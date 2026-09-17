@@ -1,0 +1,135 @@
+# Tag vX.Y.Z → host tests, one compilation, one publish job that attaches
+# what it built to a GitHub Release. Fila's shape.
+#
+# Fila splits its compilation in two because its two compositions are two
+# cold builds that share nothing. Irisin has one: `make deb-all` compiles
+# the app, the daemon and the helper once and packages that one set of
+# Mach-O slices twice, roothide and rootless, which differ only in layout.
+# Splitting it would compile the same sources twice for nothing, so there
+# is a single compile job.
+#
+# The test job is the fast signal: `make harness` fails in minutes where the
+# compile job would take the better part of an hour to reach the same
+# failure (`make deb-all` runs `check` and `harness` itself before it
+# builds).
+#
+# `ci.yml` validates pushes and pull requests and publishes nothing. Tags
+# arrive here.
+
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]*.[0-9]*.[0-9]*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_ANALYTICS: "1"
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+      - name: Run host tests
+        run: make harness
+
+  compile:
+    name: compile (roothide and rootless)
+    runs-on: macos-26
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+      - name: Install packaging tools
+        run: brew install ldid dpkg
+      # The tag is the version. The run number is the build number, so the
+      # two packages carry one and the same CFBundleVersion.
+      - name: Apply tag version
+        if: github.ref_type == 'tag'
+        run: make set-version VERSION="$GITHUB_REF_NAME"
+      - name: Package and verify both flavours
+        run: |
+          make deb-all CONFIGURATION=Release \
+            DERIVED_DATA="$RUNNER_TEMP/irisin-derived" \
+            BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+      # Named, not globbed: the checksums must account for exactly the two
+      # files the release carries, and a missing one fails here.
+      - name: Write exact release checksums
+        run: |
+          version="$(make --no-print-directory print-version)"
+          cd build/Packages
+          shasum -a 256 \
+            "wiki.qaq.irisin_${version}_iphoneos-arm64e.deb" \
+            "wiki.qaq.irisin_${version}_iphoneos-arm64.deb" > SHA256SUMS
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: irisin-packages
+          path: build/Packages/
+          if-no-files-found: error
+
+  publish:
+    needs: [test, compile]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: irisin-packages
+          path: build/Packages/
+      # The compile job hashed the packages where it built them; checking
+      # the list here is what proves the transfer.
+      - name: Verify downloaded checksums
+        working-directory: build/Packages
+        run: sha256sum --check SHA256SUMS
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          notes="$RUNNER_TEMP/irisin-release.md"
+          if [ -f "Documentation/Releases/$version.md" ]; then
+            cp "Documentation/Releases/$version.md" "$notes"
+          else
+            cat > "$notes" <<NOTES
+          Irisin $version, for roothide and for rootless (/var/jb) bootstraps.
+
+          SHA-256 sums are in \`SHA256SUMS\`.
+          NOTES
+          fi
+          files=("build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64e.deb"
+                 "build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64.deb"
+                 "build/Packages/SHA256SUMS")
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --clobber "${files[@]}"
+            gh release edit "$GITHUB_REF_NAME" --notes-file "$notes"
+          else
+            gh release create "$GITHUB_REF_NAME" --title "Irisin $version" --notes-file "$notes" "${files[@]}"
+          fi

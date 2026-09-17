@@ -196,6 +196,15 @@ private struct Tree {
     /// Where each directory made up for a path below it is in `entries`.
     private var madeUp: [String: Int] = [:]
 
+    /// `kinds` and `madeUp` are private, so the implicit memberwise
+    /// initializer is private to `Tree` itself and the adaptation above
+    /// cannot call it. Xcode 26 says so and Xcode 27 does not, which is how
+    /// this passed here and failed on CI. A tree is filled by `add` in any
+    /// case; the package name is the whole of its state at birth.
+    init(package: String) {
+        self.package = package
+    }
+
     /// A path below anything but a directory (a link, a file) is refused:
     /// what installs there depends on what the link points at. `reported`
     /// is the entry as the archive spells it, for the refusal.
