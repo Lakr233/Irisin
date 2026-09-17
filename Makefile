@@ -180,14 +180,14 @@ check:
 	@test -x "$(ROOT_DIR)/Scripts/collect-licenses.py" || { echo "error: collect-licenses.py is not executable" >&2; exit 66; }
 	@grep -qF 'collect-licenses.py' "$(PROJECT)/project.pbxproj" \
 		|| { echo "error: the Collect Licenses build phase is missing from the Irisin target; the License page would be empty" >&2; exit 65; }
-	@# The project is Irisin. The GitHub repository is still chromatic-v4 and
-	@# its URL is the one place the old codename is allowed to appear. This
-	@# rule and the Hard rule it enforces have to spell what they forbid, so
-	@# the two files that state it are the only ones not searched.
-	@hits="$$(cd "$(ROOT_DIR)" && git grep -nIi -e chromatic -e saily -- ':!AGENTS.md' ':!Makefile' | grep -v 'chromatic-v4' || true)"; \
+	@# The project is Irisin and so is the GitHub repository, so the old
+	@# codename has nowhere left to hide. This rule and the Hard rule it
+	@# enforces have to spell what they forbid, so the two files that state
+	@# it are the only ones not searched.
+	@hits="$$(cd "$(ROOT_DIR)" && git grep -nIi -e chromatic -e saily -- ':!AGENTS.md' ':!Makefile' || true)"; \
 	names="$$(cd "$(ROOT_DIR)" && git ls-files | grep -i -e chromatic -e saily || true)"; \
 	if [[ -n "$$hits$$names" ]]; then \
-		echo "error: the project is Irisin; chromatic and Saily are gone, except the chromatic-v4 repository URL" >&2; \
+		echo "error: the project is Irisin; chromatic and Saily are gone" >&2; \
 		[[ -n "$$hits" ]] && echo "$$hits" >&2; \
 		[[ -n "$$names" ]] && echo "$$names" >&2; \
 		exit 65; \

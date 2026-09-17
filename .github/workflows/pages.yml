@@ -1,0 +1,40 @@
+# The site is one icon and a redirect. It exists so `Icon:` in the Debian
+# control file — which Sileo, Zebra and Irisin itself fetch for every package
+# row — has a stable home that is not a raw.githubusercontent.com link into a
+# branch. Legacy Pages only accepts / or /docs, and the prose lives in
+# Documentation/, so the site is deployed from here instead and the
+# repository's Pages source must be set to "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    branches: [main-4.0]
+    paths:
+      - Documentation/Site/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One live site: let a running deploy finish rather than cancelling it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: Documentation/Site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -19,10 +19,10 @@ end.
 ## Hard rules
 
 - **The project is Irisin.** The product is Irisin, the codename is `irisin`,
-  the bundle is `wiki.qaq.irisin`. `chromatic` and `Saily` are gone from
-  every file and every filename; `make check` greps the tracked tree for
-  both, case-insensitively, and fails on a hit. The one exception it allows
-  is `chromatic-v4`, the GitHub repository, which keeps its name.
+  the bundle is `wiki.qaq.irisin`, and the GitHub repository is
+  `Lakr233/Irisin`. `chromatic` and `Saily` are gone from every file and
+  every filename, with no exception left; `make check` greps the tracked
+  tree for both, case-insensitively, and fails on a hit.
 - **Two links and two file types, and nothing to repair.** The app answers
   `irisin://repository/add?url=…[&suite=…][&component=…]` and
   `irisin://package/<identity>`; `IrisinLink` parses with `URLComponents` and

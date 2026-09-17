@@ -8,7 +8,8 @@ Description: Modern package manager for @FLAVOR@ jailbreaks
  installs go through a small on-demand root daemon whose helper installs
  packages natively and registers apps with LaunchServices itself. No dpkg,
  no uicache.
-Icon: https://raw.githubusercontent.com/Lakr233/chromatic-v4/main/Resources/icon.png
+Icon: https://lakr233.github.io/Irisin/icon.png
+Homepage: https://github.com/Lakr233/Irisin
 Maintainer: OwnGoal Studio <no-reply@owngoal.dev>
 Author: OwnGoal Studio <no-reply@owngoal.dev>
 Section: Applications

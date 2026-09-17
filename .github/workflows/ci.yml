@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - main-4.0
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
   pull_request:
