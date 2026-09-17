@@ -1,0 +1,144 @@
+//
+//  HandyTabBarController.swift
+//  Irisin
+//
+//  Created by Lakr Aream on 2021/8/8.
+//  Copyright © 2021 Lakr Aream. All rights reserved.
+//
+
+import Combine
+import UIKit
+
+class HandyTabBarController: UITabBarController {
+    private var subscriptions = Set<AnyCancellable>()
+    private let queue = HDQueueNavigator()
+    /// Every tab, the Queue tab included: `UITab`s from iOS 18, the
+    /// controllers before it.
+    private var everyTab: [AnyObject] = []
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let dashboard = HDMainNavigator()
+        let repositories = HDRepoNavigator()
+        let installed = HDInstalledNavigator()
+        let queue = queue
+        let search = HDSearchNavigator()
+
+        if #available(iOS 18.0, *) {
+            let searchTab = UISearchTab { _ in search }
+            // iOS 26 set the search tab apart on its own; from iOS 27 that
+            // place is the prominent tab's, and a search tab only takes it
+            // unasked when it activates search by itself, which ours does not
+            if #available(iOS 27.0, *) {
+                prominentTabIdentifier = searchTab.identifier
+            }
+            everyTab = [
+                UITab(
+                    title: dashboard.tabBarItem.title ?? "",
+                    image: dashboard.tabBarItem.image,
+                    identifier: "dashboard"
+                ) { _ in dashboard },
+                UITab(
+                    title: repositories.tabBarItem.title ?? "",
+                    image: repositories.tabBarItem.image,
+                    identifier: "repositories"
+                ) { _ in repositories },
+                UITab(
+                    title: installed.tabBarItem.title ?? "",
+                    image: installed.tabBarItem.image,
+                    identifier: "installed"
+                ) { _ in installed },
+                UITab(
+                    title: queue.tabBarItem.title ?? "",
+                    image: queue.tabBarItem.image,
+                    identifier: "queue"
+                ) { _ in queue },
+                searchTab,
+            ]
+            tabs = everyTab.compactMap { $0 as? UITab }
+        } else {
+            everyTab = [dashboard, repositories, installed, queue, search]
+            viewControllers = everyTab.compactMap { $0 as? UIViewController }
+        }
+
+        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateQueueTab() }
+            .store(in: &subscriptions)
+
+        selectedIndex = 0
+        updateQueueTab()
+    }
+
+    /// The Queue tab is there while there is a queue, and while it is open:
+    /// a queue that finishes does not pull the page from under the user.
+    /// `UITab.isHidden` only hides a tab from the sidebar, so the tab
+    /// leaves the list instead.
+    private func updateQueueTab() {
+        let shown = TaskManager.shared.plan != nil || selectedViewController === queue
+        if #available(iOS 18.0, *) {
+            let every = everyTab.compactMap { $0 as? UITab }
+            guard tabs.contains(where: { $0.identifier == "queue" }) != shown else { return }
+            setTabs(shown ? every : every.filter { $0.identifier != "queue" }, animated: true)
+        } else {
+            let every = everyTab.compactMap { $0 as? UIViewController }
+            guard viewControllers?.contains(queue) != shown else { return }
+            setViewControllers(shown ? every : every.filter { $0 !== queue }, animated: true)
+        }
+    }
+
+    private var privSelectIndex: Int?
+    private var privClicks = 0
+    override func tabBar(_: UITabBar, didSelect _: UITabBarItem) {
+        // double tap to select search bar; the tab has switched once this returns
+        Task { [self] in
+            updateQueueTab()
+            if privSelectIndex == selectedIndex {
+                privClicks += 1
+                if privClicks >= 2 {
+                    privSelectIndex = nil
+                    let page = (selectedViewController as? UINavigationController)?.topViewController
+                    if let controller = page as? SearchController {
+                        controller.searchController.searchBar.becomeFirstResponder()
+                    }
+                    if let controller = page as? HDInstalledController {
+                        controller.searchController.searchBar.becomeFirstResponder()
+                    }
+                }
+            } else {
+                privSelectIndex = selectedIndex
+                privClicks = 0
+            }
+        }
+    }
+}
+
+class HDQueueNavigator: UINavigationController {
+    private var subscriptions = Set<AnyCancellable>()
+
+    init() {
+        super.init(rootViewController: QueueController())
+
+        navigationBar.prefersLargeTitles = true
+
+        tabBarItem = UITabBarItem(
+            title: String(localized: "Queue"),
+            image: UIImage(systemName: "tray.full.fill"),
+            tag: 0
+        )
+
+        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+            .receive(on: DispatchQueue.main)
+            .map { _ in QueueController.badge }
+            .prepend(QueueController.badge)
+            .removeDuplicates()
+            .sink { [weak self] badge in self?.setTabBadge(badge) }
+            .store(in: &subscriptions)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

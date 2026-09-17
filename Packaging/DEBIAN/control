@@ -1,0 +1,17 @@
+Package: @PACKAGE_ID@
+Name: Irisin
+Version: @VERSION@
+Architecture: @ARCHITECTURE@
+Description: Modern package manager for @FLAVOR@ jailbreaks
+ Browse your repositories, install and remove packages, keep tweaks updated
+ and read every depiction, on iPhone and iPad. The app runs without root;
+ installs go through a small on-demand root daemon whose helper installs
+ packages natively and registers apps with LaunchServices itself. No dpkg,
+ no uicache.
+Icon: https://raw.githubusercontent.com/Lakr233/chromatic-v4/main/Resources/icon.png
+Maintainer: OwnGoal Studio <no-reply@owngoal.dev>
+Author: OwnGoal Studio <no-reply@owngoal.dev>
+Section: Applications
+Priority: optional
+Depends: firmware (>= @MINIMUM_IOS_VERSION@), launchctl
+Installed-Size: @INSTALLED_SIZE@

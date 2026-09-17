@@ -1,0 +1,5 @@
+// Copy to Developer.xcconfig (git-ignored) for local Xcode signing.
+// Device packages from `make deb` are ad-hoc signed with ldid and do not need this.
+
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Automatic

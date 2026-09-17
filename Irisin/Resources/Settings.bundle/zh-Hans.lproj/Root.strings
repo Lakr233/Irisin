@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "下次启动时重置";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "Irisin 下次打开时会删除软件源、下载内容、日志和设置，并关闭此选项。已安装的软件包会保留。如果 Irisin 仍在运行，请先在 App 切换器中关闭它。";

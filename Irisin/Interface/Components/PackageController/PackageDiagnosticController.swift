@@ -1,0 +1,131 @@
+import AptResolver
+import Dog
+import UIKit
+
+final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private var dataSource: UITableViewDiffableDataSource<String, ResolutionCheck>!
+    private var report: [ResolutionCheck] = []
+    private var summary = ""
+    /// A reason of the app's own, an operation still running or packages
+    /// that moved, comes with no checks: the row is the reason, and no
+    /// verdict goes under it.
+    private var reasonOnly = false
+    /// The sheet's only page has no way back, so Close takes the sheet away.
+    /// Whoever builds the sheet says so: the page cannot tell from its own
+    /// place in the stack while that stack is still being replaced.
+    private let closesSheet: Bool
+
+    init(closesSheet: Bool) {
+        self.closesSheet = closesSheet
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = String(localized: "Unable to Queue Packages")
+        navigationItem.largeTitleDisplayMode = .never
+        // the sheet's ground, whether the page is its root or pushed in it
+        view.backgroundColor = .groupedBackground
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: .fluent(.shareIos24Filled),
+            style: .plain,
+            target: self,
+            action: #selector(shareReport)
+        )
+        if closesSheet {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                systemItem: .close,
+                primaryAction: UIAction { [weak self] _ in self?.dismiss(animated: true) }
+            )
+        }
+
+        summary = PackageActionReport.shared.allAvailable()
+        report = PackageActionReport.shared.checks
+        reasonOnly = report.isEmpty
+        if reasonOnly {
+            report = [.init(package: "", requirement: summary, outcome: .conflictingRequirements)]
+        }
+        Dog.shared.join(self, "showing the diagnostic report:\n\(summary)", level: .error)
+        configureTable()
+        applyReport()
+    }
+
+    private func configureTable() {
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.backgroundColor = .clear
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 100
+        tableView.sectionHeaderHeight = UITableView.automaticDimension
+        tableView.estimatedSectionHeaderHeight = 44
+        tableView.delegate = self
+        tableView.allowsSelection = false
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "requirement")
+        view.addSubview(tableView)
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, check in
+            let cell = table.dequeueReusableCell(withIdentifier: "requirement", for: indexPath)
+            let detail = reasonOnly ? "" : check.detailText
+            var content = cell.defaultContentConfiguration()
+            content.text = check.requirement
+            content.textProperties.font = .rounded(.body, emphasized: true)
+            content.textProperties.color = .textTitle
+            content.textProperties.numberOfLines = 0
+            content.secondaryText = detail
+            content.secondaryTextProperties.font = .rounded(.subheadline)
+            content.secondaryTextProperties.color = .textSubtitle
+            content.secondaryTextProperties.numberOfLines = 0
+            content.image = UIImage(
+                systemName: check.outcome == .matched ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
+            )
+            content.imageProperties.tintColor = check.outcome == .matched ? .requirementMatched : .requirementIssue
+            cell.contentConfiguration = content
+            cell.backgroundColor = .cardBackground
+            cell.accessibilityLabel = [check.requirement, detail].filter { !$0.isEmpty }.joined(separator: ". ")
+            return cell
+        }
+    }
+
+    private func applyReport() {
+        var snapshot = NSDiffableDataSourceSnapshot<String, ResolutionCheck>()
+        var seen = Set<ResolutionCheck>()
+        for check in report where seen.insert(check).inserted {
+            if !snapshot.sectionIdentifiers.contains(check.package) {
+                snapshot.appendSections([check.package])
+            }
+            snapshot.appendItems([check], toSection: check.package)
+        }
+        dataSource.apply(snapshot, animatingDifferences: false)
+    }
+
+    func tableView(_: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = UITableViewHeaderFooterView(reuseIdentifier: nil)
+        let identity = dataSource.snapshot().sectionIdentifiers[section]
+        header.textLabel?.text = identity.isEmpty ? String(localized: "Installation Plan") : identity
+        header.textLabel?.font = .rounded(.subheadline, emphasized: true)
+        header.textLabel?.textColor = .textTitle
+        header.textLabel?.numberOfLines = 0
+        return header
+    }
+
+    @objc private func shareReport() {
+        let details = report.map { "\($0.package)\n\($0.requirement)\n\($0.detailText)" }.joined(separator: "\n\n")
+        let controller = UIActivityViewController(
+            // the reason alone is already the summary
+            activityItems: [reasonOnly ? summary : summary + "\n\n" + details],
+            applicationActivities: nil
+        )
+        controller.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+        present(controller, animated: true)
+    }
+}

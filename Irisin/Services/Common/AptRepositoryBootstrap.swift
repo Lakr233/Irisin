@@ -1,0 +1,59 @@
+//
+//  AptRepositoryBootstrap.swift
+//  Irisin
+//
+
+import AptRepository
+import Dog
+import Foundation
+import IrisinAdapter
+
+/// Irisin's side of AptRepository's seams. The package holds no opinion on
+/// where settings live or where logs go; this is where that gets decided.
+/// AptRepository calls back from its own queues, so none of this is isolated.
+nonisolated enum AptRepositoryBootstrap {
+    static func environment(documentsDirectory: URL) -> AptEnvironment {
+        AptEnvironment(
+            workingLocation: documentsDirectory,
+            dpkgStatusLocation: JailbreakRoot.path("/Library/dpkg/status"),
+            aptExtendedStatesLocation: JailbreakRoot.path("/var/lib/apt/extended_states"),
+            deviceArchitecture: { EnvironmentDetector.architecture },
+            installableArchitectures: { installableArchitectures },
+            adaptedPreDepends: PackageAdapters.installed.impliedPreDepends(on: EnvironmentDetector.architecture),
+            storage: PropertiesStorage(),
+            logger: DogLogger()
+        )
+    }
+
+    static var deviceArchitecture: String {
+        EnvironmentDetector.architecture
+    }
+
+    /// The device's own architecture plus what the shipped adapters rewrite
+    /// into it. Both inputs are constants, so this is one.
+    static let installableArchitectures: Set<String> =
+        PackageAdapters.installed.installable(on: EnvironmentDetector.architecture)
+}
+
+private nonisolated struct PropertiesStorage: AptStorage {
+    func read(key: String) -> Data? {
+        Properties.read(key: key)
+    }
+
+    func write(key: String, value: Data?) {
+        Properties.write(key: key, value: value)
+    }
+}
+
+private nonisolated struct DogLogger: AptLogger {
+    func log(_ kind: String, _ message: String, level: AptLogLevel) {
+        let dogLevel: Dog.DogLevel = switch level {
+        case .verbose: .verbose
+        case .info: .info
+        case .warning: .warning
+        case .error: .error
+        case .critical: .critical
+        }
+        Dog.shared.join(kind, message, level: dogLevel)
+    }
+}

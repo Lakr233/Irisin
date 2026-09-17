@@ -1,0 +1,11 @@
+--swiftversion 6.0
+
+# a wrapped call or declaration puts every argument on its own line and the
+# closing paren on a line of its own:
+#     foo.bar(
+#         first: x,
+#         second: y
+#     )
+--wraparguments before-first
+--wrapparameters before-first
+--closingparen balanced

@@ -1,0 +1,70 @@
+// swift-tools-version: 6.0
+
+import PackageDescription
+
+let package = Package(
+    name: "AptRepository",
+    platforms: [
+        .iOS(.v16),
+        .macOS(.v13),
+    ],
+    products: [
+        .library(name: "AptRepository", targets: ["AptRepository"]),
+        .library(name: "AptResolver", targets: ["AptResolver"]),
+        .executable(name: "ResolverProbe", targets: ["ResolverProbe"]),
+        .executable(name: "NativeInstallerProbe", targets: ["NativeInstallerProbe"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/Lakr233/libsolv.xcframework", exact: "0.1.0"),
+        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", exact: "0.1.1"),
+        .package(path: "../IrisinKit"),
+        // Prebuilt WCDB (sqlite + sqlcipher + the C++ core in one dynamic
+        // framework). The catalogue lives in its database; see Storage/.
+        .package(url: "https://github.com/Lakr233/wcdb.xcframework", from: "2.1.16"),
+    ],
+    targets: [
+        // Every compression filter a repository index or a .deb can carry,
+        // including zstd, plus the ar and tar containers, in one static
+        // binary. It comes through the package rather than a binary target of
+        // our own because icli, linked into the helper, brings the same
+        // package into the graph, and two targets named `libarchive` do not
+        // resolve. The sources still `import libarchive`, the framework's
+        // own module, and never the `LibArchive` wrapper.
+        .target(
+            name: "AptRepository",
+            dependencies: [
+                .product(name: "LibArchive", package: "libarchive.xcframework"),
+                .product(name: "IrisinProtocol", package: "IrisinKit"),
+                .product(name: "WCDBSwift", package: "wcdb.xcframework"),
+            ]
+        ),
+        .target(
+            name: "AptResolver",
+            dependencies: [
+                "AptRepository",
+                .product(name: "LibSolv", package: "libsolv.xcframework"),
+                .product(name: "IrisinProtocol", package: "IrisinKit"),
+            ]
+        ),
+        .executableTarget(name: "ResolverProbe", dependencies: ["AptResolver"], path: "Tools/ResolverProbe"),
+        .executableTarget(
+            name: "NativeInstallerProbe",
+            dependencies: [
+                "AptRepository",
+                .product(name: "IrisinInstaller", package: "IrisinKit"),
+            ],
+            path: "Tools/NativeInstallerProbe"
+        ),
+        .testTarget(name: "AptResolverTests", dependencies: ["AptResolver"]),
+        .testTarget(
+            name: "AptRepositoryTests",
+            // the adapter only for `AdapterConformanceTests`, which needs both
+            // halves: a package prepared here, then adapted there
+            dependencies: ["AptRepository", .product(name: "IrisinAdapter", package: "IrisinKit")],
+            // a Debian machine's dpkg status file and a version list sorted
+            // by apt itself, for the parser and the comparison
+            resources: [.copy("Fixtures")]
+        ),
+    ],
+    swiftLanguageModes: [.v6]
+)

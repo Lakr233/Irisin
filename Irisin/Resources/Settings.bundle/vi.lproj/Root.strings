@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "Đặt lại khi mở lần tới";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "Lần tới khi mở, Irisin sẽ xóa các nguồn, tệp tải xuống, nhật ký và cài đặt của ứng dụng, rồi tắt tùy chọn này. Các gói đã cài đặt được giữ lại. Nếu Irisin vẫn đang chạy, trước tiên hãy đóng ứng dụng trong Trình chuyển đổi ứng dụng.";

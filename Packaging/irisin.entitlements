@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	The app's entitlements. It runs as mobile and never as root.
+
+	`wiki.qaq.irisin.client` and the mach-lookup exception are the app's
+	half of the trust boundary with irisind: the daemon admits a peer that
+	carries the first, is unsandboxed, is a platform binary and runs from the
+	installed bundle. Never grant the client entitlement to anything else.
+
+	`no-container` keeps the app's documents at /var/mobile/Documents; the two
+	keychain groups are where the app reads its stored repository credentials
+	from; the CommCenter entries let the app lift the cellular data policy for
+	its own bundle.
+-->
+<plist version="1.0">
+<dict>
+	<key>application-identifier</key>
+	<string>wiki.qaq.irisin</string>
+	<key>platform-application</key>
+	<true/>
+	<key>wiki.qaq.irisin.client</key>
+	<true/>
+	<key>com.apple.security.exception.mach-lookup.global-name</key>
+	<array>
+		<string>wiki.qaq.irisin.service</string>
+	</array>
+
+	<key>com.apple.private.security.container-required</key>
+	<false/>
+	<key>com.apple.private.security.no-container</key>
+	<true/>
+	<key>com.apple.private.security.no-sandbox</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppBundles</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppDataContainers</key>
+	<true/>
+	<key>com.apple.private.tcc.allow</key>
+	<array>
+		<string>kTCCServiceFaceID</string>
+	</array>
+
+	<key>com.apple.private.system-keychain</key>
+	<true/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>com.apple.mobilesafari</string>
+		<string>wiki.qaq.irisin</string>
+	</array>
+
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.CommCenter.fine-grained</key>
+	<array>
+		<string>spi</string>
+		<string>phone</string>
+		<string>identity</string>
+		<string>data-usage</string>
+		<string>data-allowed</string>
+		<string>data-allowed-write</string>
+	</array>
+
+	<key>com.apple.developer.device-information.user-assigned-device-name</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: irisin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_ANALYTICS: "1"
+
+jobs:
+  build:
+    name: Build, verify, and release Debian packages
+    runs-on: macos-26
+    timeout-minutes: 90
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Configure build paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "DERIVED_DATA=$RUNNER_TEMP/irisin-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select newest Xcode
+        run: |
+          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install packaging dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          formulae=()
+          command -v dpkg-deb >/dev/null 2>&1 || formulae+=(dpkg)
+          command -v ldid >/dev/null 2>&1 || formulae+=(ldid)
+          if (( ${#formulae[@]} > 0 )); then
+            brew install "${formulae[@]}"
+          fi
+
+      - name: Apply release version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./Scripts/apply-version.sh "$GITHUB_REF_NAME"
+
+      - name: Build and package both flavours
+        run: make deb-all CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+
+      - name: Measure resolver performance on generated catalogues
+        run: |
+          swift build --package-path Packages/AptRepository -c release --product ResolverProbe
+          probe_dir="$(swift build --package-path Packages/AptRepository -c release --show-bin-path)"
+          python3 Scripts/apt-oracle/benchmark.py --probe "$probe_dir/ResolverProbe"
+
+      - name: Upload resolver measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: resolver-benchmarks
+          path: build/resolver-benchmarks/report.json
+
+      - name: Write checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd build/Packages
+          shasum -a 256 ./*.deb > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload Debian packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: irisin-${{ github.sha }}
+          path: |
+            build/Packages/*.deb
+            build/Packages/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          roothide_deb="$(make --no-print-directory print-deb-path FLAVOR=roothide)"
+          rootless_deb="$(make --no-print-directory print-deb-path FLAVOR=rootless)"
+          notes="$(mktemp "${TMPDIR:-/tmp}/irisin-notes.XXXXXX")"
+          trap 'rm -f "$notes"' EXIT
+          {
+            echo "Irisin $version."
+            echo
+            echo "| Jailbreak | Package |"
+            echo "| --- | --- |"
+            printf '| roothide | `%s` |\n' "$(basename "$roothide_deb")"
+            printf '| rootless (/var/jb) | `%s` |\n' "$(basename "$rootless_deb")"
+            echo
+            echo "SHA-256 sums are in \`SHA256SUMS\`."
+          } >"$notes"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --clobber "$roothide_deb" "$rootless_deb" build/Packages/SHA256SUMS
+            gh release edit "$GITHUB_REF_NAME" --notes-file "$notes"
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$notes" \
+              "$roothide_deb" "$rootless_deb" build/Packages/SHA256SUMS
+          fi

@@ -1,0 +1,99 @@
+//
+//  SetupViewController.swift
+//  Irisin
+//
+//  Created by Lakr Aream on 2021/8/8.
+//  Copyright © 2021 Lakr Aream. All rights reserved.
+//
+
+import AptRepository
+import SnapKit
+import Then
+import UIKit
+
+class SetupViewController: UIViewController {
+    let descriptionLabel = UILabel().then {
+        $0.text = ""
+        $0.textColor = .textMuted
+        $0.font = .monospacedDigit(.caption, emphasized: true)
+    }
+
+    private let indicator = UIActivityIndicatorView(style: .medium)
+
+    /// Bootstrap runs once per process; a second setup controller that
+    /// appears while the first is still working waits on the same task.
+    private static var bootstrap: Task<Void, Never>?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .plainBackground
+
+        indicator.startAnimating()
+        view.addSubview(indicator)
+        indicator.snp.makeConstraints { x in
+            x.center.equalTo(self.view)
+        }
+
+        view.addSubview(descriptionLabel)
+        descriptionLabel.snp.makeConstraints { x in
+            x.centerX.equalTo(self.view)
+            x.centerY.equalTo(self.view).offset(25)
+        }
+
+        #if !DEBUG
+            UserDefaults.standard.set(false, forKey: "_UIConstraintBasedLayoutLogUnsatisfiable")
+        #endif
+        UITableView.appearance().sectionHeaderTopPadding = 0.0
+        adoptDynamicTypeEverywhere()
+
+        Task { [weak self] in
+            await Self.bootstrapApplication { text in
+                self?.descriptionLabel.text = text
+            }
+            self?.dispatchAllocInterface()
+        }
+    }
+
+    /// Brings up every engine, once per process. Their state lives on the
+    /// main actor; each does its reading off it and returns when done.
+    private static func bootstrapApplication(progress: @escaping (String) -> Void) async {
+        if bootstrap == nil {
+            bootstrap = Task {
+                DeviceInfo.current.applyNetworkingHeaders()
+
+                // MARK: - CENTER
+
+                progress(String(localized: "Loading packages…"))
+                await PackageCenter.default.load()
+                progress(String(localized: "Loading repositories…"))
+                await RepositoryCenter.default.load()
+                progress(String(localized: "Setting up…"))
+
+                // MARK: - PRIVILEGED BACKEND
+
+                PrivilegedBackend.start()
+
+                // MARK: - DOWNLOAD ENGINE
+
+                CellularPolicy.allowForThisApplication()
+
+                await DownloadCenter.shared.load()
+
+                // MARK: - PROCESSOR
+
+                _ = TaskProcessor.shared
+            }
+        }
+        await bootstrap?.value
+    }
+
+    func dispatchAllocInterface() {
+        // the interface covers this screen; nothing here keeps spinning
+        indicator.stopAnimating()
+        indicator.removeFromSuperview()
+        descriptionLabel.removeFromSuperview()
+        let controller = NavigatorEnterViewController()
+        controller.modalPresentationStyle = .fullScreen
+        present(controller, animated: false)
+    }
+}

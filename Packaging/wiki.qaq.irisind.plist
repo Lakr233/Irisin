@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	`@PREFIX@` is substituted at package time: empty for roothide, /var/jb for
+	rootless. The daemon is on-demand: launchd starts it when the app looks the
+	Mach service up, and it exits when the last client is gone.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>wiki.qaq.irisind</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>@PREFIX@/usr/libexec/irisind</string>
+	</array>
+	<key>UserName</key>
+	<string>root</string>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<!-- 0022: files the daemon and its helper create are not group- or world-writable. -->
+	<key>Umask</key>
+	<integer>18</integer>
+	<key>MachServices</key>
+	<dict>
+		<key>wiki.qaq.irisin.service</key>
+		<true/>
+	</dict>
+	<!--
+		The install helper runs in its own session and must finish even when
+		this daemon is torn down by the package it is installing.
+	-->
+	<key>AbandonProcessGroup</key>
+	<true/>
+	<!-- Nothing may inject into the process that starts dpkg as root. -->
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>DISABLE_TWEAKS</key>
+		<string>1</string>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+#include "Base.xcconfig"
+#include? "Developer.xcconfig"
+#include? "DeveloperRelease.xcconfig"
+
+// Device helpers run outside a test runner and must not write LLVM profiles.
+ENABLE_CODE_COVERAGE = NO

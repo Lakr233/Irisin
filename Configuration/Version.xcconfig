@@ -1,0 +1,13 @@
+// Single source of truth for the app, the daemon, the helper, and the Debian
+// package version. Update with `make set-version VERSION=4.0.1`.
+//
+// The build number is not written here: make passes
+// CURRENT_PROJECT_VERSION (the git commit count, or BUILD_NUMBER=n) to
+// xcodebuild. The 0 below is only what a build from inside Xcode gets.
+//
+// A target-level MARKETING_VERSION / CURRENT_PROJECT_VERSION in
+// project.pbxproj silently shadows these and ships the wrong build number;
+// `make check` rejects that.
+
+MARKETING_VERSION = 4.0.1
+CURRENT_PROJECT_VERSION = 0

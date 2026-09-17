@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "Restablecer en el próximo inicio";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "La próxima vez que se abra, Irisin eliminará sus repositorios, descargas, registros y ajustes, y después desactivará esta opción. Los paquetes instalados se conservan. Si Irisin sigue en ejecución, cierra la app primero en el selector de apps.";

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	The daemon's and the helper's entitlements: exactly what they need to run
+	as root, spawn the bootstrap's tools and let those tools touch app bundles.
+	Scripts/package-deb.sh reads them back out of the signed binaries and
+	fails on a missing one.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.private.security.no-sandbox</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppBundles</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppDataContainers</key>
+	<true/>
+	<key>platform-application</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,285 @@
+//
+//  PackageController.swift
+//  Irisin
+//
+//  Created by Lakr Aream on 2020/5/3.
+//  Copyright © 2020 Lakr Aream. All rights reserved.
+//
+
+import AptRepository
+import Combine
+import PackageDepiction
+import Then
+import UIKit
+import WebKit
+
+class PackageController: UIViewController {
+    var packageObject = Package(identity: "")
+    private var subscriptions = Set<AnyCancellable>()
+
+    convenience init(package: Package) {
+        self.init(nibName: nil, bundle: nil)
+        packageObject = package
+    }
+
+    private func leaveForRemovedRepository() {
+        if let navigator = navigationController, navigator.viewControllers.first !== self {
+            navigator.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    // MARK: PROPERTY
+
+    /// The gutter around the photo.
+    let inset: CGFloat = 16
+
+    let container = UIScrollView()
+
+    /// The ground behind the photo, a step below the card in both modes. It
+    /// reaches far above the content so it shows through the translucent bar
+    /// and fills an overscroll.
+    let bannerBackdrop = UIView().then {
+        $0.backgroundColor = .panelBackground
+    }
+
+    /// The header photo, at most a third of the page tall
+    /// (`updatePreferredImageHeight`), over the package's name in
+    /// handwriting that shows until it arrives.
+    let bannerArtwork = ArtworkView().then {
+        $0.layer.cornerRadius = 16
+        $0.layer.cornerCurve = .continuous
+        $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+    }
+
+    /// The content below the photo: the package header, then the depiction.
+    let card = UIView().then {
+        $0.backgroundColor = .plainBackground
+    }
+
+    var bannerPackageView = PackageBannerView(package: Package(identity: ""))
+    var preferredBannerHeight: CGFloat = 120
+
+    var depictionView = UIView() {
+        didSet {
+            oldValue.removeFromSuperview()
+            card.addSubview(depictionView)
+            // the depiction is Auto Layout throughout: its height is its own
+            depictionView.snp.makeConstraints { x in
+                x.top.equalTo(self.bannerPackageView.snp.bottom)
+                x.left.right.equalToSuperview()
+            }
+            var architecture = String(localized: "Architecture: \(packageObject.architectures.joined(separator: ", "))")
+            let environment = AptEnvironment.current
+            if !packageObject.supports(architecture: environment.deviceArchitecture),
+               packageObject.supports(anyOf: environment.installableArchitectures)
+            {
+                architecture += "\n" + String(localized: "Installs in compatibility mode.")
+            }
+            depictionFooter.text = depictionIsPartial
+                ? String(localized: "Some of this package's content cannot be shown.") + "\n" + architecture
+                : architecture
+            card.addSubview(depictionFooter)
+            // The page ends well below its last line so the floating bar
+            // never covers it.
+            depictionFooter.snp.remakeConstraints { x in
+                x.top.equalTo(depictionView.snp.bottom).offset(inset)
+                x.left.right.equalToSuperview().inset(inset)
+                x.bottom.equalToSuperview().inset(inset + 128)
+            }
+            // settled at once: a depiction that lands during another
+            // animation (a sheet going down) must not slide into place
+            UIView.performWithoutAnimation { card.layoutIfNeeded() }
+        }
+    }
+
+    /// The page becomes another version of the same package, in place. The
+    /// photo and the depiction on show stay until the new depiction has
+    /// loaded, so nothing falls back to a placeholder in between.
+    func show(_ package: Package) {
+        packageObject = package
+        bannerPackageView.removeFromSuperview()
+        bannerPackageView = PackageBannerView(package: package)
+        card.addSubview(bannerPackageView)
+        bannerPackageView.snp.makeConstraints { x in
+            x.top.leading.trailing.equalToSuperview()
+            x.height.equalTo(80)
+        }
+        navigationItem.rightBarButtonItem?.menu = bannerPackageView.actionMenu
+        bannerArtwork.write(nameOf: bannerPackageView.package)
+        depictionView.snp.remakeConstraints { x in
+            x.top.equalTo(self.bannerPackageView.snp.bottom)
+            x.left.right.equalToSuperview()
+        }
+        downloadDepictionIfAvailable()
+    }
+
+    /// Whether the depiction on show named views this build could not build.
+    var depictionIsPartial = false
+
+    /// Closes the card under the depiction, in the style of the home page
+    /// footer: the architecture the package was built for, under a notice
+    /// when the depiction is partial.
+    let depictionFooter = UILabel().then {
+        $0.font = .footnote
+        $0.textColor = .secondaryLabel
+        $0.textAlignment = .center
+        $0.numberOfLines = 0
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .plainBackground
+
+        bannerPackageView = PackageBannerView(package: packageObject)
+        title = PackageCenter.default.name(of: packageObject)
+        navigationItem.largeTitleDisplayMode = .never
+        // a page for a repository the user just deleted must not stay up
+        // offering an install from a catalogue that is gone
+        if let repository = packageObject.repoRef {
+            NotificationCenter.default.publisher(for: RepositoryCenter.registrationUpdate)
+                .receive(on: DispatchQueue.main)
+                .filter { _ in RepositoryCenter.default.obtainImmutableRepository(withUrl: repository) == nil }
+                .first()
+                .sink { [weak self] _ in self?.leaveForRemovedRepository() }
+                .store(in: &subscriptions)
+        }
+        // the same menu the banner button opens on a long press
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis"),
+            menu: bannerPackageView.actionMenu
+        ).then { $0.tintColor = .textTitle }
+
+        view.addSubview(container)
+        container.alwaysBounceVertical = true
+        container.snp.makeConstraints { x in
+            x.edges.equalToSuperview()
+        }
+        container.contentLayoutGuide.snp.makeConstraints { x in
+            x.width.equalTo(container.frameLayoutGuide)
+        }
+
+        container.addSubview(bannerBackdrop)
+        container.addSubview(bannerArtwork)
+        container.addSubview(card)
+        card.addSubview(bannerPackageView)
+        bannerArtwork.write(nameOf: bannerPackageView.package)
+
+        let content = container.contentLayoutGuide
+        bannerArtwork.snp.makeConstraints { x in
+            x.top.leading.trailing.equalTo(content).inset(inset)
+            x.height.equalTo(preferredBannerHeight)
+        }
+        // the content meets the photo with no gap between them
+        card.snp.makeConstraints { x in
+            x.top.equalTo(bannerArtwork.snp.bottom)
+            x.leading.trailing.equalTo(content)
+            x.bottom.equalTo(content)
+        }
+        bannerBackdrop.snp.makeConstraints { x in
+            x.top.equalTo(content).offset(-1000)
+            x.leading.trailing.equalTo(content)
+            x.bottom.equalTo(card.snp.top)
+        }
+        bannerPackageView.snp.makeConstraints { x in
+            x.top.leading.trailing.equalToSuperview()
+            x.height.equalTo(80)
+        }
+
+        depictionView = defaultDepiction()
+
+        downloadDepictionIfAvailable()
+    }
+
+    /// A dpkg row: the page was opened from the installed list, not from a
+    /// repository or a `.deb` on disk.
+    private var showsInstalledRow: Bool {
+        packageObject.repoRef == nil && packageObject.localFileURL == nil
+    }
+
+    /// The package as the center describes it now: a transaction may have
+    /// run while the page was covered, and the button says what it did.
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let center = PackageCenter.default
+        let fresh = if let repository = packageObject.repoRef {
+            center.obtainPackage(with: packageObject.identity, in: repository)
+        } else if showsInstalledRow {
+            center.obtainPackageInstallationInfo(with: packageObject.identity)?.representObject
+        } else {
+            Package?.none
+        }
+        if let fresh {
+            packageObject = fresh
+        }
+        // settled before the button animates: a page whose first layout
+        // happens inside an animation block slides every view in from zero
+        UIView.performWithoutAnimation { view.layoutIfNeeded() }
+        bannerPackageView.updateButton()
+    }
+
+    /// The page is on screen. Before that a photo lands where it belongs;
+    /// after, one that arrives moves the banner in front of the user.
+    private var hasAppeared = false
+
+    /// A pushed page for a dpkg row that dpkg no longer has, and that no
+    /// repository offers either, shows a package that is gone: leave it.
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        hasAppeared = true
+        guard showsInstalledRow,
+              let navigator = navigationController, navigator.viewControllers.first !== self,
+              PackageCenter.default.obtainPackageInstallationInfo(with: packageObject.identity) == nil,
+              PackageCenter.default.obtainPackageSummary(with: packageObject.identity).isEmpty
+        else { return }
+        navigator.popViewController(animated: true)
+    }
+
+    /// The banner height the constraints were last set to.
+    private var appliedBannerHeight: CGFloat?
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updatePreferredImageHeight()
+        guard preferredBannerHeight != appliedBannerHeight else {
+            return
+        }
+        appliedBannerHeight = preferredBannerHeight
+        guard hasAppeared else {
+            UIView.performWithoutAnimation {
+                bannerArtwork.snp.updateConstraints { x in
+                    x.height.equalTo(preferredBannerHeight)
+                }
+                container.layoutIfNeeded()
+            }
+            return
+        }
+        UIView.animate(
+            withDuration: 0.5,
+            delay: 0,
+            usingSpringWithDamping: 1,
+            initialSpringVelocity: 0.8,
+            options: .curveEaseInOut,
+            animations: { [self] in
+                bannerArtwork.snp.updateConstraints { x in
+                    x.height.equalTo(preferredBannerHeight)
+                }
+                container.layoutIfNeeded()
+            }
+        )
+    }
+
+    /// A photo follows its own ratio, capped at a third of the page; a photo
+    /// taller than that is cropped by its aspect fill. The handwriting sits
+    /// in a 5:2 strip, capped at a quarter: on a wide page it is only a name.
+    func updatePreferredImageHeight() {
+        let width = view.frame.width - inset * 2
+        preferredBannerHeight = if let size = bannerArtwork.imageView.image?.size, size.width > 0 {
+            min(width * size.height / size.width, view.frame.height / 3)
+        } else {
+            min(width * 2 / 5, view.frame.height / 4)
+        }
+    }
+}

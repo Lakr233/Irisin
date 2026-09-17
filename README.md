@@ -1,18 +1,14 @@
-# Saily
+# Irisin
 
 ## Modern. Fast. Beautiful.
 
-**You are currently in the main-rootless-3.0 branch.**
+Irisin is a modern APT package manager for jailbroken devices running iOS/iPadOS 15 and above.
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/SailyTeam/Saily/pulls)
-
-Saily is a modern APT package manager designed for jailbroken devices running iOS/iPadOS 15 and above, using the **Dopamine** jailbreak.
-
-If you are using RootHide or NathanLR, you may need to modify the jbroot and adopt some patches yourself. Forks or pull requests are welcome.
+One binary serves both **rootless** (Dopamine, `/var/jb`) and **roothide** bootstraps. The app runs as `mobile` and never as root: the package ships a small on-demand LaunchDaemon, `irisind`, which authenticates the app over XPC and starts `irisin-install` for one job at a time. That helper installs packages natively and registers app bundles with LaunchServices itself, through [icli](https://github.com/owngoal-dev/icli) linked in as a library, in its own session, so even an Irisin self-update runs to the end. See `AGENTS.md` for the rules and `Packages/IrisinKit` for the wire protocol.
 
 ![Preview](Resources/main.jpeg)
 
-## Saily Features
+## Irisin Features
 
 - [x] Unique UI for **both** iPhone and iPad
 - [x] Import all your repositories from Cydia, Sileo, Zebra, and Installer
@@ -25,26 +21,25 @@ If you are using RootHide or NathanLR, you may need to modify the jbroot and ado
 - [x] Clean and stable packaging using CI
 - [x] Random device info for free packages
 - [x] Fully open-sourced under the MIT License
-- [x] Quick actions (e.g., respring, uicache) via the Settings page
+- [x] Quick actions (respring, rebuild icons, safe mode) via the Settings page
 
 ## Bug Reports, Feature Requests, & Feedback
 
-For support related to Saily, open up an issue. Before reporting an issue, check if it has already been reported to avoid duplicates.
+For support related to Irisin, open up an issue. Before reporting an issue, check if it has already been reported to avoid duplicates.
 
-[<img src="Resources/bugsnag.png" alt="" width="100"/>](https://www.bugsnag.com)
-
-We use [Bugsnag](https://www.bugsnag.com/) for bug and crash tracking. [Privacy Licenses](https://docs.bugsnag.com/platforms/ios/appstore-privacy/) ensure that diagnostic data is anonymous and cannot trace back to you.
-
-If your issue is related to a crash, include the following information in your report:
-
-- Your Bugsnag ID (found in the Settings page or application log) provides a backtrace with code-level diagnostic data without privacy concerns.
-- The application log, typically located at `/var/mobile/Documents/wiki.qaq.chromatic/Journal/`, can help track the issue. This plain text document may include sensitive information (e.g., searched text, repository URLs), so review it before uploading.
+If your issue is related to a crash, attach the application log, typically located at `/var/mobile/Documents/wiki.qaq.irisin/Journal/`. This plain text document may include sensitive information (e.g., searched text, repository URLs), so review it before uploading.
 
 ## Compiling the Project
 
-For debugging with Xcode, simply open the workspace and click "Run." For real device debugging, you will need to update certifications and bundle identity. The debug build will not include license information, which is generated during the release build.
+Open `Irisin.xcodeproj` for development. For packages:
 
-To compile for release, run the command line in the resources folder. Ensure you have dpkg installed for building the package, and python3 for license scanning. xcpretty is recommended for better output formatting. swiftlint and bartycrouch are optional.
+```sh
+make harness      # IrisinKit tests on the Mac
+make deb-all      # roothide and rootless .deb, ad-hoc signed and verified
+make install      # update a device behind `iproxy 2333 22`
+```
+
+`ldid` and `dpkg` from Homebrew are required. Versions live in `Configuration/Version.xcconfig`.
 
 - This product includes software developed by the Sileo Team.
 
@@ -56,4 +51,4 @@ To compile for release, run the command line in the resources folder. Ensure you
 
 ---
 
-Copyright © 2024 Saily Team. All Rights Reserved.
+Copyright © 2024 OwnGoal Studio. All Rights Reserved.

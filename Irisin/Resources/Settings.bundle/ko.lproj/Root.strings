@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "다음 실행 시 재설정";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "다음에 Irisin을 열면 소스, 다운로드, 로그 및 설정이 삭제되고 이 옵션이 꺼집니다. 설치된 패키지는 유지됩니다. Irisin이 아직 실행 중이면 먼저 앱 전환기에서 닫으십시오.";

@@ -1,0 +1,12 @@
+import Foundation
+
+public extension PackageRequirement.PackageRequirementGroup {
+    enum RequirementType: String, CaseIterable, Codable, Sendable {
+        case depends
+        case preDepends = "pre-depends"
+        case conflicts
+        case replaces
+        case breaks
+        case provides
+    }
+}
