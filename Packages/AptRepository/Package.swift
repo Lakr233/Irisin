@@ -28,8 +28,10 @@ let package = Package(
         // binary. It comes through the package rather than a binary target of
         // our own because icli, linked into the helper, brings the same
         // package into the graph, and two targets named `libarchive` do not
-        // resolve. The sources still `import libarchive`, the framework's
-        // own module, and never the `LibArchive` wrapper.
+        // resolve. The sources `import LibArchive`, the wrapper, which is
+        // one `@_exported import libarchive`: asking for the binary module
+        // by its own name finds `LibArchive.swiftmodule` instead on a
+        // case-insensitive volume, and Xcode 26 refuses it.
         .target(
             name: "AptRepository",
             dependencies: [

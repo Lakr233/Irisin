@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 import IrisinProtocol
-import libarchive
+import LibArchive
 
 extension ArchiveStream {
     /// Decode on the unprivileged side. Never let libarchive choose output

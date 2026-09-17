@@ -355,12 +355,13 @@ is `/var/jb/var/log/irisin-install.log`.
   a second binary target of that name in `Packages/AptRepository` fails
   resolution ("multiple packages declare targets with a conflicting name"),
   so AptRepository takes the package's `LibArchive` product too. Its sources
-  `import libarchive`, the framework's own module, never the `LibArchive`
-  wrapper: the two names differ by case alone, and an older toolchain died
-  on that with "cannot load module 'LibArchive' as 'libarchive'" from every
-  `xcodebuild` while `swift build` passed. 0.1.1 under Xcode 27 builds
-  clean, device and simulator; if the error comes back, that is where to
-  look.
+  `import LibArchive`, the wrapper, whose whole body is `@_exported import
+  libarchive`: the two names differ by case alone, so on a case-insensitive
+  volume a request for the binary module finds `LibArchive.swiftmodule` and
+  the compiler refuses it — "cannot load module 'LibArchive' as
+  'libarchive'". Xcode 27 lets `import libarchive` through and Xcode 26,
+  which is what the macos-26 runner has, does not; importing the wrapper is
+  unambiguous on both. If the error comes back, that is where to look.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller
   `isShowingColumn:`, which iOS 26 answers with an exception, and nothing
