@@ -12,11 +12,82 @@
 	keychain groups are where the app reads its stored repository credentials
 	from; the CommCenter entries let the app lift the cellular data policy for
 	its own bundle.
+
+	The IOKit user-client classes are the GPU and what sits beside it. A
+	bootstrap withholds them from an ad-hoc signed binary until they are
+	named, and anything that reaches for Metal (Core Image, text rendered
+	with Bold Text on) crashes without them: `deny(1) iokit-open-user-client
+	AGXDeviceUserClient … This must be in your
+	com.apple.security.iokit-user-client-class entitlement`. The list is
+	Fila's and iGhostVT's render path (AGX and the older IOAccel names,
+	IOSurface, the framebuffer, JPEG decode, HID), plus
+	`IOGPUDeviceUserClient` and `IOAccelerator` from a Bold Text crash
+	report, whose fix was the `exception.` spelling of the key, and the
+	neural engine Vision asks for (a paused depiction video offers Live
+	Text), which Preferences, Setup and MessagesViewService carry on
+	iOS 26. `AppleParavirt…`, `…ParavirtClient` and `AppleVirtIO…` are
+	the vphone's names for the same hardware. Both spellings of the key
+	carry the same list. Sileo's SMC, SEP, baseband and USB clients are
+	left out: nothing here opens them.
 -->
 <plist version="1.0">
 <dict>
 	<key>application-identifier</key>
 	<string>wiki.qaq.irisin</string>
+	<key>com.apple.security.iokit-user-client-class</key>
+	<array>
+		<string>AGXCommandQueue</string>
+		<string>AGXDevice</string>
+		<string>AGXDeviceUserClient</string>
+		<string>AGXSharedUserClient</string>
+		<string>AGXGLContext</string>
+		<string>AppleParavirtDeviceUserClient</string>
+		<string>IOAccelerator</string>
+		<string>IOAccelContext</string>
+		<string>IOAccelContext2</string>
+		<string>IOAccelDevice</string>
+		<string>IOAccelDevice2</string>
+		<string>IOAccelSharedUserClient</string>
+		<string>IOAccelSharedUserClient2</string>
+		<string>IOAccelSubmitter2</string>
+		<string>IOGPUDeviceUserClient</string>
+		<string>IOSurfaceRootUserClient</string>
+		<string>IOSurfaceAcceleratorClient</string>
+		<string>IOSurfaceAcceleratorParavirtClient</string>
+		<string>IOMobileFramebufferUserClient</string>
+		<string>AppleJPEGDriverUserClient</string>
+		<string>H11ANEInDirectPathClient</string>
+		<string>AppleVirtIONeuralEngineDeviceUserClient</string>
+		<string>IOHIDLibUserClient</string>
+		<string>IOHIDEventServiceFastPathUserClient</string>
+	</array>
+	<key>com.apple.security.exception.iokit-user-client-class</key>
+	<array>
+		<string>AGXCommandQueue</string>
+		<string>AGXDevice</string>
+		<string>AGXDeviceUserClient</string>
+		<string>AGXSharedUserClient</string>
+		<string>AGXGLContext</string>
+		<string>AppleParavirtDeviceUserClient</string>
+		<string>IOAccelerator</string>
+		<string>IOAccelContext</string>
+		<string>IOAccelContext2</string>
+		<string>IOAccelDevice</string>
+		<string>IOAccelDevice2</string>
+		<string>IOAccelSharedUserClient</string>
+		<string>IOAccelSharedUserClient2</string>
+		<string>IOAccelSubmitter2</string>
+		<string>IOGPUDeviceUserClient</string>
+		<string>IOSurfaceRootUserClient</string>
+		<string>IOSurfaceAcceleratorClient</string>
+		<string>IOSurfaceAcceleratorParavirtClient</string>
+		<string>IOMobileFramebufferUserClient</string>
+		<string>AppleJPEGDriverUserClient</string>
+		<string>H11ANEInDirectPathClient</string>
+		<string>AppleVirtIONeuralEngineDeviceUserClient</string>
+		<string>IOHIDLibUserClient</string>
+		<string>IOHIDEventServiceFastPathUserClient</string>
+	</array>
 	<key>platform-application</key>
 	<true/>
 	<key>wiki.qaq.irisin.client</key>
