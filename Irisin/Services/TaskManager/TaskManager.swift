@@ -11,6 +11,7 @@ import AptResolver
 import Combine
 import Dog
 import Foundation
+import IrisinAdapter
 
 nonisolated extension Notification.Name {
     /// The queue, its plan or its revision changed. Posted on the main actor.
@@ -39,6 +40,17 @@ final class TaskManager {
     /// Lines the queue page closes with: held-back updates, diagnostics.
     private(set) var notices: [String] = []
     private(set) var revision = 0
+    /// Adapted packages whose file needs nothing from the adapter's
+    /// Pre-Depends (`inspect`); every solve hears of them.
+    private var adaptedWithoutPreDepends: Set<Package> = []
+    /// Every package `inspect` has looked at, whatever it found: once each.
+    private var inspected: Set<Package> = []
+    /// Inspections running, each until the solve after the last of them has
+    /// committed: the queue page does not run a plan while there are any.
+    private(set) var inspecting = 0
+    /// An inspection found a package that needs none, and no solve has
+    /// heard of it yet.
+    private var learned = false
 
     /// The Settings switch: a plan may remove Essential and Protected
     /// packages, and the helper is told to let them go. A queued plan is
@@ -111,7 +123,63 @@ final class TaskManager {
         // this starts what the plan needs and stops what it no longer does,
         // except a download Download Archive is waiting for
         DownloadCenter.shared.download(proposal.plan?.install ?? [])
+        // a .deb opened by hand is never downloaded: its file is here now
+        for package in proposal.plan?.install ?? [] {
+            if let file = package.localFileURL {
+                inspect(package, at: file)
+            }
+        }
         return true
+    }
+
+    /// The file of a package the plan installs is on disk. The resolver
+    /// gives every adapted package its adapter's Pre-Depends before anything
+    /// is downloaded; one whose file needs none (a theme: no Mach-O, no
+    /// code for the compat layer to load) is solved again without, so what
+    /// the Pre-Depends brought in, rootless-compat and patchloader, leaves
+    /// the queue before it runs. Called as the file is published, so the
+    /// queue page never sees the file without `inspecting` counting it.
+    func inspect(_ package: Package, at file: URL) {
+        guard let plan, plan.snapshot.adaptedPreDepends != nil, plan.snapshot.adapts(package),
+              plan.install.contains(package), inspected.insert(package).inserted
+        else { return }
+        inspecting += 1
+        Task {
+            if await Self.addsNoPreDepends(file) {
+                adaptedWithoutPreDepends.insert(package)
+                learned = true
+                Dog.shared.join(self, "\(package.identity) has no code, solving again without its compat layer", level: .info)
+                // the plan was solved under less than this: a proposal made
+                // before it no longer commits, and is solved again
+                changed()
+            }
+            // the last inspection out, with no adapted file of the plan still
+            // on its way (that one's inspection will), solves once for all
+            // of them, until the plan has heard of everything learned; a
+            // solve that changes nothing (blocked, staging begun) with
+            // nothing new learned meanwhile is the last try
+            let arriving = self.plan.map { plan in
+                plan.install.contains { package in
+                    plan.snapshot.adapts(package) && !inspected.contains(package)
+                        && DownloadCenter.shared.isDownloading(package.obtainDownloadLink())
+                }
+            } ?? false
+            if inspecting == 1, !arriving {
+                while let plan = self.plan, plan.snapshot.adaptedWithoutPreDepends != adaptedWithoutPreDepends {
+                    learned = false
+                    refreshTask?.cancel()
+                    let task = Task { await refresh(force: true) }
+                    refreshTask = task
+                    await task.value
+                    // a refresh the packages moving started in its place
+                    await settled()
+                    if self.plan?.id == plan.id, !learned {
+                        break
+                    }
+                }
+            }
+            inspecting -= 1
+        }
     }
 
     /// The queue touches the package: asked for, ticked, or brought in.
@@ -256,7 +324,11 @@ final class TaskManager {
     private func refresh(force: Bool = false) async {
         guard !TaskProcessor.shared.inProcessingQueue, let plan else { return }
         let revision = revision
-        if !force, await (try? Self.isCurrent(plan: plan, index: PackageCenter.default.index)) == true {
+        // current means the packages did not move and nothing was learned
+        // about them since (`inspect`)
+        if !force, plan.snapshot.adaptedWithoutPreDepends == adaptedWithoutPreDepends,
+           await (try? Self.isCurrent(plan: plan, index: PackageCenter.default.index)) == true
+        {
             return
         }
         guard !Task.isCancelled, revision == self.revision else { return }
@@ -264,7 +336,10 @@ final class TaskManager {
             guard case let .install(package) = action, let file = package.localFileURL else { return true }
             return FileManager.default.fileExists(atPath: file.path)
         }
-        let result = await proposal(actions: kept, cleanup: cleanup, notices: [])
+        // the request's own lines (held-back updates) outlive a solve; the
+        // old plan's go with it and the new plan says its own
+        let planned = Self.notices(of: plan)
+        let result = await proposal(actions: kept, cleanup: cleanup, notices: notices.filter { !planned.contains($0) })
         guard !Task.isCancelled, revision == self.revision else { return }
         switch result {
         case let .success(proposal):
@@ -307,7 +382,11 @@ final class TaskManager {
         var request = request
         request.allowSystemRemoval = allowSystemRemoval
         do {
-            let plan = try await Self.resolve(request: request, index: index)
+            let plan = try await Self.resolve(
+                request: request,
+                index: index,
+                adaptedWithoutPreDepends: adaptedWithoutPreDepends
+            )
             guard !TaskProcessor.shared.inProcessingQueue,
                   try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
                   // Revalidate actor-owned facts after the asynchronous status check.
@@ -350,9 +429,33 @@ final class TaskManager {
     @concurrent
     private nonisolated static func resolve(
         request: ResolutionRequest,
-        index: PackageIndex
+        index: PackageIndex,
+        adaptedWithoutPreDepends: Set<Package>
     ) async throws -> ResolutionPlan {
-        try PackageResolver.resolve(request: request, snapshot: index.resolutionSnapshot())
+        var snapshot = try index.resolutionSnapshot()
+        snapshot.adaptedWithoutPreDepends = adaptedWithoutPreDepends
+        return try PackageResolver.resolve(request: request, snapshot: snapshot)
+    }
+
+    /// Whether adapting this file adds no Pre-Depends, asked of the adapter
+    /// itself on a scratch copy. False on any failure, which keeps the plan
+    /// as solved: installing the compat layer for nothing is the old way,
+    /// leaving it out of a package that needs it fails the install.
+    /// ponytail: the package is unpacked and adapted here and again at
+    /// staging; staging could reuse this tree if big themes make it slow.
+    @concurrent
+    private nonisolated static func addsNoPreDepends(_ file: URL) async -> Bool {
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        do {
+            _ = try ArchiveStream.prepareDebianPackage(at: file, in: scratch)
+            return try PackageAdapters.installed.addsNoPreDepends(
+                adaptingPreparedPackageAt: scratch,
+                on: EnvironmentDetector.architecture
+            )
+        } catch {
+            return false
+        }
     }
 
     @concurrent

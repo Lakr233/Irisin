@@ -39,19 +39,23 @@ extension RootlessToRoothide {
 
     /// The control paragraph: blank lines dropped, the architecture renamed
     /// wherever it is spelled, a conflict with roothide defused, and
-    /// `preDepends` put in front of the field, spelled as it was given.
+    /// `preDepends`, when there is one, put in front of the field, spelled
+    /// as it was given.
     ///
     /// The resolver reads the package's own `Conflicts`, not this one, so a
     /// rootless package that conflicts with the bootstrap is refused a plan
     /// rather than offered one that removes it (`SolverPackage.protected`
     /// names `roothide`). Solving it as rewritten would mean teaching
     /// AptResolver this substitution, which it cannot see from here.
-    static func control(_ control: String, preDepends: String) -> String {
+    static func control(_ control: String, preDepends: String?) -> String {
         var lines = control.split(separator: "\n", omittingEmptySubsequences: true).map {
             $0.replacingOccurrences(of: "iphoneos-arm64", with: "iphoneos-arm64e")
         }
         lines = lines.map {
             $0.hasPrefix("Conflicts: ") ? $0.replacingOccurrences(of: "roothide", with: "r-o-o-t-l-e-s-s-") : $0
+        }
+        guard let preDepends else {
+            return lines.joined(separator: "\n") + (control.hasSuffix("\n") ? "\n" : "")
         }
         let field = "pre-depends:"
         guard lines.contains(where: { $0.lowercased().hasPrefix(field) }) else {

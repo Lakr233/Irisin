@@ -14,6 +14,10 @@ public struct ResolutionSnapshot: Sendable {
     /// rewrites. The adapter runs after resolution, so the solver has to
     /// hear of it here or the plan would miss what the helper then demands.
     public let adaptedPreDepends: String?
+    /// Adapted packages whose own file gave the adapter no reason for
+    /// `adaptedPreDepends` (no code for a compat layer to load). Learned
+    /// once the file is downloaded; solved without it from then on.
+    public var adaptedWithoutPreDepends: Set<Package> = []
     public let blockedUpdates: Set<String>
     /// The repository each installed identity came from, for those this
     /// app installed. An identity follows its repository: only that

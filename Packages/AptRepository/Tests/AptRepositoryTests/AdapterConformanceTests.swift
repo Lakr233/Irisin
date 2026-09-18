@@ -64,8 +64,24 @@ final class AdapterConformanceTests: XCTestCase {
     private func compare(_ ours: URL, _ theirs: URL, _ name: String) throws {
         let mine = try PreparedPackage.read(from: ours)
         let reference = try PreparedPackage.read(from: theirs)
-        XCTAssertEqual(mine.control, reference.control, name)
-        XCTAssertEqual(mine.controlFiles.mapValues(\.sha256), reference.controlFiles.mapValues(\.sha256), name)
+        // where the two part ways on purpose: the script gives every package
+        // the compat layer, the adapter only one with a Mach-O for it to
+        // load, which is one with a `.roothidepatch` link
+        // (put in front of the package's own field, or appended as a line)
+        var control = reference.control
+        if !mine.entries.contains(where: { $0.path.hasSuffix(".roothidepatch") }) {
+            let prefixed = "Pre-Depends: rootless-compat(>= 0.9),"
+            control = control.contains(prefixed)
+                ? control.replacingOccurrences(of: prefixed, with: "Pre-Depends:")
+                : control.replacingOccurrences(of: "Pre-Depends: rootless-compat(>= 0.9)\n", with: "")
+        }
+        XCTAssertEqual(mine.control, control, name)
+        // the control member is the paragraph above, compared as text
+        XCTAssertEqual(
+            mine.controlFiles.filter { $0.key != "control" }.mapValues(\.sha256),
+            reference.controlFiles.filter { $0.key != "control" }.mapValues(\.sha256),
+            name
+        )
 
         let entries = Dictionary(uniqueKeysWithValues: mine.entries.map { ($0.path, $0) })
         let expected = Dictionary(uniqueKeysWithValues: reference.entries.map { ($0.path, $0) })

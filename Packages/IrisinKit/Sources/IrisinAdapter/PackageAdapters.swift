@@ -34,6 +34,19 @@ public struct PackageAdapters: Sendable {
         adapters.first { $0.target.rawValue == current && $0.impliedPreDepends != nil }?.impliedPreDepends
     }
 
+    /// Whether adapting this prepared package for `current` leaves its
+    /// Pre-Depends without `impliedPreDepends(on:)`: a package with no
+    /// code for a compat layer to load (a theme). Answered by adapting the
+    /// tree, in place, so hand it a copy: the answer is staging's own and
+    /// cannot disagree with it. False when nothing adapts the package;
+    /// a refusal throws.
+    public func addsNoPreDepends(adaptingPreparedPackageAt directory: URL, on current: String) throws -> Bool {
+        guard let implied = impliedPreDepends(on: current),
+              try adapt(preparedPackageAt: directory, on: current) != nil
+        else { return false }
+        return try !PreparedPackage.read(from: directory).control.contains("Pre-Depends: \(implied)")
+    }
+
     /// The adapter that takes a package with this control paragraph to
     /// `current`, or nil when the package already fits (`all`, or built for
     /// `current`) or nothing here converts it. Whether the adapter will try

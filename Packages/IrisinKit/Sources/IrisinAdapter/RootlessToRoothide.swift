@@ -16,7 +16,10 @@ import IrisinProtocol
 ///   `/var/jb` strings still in the code at run time;
 /// - maintainer scripts and the control paragraph are edited
 ///   (`RootlessToRoothide+Text`), the control gaining the Pre-Depends the
-///   resolver was told about.
+///   resolver was told about when there is a Mach-O. The compat layer is
+///   there for code, so a package with none (a theme) goes without it and
+///   without `com.roothide.patchloader` behind it, where the script adds
+///   it to every package: the one place the two part ways.
 ///
 /// What is not a simple tweak is refused rather than half converted: a
 /// package with files outside `/var/jb`, a program or any Mach-O that is
@@ -167,7 +170,7 @@ public struct RootlessToRoothide: PackageAdapter {
             try tree.add(entry, parents: 501, reportedAs: reported)
         }
 
-        let control = Self.control(manifest.control, preDepends: Self.compatLayer)
+        let control = Self.control(manifest.control, preDepends: rewritten.isEmpty ? nil : Self.compatLayer)
         controlFiles["control"] = try store(Data(control.utf8))
         return try PreparedPackage(control: control, controlFiles: controlFiles, entries: tree.entries).write(to: directory)
     }

@@ -20,7 +20,8 @@ struct SolverPackage {
     /// only while the record needs a reinstall.
     ///
     /// A package an adapter rewrites is read as it will be once rewritten:
-    /// the snapshot's architecture and the adapter's Pre-Depends in front.
+    /// the snapshot's architecture and the adapter's Pre-Depends in front,
+    /// unless its downloaded file showed it gets none.
     init(_ package: Package, installed: Bool, action: ResolutionAction? = nil, in snapshot: ResolutionSnapshot) throws {
         guard package.payload.count == 1, let version = package.latestVersion,
               DebianVersion.isValid(version), var fields = package.latestMetadata
@@ -28,7 +29,7 @@ struct SolverPackage {
             throw ResolutionFailure(.unreadableVersion(package: package.identity))
         }
         let adapted = !installed && snapshot.adapts(package)
-        if adapted, let implied = snapshot.adaptedPreDepends {
+        if adapted, let implied = snapshot.adaptedPreDepends, !snapshot.adaptedWithoutPreDepends.contains(package) {
             let key = Group.RequirementType.preDepends.rawValue
             fields[key] = [implied, fields[key]].compactMap(\.self)
                 .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }

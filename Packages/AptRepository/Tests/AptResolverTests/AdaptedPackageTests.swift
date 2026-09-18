@@ -42,6 +42,29 @@ struct AdaptedPackageTests {
         #expect(try #require(order.firstIndex(of: "compat")) < order.firstIndex(of: "tweak")!)
     }
 
+    /// A theme's file showed it has no code: solved without the compat
+    /// layer, which then neither comes in nor is required, while a tweak
+    /// adapted beside it still brings it.
+    @Test func anAdaptedPackageWhoseFileNeedsNoneGetsNoImpliedPreDepends() throws {
+        let theme = pkg("theme", "1", foreign)
+        let tweak = pkg("tweak", "1", foreign)
+        let compat = pkg("compat", "1")
+        let alone = try solve(
+            [theme, compat], actions: [.install(theme)],
+            adapting: ["other"], implied: "compat(>= 0.9)", withoutImplied: [theme]
+        )
+        #expect(alone.install == [theme])
+        _ = try solve(
+            [theme], actions: [.install(theme)],
+            adapting: ["other"], implied: "compat(>= 0.9)", withoutImplied: [theme]
+        )
+        let both = try solve(
+            [theme, tweak, compat], actions: [.install(theme), .install(tweak)],
+            adapting: ["other"], implied: "compat(>= 0.9)", withoutImplied: [theme]
+        )
+        #expect(Set(both.install.map(\.identity)) == ["theme", "tweak", "compat"])
+    }
+
     @Test func missingImpliedPreDependsFailsTheAdaptedPackageAlone() throws {
         let tweak = pkg("tweak", "1", foreign)
         #expect(throws: (any Error).self) {

@@ -131,6 +131,27 @@ final class RootlessToRoothideTests: XCTestCase {
         XCTAssertEqual(digests[0], digests[1])
     }
 
+    /// A theme: nothing for the compat layer to load, so no Pre-Depends and
+    /// nothing it would bring in. A Mach-O under a name the patcher never
+    /// opens (`icon.png`) is no code either.
+    func testAPackageWithNoMachOGetsNoCompatLayer() throws {
+        let entries: [Entry] = try [
+            .file("var/jb/Library/Themes/Fixture.theme/Info.plist", Data("{}".utf8)),
+            .file("var/jb/Library/Themes/Fixture.theme/IconBundles/icon.png", fixture("input/Fixture.dylib")),
+            .file("var/jb/Library/Themes/.DS_Store", fixture("input/Fixture.dylib")),
+        ]
+        let theme = try prepared(entries: entries)
+        XCTAssertTrue(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: theme, on: "iphoneos-arm64e"))
+        let adapted = try PreparedPackage.read(from: theme)
+        XCTAssertEqual(adapted.control, "Package: com.example.fixture\nVersion: 1.0\nArchitecture: iphoneos-arm64e\n")
+        XCTAssertFalse(adapted.entries.contains { $0.path.hasSuffix(".roothidepatch") })
+
+        let code = try prepared(entries: entries + [.file(tweak, fixture("input/Fixture.dylib"))])
+        XCTAssertFalse(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: code, on: "iphoneos-arm64e"))
+        // on rootless no adapter adds anything, so there is nothing to leave out
+        XCTAssertFalse(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: code, on: "iphoneos-arm64"))
+    }
+
     /// ldid signs a file under its own name, so one blob the archive shares
     /// between two names comes out as two.
     func testOneBlobUnderTwoNames() throws {

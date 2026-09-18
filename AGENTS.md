@@ -112,10 +112,22 @@ end.
   `RootlessToRoothide` is roothide's own RootHidePatcher (`patch.sh`,
   Compat Layer) in Swift, nothing spawned: simple tweaks only, anything
   more refused with a typed failure, never installed as built. Its output
-  must equal the script's, blob for blob (`AdapterConformanceTests`, fed by
-  `Scripts/adapter-reference.sh`); Mach-O is read through MachOKit, and
+  must equal the script's, blob for blob, save the one difference below
+  (`AdapterConformanceTests`, fed by `Scripts/adapter-reference.sh`, writes
+  it down in `compare`); Mach-O is read through MachOKit, and
   ldid (AGPL) is matched byte for byte, never linked or ported. It adds
-  the `rootless-compat` Pre-Depends and never adds a repository. The queue
+  the `rootless-compat` Pre-Depends to a package with a Mach-O in it and
+  never adds a repository. A package with none (a theme) gets no
+  Pre-Depends, the one place it parts from the script on purpose. The
+  resolver adds it to every adapted package before anything downloads,
+  so `TaskManager.inspect` adapts each downloaded file on a scratch copy
+  and solves again without it where `adapt` left it out, and the queue
+  page waits while an inspection is out: rootless-compat and patchloader
+  leave the queue before it runs. Where that misses (a status left from
+  an earlier download, a catalogue refresh mid-download) the plan runs as
+  solved and the compat layer is installed for nothing, as it always was;
+  on the same file never the other way round, since the probe is `adapt`
+  itself. The queue
   asks before an adapted package joins it (Compatibility Mode).
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by

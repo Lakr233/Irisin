@@ -80,7 +80,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     }
 
     /// The plan the page last showed, to tell a new one from a redraw.
-    private var shownPlan: UUID?
+    private var shownPlan: ResolutionPlan?
     private var failure: String?
 
     /// Where the queue stands, for Execute to know what its tap means.
@@ -189,9 +189,23 @@ final class QueueController: UIViewController, UITableViewDelegate {
         guard isViewLoaded else { return }
         let manager = TaskManager.shared
         let plan = manager.plan
-        if plan?.id != shownPlan {
-            shownPlan = plan?.id
-            committed = false
+        if plan?.id != shownPlan?.id {
+            // a plan that only leaves out dependencies the one shown brought
+            // in (a theme's compat layer, once its file showed it has no
+            // code) is still what Execute agreed to; a request leaving, or
+            // anything else, asks again
+            let narrowed = if let plan, let shown = shownPlan {
+                Set(plan.remove) == Set(shown.remove)
+                    && Set(plan.install).isSubset(of: shown.install)
+                    && Set(shown.install).subtracting(plan.install)
+                    .allSatisfy { shown.autoInstalled.contains($0.identity) }
+            } else {
+                false
+            }
+            if !narrowed {
+                committed = false
+            }
+            shownPlan = plan
             failure = nil
         }
         emptyState.isHidden = plan != nil
@@ -360,6 +374,10 @@ final class QueueController: UIViewController, UITableViewDelegate {
             failure = nil
             DownloadCenter.shared.download(plan.install)
             reload()
+        case .ready where TaskManager.shared.inspecting > 0:
+            // a file is still being looked at: run once that is solved in
+            committed = true
+            follow(plan)
         case .stagingFailed, .ready:
             stageAndRun(plan)
         case .downloading:
@@ -371,19 +389,27 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     /// Follows the plan's missing files; each row follows its own.
     private func follow(_ plan: ResolutionPlan) {
+        // one watch per plan: an earlier one waking later would stage again
+        watch?.cancel()
+        watch = nil
         let pending = plan.install.filter { $0.localFileURL == nil }
-        guard !pending.isEmpty else {
-            stage = .ready
+        guard !pending.isEmpty || TaskManager.shared.inspecting > 0 else {
+            // a tap a narrowed plan carried over runs now
+            if committed {
+                stageAndRun(plan)
+            } else {
+                stage = .ready
+            }
             return
         }
         stage = .downloading
         refreshVisibleProgress()
-        watch?.cancel()
         watch = Task { [weak self] in
-            let failure = await Self.awaitDownloads(of: pending) { [weak self] in
+            let failure = await Self.awaitDownloads(of: pending, in: plan.id) { [weak self] in
                 self?.refreshVisibleProgress()
             }
-            guard !Task.isCancelled, let self else { return }
+            // a plan that replaced this one has a watch of its own
+            guard !Task.isCancelled, let self, TaskManager.shared.plan?.id == plan.id else { return }
             watch = nil
             refreshVisibleProgress()
             if let failure {
@@ -447,16 +473,19 @@ final class QueueController: UIViewController, UITableViewDelegate {
         present(console, animated: true)
     }
 
-    /// Waits until every one of these packages is on disk, or answers the
-    /// first download's failure.
+    /// Waits until every one of these packages is on disk and what the queue
+    /// learns from the files (`TaskManager.inspect`) is solved in, or
+    /// answers the first download's failure. Stops when `plan` is no longer
+    /// the queue's.
     private static func awaitDownloads(
         of packages: [Package],
+        in plan: UUID,
         progress: @MainActor () -> Void
     ) async -> String? {
         let center = DownloadCenter.shared
         // ponytail: polls the statuses four times a second; a publisher on
         // the statuses if the tick ever shows
-        while !Task.isCancelled {
+        while !Task.isCancelled, TaskManager.shared.plan?.id == plan {
             let statuses = packages.map { (package: $0, status: center.status(for: $0.obtainDownloadLink())) }
             // a retry's download keeps the old error until it first reports
             if let failed = statuses.first(where: {
@@ -464,7 +493,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             })?.status?.errorDescription {
                 return failed
             }
-            if statuses.allSatisfy({ $0.status?.file != nil }) {
+            if statuses.allSatisfy({ $0.status?.file != nil }), TaskManager.shared.inspecting == 0 {
                 return nil
             }
             // the queue starts every download it needs; one that is neither
