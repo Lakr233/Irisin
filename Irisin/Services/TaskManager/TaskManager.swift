@@ -189,10 +189,9 @@ final class TaskManager {
             || plan.map { ($0.install + $0.remove).contains { $0.identity == identity } } ?? false
     }
 
-    /// The version of the package the queue installs; nil when it installs
-    /// none.
-    func queuedVersion(of identity: String) -> String? {
-        plan?.install.first { $0.identity == identity }?.latestVersion
+    /// The package the queue installs, including its source file.
+    func queuedPackage(of identity: String) -> Package? {
+        plan?.install.first { $0.identity == identity }
     }
 
     /// Solves the queue without the package: its own request or tick, or
@@ -316,9 +315,10 @@ final class TaskManager {
         refreshTask = Task { await refresh() }
     }
 
-    /// The packages moved: a plan that no longer matches them is solved
-    /// again, and a local file the cache lost leaves the queue first. When
-    /// that fails the old plan stays, blocked, with the reason.
+    /// The packages moved: solve the original requests again. A missing
+    /// local file stays requested and fails staging; dropping it here could
+    /// let a repository copy satisfy another package's dependency instead.
+    /// When solving fails the old plan stays, blocked, with the reason.
     /// `force` solves again even when the packages did not move: the rules
     /// the plan was solved under did.
     private func refresh(force: Bool = false) async {
@@ -332,14 +332,10 @@ final class TaskManager {
             return
         }
         guard !Task.isCancelled, revision == self.revision else { return }
-        let kept = actions.filter { action in
-            guard case let .install(package) = action, let file = package.localFileURL else { return true }
-            return FileManager.default.fileExists(atPath: file.path)
-        }
         // the request's own lines (held-back updates) outlive a solve; the
         // old plan's go with it and the new plan says its own
         let planned = Self.notices(of: plan)
-        let result = await proposal(actions: kept, cleanup: cleanup, notices: notices.filter { !planned.contains($0) })
+        let result = await proposal(actions: actions, cleanup: cleanup, notices: notices.filter { !planned.contains($0) })
         guard !Task.isCancelled, revision == self.revision else { return }
         switch result {
         case let .success(proposal):

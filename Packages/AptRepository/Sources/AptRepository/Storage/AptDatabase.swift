@@ -264,8 +264,9 @@ final class AptDatabase: @unchecked Sendable {
     /// in the same transaction. `sources` are the packages a transaction
     /// just installed: each one from a repository that dpkg now reports at
     /// that version becomes the origin of its identity. A local `.deb` has
-    /// no repository to come back to and records nothing. An origin whose
-    /// identity or version dpkg no longer reports is dropped: the origin
+    /// no repository to come back to and clears any previous origin, even
+    /// at the same version. An origin whose identity or version dpkg no
+    /// longer reports is dropped: the origin
     /// table never knows more than dpkg does.
     func replaceInstalled(_ packages: [String: Package], installedFrom sources: [Package] = []) {
         let rows = packages.values.map { PackageRow($0, repo: "") }
@@ -275,6 +276,14 @@ final class AptDatabase: @unchecked Sendable {
         write { handle in
             try handle.delete(fromTable: Table.installed)
             try handle.insert(rows, intoTable: Table.installed)
+            for source in sources where source.localFileURL != nil
+                && packages[source.identity]?.latestVersion == source.latestVersion
+            {
+                try handle.delete(
+                    fromTable: Table.installOrigin,
+                    where: OriginRow.Properties.identity == source.identity
+                )
+            }
             try handle.insertOrReplace(origins, intoTable: Table.installOrigin)
             // two columns, not the payload: the decoder needs every column
             // of a row, and the row is the heavy part

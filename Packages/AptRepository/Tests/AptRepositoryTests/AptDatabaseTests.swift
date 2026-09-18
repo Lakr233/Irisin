@@ -137,6 +137,24 @@ final class AptDatabaseTests: XCTestCase {
         XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.shared", version: "0").count, 0)
     }
 
+    func testLocalReinstallClearsThePreviousRepositoryAtTheSameVersion() {
+        let installed = package("test.local", "1", repo: nil)
+        let remote = package(installed.identity, "1", repo: Self.repoA)
+        let packages = [installed.identity: installed]
+        db.replaceInstalled(packages, installedFrom: [remote])
+        XCTAssertEqual(index.obtainInstallOrigin(of: installed.identity), remote)
+
+        // An ordinary status refresh must preserve the recorded source.
+        db.replaceInstalled(packages)
+        XCTAssertEqual(db.installOrigins()[installed.identity], Self.repoA)
+
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("local.deb")
+        let local = package(installed.identity, "1", repo: nil, ["filename": file.absoluteString])
+        db.replaceInstalled(packages, installedFrom: [local])
+        XCTAssertNil(index.obtainInstallOrigin(of: installed.identity))
+        XCTAssertTrue(db.installOrigins().isEmpty)
+    }
+
     func testRefreshReplacesOnlyThatRepository() {
         seed()
         db.replacePackages(of: Self.repoB, with: [

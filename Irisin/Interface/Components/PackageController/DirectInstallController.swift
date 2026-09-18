@@ -85,7 +85,8 @@ class DirectInstallController: UIViewController {
     }
 
     /// Puts the file in a directory of its own under the direct-install
-    /// cache, where the package keeps pointing until the cache is cleared.
+    /// cache, where the package keeps pointing for this session. The next
+    /// launch clears it before accepting imports.
     ///
     /// An inbox copy is ours to take and is moved. A file opened in place is
     /// the user's, still listed in their Files app: it is copied under a

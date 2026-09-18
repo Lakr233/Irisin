@@ -274,6 +274,9 @@ public enum PackageResolver {
             throw removalBlock(stayed, base: selected, universe: universe, kept: kept)
                 ?? ResolutionFailure(.unresolvable)
         }
+        // These indices identify full package records, including source and
+        // archive metadata. Matching only identity/version would allow a
+        // different file to stand in for the one the user chose.
         guard explicitInstall.isSubset(of: selected) else {
             throw ResolutionFailure(.unresolvable)
         }

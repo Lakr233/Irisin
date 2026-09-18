@@ -43,7 +43,7 @@ extension PackageBannerView {
 
     /// What a tap does: the first eligible action for a file or a package
     /// that is not installed, Update for one that is and has a newer
-    /// version, Replace for one the queue installs at another version. nil
+    /// version, Replace for a different queued package record. nil
     /// when the tap opens the menu instead, as it does for a package queued
     /// as it is.
     func obtainQuickAction() -> PackageMenuAction.MenuAction? {

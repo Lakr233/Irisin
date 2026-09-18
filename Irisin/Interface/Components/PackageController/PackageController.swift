@@ -199,19 +199,13 @@ class PackageController: UIViewController {
         packageObject.repoRef == nil && packageObject.localFileURL == nil
     }
 
-    /// The package as the center describes it now: a transaction may have
-    /// run while the page was covered, and the button says what it did.
+    /// Refresh installed status after a transaction. An explicitly opened
+    /// package keeps its version, source and metadata while this page lives.
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        let center = PackageCenter.default
-        let fresh = if let repository = packageObject.repoRef {
-            center.obtainPackage(with: packageObject.identity, in: repository)
-        } else if showsInstalledRow {
-            center.obtainPackageInstallationInfo(with: packageObject.identity)?.representObject
-        } else {
-            Package?.none
-        }
-        if let fresh {
+        if showsInstalledRow,
+           let fresh = PackageCenter.default.obtainPackageInstallationInfo(with: packageObject.identity)?.representObject
+        {
             packageObject = fresh
         }
         // settled before the button animates: a page whose first layout

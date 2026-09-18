@@ -1,10 +1,61 @@
-import AptRepository
+@testable import AptRepository
 import AptResolver
 @testable import irisin
 import UIKit
 import XCTest
 
 final class TaskResolutionTests: XCTestCase {
+    @MainActor
+    func testMissingLocalFileStaysPinnedAcrossQueueRefresh() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let db = AptDatabase(at: directory.appendingPathComponent("apt.db"))
+        let center = PackageCenter.default
+        let previous = center.index
+        center.index = PackageIndex(db: db)
+        let manager = TaskManager.shared
+        XCTAssertNil(manager.plan)
+        defer {
+            manager.clear()
+            center.index = previous
+        }
+
+        let file = directory.appendingPathComponent("local.deb")
+        try Data().write(to: file)
+        let local = Package(identity: "test.pinned", payload: ["1": [
+            "architecture": "all", "filename": file.absoluteString,
+        ]])
+        let dependent = Package(identity: "test.dependent", payload: ["1": [
+            "architecture": "all", "filename": directory.appendingPathComponent("dependent.deb").absoluteString,
+            "depends": local.identity,
+        ]])
+        guard case let .success(proposal) = await manager.propose([.install(local), .install(dependent)]) else {
+            return XCTFail("The explicitly selected local packages must solve")
+        }
+        XCTAssertTrue(manager.commit(proposal))
+
+        try FileManager.default.removeItem(at: file)
+        let repository = try XCTUnwrap(URL(string: "https://example.test/"))
+        let remote = Package(identity: local.identity, payload: ["2": [
+            "architecture": "all", "filename": "pool/replacement.deb",
+        ]], repoRef: repository)
+        db.replacePackages(of: repository, with: [remote.identity: remote])
+        NotificationCenter.default.post(name: PackageCenter.packageRecordChanged, object: nil)
+        // Let receive(on: .main) schedule the queue's refresh before awaiting it.
+        await withCheckedContinuation { done in
+            DispatchQueue.main.async { done.resume() }
+        }
+        await manager.settled()
+
+        let refreshed = try XCTUnwrap(manager.plan)
+        XCTAssertNotEqual(refreshed.id, proposal.plan?.id)
+        XCTAssertEqual(Set(manager.actions.map(\.identity)), [local.identity, dependent.identity])
+        XCTAssertEqual(Set(refreshed.install), [local, dependent])
+        let operation = await TaskProcessor.shared.createOperationPayload(plan: refreshed)
+        XCTAssertNil(operation, "A missing selected file must fail instead of installing a repository substitute")
+    }
+
     @MainActor
     func testRefusedRequestReportsAndLeavesNothingBehind() async throws {
         let broken = Package(

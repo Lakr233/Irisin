@@ -15,7 +15,7 @@ import UIKit
 class PackageMenuAction {
     enum ActionDescriptor: String, CaseIterable {
         case dequeue
-        /// The queue installs another version: this one takes its place.
+        /// The queue installs a different package record: this one takes its place.
         case replace
         case directInstall
         case install

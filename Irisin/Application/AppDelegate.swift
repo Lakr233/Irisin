@@ -66,6 +66,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             break
         }
 
+        // Local package pages and the queue live for this process only.
+        // Clear their private archive copies before accepting new imports;
+        // a running helper uses its separate, prepared transaction files.
+        let imports = documentsDirectory.appendingPathComponent("DirectInstallCache")
+        if FileManager.default.fileExists(atPath: imports.path) {
+            do {
+                try FileManager.default.removeItem(at: imports)
+            } catch {
+                Dog.shared.join("App", "could not clear previous local package imports: \(error)", level: .warning)
+            }
+        }
+
         // MARK: - Properties
 
         Properties.setup(storeAt: documentsDirectory.appendingPathComponent("Settings")) { str in
