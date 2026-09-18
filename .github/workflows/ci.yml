@@ -1,5 +1,6 @@
-# Pushes and pull requests: build, package, measure, keep the artifacts for
-# thirty days. Nothing is published from here — a tag goes to `release.yml`.
+# Pushes and pull requests: test and measure on the host, and in parallel
+# build and package, keeping the packages for thirty days. Nothing is
+# published from here — a tag goes to `release.yml`.
 name: CI
 
 on:
@@ -22,6 +23,41 @@ env:
   HOMEBREW_NO_ANALYTICS: "1"
 
 jobs:
+  # Minutes where the build takes the better part of an hour, so a broken
+  # test says so long before the packages would. Host only: `swift build`
+  # has no flat Products directory and needs no case-sensitive volume.
+  test:
+    name: Host tests and resolver measurements
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select newest Xcode
+        run: |
+          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+
+      - name: Run host tests
+        run: make harness
+
+      - name: Measure resolver performance on generated catalogues
+        run: |
+          swift build --package-path Packages/AptRepository -c release --product ResolverProbe
+          probe_dir="$(swift build --package-path Packages/AptRepository -c release --show-bin-path)"
+          python3 Scripts/apt-oracle/benchmark.py --probe "$probe_dir/ResolverProbe"
+
+      - name: Upload resolver measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: resolver-benchmarks
+          path: build/resolver-benchmarks/report.json
+
   build:
     name: Build and verify Debian packages
     runs-on: macos-26
@@ -72,20 +108,11 @@ jobs:
             brew install "${formulae[@]}"
           fi
 
-      - name: Build and package both flavours
-        run: make deb-all CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+      - name: Compile
+        run: make compile CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
 
-      - name: Measure resolver performance on generated catalogues
-        run: |
-          swift build --package-path Packages/AptRepository -c release --product ResolverProbe
-          probe_dir="$(swift build --package-path Packages/AptRepository -c release --show-bin-path)"
-          python3 Scripts/apt-oracle/benchmark.py --probe "$probe_dir/ResolverProbe"
-
-      - name: Upload resolver measurements
-        uses: actions/upload-artifact@v4
-        with:
-          name: resolver-benchmarks
-          path: build/resolver-benchmarks/report.json
+      - name: Package and verify both flavours
+        run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
 
       - name: Write checksums
         shell: bash

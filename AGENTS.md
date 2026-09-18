@@ -289,7 +289,10 @@ a version bump, like icli.
 - `make test` — the IrisinUnitTest bundle inside the app on the booted
   simulator (`SIMULATOR=<udid>` to pick one).
 - `make check` — project and packaging validation.
-- `make build` — unsigned app, daemon and helper for iPhoneOS. The build
+- `make build` — the harness, then `make compile`: unsigned app, daemon
+  and helper for iPhoneOS, checked and built with no tests (CI and the
+  release run the harness as a job of its own beside it, then `make
+  _packages`). The build
   number is the git commit count (`BUILD_NUMBER=n` to override; CI passes
   its run number), handed to xcodebuild on the command line. Nothing in the
   tree changes from building; `Version.xcconfig` holds only

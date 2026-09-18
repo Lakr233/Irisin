@@ -96,8 +96,8 @@ $(error BUILD_NUMBER is empty: not a git checkout, pass BUILD_NUMBER=n)
 endif
 
 .PHONY: all help print-version print-build-number print-deb-path print-flavor \
-	set-version check harness test build sim _build-ios _package-deb \
-	deb deb-roothide deb-rootless deb-all install clean
+	set-version check harness test build compile sim _build-ios _package-deb \
+	_packages deb deb-roothide deb-rootless deb-all install clean
 
 all: deb-all
 
@@ -106,7 +106,8 @@ help:
 	@echo "  harness     Run the IrisinKit and AptRepository tests on macOS (no device, no simulator)"
 	@echo "  test        Run the IrisinUnitTest bundle inside the app on the booted simulator"
 	@echo "  check       Validate the Xcode project and packaging inputs"
-	@echo "  build       Build the unsigned irisin.app, irisind and irisin-install for iPhoneOS"
+	@echo "  build       Run the harness, then compile"
+	@echo "  compile     Build the unsigned irisin.app, irisind and irisin-install for iPhoneOS, no tests"
 	@echo "  sim         Build Debug and launch the app on the booted simulator"
 	@echo "  deb         Build, ad-hoc sign, package, and verify the .deb for FLAVOR (default roothide)"
 	@echo "  deb-all     Package both the roothide and the rootless .deb"
@@ -220,7 +221,11 @@ test:
 		-collect-test-diagnostics never \
 		test
 
-build: check harness
+build: harness compile
+
+# CI runs the harness and this compilation as two jobs in parallel;
+# publication waits for both.
+compile: check
 	@$(MAKE) --no-print-directory _build-ios
 
 _build-ios:
@@ -276,6 +281,10 @@ deb-rootless:
 	@$(MAKE) --no-print-directory deb FLAVOR=rootless
 
 deb-all: build
+	@$(MAKE) --no-print-directory _packages
+
+# One compilation, packaged twice: the two flavours differ in layout only.
+_packages:
 	@$(MAKE) --no-print-directory _package-deb FLAVOR=roothide
 	@$(MAKE) --no-print-directory _package-deb FLAVOR=rootless
 

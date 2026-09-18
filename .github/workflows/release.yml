@@ -9,9 +9,9 @@
 # is a single compile job.
 #
 # The test job is the fast signal: `make harness` fails in minutes where the
-# compile job would take the better part of an hour to reach the same
-# failure (`make deb-all` runs `check` and `harness` itself before it
-# builds).
+# compile job takes the better part of an hour, and the two run in
+# parallel. The compile job runs `make compile`, which checks and builds
+# and tests nothing, so the harness runs once per release, here.
 #
 # `ci.yml` validates pushes and pull requests and publishes nothing. Tags
 # arrive here.
@@ -82,9 +82,14 @@ jobs:
       - name: Apply tag version
         if: github.ref_type == 'tag'
         run: make set-version VERSION="$GITHUB_REF_NAME"
+      - name: Compile
+        run: |
+          make compile CONFIGURATION=Release \
+            DERIVED_DATA=/Volumes/IrisinBuild/irisin-derived \
+            BUILD_NUMBER="$GITHUB_RUN_NUMBER"
       - name: Package and verify both flavours
         run: |
-          make deb-all CONFIGURATION=Release \
+          make _packages CONFIGURATION=Release \
             DERIVED_DATA=/Volumes/IrisinBuild/irisin-derived \
             BUILD_NUMBER="$GITHUB_RUN_NUMBER"
       # Named, not globbed: the checksums must account for exactly the two
