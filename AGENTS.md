@@ -362,6 +362,21 @@ is `/var/jb/var/log/irisin-install.log`.
   'libarchive'". Xcode 27 lets `import libarchive` through and Xcode 26,
   which is what the macos-26 runner has, does not; importing the wrapper is
   unambiguous on both. If the error comes back, that is where to look.
+- **The project is built with Xcode 27 and CI has 26.6.** The runner image
+  has no Xcode 27, so two things on CI are workarounds and both come out
+  the day it does:
+  - `xcodebuild` writes `LibArchive.swiftmodule` and `libarchive.swiftmodule`
+    into one flat Products directory, and on a case-insensitive volume that
+    is one directory: the compiler opens the wrapper when asked for the
+    binary module and refuses it. `ci.yml` and `release.yml` put DerivedData
+    on a case-sensitive sparse image to keep the two apart. Importing the
+    wrapper does not help — its `@_exported import libarchive` puts both in
+    the map either way. `swift build` is unaffected; only `xcodebuild` has
+    the flat directory.
+  - `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and not
+    in Xcode 26's, and `#available` guards the call, not the reference, so
+    `HandyTabBarController` sets it through KVC under its `iOS 27.0` check.
+    Same behaviour, any SDK.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller
   `isShowingColumn:`, which iOS 26 answers with an exception, and nothing

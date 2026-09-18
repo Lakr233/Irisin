@@ -66,6 +66,17 @@ jobs:
           xcodebuild -version
       - name: Install packaging tools
         run: brew install ldid dpkg
+      # DerivedData goes on a case-sensitive volume, for the reason spelled
+      # out in ci.yml: libarchive.xcframework's two modules differ by case
+      # alone and Xcode writes both into one flat Products directory. Drop
+      # this step the day the runner image ships Xcode 27.
+      - name: Case-sensitive volume for DerivedData
+        run: |
+          set -euo pipefail
+          image="$RUNNER_TEMP/derived.sparseimage"
+          hdiutil create -size 60g -fs 'Case-sensitive APFS' -volname IrisinBuild \
+            -type SPARSE -quiet "$image"
+          hdiutil attach "$image" -mountpoint /Volumes/IrisinBuild -quiet
       # The tag is the version. The run number is the build number, so the
       # two packages carry one and the same CFBundleVersion.
       - name: Apply tag version
@@ -74,7 +85,7 @@ jobs:
       - name: Package and verify both flavours
         run: |
           make deb-all CONFIGURATION=Release \
-            DERIVED_DATA="$RUNNER_TEMP/irisin-derived" \
+            DERIVED_DATA=/Volumes/IrisinBuild/irisin-derived \
             BUILD_NUMBER="$GITHUB_RUN_NUMBER"
       # Named, not globbed: the checksums must account for exactly the two
       # files the release carries, and a missing one fails here.
