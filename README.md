@@ -2,53 +2,64 @@
 
 ## Modern. Fast. Beautiful.
 
-Irisin is a modern APT package manager for jailbroken devices running iOS/iPadOS 15 and above.
-
-One binary serves both **rootless** (Dopamine, `/var/jb`) and **roothide** bootstraps. The app runs as `mobile` and never as root: the package ships a small on-demand LaunchDaemon, `irisind`, which authenticates the app over XPC and starts `irisin-install` for one job at a time. That helper installs packages natively and registers app bundles with LaunchServices itself, through [icli](https://github.com/owngoal-dev/icli) linked in as a library, in its own session, so even an Irisin self-update runs to the end. See `AGENTS.md` for the rules and `Packages/IrisinKit` for the wire protocol.
+Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 16 or later. It works with both rootless jailbreaks, such as Dopamine, and roothide.
 
 ![Preview](Resources/main.jpeg)
 
-## Irisin Features
+## Features
 
-- [x] Unique UI for **both** iPhone and iPad
-- [x] Import all your repositories from Cydia, Sileo, Zebra, and Installer
-- [x] Add and manage repositories without limitation
-- [x] Built to work alongside all your other package managers
-- [x] Support for Web Depictions with dark mode
-- [x] Support for Native Depictions with dark mode
-- [x] Support for paid packages
-- [x] Clear Version Control page listing all available versions and repositories
-- [x] Clean and stable packaging using CI
-- [x] Random device info for free packages
-- [x] Fully open-sourced under the MIT License
-- [x] Quick actions (respring, rebuild icons, safe mode) via the Settings page
+- Designed for both iPhone and iPad
+- A welcome page on first launch, with recommended repositories for your jailbreak
+- Add a repository from a link, and export or import your repository list to move it to another device
+- Search across packages, repositories, and authors, and narrow any package list with its own search bar
+- Package pages that follow light and dark mode
+- Install any version a repository offers, and block updates for packages you want to keep as they are
+- Buy paid packages and sign in to your vendor accounts
+- On roothide, install simple rootless tweaks in Compatibility Mode
+- Rebuild icons and reload the Home Screen from Settings
+- Update Irisin from inside Irisin
+- Available in 13 languages
+- Open source under the MIT License
 
-## Bug Reports, Feature Requests, & Feedback
+## Installation
 
-For support related to Irisin, open up an issue. Before reporting an issue, check if it has already been reported to avoid duplicates.
+Download the package for your jailbreak from [Releases](https://github.com/Lakr233/Irisin/releases):
 
-If your issue is related to a crash, attach the application log, typically located at `/var/mobile/Documents/wiki.qaq.irisin/Journal/`. This plain text document may include sensitive information (e.g., searched text, repository URLs), so review it before uploading.
+| Jailbreak | Package |
+| --- | --- |
+| roothide | `iphoneos-arm64e` |
+| rootless (`/var/jb`) | `iphoneos-arm64` |
 
-## Compiling the Project
+Irisin checks your jailbreak when it opens. If you installed the wrong package, Irisin tells you which one to install instead.
 
-Open `Irisin.xcodeproj` for development. For packages:
+## Report a Problem
+
+Choose Report an Issue in Settings, or [open an issue on GitHub](https://github.com/Lakr233/Irisin/issues/new). Search the existing issues first to avoid duplicates.
+
+If Irisin crashes or an installation fails, include the log from View Logs in Settings. The log may contain your searches and repository addresses, so review it before you share it.
+
+## Build from Source
+
+Open `Irisin.xcodeproj` in Xcode. To build the packages:
 
 ```sh
-make harness      # IrisinKit tests on the Mac
-make deb-all      # roothide and rootless .deb, ad-hoc signed and verified
-make install      # update a device behind `iproxy 2333 22`
+make harness      # run the tests on the Mac
+make deb-all      # build the roothide and rootless packages
+make install      # update a device connected through `iproxy 2333 22`
 ```
 
-`ldid` and `dpkg` from Homebrew are required. Versions live in `Configuration/Version.xcconfig`.
+You need `ldid` and `dpkg` from Homebrew. Notes for contributors are in [AGENTS.md](AGENTS.md).
 
-- This product includes software developed by the Sileo Team.
+## Acknowledgements
+
+This product includes software developed by the Sileo Team.
 
 #### "While the world sleeps, we dream."
 
 ## Sponsor
 
-[LookInside](https://lookinside-app.com/) helps you inspect a running iOS or macOS app UI from your Mac.
+[LookInside](https://lookinside-app.com/) lets you inspect the interface of a running iOS or macOS app from your Mac.
 
 ---
 
-Copyright © 2024 OwnGoal Studio. All Rights Reserved.
+Copyright © 2026 OwnGoal Studio. Released under the [MIT License](LICENSE).
