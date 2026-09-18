@@ -12,6 +12,8 @@ import UIKit
 /// user's default text size; each scales with Dynamic Type along the curve
 /// of the nearest system text style (`textStyle`).
 enum TypeSize: CGFloat {
+    /// The welcome page's title, the one text larger than a screen title.
+    case display = 32
     /// Screen titles.
     case largeTitle = 28
     /// Package names, iPad section titles.
@@ -35,7 +37,7 @@ enum TypeSize: CGFloat {
 
     var textStyle: UIFont.TextStyle {
         switch self {
-        case .largeTitle: .largeTitle
+        case .display, .largeTitle: .largeTitle
         case .title, .icon: .title2
         case .headline: .title3
         case .body: .body

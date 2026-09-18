@@ -71,6 +71,31 @@ class SettingController: UITableViewController {
         super.viewDidLoad()
         title = String(localized: "Settings")
         navigationItem.largeTitleDisplayMode = .never
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis"),
+            menu: UIMenu(children: [
+                UIAction(
+                    title: String(localized: "Show Welcome Page"),
+                    image: UIImage(systemName: "hand.wave")
+                ) { [weak self] _ in
+                    self?.present(WelcomeController.makeNavigator(), animated: true)
+                },
+                UIAction(
+                    title: String(localized: "Open System Settings"),
+                    image: UIImage(systemName: "gear")
+                ) { _ in
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(url)
+                },
+                UIAction(
+                    title: String(localized: "Report an Issue"),
+                    image: UIImage(systemName: "exclamationmark.bubble")
+                ) { _ in
+                    guard let url = URL(string: "https://github.com/Lakr233/Irisin/issues/new") else { return }
+                    UIApplication.shared.open(url)
+                },
+            ])
+        )
         // the grouped ground: the page and the cards match every other
         // inset grouped list in the app
         view.backgroundColor = .groupedBackground

@@ -36,6 +36,15 @@ class NavigatorEnterViewController: UIViewController {
         setExceptedRootViewController()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // a link that opened the app gets its sheet; onboarding waits for
+        // the next time the interface appears
+        if WelcomeController.shouldPresent, presentedViewController == nil {
+            present(WelcomeController.makeNavigator(), animated: true)
+        }
+    }
+
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         setExceptedRootViewController()
