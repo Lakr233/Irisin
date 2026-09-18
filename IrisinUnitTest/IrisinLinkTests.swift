@@ -16,26 +16,26 @@ struct IrisinLinkTests {
 
     // MARK: - REPOSITORIES
 
-    @Test func oneAddressIsOneFlatRepository() {
-        #expect(sources("irisin://repository/add?url=https://apt.procurs.us") == [
-            RepositorySource(url: URL(string: "https://apt.procurs.us")!),
+    @Test func oneAddressIsOneFlatRepository() throws {
+        #expect(try sources("irisin://repository/add?url=https://apt.procurs.us") == [
+            RepositorySource(url: #require(URL(string: "https://apt.procurs.us"))),
         ])
     }
 
     /// The trailing slash apt writes and a browser keeps is not part of the
     /// address the center stores.
-    @Test func aTrailingSlashIsNotPartOfTheAddress() {
-        #expect(sources("irisin://repository/add?url=https://apt.procurs.us/") == [
-            RepositorySource(url: URL(string: "https://apt.procurs.us")!),
+    @Test func aTrailingSlashIsNotPartOfTheAddress() throws {
+        #expect(try sources("irisin://repository/add?url=https://apt.procurs.us/") == [
+            RepositorySource(url: #require(URL(string: "https://apt.procurs.us"))),
         ])
     }
 
-    @Test func aSuiteAndItsComponentsDescribeOneRepository() {
+    @Test func aSuiteAndItsComponentsDescribeOneRepository() throws {
         #expect(
-            sources("irisin://repository/add?url=https://apt.procurs.us&suite=2000&component=main&component=contrib")
+            try sources("irisin://repository/add?url=https://apt.procurs.us&suite=2000&component=main&component=contrib")
                 == [
                     RepositorySource(
-                        url: URL(string: "https://apt.procurs.us")!,
+                        url: #require(URL(string: "https://apt.procurs.us")),
                         distribution: "2000",
                         components: ["main", "contrib"]
                     ),
@@ -43,10 +43,10 @@ struct IrisinLinkTests {
         )
     }
 
-    @Test func severalAddressesAreSeveralFlatRepositories() {
-        #expect(sources("irisin://repository/add?url=https://one.example.com&url=http://two.example.com") == [
-            RepositorySource(url: URL(string: "https://one.example.com")!),
-            RepositorySource(url: URL(string: "http://two.example.com")!),
+    @Test func severalAddressesAreSeveralFlatRepositories() throws {
+        #expect(try sources("irisin://repository/add?url=https://one.example.com&url=http://two.example.com") == [
+            RepositorySource(url: #require(URL(string: "https://one.example.com"))),
+            RepositorySource(url: #require(URL(string: "http://two.example.com"))),
         ])
     }
 

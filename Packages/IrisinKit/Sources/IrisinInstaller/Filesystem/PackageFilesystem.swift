@@ -95,8 +95,8 @@ final class PackageFilesystem {
         layout: BootstrapLayout,
         under base: String = "/"
     ) -> String? {
-        // split at every `/` byte, as the kernel splits: `String` would take
-        // one with a combining mark after it for a character of a name
+        /// split at every `/` byte, as the kernel splits: `String` would take
+        /// one with a combining mark after it for a character of a name
         func components(_ path: String) -> [String] {
             path.utf8.split(separator: 0x2F).map { String(decoding: $0, as: UTF8.self) }
         }

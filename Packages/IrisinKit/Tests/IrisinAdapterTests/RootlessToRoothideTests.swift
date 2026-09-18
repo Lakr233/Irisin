@@ -388,7 +388,7 @@ final class RootlessToRoothideTests: XCTestCase {
         let library = try fixture("input/Fixture.dylib")
         // its one `/var/jb/` name spelled otherwise, so only ldid opens it
         var bundle = try fixture("input/FixtureBundle")
-        bundle.replaceSubrange(try XCTUnwrap(bundle.range(of: Data("/var/jb/".utf8))), with: Data("/var/JB/".utf8))
+        try bundle.replaceSubrange(XCTUnwrap(bundle.range(of: Data("/var/jb/".utf8))), with: Data("/var/JB/".utf8))
         let directory = try prepared(entries: [
             .directory("var"), .directory("var/jb"), .directory("var/jb/usr", group: 20), .directory("var/jb/usr/lib", group: 20),
             .file("var/jb/usr/lib/owned.dylib", library, mode: 0o775, owner: (501, 501)),

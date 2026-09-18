@@ -39,10 +39,6 @@ nonisolated struct RepositoryListFile: Codable {
     var format = currentRepositoryFileFormat
     var sources: [RepositorySource]
 
-    init(sources: [RepositorySource]) {
-        self.sources = sources
-    }
-
     func encoded() throws -> Data {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml

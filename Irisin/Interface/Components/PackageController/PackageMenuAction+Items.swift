@@ -37,6 +37,7 @@ extension PackageMenuAction {
             block: resolveInstallRequest,
             eligibleForPerform: { package in
                 package.localFileURL != nil
+                    && PackageCenter.default.obtainPackageInstallationInfo(with: package.identity) == nil
             }
         ),
         .init(
@@ -62,13 +63,11 @@ extension PackageMenuAction {
                 if package.obtainDownloadLink() == PackageBadUrl {
                     return false
                 }
-                if package.localFileURL != nil {
-                    return false
-                }
                 // this row is the candidate, whichever repository it is
                 // from: taking it by hand is how the user moves a package
-                // to another repository
-                if !PackageCenter.default.blockedUpdateTable.contains(package.identity),
+                // to another repository. A file explicitly opened by the
+                // user can update even when repository updates are blocked.
+                if package.localFileURL != nil || !PackageCenter.default.blockedUpdateTable.contains(package.identity),
                    let info = PackageCenter
                    .default
                    .obtainPackageInstallationInfo(with: package.identity),
@@ -86,13 +85,10 @@ extension PackageMenuAction {
                 if package.obtainDownloadLink() == PackageBadUrl {
                     return false
                 }
-                if package.localFileURL != nil {
-                    return false
-                }
-                let info = PackageCenter
-                    .default
-                    .obtainPackageInstallationInfo(with: package.identity)
-                return info?.version == package.latestVersion && info?.version != nil
+                guard let info = PackageCenter.default.obtainPackageInstallationInfo(with: package.identity),
+                      let current = package.latestVersion
+                else { return false }
+                return Package.compareVersion(current, b: info.version) == .aIsEqualToB
             }
         ),
         .init(
@@ -100,9 +96,6 @@ extension PackageMenuAction {
             block: resolveInstallRequest,
             eligibleForPerform: { package in
                 if package.obtainDownloadLink() == PackageBadUrl {
-                    return false
-                }
-                if package.localFileURL != nil {
                     return false
                 }
                 guard let info = PackageCenter

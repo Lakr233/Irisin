@@ -7,8 +7,18 @@ import UIKit
 
 @MainActor
 struct LocalPackageActionTests {
-    @Test(arguments: ["4.0.6", "4.0.5", "4.0.3", "4.0.2"])
-    func localFileSurvivesAnAvailableRepositoryUpdate(version: String) throws {
+    @Test(arguments: [
+        ("4.0.8", PackageMenuAction.ActionDescriptor.update, QueueChange.Kind.update),
+        ("4.0.5", .update, .update),
+        ("4.0.3", .reinstall, .reinstall),
+        ("4.0.3-0", .reinstall, .reinstall),
+        ("4.0.2", .downgrade, .downgrade),
+    ])
+    func localFileSurvivesAnAvailableRepositoryUpdate(
+        version: String,
+        action: PackageMenuAction.ActionDescriptor,
+        change: QueueChange.Kind
+    ) throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -39,7 +49,9 @@ struct LocalPackageActionTests {
         let banner = page.bannerPackageView
         #expect(page.packageObject == local)
         #expect(banner.package == local)
-        #expect(banner.obtainQuickAction()?.descriptor == .directInstall)
+        #expect(banner.obtainQuickAction()?.descriptor == action)
+        #expect(banner.button.title(for: .normal) == action.describe())
+        #expect(!banner.button.showsMenuAsPrimaryAction)
         #expect(banner.package.localFileURL == file)
         #expect(banner.package.repoRef == nil)
 
@@ -52,6 +64,16 @@ struct LocalPackageActionTests {
             snapshot: .init(packages: [remote, dependency], installed: [installed], architecture: "iphoneos-arm64")
         )
         #expect(Set(plan.install) == [local, dependency])
+        #expect(plan.remove.isEmpty)
+        let changes = QueueChange.changes(of: plan, requested: [local.identity])
+        #expect(changes[local.identity]?.kind == change)
+        #expect(changes[local.identity]?.package == local)
+
+        // Blocking repository updates does not change an explicit file's action.
+        let previousBlocked = center.blockedUpdateTable
+        defer { center.blockedUpdateTable = previousBlocked }
+        center.blockedUpdateTable.append(local.identity)
+        #expect(banner.obtainQuickAction()?.descriptor == action)
 
         // Choosing a repository version is explicit too, including a downgrade.
         let picked = Package(identity: installed.identity, payload: ["4.0.2": [
@@ -61,6 +83,18 @@ struct LocalPackageActionTests {
         page.viewWillAppear(false)
         #expect(page.packageObject == picked)
         #expect(page.bannerPackageView.package == picked)
+    }
+
+    @Test
+    func uninstalledLocalFileOffersInstall() {
+        let local = Package(identity: "test.new-local", payload: ["4.0.8": [
+            "architecture": "all",
+            "filename": FileManager.default.temporaryDirectory.appendingPathComponent("new.deb").absoluteString,
+        ]])
+        let banner = PackageBannerView(package: local)
+        #expect(banner.obtainQuickAction()?.descriptor == .directInstall)
+        #expect(banner.button.title(for: .normal) == String(localized: "Install").uppercased())
+        #expect(!PackageMenuAction.eligibleActions(for: local).contains { $0.descriptor == .remove })
     }
 
     @Test

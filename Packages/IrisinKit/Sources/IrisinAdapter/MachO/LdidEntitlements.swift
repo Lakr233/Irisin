@@ -205,9 +205,12 @@ struct LdidEntitlements: Equatable {
         case let .array(values):
             tagged(0x30, values.flatMap(der))
         case let .dictionary(entries):
-            tagged(0x31, entries.map { tagged(0x30, tagged(0x0C, Array($0.key.utf8)) + der($0.value)) }
-                .sorted { $0.lexicographicallyPrecedes($1) }
-                .flatMap(\.self))
+            tagged(
+                0x31,
+                entries.map { tagged(0x30, tagged(0x0C, Array($0.key.utf8)) + der($0.value)) }
+                    .sorted { $0.lexicographicallyPrecedes($1) }
+                    .flatMap(\.self)
+            )
         }
     }
 

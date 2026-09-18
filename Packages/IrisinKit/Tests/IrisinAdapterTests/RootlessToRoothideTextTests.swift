@@ -29,7 +29,7 @@ final class RootlessToRoothideTextTests: XCTestCase {
         exit 0
 
         """
-        XCTAssertEqual(String(decoding: try RootlessToRoothide.maintainerScript(Data(script.utf8)), as: UTF8.self), expected)
+        XCTAssertEqual(try String(decoding: RootlessToRoothide.maintainerScript(Data(script.utf8)), as: UTF8.self), expected)
     }
 
     /// A shebang with no space is never touched, and neither is the missing
@@ -37,7 +37,7 @@ final class RootlessToRoothideTextTests: XCTestCase {
     func testMaintainerScriptWithTheBootstrapsInterpreter() throws {
         let script = Data("#!/var/jb/bin/sh\n/bin/ls /System/Library".utf8)
         XCTAssertEqual(
-            String(decoding: try RootlessToRoothide.maintainerScript(script), as: UTF8.self),
+            try String(decoding: RootlessToRoothide.maintainerScript(script), as: UTF8.self),
             "#!/bin/sh\n/bin/ls /rootfs/System/Library"
         )
     }
@@ -47,7 +47,7 @@ final class RootlessToRoothideTextTests: XCTestCase {
     func testShebangSpaces() throws {
         for space in ["\t", "\u{B}", "\u{C}", "\r", "  "] {
             XCTAssertEqual(
-                String(decoding: try RootlessToRoothide.maintainerScript(Data("#!\(space) /bin/sh\n".utf8)), as: UTF8.self),
+                try String(decoding: RootlessToRoothide.maintainerScript(Data("#!\(space) /bin/sh\n".utf8)), as: UTF8.self),
                 "#! /bin/sh\n", space.debugDescription
             )
         }

@@ -102,7 +102,11 @@ class DirectInstallController: UIViewController {
             return kept
         }
         let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        defer {
+            if scoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
         try FileManager.default.copyItem(at: url, to: kept)
         return kept
     }

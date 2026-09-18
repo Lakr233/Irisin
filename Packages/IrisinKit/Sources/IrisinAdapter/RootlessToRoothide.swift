@@ -172,10 +172,10 @@ public struct RootlessToRoothide: PackageAdapter {
         let earliest = manifest.entries.map(\.modificationTime).min() ?? 0
         var tree = Tree(package: package)
         var mirror: [(entry: PreparedEntry, reported: String)] = []
-        /// Each blob signed under each name, by its bytes.
+        // Each blob signed under each name, by its bytes.
         var rewritten: [[UInt8]: PreparedFile] = [:]
-        /// What the patcher's tools make anew as root, and the umask its mode
-        /// loses: a Mach-O install_name_tool wrote, a `.roothidepatch` link.
+        // What the patcher's tools make anew as root, and the umask its mode
+        // loses: a Mach-O install_name_tool wrote, a `.roothidepatch` link.
         var madeByRoot: [(path: String, umask: UInt32)] = []
 
         // tar unpacks a hard link as one file under every name, with the
@@ -209,10 +209,10 @@ public struct RootlessToRoothide: PackageAdapter {
                 converted.insert(origin.path)
             }
         }
-        /// That XML, by the entry of the file.
+        // That XML, by the entry of the file.
         var lists: [String: PreparedFile] = [:]
-        /// The names of each file that still share it, in the payload and in
-        /// the mirror, by the entry of the file.
+        // The names of each file that still share it, in the payload and in
+        // the mirror, by the entry of the file.
         var linked: [String: [String]] = [:]
         var mirrorLinked: [String: [String]] = [:]
 

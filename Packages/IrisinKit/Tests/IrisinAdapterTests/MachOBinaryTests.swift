@@ -282,7 +282,7 @@ final class MachOBinaryTests: XCTestCase {
         strings.replaceSubrange(symtab + 20 ..< symtab + 24, with: withUnsafeBytes(of: UInt32(u32(thin, symtab + 20) - 32).littleEndian, Array.init))
         try strings.write(to: url)
         let cut = try XCTUnwrap(MachOBinary(contentsOf: url)).rewritten(identifier: "FixtureBundle")
-        XCTAssertEqual(u32(cut, try XCTUnwrap(commands(0x1D, in: cut).first) + 8), (end + 15) & ~15)
+        XCTAssertEqual(try u32(cut, XCTUnwrap(commands(0x1D, in: cut).first) + 8), (end + 15) & ~15)
 
         // a backslash in a dependency, a blank at the end of an rpath
         var escaped = thin
@@ -290,7 +290,7 @@ final class MachOBinaryTests: XCTestCase {
         escaped[name.upperBound] = UInt8(ascii: "\\")
         XCTAssertEqual(try refusal(escaped), .unsupportedName)
         var blank = fat
-        let rpath = try XCTUnwrap(commands(0x8000001C, in: blank, at: 16384).first)
+        let rpath = try XCTUnwrap(commands(0x8000_001C, in: blank, at: 16384).first)
         let path = rpath + u32(blank, rpath + 8)
         let pathEnd = try XCTUnwrap(blank[path...].firstIndex(of: 0))
         blank[pathEnd - 1] = 0x20

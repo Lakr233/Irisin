@@ -142,7 +142,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func importRepositories(from url: URL, inPlace: Bool) {
         let scoped = inPlace && url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        defer {
+            if scoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
         guard let data = try? Data(contentsOf: url),
               let sources = try? RepositoryListFile.sources(in: data)
         else {

@@ -41,7 +41,7 @@ struct RepositoryFileTests {
     }
 
     @Test func aSourceAptWouldRefuseIsDropped() throws {
-        let broken = RepositorySource(url: URL(string: "https://havoc.app")!, distribution: "stable", components: [])
+        let broken = try RepositorySource(url: #require(URL(string: "https://havoc.app")), distribution: "stable", components: [])
         let data = try RepositoryListFile(sources: [procursus, broken]).encoded()
         #expect(try RepositoryListFile.sources(in: data) == [procursus])
     }
