@@ -13,13 +13,13 @@ import UIKit
 class PackageCollectionController: UIViewController, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     var dataSource: [Package] = [] {
         didSet {
-            updateGuiderOpacity()
             if isViewLoaded {
                 applySnapshot()
             }
         }
     }
 
+    let searchController = UISearchController()
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
     var collectionViewCellSizeCache = CGSize()
@@ -60,8 +60,19 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
 
     func applySnapshot() {
         var snapshot = buildSnapshot()
+        // the search narrows whatever the page lists, a subclass's sections included
+        let query = searchController.searchBar.text?.trimmingCharacters(in: .whitespaces) ?? ""
+        if !query.isEmpty {
+            snapshot.deleteItems(snapshot.itemIdentifiers.filter { package in
+                !(PackageCenter.default.name(of: package).localizedStandardContains(query)
+                    || PackageCenter.default.description(of: package).localizedStandardContains(query)
+                    || package.identity.localizedStandardContains(query))
+            })
+            snapshot.deleteSections(snapshot.sectionIdentifiers.filter { snapshot.numberOfItems(inSection: $0) == 0 })
+        }
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
         diffableDataSource.apply(snapshot, animatingDifferences: collectionView.shouldAnimateDiff)
+        updateGuiderOpacity()
     }
 
     let collectionView: UICollectionView = {
@@ -101,6 +112,18 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             image: .fluent(.shareIos24Filled),
             primaryAction: UIAction { [weak self] _ in self?.exportPackageList() }
         )
+
+        searchController.searchBar.placeholder = String(localized: "Search")
+        searchController.searchBar.setValue(
+            String(localized: "Cancel"),
+            forKey: "cancelButtonText"
+        )
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.searchTextField.autocapitalizationType = .none
+        searchController.searchBar.searchTextField.autocorrectionType = .no
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
 
         collectionView.alwaysBounceVertical = true
         collectionView.dataSource = diffableDataSource
@@ -149,11 +172,10 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             x.top.equalTo(emptyElementGuider.snp.bottom).offset(12)
             x.leading.trailing.equalToSuperview().inset(40)
         }
-        updateGuiderOpacity()
     }
 
     func updateGuiderOpacity() {
-        if dataSource.count == 0 {
+        if diffableDataSource.snapshot().numberOfItems == 0 {
             emptyElementGuider.isHidden = false
             emptyElementLabel.isHidden = false
         } else {
@@ -171,12 +193,13 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
 
     /// What the page is showing, one package a line.
     private func exportPackageList() {
-        guard !dataSource.isEmpty else {
+        let shown = diffableDataSource.snapshot().itemIdentifiers
+        guard !shown.isEmpty else {
             presentNotice(title: "Nothing to Export", dismissTitle: "OK")
             return
         }
         ExportFile.share(
-            ExportFile.packageText(dataSource),
+            ExportFile.packageText(shown),
             named: "packages-\(ExportFile.stamp()).txt",
             from: self
         )
@@ -230,5 +253,11 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         animator: UIContextMenuInteractionCommitAnimating
     ) {
         show(preview: animator)
+    }
+}
+
+extension PackageCollectionController: UISearchResultsUpdating {
+    func updateSearchResults(for _: UISearchController) {
+        applySnapshot()
     }
 }
