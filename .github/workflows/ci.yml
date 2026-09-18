@@ -1,6 +1,7 @@
 # Pushes and pull requests: test and measure on the host, and in parallel
 # build and package, keeping the packages for thirty days. Nothing is
-# published from here — a tag goes to `release.yml`.
+# published from here: a tag publishes, through `release.yml`, the
+# packages of its commit's run, once that run has passed.
 name: CI
 
 on:
@@ -13,8 +14,11 @@ on:
 permissions:
   contents: read
 
+# A pull request's new push cancels the run of its old one. A push to
+# main-4.0 keeps its own run however soon the next one follows, since a tag
+# on that commit publishes what the run built.
 concurrency:
-  group: irisin-${{ github.workflow }}-${{ github.ref }}
+  group: irisin-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
 env:

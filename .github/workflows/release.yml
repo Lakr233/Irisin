@@ -1,20 +1,21 @@
-# Tag vX.Y.Z → host tests, one compilation, one publish job that attaches
-# what it built to a GitHub Release. Fila's shape.
+# Tag vX.Y.Z → the packages CI built for the tagged commit, published.
 #
-# Fila splits its compilation in two because its two compositions are two
-# cold builds that share nothing. Irisin has one: `make deb-all` compiles
-# the app, the daemon and the helper once and packages that one set of
-# Mach-O slices twice, roothide and rootless, which differ only in layout.
-# Splitting it would compile the same sources twice for nothing, so there
-# is a single compile job.
+# Nothing is tested or compiled here. The push of the commit to main-4.0 ran
+# `ci.yml`: the host tests in one job and, beside them, both packages
+# compiled, packaged and verified in another, kept as the artifact
+# `irisin-<sha>`. The tag publishes that artifact, and only once that run
+# has succeeded: a failed test fails the run, and the release with it. What
+# ships is the file CI verified, not a second build of the same commit.
 #
-# The test job is the fast signal: `make harness` fails in minutes where the
-# compile job takes the better part of an hour, and the two run in
-# parallel. The compile job runs `make compile`, which checks and builds
-# and tests nothing, so the harness runs once per release, here.
+# The commit says its version (`make set-version`, the release notes, then
+# the tag), and the packages CI built are named for it: when they are not
+# named for the tag, nothing is published.
 #
-# `ci.yml` validates pushes and pull requests and publishes nothing. Tags
-# arrive here.
+# The tag and the branch usually arrive together, so the run may not exist
+# yet when this starts, and it is waited for. A commit that never reached
+# main-4.0 has no run: dispatch CI on the tag (`gh workflow run ci.yml
+# --ref vX.Y.Z`), which is also the way back once the artifact is past its
+# thirty days, and re-run this.
 
 name: Release
 
@@ -23,107 +24,66 @@ on:
     tags: ["v[0-9]*.[0-9]*.[0-9]*"]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  HOMEBREW_NO_AUTO_UPDATE: "1"
-  HOMEBREW_NO_INSTALL_CLEANUP: "1"
-  HOMEBREW_NO_ANALYTICS: "1"
-
 jobs:
-  test:
-    runs-on: macos-26
-    timeout-minutes: 60
+  publish:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
     permissions:
-      contents: read
+      contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
-      - name: Select newest Xcode
-        run: |
-          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-      - name: Run host tests
-        run: make harness
-
-  compile:
-    name: compile (roothide and rootless)
-    runs-on: macos-26
-    timeout-minutes: 120
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Select newest Xcode
-        run: |
-          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
-          xcodebuild -version
-      - name: Install packaging tools
-        run: brew install ldid dpkg
-      # DerivedData goes on a case-sensitive volume, for the reason spelled
-      # out in ci.yml: libarchive.xcframework's two modules differ by case
-      # alone and Xcode writes both into one flat Products directory. Drop
-      # this step the day the runner image ships Xcode 27.
-      - name: Case-sensitive volume for DerivedData
+      # The newest run on the commit that a push or a dispatch started; a pull
+      # request's run names its packages for the merge commit, not this one.
+      - name: Wait for CI on the tagged commit
+        id: ci
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          image="$RUNNER_TEMP/derived.sparseimage"
-          hdiutil create -size 60g -fs 'Case-sensitive APFS' -volname IrisinBuild \
-            -type SPARSE -quiet "$image"
-          hdiutil attach "$image" -mountpoint /Volumes/IrisinBuild -quiet
-      # The tag is the version. The run number is the build number, so the
-      # two packages carry one and the same CFBundleVersion.
-      - name: Apply tag version
-        if: github.ref_type == 'tag'
-        run: make set-version VERSION="$GITHUB_REF_NAME"
-      - name: Compile
+          run=""
+          for _ in $(seq 30); do
+            run="$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --json databaseId,event \
+              --jq '[.[] | select(.event != "pull_request")][0].databaseId // empty')"
+            [ -n "$run" ] && break
+            sleep 20
+          done
+          if [ -z "$run" ]; then
+            echo "::error::CI has not run on $GITHUB_SHA: dispatch it on $GITHUB_REF_NAME, then re-run this"
+            exit 1
+          fi
+          echo "CI run $run on $GITHUB_SHA"
+          gh run watch "$run" --interval 30 > /dev/null
+          conclusion="$(gh run view "$run" --json conclusion --jq .conclusion)"
+          if [ "$conclusion" != success ]; then
+            echo "::error::CI run $run ended $conclusion: nothing is published"
+            exit 1
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: irisin-${{ github.sha }}
+          path: build/Packages/
+          run-id: ${{ steps.ci.outputs.run }}
+          github-token: ${{ github.token }}
+      # CI's list proves the transfer. The release's own list is written for
+      # exactly the two files it carries, named for the tag, and a missing one
+      # fails here.
+      - name: Verify the packages and write the release checksums
+        working-directory: build/Packages
         run: |
-          make compile CONFIGURATION=Release \
-            DERIVED_DATA=/Volumes/IrisinBuild/irisin-derived \
-            BUILD_NUMBER="$GITHUB_RUN_NUMBER"
-      - name: Package and verify both flavours
-        run: |
-          make _packages CONFIGURATION=Release \
-            DERIVED_DATA=/Volumes/IrisinBuild/irisin-derived \
-            BUILD_NUMBER="$GITHUB_RUN_NUMBER"
-      # Named, not globbed: the checksums must account for exactly the two
-      # files the release carries, and a missing one fails here.
-      - name: Write exact release checksums
-        run: |
-          version="$(make --no-print-directory print-version)"
-          cd build/Packages
-          shasum -a 256 \
+          set -euo pipefail
+          sha256sum --check SHA256SUMS
+          version="${GITHUB_REF_NAME#v}"
+          sha256sum \
             "wiki.qaq.irisin_${version}_iphoneos-arm64e.deb" \
             "wiki.qaq.irisin_${version}_iphoneos-arm64.deb" > SHA256SUMS
           cat SHA256SUMS
-      - uses: actions/upload-artifact@v4
-        with:
-          name: irisin-packages
-          path: build/Packages/
-          if-no-files-found: error
-
-  publish:
-    needs: [test, compile]
-    if: github.ref_type == 'tag'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: irisin-packages
-          path: build/Packages/
-      # The compile job hashed the packages where it built them; checking
-      # the list here is what proves the transfer.
-      - name: Verify downloaded checksums
-        working-directory: build/Packages
-        run: sha256sum --check SHA256SUMS
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}

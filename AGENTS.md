@@ -311,9 +311,10 @@ a version bump, like icli.
   simulator (`SIMULATOR=<udid>` to pick one).
 - `make check` — project and packaging validation.
 - `make build` — the harness, then `make compile`: unsigned app, daemon
-  and helper for iPhoneOS, checked and built with no tests (CI and the
-  release run the harness as a job of its own beside it, then `make
-  _packages`). The build
+  and helper for iPhoneOS, checked and built with no tests (CI runs the
+  harness as a job of its own beside it, then `make _packages`; a tag
+  publishes the packages of its commit's CI run once that run has passed,
+  and builds nothing of its own). The build
   number is the git commit count (`BUILD_NUMBER=n` to override; CI passes
   its run number), handed to xcodebuild on the command line. Nothing in the
   tree changes from building; `Version.xcconfig` holds only
@@ -392,7 +393,7 @@ is `/var/jb/var/log/irisin-install.log`.
   - `xcodebuild` writes `LibArchive.swiftmodule` and `libarchive.swiftmodule`
     into one flat Products directory, and on a case-insensitive volume that
     is one directory: the compiler opens the wrapper when asked for the
-    binary module and refuses it. `ci.yml` and `release.yml` put DerivedData
+    binary module and refuses it. `ci.yml` puts DerivedData
     on a case-sensitive sparse image to keep the two apart. Importing the
     wrapper does not help — its `@_exported import libarchive` puts both in
     the map either way. `swift build` is unaffected; only `xcodebuild` has
