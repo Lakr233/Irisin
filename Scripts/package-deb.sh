@@ -95,7 +95,7 @@ mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")
 /usr/libexec/PlistBuddy -c 'Set :CFBundleName Irisin' "$installed_app/Info.plist"
 # One binary is packaged once per flavor; the plist tells the app which
 # bootstrap this copy is for (EnvironmentDetector.packagedArchitectureKey),
-# so a fresh bootstrap with no dpkg status to vote on still knows.
+# and startup refuses a copy installed on a different bootstrap.
 /usr/libexec/PlistBuddy -c "Add :IrisinCurrentArchitecture string $architecture" "$installed_app/Info.plist" 2>/dev/null \
     || /usr/libexec/PlistBuddy -c "Set :IrisinCurrentArchitecture $architecture" "$installed_app/Info.plist"
 /usr/bin/ditto "$daemon_binary" "$installed_daemon"

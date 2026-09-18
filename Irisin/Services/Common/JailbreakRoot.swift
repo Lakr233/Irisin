@@ -8,6 +8,7 @@
 
 import Foundation
 import IrisinClient
+import IrisinProtocol
 
 /// Single source of truth for where the jailbreak bootstrap lives.
 /// rootless (Dopamine): `/var/jb` via libroot.dylib, else that path as fallback.
@@ -18,27 +19,50 @@ nonisolated enum JailbreakRoot {
         static let prefix = DaemonLink.simulatedInstallRoot
         static let isRoothide = false
     #else
-        static let prefix = libraryPrefix
-        static let isRoothide = prefix != "/var/jb"
+        static let prefix = libraryRoot.prefix
+        static let isRoothide = libraryRoot.isRoothide
     #endif
 
-    private static let libraryPrefix: String = {
+    /// libroot defines the rootfs prefix as empty on Dopamine and `/rootfs`
+    /// on roothide. Older implementations may omit that API: only then
+    /// compare `/var/jb` with its target, never just their spelling.
+    /// See https://github.com/opa334/libroot#providing-paths.
+    static func isRoothide(prefix: String, rootlessPrefix: String, rootfsPrefix: String? = nil) -> Bool {
+        if let rootfsPrefix {
+            return rootfsPrefix == "/rootfs"
+        }
+        guard prefix != rootlessPrefix else { return false }
+        guard let root = ProcessPath.canonical(prefix),
+              let rootless = ProcessPath.canonical(rootlessPrefix)
+        else { return true }
+        return root != rootless
+    }
+
+    private static let libraryRoot: (prefix: String, isRoothide: Bool) = {
         // roothide does not ship libroot.dylib, probe its own library first
         let roothideLibrary = Bundle.main.bundlePath + "/.jbroot/usr/lib/libroothide.dylib"
         if let handle = dlopen(roothideLibrary, RTLD_NOW),
            let symbol = dlsym(handle, "jbroot")
         {
-            typealias JBRoot = @convention(c) (UnsafePointer<CChar>) -> UnsafePointer<CChar>
-            let root = String(cString: unsafeBitCast(symbol, to: JBRoot.self)("/"))
-            return root.hasSuffix("/") ? String(root.dropLast()) : root
+            typealias JBRoot = @convention(c) (UnsafePointer<CChar>) -> UnsafePointer<CChar>?
+            if let value = unsafeBitCast(symbol, to: JBRoot.self)("/") {
+                let root = String(cString: value)
+                return (root.hasSuffix("/") ? String(root.dropLast()) : root, true)
+            }
         }
         if let handle = dlopen("@rpath/libroot.dylib", RTLD_NOW),
            let symbol = dlsym(handle, "libroot_get_jbroot_prefix")
         {
-            typealias Prefix = @convention(c) () -> UnsafePointer<CChar>
-            return String(cString: unsafeBitCast(symbol, to: Prefix.self)())
+            typealias Prefix = @convention(c) () -> UnsafePointer<CChar>?
+            if let value = unsafeBitCast(symbol, to: Prefix.self)() {
+                let root = String(cString: value)
+                let rootfs = dlsym(handle, "libroot_get_root_prefix")
+                    .flatMap { unsafeBitCast($0, to: Prefix.self)() }
+                    .map { String(cString: $0) }
+                return (root, isRoothide(prefix: root, rootlessPrefix: "/var/jb", rootfsPrefix: rootfs))
+            }
         }
-        return "/var/jb"
+        return ("/var/jb", false)
     }()
 
     /// A bootstrap path spelled with the daemon's install root when the

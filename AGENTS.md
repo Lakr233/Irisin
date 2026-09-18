@@ -131,8 +131,13 @@ end.
   asks before an adapted package joins it (Compatibility Mode).
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by
-  `package-deb.sh` per flavor; a build that was never packaged falls back to
-  voting on dpkg's status file.
+  `package-deb.sh` per flavor; a build that was never packaged uses the
+  bootstrap runtime's layout, never a vote of installed packages. A packaged
+  Irisin never switches architecture to fit the device: startup compares
+  that key with the independently detected bootstrap, alerts on a mismatch
+  and does not open the interface.
+  Install the matching official package; Irisin itself must not be converted
+  with a patcher, including its own compatibility adapter.
 - **No install prefix is written in Swift.** The daemon and the helper derive
   it from their own `proc_pidpath` (`ProcessPath.installRoot`); the app reads
   it from `hello`, and uses libroot (`JailbreakRoot`) only while there is no

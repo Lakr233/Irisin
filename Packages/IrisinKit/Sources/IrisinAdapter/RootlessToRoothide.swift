@@ -46,7 +46,9 @@ public struct RootlessToRoothide: PackageAdapter {
     /// the name, as it matches them).
     public func canAttemptInstall(control: [String: String]) -> Bool {
         guard let package = control["package"] else { return false }
-        return !["ellekit", "oldabi"].contains(package)
+        // Irisin ships a native package for each bootstrap. Its daemon and
+        // helper must never be installed through compatibility mode.
+        return !["ellekit", "oldabi", "wiki.qaq.irisin"].contains(package)
             && control["maintainer"] != "Procursus Team <support@procurs.us>"
             && ![
                 "xinam1ne", "xinamine", "legizmo", "vnodebypass", "voicechangerx-rootless", "appsyncunified",

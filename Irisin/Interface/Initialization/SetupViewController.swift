@@ -46,11 +46,27 @@ class SetupViewController: UIViewController {
         UITableView.appearance().sectionHeaderTopPadding = 0.0
         adoptDynamicTypeEverywhere()
 
+        guard EnvironmentDetector.incompatibilityMessage == nil else {
+            indicator.stopAnimating()
+            descriptionLabel.text = String(localized: "Unsupported Architecture")
+            return
+        }
+
         Task { [weak self] in
             await Self.bootstrapApplication { text in
                 self?.descriptionLabel.text = text
             }
             self?.dispatchAllocInterface()
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard let message = EnvironmentDetector.incompatibilityMessage,
+              presentedViewController == nil
+        else { return }
+        presentNotice(title: "Unsupported Architecture", message: message, dismissTitle: "Close") {
+            UIApplication.prepareForExitAndSuspend()
         }
     }
 

@@ -26509,6 +26509,89 @@
         }
       }
     },
+    "This copy of Irisin is built for %@, but your bootstrap uses %@. Install the matching official Irisin package. Do not install Irisin using a patcher." : {
+      "comment" : "Startup is blocked because the architecture stamped in this Irisin package differs from the detected bootstrap. The placeholders are dpkg architecture names, in that order.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صُممت هذه النسخة من Irisin للعمل مع %@، لكن بيئة كسر الحماية لديك تستخدم %@. ثبّت حزمة Irisin الرسمية المطابقة لبيئتك. لا تثبّت Irisin باستخدام أداة لتعديل الحزم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Version von Irisin wurde für %@ erstellt, aber Ihre Bootstrap-Umgebung verwendet %@. Installieren Sie das passende offizielle Irisin-Paket. Installieren Sie Irisin nicht mithilfe eines Patchers."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This copy of Irisin is built for %@, but your bootstrap uses %@. Install the matching official Irisin package. Do not install Irisin using a patcher."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta copia de Irisin está compilada para %@, pero tu entorno de jailbreak usa %@. Instala el paquete oficial de Irisin correspondiente. No instales Irisin con una herramienta de parcheo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette version d’Irisin est conçue pour %@, mais votre environnement de jailbreak utilise %@. Installez le paquet officiel Irisin correspondant à votre environnement. N’installez pas Irisin à l’aide d’un outil de conversion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa copia di Irisin è stata compilata per %@, ma il bootstrap del dispositivo usa %@. Installa il pacchetto ufficiale di Irisin compatibile con il bootstrap. Non installare Irisin utilizzando un patcher."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この Irisin は %@ 向けにビルドされていますが、現在の脱獄環境は %@ を使用しています。お使いの環境に対応する公式の Irisin パッケージをインストールしてください。パッチャーを使用して Irisin をインストールしないでください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 Irisin 패키지는 %@용으로 빌드되었지만, 현재 탈옥 환경은 %@을(를) 사용합니다. 현재 환경에 맞는 공식 Irisin 패키지를 설치하세요. 패처를 사용하여 Irisin을 설치하지 마세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta cópia do Irisin foi criada para %@, mas seu ambiente de jailbreak usa %@. Instale o pacote oficial do Irisin compatível com seu ambiente. Não instale o Irisin usando uma ferramenta de adaptação."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта версия Irisin собрана для архитектуры %@, но ваша среда джейлбрейка использует %@. Установите официальный пакет Irisin для вашей среды. Не устанавливайте Irisin с помощью патчера."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bản Irisin này được xây dựng cho %@, nhưng môi trường jailbreak của bạn sử dụng %@. Hãy cài đặt gói Irisin chính thức phù hợp. Không cài đặt Irisin bằng công cụ vá."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Irisin 安装包适用于 %@，但当前越狱环境使用 %@。请安装与当前环境匹配的 Irisin 官方安装包。请勿使用转换工具安装 Irisin。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Irisin 安裝套件適用於 %@，但目前的越獄環境使用 %@。請安裝與目前環境相符的 Irisin 官方安裝套件。請勿使用轉換工具安裝 Irisin。"
+          }
+        }
+      }
+    },
     "This device supports %@." : {
       "localizations" : {
         "ar" : {

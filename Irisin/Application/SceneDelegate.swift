@@ -24,6 +24,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         window.makeKeyAndVisible()
 
+        guard EnvironmentDetector.incompatibilityMessage == nil else { return }
+
         // created from user activity
         if let userActivity = options.userActivities.first ?? session.stateRestorationActivity {
             if !configure(with: userActivity) {
@@ -51,6 +53,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_: UIScene) {
+        guard EnvironmentDetector.incompatibilityMessage == nil else { return }
         Dog.shared.join(self, "sceneDidBecomeActive", level: .info)
         reloadThrottle.throttle {
             Task { await InterfaceBridge.reloadLocalPackages() }
@@ -58,6 +61,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard EnvironmentDetector.incompatibilityMessage == nil else { return }
         for item in URLContexts {
             if item.url.isFileURL {
                 open(file: item.url, inPlace: item.options.openInPlace)

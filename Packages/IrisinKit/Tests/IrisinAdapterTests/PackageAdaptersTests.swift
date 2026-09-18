@@ -84,6 +84,16 @@ final class PackageAdaptersTests: XCTestCase {
         }
     }
 
+    func testIrisinCannotBePatchedForAnotherBootstrap() throws {
+        let directory = try prepared(architecture: "iphoneos-arm64", package: "wiki.qaq.irisin")
+        let before = try Data(contentsOf: directory.appendingPathComponent("manifest.json"))
+        XCTAssertThrowsError(try PackageAdapters.installed.adapt(preparedPackageAt: directory, on: "iphoneos-arm64e")) {
+            XCTAssertEqual($0 as? AdaptationFailure, .incompatible(package: "wiki.qaq.irisin"))
+        }
+        XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before)
+        XCTAssertNil(try PackageAdapters.installed.adapt(preparedPackageAt: directory, on: "iphoneos-arm64"))
+    }
+
     func testAdaptRewritesTheManifestAndReturnsItsDigest() throws {
         let directory = try prepared(architecture: "iphoneos-arm")
         let digest = try XCTUnwrap(registry.adapt(preparedPackageAt: directory, on: "iphoneos-arm64"))
