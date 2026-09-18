@@ -226,6 +226,83 @@ final class MachOBinaryTests: XCTestCase {
         }
     }
 
+    /// What ldid and install_name_tool make of the header, as the device's
+    /// did: a segment past 2^63 is refused rather than trapped on,
+    /// `__LINKEDIT` is rounded to the fat header's alignment, the code ends
+    /// with the string table, and a name the shell would read otherwise is
+    /// refused.
+    func testWhatTheHeaderSays() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        func u32(_ data: Data, _ offset: Int) -> Int {
+            Int(data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: UInt32.self) })
+        }
+        func u64(_ data: Data, _ offset: Int) -> UInt64 {
+            data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: UInt64.self) }
+        }
+        /// Where each command of `type` is in the thin image at `slice`.
+        func commands(_ type: Int, in data: Data, at slice: Int = 0) -> [Int] {
+            var offset = slice + 32
+            return (0 ..< u32(data, slice + 16)).compactMap { _ in
+                defer { offset += u32(data, offset + 4) }
+                return u32(data, offset) == type ? offset : nil
+            }
+        }
+        func refusal(_ data: Data) throws -> MachOFailure? {
+            try data.write(to: url)
+            do {
+                _ = try MachOBinary(contentsOf: url)?.rewritten(identifier: "x")
+                return nil
+            } catch let failure as MachOFailure {
+                return failure
+            }
+        }
+        let thin = try Data(contentsOf: fixture("input/FixtureBundle"))
+        let linkedit = try XCTUnwrap(commands(0x19, in: thin).first { thin[($0 + 8)...].starts(with: "__LINKEDIT".utf8) })
+        var huge = thin
+        huge.replaceSubrange(linkedit + 40 ..< linkedit + 48, with: [0, 0, 0, 0, 0, 0, 0, 0x80])
+        XCTAssertEqual(try refusal(huge), .malformed)
+
+        var fat = try Data(contentsOf: fixture("input/Fixture.dylib"))
+        for arch in 0 ..< 2 {
+            fat.replaceSubrange(8 + arch * 20 + 16 ..< 8 + arch * 20 + 20, with: [0, 0, 0, 12])
+        }
+        try fat.write(to: url)
+        let aligned = try XCTUnwrap(MachOBinary(contentsOf: url)).rewritten(identifier: "Fixture.dylib")
+        for arch in 0 ..< 2 {
+            let slice = u32(Data(aligned[(8 + arch * 20 + 8)...].prefix(4).reversed()), 0)
+            let segment = try XCTUnwrap(commands(0x19, in: aligned, at: slice).first { aligned[($0 + 8)...].starts(with: "__LINKEDIT".utf8) })
+            XCTAssertEqual(slice % 0x1000, 0)
+            XCTAssertEqual(u64(aligned, segment + 32), (u64(aligned, segment + 48) + 0xFFF) & ~0xFFF)
+        }
+
+        var strings = thin
+        let symtab = try XCTUnwrap(commands(0x2, in: thin).first)
+        let end = u32(thin, symtab + 16) + u32(thin, symtab + 20) - 32
+        strings.replaceSubrange(symtab + 20 ..< symtab + 24, with: withUnsafeBytes(of: UInt32(u32(thin, symtab + 20) - 32).littleEndian, Array.init))
+        try strings.write(to: url)
+        let cut = try XCTUnwrap(MachOBinary(contentsOf: url)).rewritten(identifier: "FixtureBundle")
+        XCTAssertEqual(u32(cut, try XCTUnwrap(commands(0x1D, in: cut).first) + 8), (end + 15) & ~15)
+
+        // a backslash in a dependency, a blank at the end of an rpath
+        var escaped = thin
+        let name = try XCTUnwrap(escaped.range(of: Data("/var/jb/".utf8)))
+        escaped[name.upperBound] = UInt8(ascii: "\\")
+        XCTAssertEqual(try refusal(escaped), .unsupportedName)
+        var blank = fat
+        let rpath = try XCTUnwrap(commands(0x8000001C, in: blank, at: 16384).first)
+        let path = rpath + u32(blank, rpath + 8)
+        let pathEnd = try XCTUnwrap(blank[path...].firstIndex(of: 0))
+        blank[pathEnd - 1] = 0x20
+        XCTAssertEqual(try refusal(blank), .unsupportedName)
+
+        // four bytes of a thin magic are a Mach-O to `file`; of a fat one, text
+        try Data([0xCF, 0xFA, 0xED, 0xFE, 0x0C]).write(to: url)
+        XCTAssertThrowsError(try MachOBinary(contentsOf: url)) { XCTAssertEqual($0 as? MachOFailure, .malformed) }
+        try Data([0xCA, 0xFE, 0xBA, 0xBE, 0x0C]).write(to: url)
+        XCTAssertNil(try MachOBinary(contentsOf: url))
+    }
+
     func testWhatIsNotMachO() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }

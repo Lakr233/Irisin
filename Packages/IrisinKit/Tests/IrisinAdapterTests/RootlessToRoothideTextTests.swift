@@ -4,7 +4,7 @@ import XCTest
 /// The expected texts are what the sed lines of roothide's `patch.sh`, run
 /// by GNU sed 4.9 on a device, made of the same inputs.
 final class RootlessToRoothideTextTests: XCTestCase {
-    func testMaintainerScript() {
+    func testMaintainerScript() throws {
         let script = """
         #! /bin/sh
         set -e
@@ -29,45 +29,65 @@ final class RootlessToRoothideTextTests: XCTestCase {
         exit 0
 
         """
-        XCTAssertEqual(String(decoding: RootlessToRoothide.maintainerScript(Data(script.utf8)), as: UTF8.self), expected)
+        XCTAssertEqual(String(decoding: try RootlessToRoothide.maintainerScript(Data(script.utf8)), as: UTF8.self), expected)
     }
 
     /// A shebang with no space is never touched, and neither is the missing
     /// newline at the end.
-    func testMaintainerScriptWithTheBootstrapsInterpreter() {
+    func testMaintainerScriptWithTheBootstrapsInterpreter() throws {
         let script = Data("#!/var/jb/bin/sh\n/bin/ls /System/Library".utf8)
         XCTAssertEqual(
-            String(decoding: RootlessToRoothide.maintainerScript(script), as: UTF8.self),
+            String(decoding: try RootlessToRoothide.maintainerScript(script), as: UTF8.self),
             "#!/bin/sh\n/bin/ls /rootfs/System/Library"
         )
     }
 
-    func testBytesThatAreNotTextSurvive() {
+    /// sed's `\s` takes in every ASCII space after `#!`, and a space the
+    /// locale might call one is refused.
+    func testShebangSpaces() throws {
+        for space in ["\t", "\u{B}", "\u{C}", "\r", "  "] {
+            XCTAssertEqual(
+                String(decoding: try RootlessToRoothide.maintainerScript(Data("#!\(space) /bin/sh\n".utf8)), as: UTF8.self),
+                "#! /bin/sh\n", space.debugDescription
+            )
+        }
+        for space in ["\u{A0}", "\u{3000}"] {
+            XCTAssertThrowsError(try RootlessToRoothide.maintainerScript(Data("#!\(space) /bin/sh\n".utf8)), space.debugDescription)
+        }
+        XCTAssertEqual(try RootlessToRoothide.maintainerScript(Data("#!\u{A0}x /bin/sh\n".utf8)), Data("#!\u{A0}x /rootfs/bin/sh\n".utf8))
+    }
+
+    func testBytesThatAreNotTextSurvive() throws {
         let bytes = Data([0xFF, 0xFE, 0x00, 0x80]) + Data(" /usr/bin\n".utf8) + Data([0xC3, 0x28])
         XCTAssertEqual(
-            RootlessToRoothide.maintainerScript(bytes),
+            try RootlessToRoothide.maintainerScript(bytes),
             Data([0xFF, 0xFE, 0x00, 0x80]) + Data(" /rootfs/usr/bin\n".utf8) + Data([0xC3, 0x28])
         )
     }
 
     /// The patcher's loose tests of a name and of a directory, as bash's
     /// `=~` on the device answered them.
-    func testWhatThePatcherEditsByName() {
+    func testWhatThePatcherEditsByName() throws {
         XCTAssertEqual(["postinst", "extrainst_", "rm", "inst", "in", "s", "postinst.sh"].map(RootlessToRoothide.isScript), [
             true, true, true, true, false, false, false,
         ])
-        XCTAssertEqual(["x.plist", "plist", ".plist", "x.plist.bak", "xplist"].map(RootlessToRoothide.isPropertyList), [
-            true, true, true, false, false,
+        // an Arabic number sign makes one character with the dot after it
+        XCTAssertEqual(["x.plist", "plist", ".plist", "x.plist.bak", "xplist", "\u{600}.plist"].map(RootlessToRoothide.isPropertyList), [
+            true, true, true, false, false, true,
         ])
+        // the last row are directories where ICU and POSIX part ways
         let rules: [String: RootlessToRoothide.PropertyListRule?] = [
             "Library/LaunchDaemons/x.plist": .daemon, "x.plist": .daemon, "Library/x.plist": .daemon, "Lib/x.plist": .daemon,
             "Library/LaunchDaemon./x.plist": .daemon, "Library/libSandy/x.plist": .sandbox,
             "Library/LaunchDaemons/sub/x.plist": nil, "Library/Preferences/x.plist": nil,
-            "Library/Fixture (1)/x.plist": nil, "Library/[/x.plist": nil,
+            "Library/Fixture (1)/x.plist": nil, "Library/[/x.plist": nil, "Library/Préférences/x.plist": nil,
+            "(?i)library/x.plist": nil, "zz|/x.plist": nil, #"\x4cibrary/x.plist"#: nil, #"L\Qibrary\E/x.plist"#: nil,
+            "(a|)/x.plist": nil, "a)|/L/x.plist": .daemon, "Library/LaunchDaemons}/x.plist": .daemon,
         ]
         for (path, rule) in rules {
-            XCTAssertEqual(RootlessToRoothide.propertyListRule(at: path), rule, path)
+            XCTAssertEqual(try RootlessToRoothide.propertyListRule(at: path), rule, path)
         }
+        XCTAssertThrowsError(try RootlessToRoothide.propertyListRule(at: "Library/é(x)?/x.plist"))
     }
 
     /// One string of a list, as the patcher's sed lines leave it in the
@@ -104,6 +124,14 @@ final class RootlessToRoothideTextTests: XCTestCase {
         Description: built for iphoneos-arm64e
 
         """)
+    }
+
+    /// sed's lines end at a newline byte, a carriage return left on them.
+    func testControlWithCarriageReturns() {
+        XCTAssertEqual(
+            RootlessToRoothide.control("Package: x\r\nConflicts: roothide\r\n\r\n", preDepends: nil),
+            "Package: x\r\nConflicts: r-o-o-t-l-e-s-s-\r\n\r\n"
+        )
     }
 
     /// The one place the patcher is not followed: it appends the field with

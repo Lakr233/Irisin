@@ -76,12 +76,12 @@ public struct BootstrapLayout: Equatable, Sendable {
         switch kind {
         case .none: path
         case let .rootless(prefix):
-            if let mount, path == prefix || path.hasPrefix(prefix + "/") {
-                mount + path.dropFirst(prefix.count)
+            if let mount, path == prefix || path.utf8.starts(with: "\(prefix)/".utf8) {
+                mount + String(decoding: path.utf8.dropFirst(prefix.utf8.count), as: UTF8.self)
             } else {
                 path
             }
-        case let .roothide(jbroot): path.hasPrefix("/") ? jbroot + path : path
+        case let .roothide(jbroot): path.utf8.first == 0x2F ? jbroot + path : path
         }
     }
 

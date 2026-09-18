@@ -13,12 +13,18 @@ public struct PreparedPackage: Codable, Equatable, Sendable {
         self.entries = entries
     }
 
+    /// `original` as a path below a root, `.` and empty components dropped,
+    /// or a refusal: absolute, a NUL or a newline in it, a `..` component.
+    /// All of it in bytes, as the kernel and dpkg's lists read a path:
+    /// `String` splits by character, and a combining mark after a `/` makes
+    /// one character of the two, so `../` and a mark would pass as a name,
+    /// and `\r\n` is a character that is not `\n`.
     public static func relativePath(_ original: String) throws -> String {
-        guard !original.hasPrefix("/"), !original.utf8.contains(0), !original.contains("\n") else {
+        guard original.utf8.first != 0x2F, !original.utf8.contains(0), !original.utf8.contains(0x0A) else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        let components = original.split(separator: "/").filter { $0 != "." }
-        guard !components.contains("..") else { throw CocoaError(.fileReadCorruptFile) }
-        return components.joined(separator: "/")
+        let components = original.utf8.split(separator: 0x2F).filter { !$0.elementsEqual(".".utf8) }
+        guard !components.contains(where: { $0.elementsEqual("..".utf8) }) else { throw CocoaError(.fileReadCorruptFile) }
+        return components.map { String(decoding: $0, as: UTF8.self) }.joined(separator: "/")
     }
 }

@@ -11,6 +11,12 @@ struct DpkgParityTests {
     printf '%s:%s\\n' "$DPKG_MAINTSCRIPT_NAME" "$*" >> "$DPKG_ROOT/script log"
     """
 
+    /// dpkg's `varbufrecord`: a value's lines are continued with a space,
+    /// and `\r\n` ends one, which `String` would take for a character.
+    @Test func paragraphLinesEndAtEveryNewline() {
+        #expect(NativePackageDatabase.paragraph(["package": "x", "description": "a\r\nStatus: b"]) == "Package: x\nDescription: a\r\n Status: b\n")
+    }
+
     private func seed(_ fixture: NativeInstallFixture, _ paragraphs: [[String: String]]) throws {
         let text = paragraphs.map(NativePackageDatabase.paragraph).joined(separator: "\n")
         try Data(text.utf8).write(to: fixture.database.appendingPathComponent("status"))

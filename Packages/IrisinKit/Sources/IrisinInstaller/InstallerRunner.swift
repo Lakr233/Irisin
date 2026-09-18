@@ -141,8 +141,8 @@ public final class InstallerRunner {
                 let path = line.trimmingCharacters(in: .whitespaces)
                 // A tweak may put files inside another app's bundle; only a
                 // bundle directly under Applications is something to register.
-                guard path.hasSuffix(".app"), path.hasPrefix(applicationsPrefix),
-                      !path.dropFirst(applicationsPrefix.count).contains("/") else { continue }
+                guard path.hasSuffix(".app"), path.utf8.starts(with: applicationsPrefix.utf8),
+                      !path.utf8.dropFirst(applicationsPrefix.utf8.count).contains(0x2F) else { continue }
                 applications.insert(path)
             }
         }

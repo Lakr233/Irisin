@@ -95,8 +95,13 @@ final class PackageFilesystem {
         layout: BootstrapLayout,
         under base: String = "/"
     ) -> String? {
-        var pending = Array(path.split(separator: "/").map(String.init).reversed())
-        var resolved = base.split(separator: "/").map(String.init)
+        // split at every `/` byte, as the kernel splits: `String` would take
+        // one with a combining mark after it for a character of a name
+        func components(_ path: String) -> [String] {
+            path.utf8.split(separator: 0x2F).map { String(decoding: $0, as: UTF8.self) }
+        }
+        var pending = Array(components(path).reversed())
+        var resolved = components(base)
         var missing = false
         var links = 0
         while let component = pending.popLast() {
@@ -122,10 +127,10 @@ final class PackageFilesystem {
                   let target = try? FileManager.default.destinationOfSymbolicLink(atPath: current)
             else { return nil }
             resolved.removeLast()
-            if target.hasPrefix("/") {
+            if target.utf8.first == 0x2F {
                 resolved.removeAll()
             }
-            pending += layout.linkedPath(target).split(separator: "/").map(String.init).reversed()
+            pending += components(layout.linkedPath(target)).reversed()
         }
         return "/" + resolved.joined(separator: "/")
     }
@@ -227,13 +232,15 @@ final class PackageFilesystem {
     }
 
     func location(_ path: String) throws -> URL {
-        guard path.hasPrefix("/") else { throw NativePackageFailure("Package path must be absolute: \(path)") }
-        var relative = String(path.dropFirst())
+        // in bytes, as the kernel reads it: a combining mark after a `/` is
+        // one character with it
+        guard path.utf8.first == 0x2F else { throw NativePackageFailure("Package path must be absolute: \(path)") }
+        var relative = String(decoding: path.utf8.dropFirst(), as: UTF8.self)
         if case let .rootless(prefix) = layout.kind {
-            guard path.hasPrefix(prefix + "/") else {
+            guard path.utf8.starts(with: "\(prefix)/".utf8) else {
                 throw NativePackageFailure("Package path is outside the bootstrap: \(path)")
             }
-            relative = String(path.dropFirst(prefix.count + 1))
+            relative = String(decoding: path.utf8.dropFirst(prefix.utf8.count + 1), as: UTF8.self)
         }
         guard try PreparedPackage.relativePath(relative) == relative, !relative.isEmpty else {
             throw NativePackageFailure("Invalid package pathname")

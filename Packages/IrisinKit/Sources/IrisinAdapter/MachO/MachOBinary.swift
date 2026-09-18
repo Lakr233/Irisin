@@ -21,6 +21,10 @@ enum MachOFailure: Error, Equatable {
     case unsupportedSlice
     /// The longer load commands do not fit in front of the first section.
     case noRoom
+    /// A library or an rpath the patcher's shell reads otherwise than it is
+    /// written (a control byte, a backslash, a blank at its edge), so that
+    /// install_name_tool would be asked to change a name that is not there.
+    case unsupportedName
 }
 
 /// One Mach-O of a package, thin or fat, and what roothide's patcher does
@@ -45,13 +49,26 @@ struct MachOBinary {
     /// What `file` says of the whole file, which is what the patcher asks
     /// before it picks ldid's arguments: a program if any slice is one.
     private let isProgram: Bool
+    /// Whether the patcher runs install_name_tool on the file, which writes
+    /// it anew as root: it does for any name it reads off otool that starts
+    /// with `/var/jb/`, whether or not that changes anything (a library's
+    /// own name, a dependency cut at a space). ldid alone keeps the file's
+    /// owner and mode.
+    let installNameToolRuns: Bool
 
     /// nil for a file that is not a Mach-O. A library, a bundle or a
     /// program, 64-bit in every slice and sound enough to rewrite, or
     /// `MachOFailure`.
     init?(contentsOf url: URL) throws {
         data = try Data(contentsOf: url, options: .mappedIfSafe)
-        guard data.count >= 8 else { return nil }
+        guard data.count >= 8 else {
+            // `file` calls four bytes of a thin magic a Mach-O, and ldid
+            // then fails on it; a fat magic it calls text
+            if data.count >= 4, [MH_MAGIC, MH_MAGIC_64, MH_CIGAM, MH_CIGAM_64].contains(data.integer(at: 0) as UInt32) {
+                throw MachOFailure.malformed
+            }
+            return nil
+        }
         let magic: UInt32 = data.integer(at: 0)
         switch magic {
         case MH_MAGIC_64:
@@ -95,6 +112,60 @@ struct MachOBinary {
             return nil
         }
         isProgram = slices.contains { $0.file.header.filetype == UInt32(MH_EXECUTE) }
+        let contents = data
+        installNameToolRuns = try slices.flatMap { try Self.names(in: $0, contents) }.map(Self.patcherChanges).contains(true)
+    }
+
+    /// A load command that names a library or an rpath.
+    private struct Name {
+        enum Kind { case rpath, dependency, id }
+        let kind: Kind
+        /// Where the command is among the commands, and its length.
+        let offset: Int, size: Int
+        /// Where the name starts in the command.
+        let start: Int
+        let bytes: [UInt8]
+    }
+
+    private static func names(in slice: Slice, _ data: Data) throws -> [Name] {
+        try slice.file.loadCommands.compactMap { command in
+            let (kind, offset, size, start): (Name.Kind, Int, Int, UInt32)
+            switch command {
+            case let .rpath(rpath):
+                (kind, offset, size, start) = (.rpath, rpath.offset, Int(rpath.layout.cmdsize), rpath.layout.path.offset)
+            case let .loadDylib(dylib), let .loadWeakDylib(dylib), let .reexportDylib(dylib),
+                 let .lazyLoadDylib(dylib), let .loadUpwardDylib(dylib):
+                (kind, offset, size, start) = (.dependency, dylib.offset, Int(dylib.layout.cmdsize), dylib.layout.dylib.name.offset)
+            case let .idDylib(dylib):
+                (kind, offset, size, start) = (.id, dylib.offset, Int(dylib.layout.cmdsize), dylib.layout.dylib.name.offset)
+            default:
+                return nil
+            }
+            guard start >= 12, start < size else { throw MachOFailure.malformed }
+            let command = slice.range.lowerBound + MemoryLayout<mach_header_64>.size + offset
+            let bytes = data[command + Int(start) ..< command + size].prefix { $0 != 0 }
+            return Name(kind: kind, offset: offset, size: size, start: Int(start), bytes: Array(bytes))
+        }
+    }
+
+    /// Whether the patcher asks install_name_tool to change `name`. It reads
+    /// the name off otool through `read`, which drops blanks at the edges
+    /// and the backslash of every escape, a dependency after `cut -d' '
+    /// -f1` and `tr -d '[:blank:]'`, and asks when what comes out starts
+    /// with `/var/jb/`. What comes out otherwise than it went in would
+    /// change another name or none, and is refused.
+    private static func patcherChanges(_ name: Name) throws -> Bool {
+        // a control byte splits otool's line, or is a tab tr drops
+        guard !name.bytes.contains(where: { $0 < 0x20 || $0 == 0x7F }) else { throw MachOFailure.unsupportedName }
+        let read = name.bytes.drop { $0 == 0x20 }.filter { $0 != 0x5C }
+        guard read.starts(with: "/var/jb/".utf8) else { return false }
+        // a space later in a dependency is cut away with the rest of the
+        // line, and the change asked for then matches nothing, as `rewrite`
+        // leaves it
+        guard name.bytes.first != 0x20, !name.bytes.contains(0x5C), name.kind != .rpath || name.bytes.last != 0x20 else {
+            throw MachOFailure.unsupportedName
+        }
+        return true
     }
 
     /// The file as the patcher leaves it. `identifier` is what ldid signs
@@ -130,10 +201,12 @@ struct MachOBinary {
         var image = Data(data[slice.range])
         let commandsSize = Int(slice.file.header.sizeofcmds)
 
-        // what changes, in file order: (offset among the commands, old length, new bytes)
-        var replacements: [(offset: Int, size: Int, bytes: Data)] = []
         var signature: LoadCommandInfo<linkedit_data_command>?
-        var linkedit: SegmentCommand64?
+        // ldid sets the size of every `__LINKEDIT` there is
+        var linkedits: [SegmentCommand64] = []
+        // where the string table ends, where ldid ends the code: the last
+        // LC_SYMTAB's, unless that one is all zeros
+        var strings: UInt64?
         // ldid's executable segment: from the first byte of any segment
         // that maps code to the last, in its own unsigned arithmetic
         var executable: (start: UInt64, end: UInt64) = (.max, 0)
@@ -143,21 +216,18 @@ struct MachOBinary {
         // Where a segment that holds content without sections begins.
         // `install_name_tool` counts these when it measures the room in
         // front of the file, and so must anything that writes there.
-        var sectionlessContent: [Int] = []
+        // Offsets stay 64-bit: MachOKit's `Int` of one past 2^63 traps.
+        var sectionlessContent: [UInt64] = []
         for command in slice.file.loadCommands {
-            let path: (offset: Int, size: Int, name: Int)
             switch command {
-            case let .rpath(rpath):
-                path = (rpath.offset, Int(rpath.layout.cmdsize), Int(rpath.layout.path.offset))
-            case let .loadDylib(dylib), let .loadWeakDylib(dylib), let .reexportDylib(dylib),
-                 let .lazyLoadDylib(dylib), let .loadUpwardDylib(dylib):
-                path = (dylib.offset, Int(dylib.layout.cmdsize), Int(dylib.layout.dylib.name.offset))
             case let .codeSignature(info):
                 signature = info
-                continue
+            case let .symtab(symtab):
+                let (offset, size) = (symtab.layout.stroff, symtab.layout.strsize)
+                strings = offset == 0 && size == 0 ? nil : UInt64(offset) + UInt64(size)
             case let .segment64(segment):
                 if segment.segmentName == SEG_LINKEDIT {
-                    linkedit = segment
+                    linkedits.append(segment)
                 }
                 if segment.layout.initprot & VM_PROT_EXECUTE != 0 {
                     executable = (min(executable.start, segment.layout.fileoff), max(executable.end, segment.layout.fileoff &+ segment.layout.filesize))
@@ -167,29 +237,30 @@ struct MachOBinary {
                         infoPlist = (segment.layout.fileoff &+ UInt64(section.layout.offset), section.layout.size)
                     }
                 }
-                if segment.numberOfSections == 0, segment.fileSize > 0 {
-                    sectionlessContent.append(segment.fileOffset)
+                if segment.numberOfSections == 0, segment.layout.filesize > 0 {
+                    sectionlessContent.append(segment.layout.fileoff)
                 }
-                continue
             default:
+                break
+            }
+        }
+        guard !linkedits.isEmpty else { throw MachOFailure.malformed }
+
+        // what changes, in file order: (offset among the commands, old length, new bytes)
+        var replacements: [(offset: Int, size: Int, bytes: Data)] = []
+        for name in try Self.names(in: slice, data) where name.kind != .id && name.bytes.starts(with: "/var/jb/".utf8) {
+            // a dependency with a space in it is cut short, and matches nothing
+            if name.kind == .dependency, name.bytes.contains(0x20) {
                 continue
             }
-            guard path.name >= 12, path.name < path.size else { throw MachOFailure.malformed }
-            let start = headerSize + path.offset
-            let name = image[start + path.name ..< start + path.size].prefix { $0 != 0 }
-            guard let old = String(data: name, encoding: .utf8), old.hasPrefix("/var/jb/") else { continue }
-            // the patcher reads dependencies off `otool -L` and cuts each
-            // line at its first space, so one with a space never matches
-            if case .rpath = command {} else if old.contains(" ") {
-                continue
-            }
-            var bytes = Data(image[start ..< start + path.name])
-            bytes.append(contentsOf: ("@loader_path/.jbroot/" + old.dropFirst("/var/jb/".count)).utf8)
+            let start = headerSize + name.offset
+            var bytes = Data(image[start ..< start + name.start])
+            bytes.append(contentsOf: "@loader_path/.jbroot/".utf8)
+            bytes.append(contentsOf: name.bytes.dropFirst("/var/jb/".utf8.count))
             bytes.append(Data(count: (bytes.count + 1).aligned(to: 8) - bytes.count))
             bytes.store(UInt32(bytes.count), at: 4)
-            replacements.append((path.offset, path.size, bytes))
+            replacements.append((name.offset, name.size, bytes))
         }
-        guard let linkedit else { throw MachOFailure.malformed }
 
         var commands = Data()
         var cursor = 0
@@ -204,16 +275,16 @@ struct MachOBinary {
             headerSize + offset + replacements.filter { $0.offset < offset }.reduce(0) { $0 + $1.bytes.count - $1.size }
         }
 
-        // the code ends where the old signature began; a file that never
+        // the old signature begins where the code ended; a file that never
         // had one gets the command, as ldid adds it, after all the others
-        let codeEnd: Int
+        let oldSignature: Int
         let signatureCommand: Int
         if let signature {
-            codeEnd = Int(signature.layout.dataoff)
-            guard codeEnd <= image.count, codeEnd + Int(signature.layout.datasize) == image.count else { throw MachOFailure.malformed }
+            oldSignature = Int(signature.layout.dataoff)
+            guard oldSignature <= image.count, oldSignature + Int(signature.layout.datasize) == image.count else { throw MachOFailure.malformed }
             signatureCommand = moved(signature.offset)
         } else {
-            codeEnd = image.count
+            oldSignature = image.count
             signatureCommand = headerSize + commands.count
             var command = Data(count: MemoryLayout<linkedit_data_command>.size)
             command.store(UInt32(LC_CODE_SIGNATURE), at: 0)
@@ -221,16 +292,23 @@ struct MachOBinary {
             commands.append(command)
             image.store(slice.file.header.ncmds + 1, at: 16)
         }
-        let content = slice.file.sections64.map { Int($0.layout.offset) } + sectionlessContent
+        // ldid ends the code at the end of the string table, which it adds
+        // up in 32 bits and asserts is not past the old signature
+        var codeEnd = oldSignature
+        if let strings {
+            guard strings <= UInt32.max, strings <= UInt64(codeEnd) else { throw MachOFailure.malformed }
+            codeEnd = Int(strings)
+        }
+        let content = slice.file.sections64.map { UInt64($0.layout.offset) } + sectionlessContent
         let firstSection = content.filter { $0 > 0 }.min() ?? 0
-        guard headerSize + commands.count <= firstSection, firstSection <= codeEnd else { throw MachOFailure.noRoom }
+        guard UInt64(headerSize + commands.count) <= firstSection, firstSection <= UInt64(codeEnd) else { throw MachOFailure.noRoom }
         image.replaceSubrange(headerSize ..< headerSize + commands.count, with: commands)
         image.store(UInt32(commands.count), at: 20)
 
         var signer = LdidStyleSignature(identifier: identifier)
         if isProgram {
             // each slice keeps its own, read before the old signature goes
-            var entitlements = try LdidEntitlements(xml: signature == nil ? Data() : Self.entitlements(in: Data(image[codeEnd...])))
+            var entitlements = try LdidEntitlements(xml: signature == nil ? Data() : Self.entitlements(in: Data(image[oldSignature...])))
             entitlements.merge(LdidEntitlements.roothide)
             signer.entitlements = try (entitlements.xml(), entitlements.der)
             signer.executableSegmentFlags = entitlements.executableSegmentFlags(
@@ -254,13 +332,24 @@ struct MachOBinary {
         image = image.prefix(codeEnd) + Data(count: codeLimit - codeEnd)
         image.store(UInt32(codeLimit), at: signatureCommand + 8)
         image.store(UInt32(signatureSize), at: signatureCommand + 12)
-        let linkeditSize = codeLimit + signatureSize - linkedit.fileOffset
-        guard linkeditSize > 0 else { throw MachOFailure.malformed }
-        // ldid rounds the segment to the slice's own page size, which is 16K
-        // only where the kernel's is: arm64 and arm64e
-        let pageSize = slice.file.header.cputype == CPU_TYPE_ARM64 ? 0x4000 : 0x1000
-        image.store(UInt64(linkeditSize.aligned(to: pageSize)), at: moved(linkedit.offset) + 32)
-        image.store(UInt64(linkeditSize), at: moved(linkedit.offset) + 48)
+        // ldid rounds the segment to the slice's alignment in the fat header,
+        // or in a thin file to what it takes its CPU's page to be
+        let align = if let arch = slice.arch {
+            Int(arch.align)
+        } else {
+            switch slice.file.header.cputype {
+            case CPU_TYPE_ARM, CPU_TYPE_ARM64, CPU_TYPE_ARM64_32: 14
+            case CPU_TYPE_X86, CPU_TYPE_X86_64, CPU_TYPE_POWERPC, CPU_TYPE_POWERPC64: 12
+            default: 0
+            }
+        }
+        for linkedit in linkedits {
+            let end = UInt64(codeLimit + signatureSize)
+            guard linkedit.layout.fileoff < end else { throw MachOFailure.malformed }
+            let size = Int(end - linkedit.layout.fileoff)
+            image.store(UInt64(size.aligned(to: 1 << align)), at: moved(linkedit.offset) + 32)
+            image.store(UInt64(size), at: moved(linkedit.offset) + 48)
+        }
 
         let blob = signer.blob(code: image, executable: (executable.start, executable.end &- executable.start))
         return image + blob + Data(count: signatureSize - blob.count)
@@ -316,7 +405,9 @@ struct MachOBinary {
                 MemoryLayout<linkedit_data_command>.size
             case UInt32(LC_RPATH):
                 MemoryLayout<rpath_command>.size
-            case UInt32(LC_LOAD_DYLIB), LC_LOAD_WEAK_DYLIB, LC_REEXPORT_DYLIB, UInt32(LC_LAZY_LOAD_DYLIB), LC_LOAD_UPWARD_DYLIB:
+            case UInt32(LC_SYMTAB):
+                MemoryLayout<symtab_command>.size
+            case UInt32(LC_ID_DYLIB), UInt32(LC_LOAD_DYLIB), LC_LOAD_WEAK_DYLIB, LC_REEXPORT_DYLIB, UInt32(LC_LAZY_LOAD_DYLIB), LC_LOAD_UPWARD_DYLIB:
                 MemoryLayout<dylib_command>.size
             default:
                 8
@@ -325,6 +416,9 @@ struct MachOBinary {
             if command == UInt32(LC_SEGMENT_64) {
                 let sections = Int(data.integer(at: start + 64) as UInt32)
                 guard least + sections * MemoryLayout<section_64>.size <= length else { throw MachOFailure.malformed }
+                // install_name_tool refuses a segment past the end of its file
+                let (offset, size) = (data.integer(at: start + 40) as UInt64, data.integer(at: start + 48) as UInt64)
+                guard offset <= UInt64(range.count), size <= UInt64(range.count) - offset else { throw MachOFailure.malformed }
             }
             cursor += length
         }

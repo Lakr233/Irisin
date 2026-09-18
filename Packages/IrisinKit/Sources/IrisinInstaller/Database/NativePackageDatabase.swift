@@ -295,11 +295,14 @@ final class NativePackageDatabase {
                 .map { $0.prefix(1).uppercased() + $0.dropFirst() }
                 .joined(separator: "-")
             let value = fields[key]!
+            // dpkg's lines end at a newline byte: `String` takes `\r\n` for a
+            // character of its own, and a field would end inside the value
+            let lines = value.utf8.split(separator: 0x0A, omittingEmptySubsequences: key == "conffiles")
+                .map { String(decoding: $0, as: UTF8.self) }
             if key == "conffiles" {
-                return title + ":\n" + value.split(separator: "\n").map { " " + $0 }.joined(separator: "\n")
+                return title + ":\n" + lines.map { " " + $0 }.joined(separator: "\n")
             }
-            if value.contains("\n") {
-                let lines = value.split(separator: "\n", omittingEmptySubsequences: false)
+            if lines.count > 1 {
                 return title + ": " + lines[0] + lines.dropFirst().map { "\n " + $0 }.joined()
             }
             return title + ": " + value

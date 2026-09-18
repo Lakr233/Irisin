@@ -91,7 +91,8 @@ final class RootlessToRoothideTests: XCTestCase {
         let mark = try XCTUnwrap(entries["Library/MobileSubstrate/DynamicLibraries/Fixture.dylib.roothidepatch"])
         XCTAssertEqual(mark.kind, .symbolicLink)
         XCTAssertEqual(mark.linkTarget, "/usr/lib/DynamicPatches/AutoPatches.dylib")
-        XCTAssertEqual([mark.uid, mark.gid, mark.mode], [0, 0, 0o755])
+        // root's, as `ln` made it, in the group tar made its directory with
+        XCTAssertEqual([mark.uid, mark.gid, mark.mode], [0, 501, 0o755])
         // the helper translates an absolute target; the patcher leaves it, and so does this
         XCTAssertEqual(entries["usr/lib/libfixture.dylib"]?.linkTarget, "/var/jb/Library/MobileSubstrate/DynamicLibraries/Fixture.dylib")
 
@@ -319,6 +320,14 @@ final class RootlessToRoothideTests: XCTestCase {
             ("var/jb/Library/Escape/x", [.file("var/jb/Library/Escape", ok), .file("var/jb/Library/Escape/x", ok)], [:]),
             // the mark the adapter writes beside a library, already taken
             (tweak + ".roothidepatch", [.link(tweak + ".roothidepatch", to: "/elsewhere"), .file(tweak, library)], [:]),
+            // tar fails on a hard link to a name it has not unpacked yet
+            ("var/jb/usr/share/a", [.hardLink("var/jb/usr/share/a", to: "var/jb/usr/share/b"), .file("var/jb/usr/share/b", ok)], [:]),
+            // `find -delete` cannot remove a `.DS_Store` with more in it
+            ("var/jb/usr/share/.DS_Store/keep", [.file("var/jb/usr/share/.DS_Store/keep", ok)], [:]),
+            // `read` drops the blank, and the patcher asks about a file that is not there
+            ("var/jb/usr/lib/sp.dylib ", [.file("var/jb/usr/lib/sp.dylib ", library)], [:]),
+            // two spellings of one name, which `String` takes for one
+            ("var/jb/usr/share/e\u{301}", [.file("var/jb/usr/share/\u{E9}", ok), .file("var/jb/usr/share/e\u{301}", ok)], [:]),
         ]
         for (path, entries, control) in cases {
             let directory = try prepared(entries: entries, control: control)
@@ -330,7 +339,8 @@ final class RootlessToRoothideTests: XCTestCase {
             XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before, path)
         }
 
-        for binary in [malformed, armv7] {
+        // four bytes of a thin magic are a Mach-O to `file`, and ldid fails on it
+        for binary in [malformed, armv7, Data([0xCF, 0xFA, 0xED, 0xFE, 0x0C])] {
             let directory = try prepared(entries: [.file(tweak, binary)])
             XCTAssertThrowsError(try RootlessToRoothide().adapt(preparedPackageAt: directory)) {
                 XCTAssertEqual($0 as? AdaptationFailure, .malformedBinary(package: "com.example.fixture", path: tweak))
@@ -367,6 +377,65 @@ final class RootlessToRoothideTests: XCTestCase {
         XCTAssertEqual(entries["usr"]?.mode, 0o755)
     }
 
+    /// install_name_tool writes a file anew as root: root's, in its
+    /// directory's group, the umask's bits gone from its mode; ldid alone
+    /// keeps both, and `ln` makes the mark root's in the same group. A
+    /// directory the archive leaves out is root's, in the group of the one
+    /// tar made it in at that moment: the patcher's (mobile's) until tar has
+    /// left a listed directory and set the owner the archive gives it (`lib`
+    /// before `share`, `usr` only once `top.dylib` comes).
+    func testOwnersThePatchersToolsLeave() throws {
+        let library = try fixture("input/Fixture.dylib")
+        // its one `/var/jb/` name spelled otherwise, so only ldid opens it
+        var bundle = try fixture("input/FixtureBundle")
+        bundle.replaceSubrange(try XCTUnwrap(bundle.range(of: Data("/var/jb/".utf8))), with: Data("/var/JB/".utf8))
+        let directory = try prepared(entries: [
+            .directory("var"), .directory("var/jb"), .directory("var/jb/usr", group: 20), .directory("var/jb/usr/lib", group: 20),
+            .file("var/jb/usr/lib/owned.dylib", library, mode: 0o775, owner: (501, 501)),
+            .file("var/jb/usr/lib/wide.dylib", library, mode: 0o777),
+            .file("var/jb/usr/lib/ldid.bundle", bundle, mode: 0o775, owner: (501, 20)),
+            .file("var/jb/usr/share/n/notes", Data("n".utf8)),
+            .file("var/jb/usr/lib/sub/notes", Data("n".utf8)),
+            .file("var/jb/top.dylib", library, mode: 0o755),
+            .file("var/jb/usr/games/notes", Data("n".utf8)),
+        ])
+        _ = try RootlessToRoothide().adapt(preparedPackageAt: directory)
+        let entries = try Dictionary(uniqueKeysWithValues: PreparedPackage.read(from: directory).entries.map { ($0.path, $0) })
+        let expected: [String: [UInt32]] = [
+            "usr/lib/owned.dylib": [0, 20, 0o755], "usr/lib/wide.dylib": [0, 20, 0o755],
+            "usr/lib/ldid.bundle": [501, 20, 0o775], "top.dylib": [0, 501, 0o755],
+            "usr/lib/owned.dylib.roothidepatch": [0, 20, 0o755], "top.dylib.roothidepatch": [0, 501, 0o755],
+            "usr/share": [0, 501, 0o755], "usr/share/n": [0, 501, 0o755], "usr/lib/sub": [0, 20, 0o755],
+            "usr/games": [0, 20, 0o755],
+        ]
+        for (path, owner) in expected {
+            let entry = try XCTUnwrap(entries[path], path)
+            XCTAssertEqual([entry.uid, entry.gid, entry.mode], owner, path)
+        }
+    }
+
+    /// Paths are bytes to the patcher's tools: a combining mark after a `/`
+    /// hides it neither from the walk `dpkg-deb` makes, nor from `find
+    /// -path`, nor from the check for a mirror of the package's own.
+    func testPathsAreBytes() throws {
+        let library = try fixture("input/Fixture.dylib")
+        let directory = try prepared(entries: [
+            .file("var/jb/usr/share/c/x-z", Data("x".utf8)),
+            .hardLink("var/jb/usr/share/c/x/\u{301}y", to: "var/jb/usr/share/c/x-z"),
+            .file("var/jb/usr/share/c/Foo.lproj/\u{301}lib.dylib", library),
+            .file("var/jb/usr/share/n/var/mobile/Library/pkgmirror/tool.dylib", library),
+        ])
+        _ = try RootlessToRoothide().adapt(preparedPackageAt: directory)
+        let entries = try Dictionary(uniqueKeysWithValues: PreparedPackage.read(from: directory).entries.map { ($0.path, $0) })
+        XCTAssertEqual(entries["usr/share/c/x/\u{301}y"]?.kind, .file)
+        XCTAssertEqual(entries["usr/share/c/x-z"]?.kind, .hardLink)
+        XCTAssertEqual(entries["usr/share/c/x-z"]?.linkTarget, "usr/share/c/x/\u{301}y")
+        for path in ["usr/share/c/Foo.lproj/\u{301}lib.dylib", "usr/share/n/var/mobile/Library/pkgmirror/tool.dylib"] {
+            XCTAssertNotNil(entries[path], path)
+            XCTAssertNil(entries[path + ".roothidepatch"], path)
+        }
+    }
+
     /// The patcher's own list, matched as it matches: anywhere in the name.
     func testPackagesThePatcherRefuses() throws {
         let adapter = RootlessToRoothide()
@@ -390,13 +459,14 @@ final class RootlessToRoothideTests: XCTestCase {
         var data: Data?
         var link: String?
         var mode: UInt32
+        var owner: (uid: UInt32, gid: UInt32) = (0, 0)
 
-        static func directory(_ path: String, mode: UInt32 = 0o755) -> Entry {
-            Entry(path: path, kind: .directory, mode: mode)
+        static func directory(_ path: String, mode: UInt32 = 0o755, group: UInt32 = 0) -> Entry {
+            Entry(path: path, kind: .directory, mode: mode, owner: (0, group))
         }
 
-        static func file(_ path: String, _ data: Data?, mode: UInt32 = 0o644) -> Entry {
-            Entry(path: path, kind: .file, data: data, mode: mode)
+        static func file(_ path: String, _ data: Data?, mode: UInt32 = 0o644, owner: (UInt32, UInt32) = (0, 0)) -> Entry {
+            Entry(path: path, kind: .file, data: data, mode: mode, owner: owner)
         }
 
         static func link(_ path: String, to target: String) -> Entry {
@@ -443,7 +513,7 @@ final class RootlessToRoothideTests: XCTestCase {
             }
             return PreparedEntry(
                 path: entry.path, kind: entry.kind, file: entry.kind == .file ? last : nil, linkTarget: entry.link,
-                mode: entry.mode, uid: 0, gid: 0, modificationTime: 1_700_000_000
+                mode: entry.mode, uid: entry.owner.uid, gid: entry.owner.gid, modificationTime: 1_700_000_000
             )
         }
         try Data("2.0\n".utf8).write(to: directory.appendingPathComponent("blob-90"))

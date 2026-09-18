@@ -20,14 +20,21 @@ extension RootlessToRoothide {
     /// extension, `${fname##*.}`, is `plist`, which a name with no dot is
     /// its own extension for.
     static func isPropertyList(_ name: String) -> Bool {
-        name == "plist" || name.hasSuffix(".plist")
+        fileExtension(name) == "plist"
     }
 
     /// The names neither edit touches, tested as loosely: an extension that
     /// is part of `{png,strings}` (`s`, `in`, an empty one).
     private static func skipsText(_ name: String) -> Bool {
-        let suffix = name.lastIndex(of: ".").map { String(name[name.index(after: $0)...]) } ?? name
+        let suffix = fileExtension(name)
         return suffix.isEmpty || "{png,strings}".range(of: suffix, options: .literal) != nil
+    }
+
+    /// `${fname##*.}`: what follows the last dot, a byte, or the whole name
+    /// where there is none. `String` finds a dot by character, and not one
+    /// that a character in front of it has taken into its own.
+    private static func fileExtension(_ name: String) -> String {
+        name.utf8.lastIndex(of: UInt8(ascii: ".")).map { String(decoding: name.utf8[name.utf8.index(after: $0)...], as: UTF8.self) } ?? name
     }
 
     /// What `plutil -convert xml1` leaves of a file: Foundation's XML, which
@@ -54,15 +61,32 @@ extension RootlessToRoothide {
     /// patcher tests its directory, `/` and all, as a pattern against
     /// `{/Library/LaunchDaemons}` and then `{/Library/libSandy}`, so a
     /// list at the top or directly in `/Library` is a daemon's as well.
-    static func propertyListRule(at path: String) -> PropertyListRule? {
+    ///
+    /// bash's `=~` is POSIX's extended `regcomp`, which is called here: ICU
+    /// reads `(?i)` or `\Q` where POSIX does not, and the other way round.
+    /// A directory with a character that is not ASCII matches only where
+    /// the device's locale says, unless it is no pattern at all: then it is
+    /// text neither of the two holds.
+    static func propertyListRule(at path: String) throws -> PropertyListRule? {
         let directory = "/" + (path as NSString).deletingLastPathComponent
+        if !directory.utf8.allSatisfy({ $0 < 0x80 }) {
+            guard directory.utf8.contains(where: #"\^$.|?*+()[]{}"#.utf8.contains) else { return nil }
+            throw LocaleDependent()
+        }
+        var pattern = regex_t()
+        // a directory that is no pattern (`Fixture (1)` is one; `[` is not)
+        // matches nothing, as bash's `=~` fails it
+        guard regcomp(&pattern, directory, REG_EXTENDED | REG_NOSUB) == 0 else { return nil }
+        defer { regfree(&pattern) }
         func matches(_ text: String) -> Bool {
-            // a directory that is no pattern (`Fixture (1)` is one; `[` is
-            // not) matches nothing, as bash's `=~` fails it
-            (try? NSRegularExpression(pattern: directory))?.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
+            regexec(&pattern, text, 0, nil, 0) == 0
         }
         return matches("{/Library/LaunchDaemons}") ? .daemon : matches("{/Library/libSandy}") ? .sandbox : nil
     }
+
+    /// A text the patcher's tools read by the locale of the device they run
+    /// on, which this cannot know: refused.
+    struct LocaleDependent: Error {}
 
     /// A daemon's or a libSandy profile's property list with its paths
     /// respelled: every key and string, depth first, through `path`, and
@@ -148,8 +172,9 @@ extension RootlessToRoothide {
     /// jailbreak root as its `/`: `/var/jb/x` is `/x`, and what was the
     /// system's is under `/rootfs`. The patcher parks every `/var/jb` out of
     /// the way first so that the system rules cannot touch it.
-    static func maintainerScript(_ script: Data) -> Data {
-        sed(script) { text in
+    /// `LocaleDependent` for a shebang sed reads by the locale.
+    static func maintainerScript(_ script: Data) throws -> Data {
+        try sed(script) { text in
             text.replace("iphoneos-arm64", "iphoneos-arm64e")
             text.replace("/var/jb/", "/-var/jb/-")
             text.replace("/var/jb", "/-var/jb-")
@@ -157,8 +182,11 @@ extension RootlessToRoothide {
                 text.replace(" /\(directory)/", " /rootfs/\(directory)/")
             }
             text.replace("DIR=\"/Library/", "DIR=\"/rootfs/Library/")
-            // `#! /bin/sh` was caught by the rule for ` /bin/`; the interpreter is the bootstrap's
-            if let shebang = text.range(of: "^#![ \\t]*/rootfs/", options: .regularExpression) {
+            // `#! /bin/sh` was caught by the rule for ` /bin/`; the
+            // interpreter is the bootstrap's. sed's `\s` is whatever the
+            // locale calls a space, and only one in ASCII surely is.
+            if let shebang = text.range(of: #"^#![ \t\x0B\f\r\x{80}-\x{FF}]*/rootfs/"#, options: .regularExpression) {
+                guard text[shebang].unicodeScalars.allSatisfy(\.isASCII) else { throw LocaleDependent() }
                 text.replaceSubrange(shebang, with: "#! /")
             }
             text.replace("/-var/jb/-", "/")
@@ -168,9 +196,9 @@ extension RootlessToRoothide {
 
     /// `data` through `edit` one scalar per byte, as sed sees a file: nothing
     /// is refused or changed for the encoding it is in.
-    private static func sed(_ data: Data, _ edit: (inout String) -> Void) -> Data {
+    private static func sed(_ data: Data, _ edit: (inout String) throws -> Void) rethrows -> Data {
         var text = String(String.UnicodeScalarView(data.map { Unicode.Scalar($0) }))
-        edit(&text)
+        try edit(&text)
         return Data(text.unicodeScalars.map { UInt8($0.value) })
     }
 
@@ -185,14 +213,16 @@ extension RootlessToRoothide {
     /// names `roothide`). Solving it as rewritten would mean teaching
     /// AptResolver this substitution, which it cannot see from here.
     static func control(_ control: String, preDepends: String?) -> String {
-        var lines = control.split(separator: "\n", omittingEmptySubsequences: true).map {
-            $0.replacingOccurrences(of: "iphoneos-arm64", with: "iphoneos-arm64e")
+        // sed's lines end at a newline byte, `\r\n` or not
+        var lines = control.utf8.split(separator: 0x0A).map {
+            String(decoding: $0, as: UTF8.self).replacingOccurrences(of: "iphoneos-arm64", with: "iphoneos-arm64e", options: .literal)
         }
         lines = lines.map {
-            $0.hasPrefix("Conflicts: ") ? $0.replacingOccurrences(of: "roothide", with: "r-o-o-t-l-e-s-s-") : $0
+            $0.utf8.starts(with: "Conflicts: ".utf8) ? $0.replacingOccurrences(of: "roothide", with: "r-o-o-t-l-e-s-s-", options: .literal) : $0
         }
+        let end = control.utf8.last == 0x0A ? "\n" : ""
         guard let preDepends else {
-            return lines.joined(separator: "\n") + (control.hasSuffix("\n") ? "\n" : "")
+            return lines.joined(separator: "\n") + end
         }
         let field = "pre-depends:"
         guard lines.contains(where: { $0.lowercased().hasPrefix(field) }) else {
@@ -201,7 +231,7 @@ extension RootlessToRoothide {
         lines = lines.map {
             $0.lowercased().hasPrefix(field) ? "Pre-Depends: \(preDepends)," + $0.dropFirst(field.count) : $0
         }
-        return lines.joined(separator: "\n") + (control.hasSuffix("\n") ? "\n" : "")
+        return lines.joined(separator: "\n") + end
     }
 }
 

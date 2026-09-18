@@ -107,7 +107,8 @@ public extension InstallerJob {
         for package in transaction.install {
             if let preparedPath = package.preparedPath {
                 guard preparedPath.hasPrefix("/"), !preparedPath.utf8.contains(0),
-                      !preparedPath.split(separator: "/").contains(".."),
+                      // by bytes: `..` and a combining mark is one character
+                      !preparedPath.utf8.split(separator: 0x2F).contains(where: { $0.elementsEqual("..".utf8) }),
                       let digest = package.preparedSHA256, Self.isSHA256Hex(digest)
                 else {
                     throw IrisinFailure(code: .invalidRequest, path: preparedPath)

@@ -14,6 +14,21 @@ final class InstallerJobTests: XCTestCase {
         XCTAssertFalse(InstallerJob.isPackageIdentity(""))
     }
 
+    /// A path is bytes to the kernel and to dpkg's lists: `..` with a
+    /// combining mark after its slash is still `..`, and `\r\n` still ends a
+    /// line.
+    func testPathsAndLinesAreBytes() throws {
+        for path in ["../\u{301}x", "a/../\u{301}b", "a\r\nb", "/\u{301}x"] {
+            XCTAssertThrowsError(try PreparedPackage.relativePath(path), path.debugDescription)
+        }
+        XCTAssertEqual(try PreparedPackage.relativePath("./a//\u{301}b/./c"), "a/\u{301}b/c")
+        // a value takes no line of its own into the paragraph
+        let fields = try DebianControl.parse("Package: x\r\r\nDescription: y\r\nInjected: z\r\n")
+        XCTAssertEqual(fields["package"], "x\r")
+        XCTAssertEqual(fields["injected"], "z")
+        XCTAssertEqual(try DebianControl.parse("A:\u{301}b\n \u{301}c\n")["a"], "\u{301}b \u{301}c")
+    }
+
     func testTransactionValidation() throws {
         let good = InstallerJob.transaction(.init(
             install: [.init(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")],

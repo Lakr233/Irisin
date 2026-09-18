@@ -34,7 +34,11 @@ import IrisinProtocol
 /// program, a Mach-O maintainer script, conffiles, a set-id mode, or a path
 /// that lies beneath one of its own links. The script writes the system's
 /// side of the device for the first and cannot build conffiles at all; the
-/// rest are not converted here yet.
+/// rest are not converted here yet. So is what its own tools would fail on
+/// (a hard link ahead of its file, a `.DS_Store` with more in it) or read by
+/// the device's locale, and a name its shell reads otherwise than it is
+/// spelled. Paths are compared as bytes throughout, as the tools compare
+/// them.
 public struct RootlessToRoothide: PackageAdapter {
     public let source = BootstrapArchitecture.rootless
     public let target = BootstrapArchitecture.roothide
@@ -67,7 +71,7 @@ public struct RootlessToRoothide: PackageAdapter {
     public func adapt(preparedPackageAt directory: URL) throws -> String {
         let manifest = try PreparedPackage.read(from: directory)
         let fields = try DebianControl.parse(manifest.control, preservingLinesFor: ["description"])
-        guard let package = fields["package"], !package.isEmpty, !package.contains("/"),
+        guard let package = fields["package"], !package.isEmpty, !package.utf8.contains(0x2F),
               try PreparedPackage.relativePath(package) == package
         else { throw CocoaError(.fileReadCorruptFile) }
 
@@ -92,15 +96,60 @@ public struct RootlessToRoothide: PackageAdapter {
         func store(_ data: Data, over file: PreparedFile) throws -> PreparedFile {
             try data == contents(file) ? file : store(data)
         }
+        /// Whether the patcher opens the file: `find` walks to it and `read
+        /// -r` hands its path on, but for a blank at the end, which it drops,
+        /// and then asks about a file that is not there (refused).
+        func walks(_ file: PreparedFile, at path: String, reportedAs reported: String) throws -> Bool {
+            guard file.size > 0, Self.patcherOpens(path) else { return false }
+            guard path.utf8.last != 0x20, path.utf8.last != 0x09 else {
+                throw AdaptationFailure.notSimple(package: package, path: reported)
+            }
+            return true
+        }
         /// nil for what is not a Mach-O, or has a name the patcher never opens.
         func binary(_ file: PreparedFile, at path: String, reportedAs reported: String) throws -> MachOBinary? {
-            guard file.size > 0, Self.patcherOpens(path) else { return nil }
+            guard try walks(file, at: path, reportedAs: reported) else { return nil }
             do {
                 return try MachOBinary(contentsOf: directory.appendingPathComponent(file.name))
-            } catch MachOFailure.notCode {
+            } catch MachOFailure.notCode, MachOFailure.unsupportedName {
                 throw AdaptationFailure.notSimple(package: package, path: reported)
             } catch is MachOFailure {
                 throw AdaptationFailure.malformedBinary(package: package, path: reported)
+            }
+        }
+        /// `edit`, or a refusal where what the patcher makes of the text
+        /// depends on the locale of the device it runs on.
+        func unlessLocaleDependent<T>(_ reported: String, _ edit: () throws -> T) throws -> T {
+            do {
+                return try edit()
+            } catch is LocaleDependent {
+                throw AdaptationFailure.notSimple(package: package, path: reported)
+            }
+        }
+
+        // A Swift string equals another that spells the same text in other
+        // bytes (`é`, and `e` with a combining accent), and the patcher's
+        // paths are bytes: two such paths, or the directories on the way to
+        // them, would be one here.
+        var spellings: [String: [UInt8]] = [:]
+        for entry in manifest.entries {
+            var path = entry.path
+            while true {
+                if let other = spellings.updateValue(Array(path.utf8), forKey: path), !other.elementsEqual(path.utf8) {
+                    throw AdaptationFailure.notSimple(package: package, path: entry.path)
+                }
+                guard let slash = path.utf8.lastIndex(of: 0x2F) else { break }
+                path = String(decoding: path.utf8[..<slash], as: UTF8.self)
+            }
+        }
+        // `find -delete` cannot remove a `.DS_Store` directory that holds
+        // anything but more of them, and the patcher stops there
+        for entry in manifest.entries {
+            let components = entry.path.utf8.split(separator: 0x2F)
+            if components.dropLast().contains(where: { $0.elementsEqual(".DS_Store".utf8) }),
+               components.last?.elementsEqual(".DS_Store".utf8) == false
+            {
+                throw AdaptationFailure.notSimple(package: package, path: entry.path)
             }
         }
 
@@ -123,20 +172,27 @@ public struct RootlessToRoothide: PackageAdapter {
         let earliest = manifest.entries.map(\.modificationTime).min() ?? 0
         var tree = Tree(package: package)
         var mirror: [(entry: PreparedEntry, reported: String)] = []
-        var rewritten: [String: PreparedFile] = [:]
+        /// Each blob signed under each name, by its bytes.
+        var rewritten: [[UInt8]: PreparedFile] = [:]
+        /// What the patcher's tools make anew as root, and the umask its mode
+        /// loses: a Mach-O install_name_tool wrote, a `.roothidepatch` link.
+        var madeByRoot: [(path: String, umask: UInt32)] = []
 
         // tar unpacks a hard link as one file under every name, with the
         // mode and owner of the entry that brought it, and the patcher
         // walks each name on its own
-        let named = Dictionary(manifest.entries.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
+        let named = Dictionary(manifest.entries.enumerated().map { ($1.path, (position: $0, entry: $1)) }, uniquingKeysWith: { first, _ in first })
         func origin(of entry: PreparedEntry) throws -> PreparedEntry {
             var origin = entry
-            var seen: Set<String> = []
             while origin.kind == .hardLink {
-                guard seen.insert(origin.path).inserted, let target = origin.linkTarget, let next = named[target] else {
+                // tar links a name to one it has unpacked, and fails on one
+                // that comes later in the archive
+                guard let target = origin.linkTarget, let next = named[target], let this = named[origin.path],
+                      next.position < this.position
+                else {
                     throw AdaptationFailure.notSimple(package: package, path: entry.path)
                 }
-                origin = next
+                origin = next.entry
             }
             guard entry.kind != .hardLink || origin.kind == .file else {
                 throw AdaptationFailure.notSimple(package: package, path: entry.path)
@@ -146,8 +202,8 @@ public struct RootlessToRoothide: PackageAdapter {
         // plutil writes a property list in place, so every name of a file
         // reads the XML once one of them is a list
         var converted: Set<String> = []
-        for entry in manifest.entries where entry.path.hasPrefix("var/jb/") && [.file, .hardLink].contains(entry.kind) {
-            let path = String(entry.path.dropFirst("var/jb/".count))
+        for entry in manifest.entries where entry.path.utf8.starts(with: "var/jb/".utf8) && [.file, .hardLink].contains(entry.kind) {
+            let path = entry.path.droppingBytes("var/jb/")
             let origin = try origin(of: entry)
             if let file = origin.file, file.size > 0, Self.patcherOpens(path), Self.isPropertyList((path as NSString).lastPathComponent) {
                 converted.insert(origin.path)
@@ -165,11 +221,11 @@ public struct RootlessToRoothide: PackageAdapter {
                 continue
             }
             let origin = try origin(of: entry)
-            guard entry.path.hasPrefix("var/jb/"), origin.mode & 0o6000 == 0 else {
+            guard entry.path.utf8.starts(with: "var/jb/".utf8), origin.mode & 0o6000 == 0 else {
                 throw AdaptationFailure.notSimple(package: package, path: entry.path)
             }
-            let path = String(entry.path.dropFirst("var/jb/".count))
-            guard !reserved.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) else {
+            let path = entry.path.droppingBytes("var/jb/")
+            guard !reserved.contains(where: { path == $0 || path.utf8.starts(with: "\($0)/".utf8) }) else {
                 throw AdaptationFailure.notSimple(package: package, path: entry.path)
             }
             mirror.append((origin.moved(to: "\(mirrorRoot)/\(path)", owner: 501, mode: 0o755), entry.path))
@@ -184,22 +240,27 @@ public struct RootlessToRoothide: PackageAdapter {
                 // ldid signs a file under its name and writes it anew, so
                 // one blob behind two names, a hard link's or not, is two files
                 let signed: PreparedFile
+                let key = Array("\(file.name)/\(name)".utf8)
                 do {
-                    signed = try rewritten["\(file.name)/\(name)"] ?? store(binary.rewritten(identifier: name))
+                    signed = try rewritten[key] ?? store(binary.rewritten(identifier: name))
                 } catch is MachOFailure {
                     throw AdaptationFailure.malformedBinary(package: package, path: entry.path)
                 }
-                rewritten["\(file.name)/\(name)"] = signed
+                rewritten[key] = signed
                 try tree.add(origin.moved(to: path, file: signed), reportedAs: entry.path)
                 try tree.add(PreparedEntry(
                     path: path + ".roothidepatch", kind: .symbolicLink,
                     linkTarget: "/usr/lib/DynamicPatches/AutoPatches.dylib",
                     mode: 0o755, uid: 0, gid: 0, modificationTime: entry.modificationTime
                 ), reportedAs: entry.path + ".roothidepatch")
+                if binary.installNameToolRuns {
+                    madeByRoot.append((path, 0o022))
+                }
+                madeByRoot.append((path + ".roothidepatch", 0))
                 continue
             }
 
-            let walked = file.size > 0 && Self.patcherOpens(path)
+            let walked = try walks(file, at: path, reportedAs: entry.path)
             var edited: Data?
             if walked, Self.isScript(name) {
                 // sed would read the file or plutil's XML of it, whichever
@@ -207,8 +268,8 @@ public struct RootlessToRoothide: PackageAdapter {
                 guard !converted.contains(origin.path) else {
                     throw AdaptationFailure.notSimple(package: package, path: entry.path)
                 }
-                edited = try Self.maintainerScript(contents(file))
-            } else if walked, Self.isPropertyList(name), let rule = Self.propertyListRule(at: path) {
+                edited = try unlessLocaleDependent(entry.path) { try Self.maintainerScript(contents(file)) }
+            } else if walked, Self.isPropertyList(name), let rule = try unlessLocaleDependent(entry.path, { try Self.propertyListRule(at: path) }) {
                 guard let list = try Self.propertyList(contents(file), rule) else {
                     throw AdaptationFailure.notSimple(package: package, path: entry.path)
                 }
@@ -227,6 +288,17 @@ public struct RootlessToRoothide: PackageAdapter {
             try tree.add(origin.moved(to: path, file: shared), reportedAs: entry.path)
             linked[origin.path, default: []].append(path)
         }
+        // a directory the archive never lists is root's, in the group tar
+        // gave it (`dpkg-deb -b` lists every one)
+        let groups = Self.madeUpGroups(manifest.entries)
+        for path in tree.madeUp {
+            tree.makeRoots(path, group: groups["var/jb/\(path)"] ?? 501)
+        }
+        // what the patcher's tools make anew is root's, in the group of the
+        // directory tar left, or at the top of the one the patcher made
+        for (path, umask) in madeByRoot {
+            tree.makeRoots(path, clearing: umask)
+        }
 
         var controlFiles = manifest.controlFiles.filter { $0.key != ".DS_Store" }
         try tree.add(
@@ -242,10 +314,11 @@ public struct RootlessToRoothide: PackageAdapter {
                 mode: 0o755, uid: 501, gid: 501, modificationTime: earliest
             ), parents: 501, reportedAs: "DEBIAN/\(name)")
             // the patcher walks the control directory like the rest
-            guard file.size > 0, Self.patcherOpens(name) else { continue }
+            guard try walks(file, at: name, reportedAs: "DEBIAN/\(name)") else { continue }
             let member = try contents(file)
             controlFiles[name] = try store(
-                Self.isScript(name) ? Self.maintainerScript(member) : Self.isPropertyList(name) ? Self.xml(member) : member,
+                Self.isScript(name) ? unlessLocaleDependent("DEBIAN/\(name)") { try Self.maintainerScript(member) }
+                    : Self.isPropertyList(name) ? Self.xml(member) : member,
                 over: file
             )
         }
@@ -268,38 +341,98 @@ public struct RootlessToRoothide: PackageAdapter {
     }
 
     /// The names the patcher's `find` passes over before it asks what a
-    /// file is: a Mach-O called `icon.png` is left as it was, by both.
+    /// file is: a Mach-O called `icon.png` is left as it was, by both, and
+    /// so is anything under a `pkgmirror` of the package's own, at any depth.
+    /// `find -path` matches bytes, and so does everything here.
     private static func patcherOpens(_ path: String) -> Bool {
-        if path.hasSuffix(".lua") {
-            return (path as NSString).lastPathComponent == "EQE.lua"
+        !path.containsBytes(".lproj/") && !"/\(path)".containsBytes("/var/mobile/Library/pkgmirror/")
+            && ![".png", ".gif", ".jpg", ".jpeg", ".svg", ".strings", ".js", ".py", ".h", ".json", ".txt", ".xml"]
+            .contains(where: { path.utf8.reversed().starts(with: $0.utf8.reversed()) })
+            && (!path.utf8.reversed().starts(with: ".lua".utf8.reversed()) || (path as NSString).lastPathComponent == "EQE.lua")
+    }
+
+    /// The group tar gives each directory it makes up on the way to a member
+    /// below it, by archive path: the group the directory it makes it in
+    /// has at that moment (BSD's rule). A directory tar unpacks keeps the
+    /// group it was made with, the patcher's (mobile's) at the top, until
+    /// tar sets the owner the archive gives it, which it puts off until a
+    /// member outside that directory comes (GNU tar's delayed set_stat).
+    private static func madeUpGroups(_ entries: [PreparedEntry]) -> [String: UInt32] {
+        var group: [String: UInt32] = [:]
+        var delayed: [(path: String, group: UInt32?)] = []
+        var madeUp: [String: UInt32] = [:]
+        func parent(_ path: String) -> String? {
+            path.utf8.lastIndex(of: 0x2F).map { String(decoding: path.utf8[..<$0], as: UTF8.self) }
         }
-        return !path.contains(".lproj/") && ![
-            ".png", ".gif", ".jpg", ".jpeg", ".svg", ".strings", ".js", ".py", ".h", ".json", ".txt", ".xml",
-        ].contains(where: path.hasSuffix)
+        func madeIn(_ path: String) -> UInt32 {
+            parent(path).flatMap { group[$0] } ?? 501
+        }
+        for entry in entries {
+            while let last = delayed.last, !entry.path.utf8.starts(with: "\(last.path)/".utf8) {
+                if let owned = last.group {
+                    group[last.path] = owned
+                }
+                delayed.removeLast()
+            }
+            var missing: [String] = []
+            var path = entry.path
+            while let up = parent(path), group[up] == nil {
+                missing.append(up)
+                path = up
+            }
+            for directory in missing.reversed() {
+                group[directory] = madeIn(directory)
+                madeUp[directory] = group[directory]
+                delayed.append((directory, nil))
+            }
+            if entry.kind == .directory {
+                group[entry.path] = group[entry.path] ?? madeIn(entry.path)
+                madeUp[entry.path] = nil
+                delayed.append((entry.path, entry.gid))
+            }
+        }
+        return madeUp
     }
 
     /// The order `dpkg-deb -b` walks a tree in: depth first, each
     /// directory's names sorted bytewise, so `a/b` comes before `a-c`.
     private static func walksBefore(_ lhs: String, _ rhs: String) -> Bool {
-        lhs.split(separator: "/").lexicographicallyPrecedes(rhs.split(separator: "/")) {
-            $0.utf8.lexicographicallyPrecedes($1.utf8)
+        lhs.utf8.split(separator: 0x2F).lexicographicallyPrecedes(rhs.utf8.split(separator: 0x2F)) {
+            $0.lexicographicallyPrecedes($1)
         }
+    }
+}
+
+/// Paths as the patcher's tools take them, byte for byte. `String` compares,
+/// searches and splits by character, and a combining mark makes one
+/// character of the `/` in front of it.
+extension String {
+    func containsBytes(_ other: String) -> Bool {
+        utf8.indices.contains { utf8[$0...].starts(with: other.utf8) }
+    }
+
+    /// The path past an ASCII `prefix` it starts with.
+    func droppingBytes(_ prefix: String) -> String {
+        String(decoding: utf8.dropFirst(prefix.utf8.count), as: UTF8.self)
     }
 }
 
 /// The entries of the adapted package, in the order they are added, every
 /// path once. The script unpacks to a directory and packs it again, so every
 /// directory on the way to a file is an entry of its result even where the
-/// package never listed it; the same is made up here.
+/// package never listed it; the same is made up here, for the mirror and
+/// the patcher's own directories (the payload's are refused, `madeUp`).
 private struct Tree {
     /// Named in a refusal.
     let package: String
     private(set) var entries: [PreparedEntry] = []
-    private var kinds: [String: PreparedEntryKind] = [:]
-    /// Where each directory made up for a path below it is in `entries`.
-    private var madeUp: [String: Int] = [:]
+    /// Where each path is in `entries`.
+    private var index: [String: Int] = [:]
+    /// The directories made up for a path below them that the archive has
+    /// not listed.
+    private(set) var madeUp: Set<String> = []
 
-    /// `kinds` and `madeUp` are private, so the implicit memberwise
+    /// `index` is private, so the implicit memberwise
     /// initializer is private to `Tree` itself and the adaptation above
     /// cannot call it. Xcode 26 says so and Xcode 27 does not, which is how
     /// this passed here and failed on CI. A tree is filled by `add` in any
@@ -315,45 +448,64 @@ private struct Tree {
         let refusal = AdaptationFailure.notSimple(package: package, path: reported)
         var missing: [String] = []
         var path = entry.path
-        while let slash = path.lastIndex(of: "/") {
-            path = String(path[..<slash])
-            if let kind = kinds[path] {
-                guard kind == .directory else { throw refusal }
+        while let parent = Self.parent(of: path) {
+            path = parent
+            if let at = index[path] {
+                guard entries[at].kind == .directory else { throw refusal }
                 break
             }
             missing.append(path)
         }
         for path in missing.reversed() {
-            kinds[path] = .directory
-            madeUp[path] = entries.count
+            index[path] = entries.count
+            madeUp.insert(path)
             entries.append(PreparedEntry(
                 path: path, kind: .directory, mode: 0o755, uid: owner, gid: owner, modificationTime: entry.modificationTime
             ))
         }
-        if let kind = kinds[entry.path] {
+        if let at = index[entry.path] {
             // anything but two directories is two things in one place
-            guard kind == .directory, entry.kind == .directory else { throw refusal }
+            guard entries[at].kind == .directory, entry.kind == .directory else { throw refusal }
             // the archive listed the directory after its contents: its own
             // entry is the one unpacking leaves; one the mirror needs as well
             // (`var/mobile/Library`) stays the package's
-            if let index = madeUp.removeValue(forKey: entry.path) {
-                entries[index] = entry
+            if madeUp.remove(entry.path) != nil {
+                entries[at] = entry
             }
             return
         }
-        kinds[entry.path] = entry.kind
+        index[entry.path] = entries.count
         entries.append(entry)
     }
 
     /// The file at `path` as a hard link to `target`, which holds the same.
     mutating func link(_ path: String, to target: String) {
-        guard let index = entries.firstIndex(where: { $0.path == path }) else { return }
-        let entry = entries[index]
-        entries[index] = PreparedEntry(
+        guard let at = index[path] else { return }
+        let entry = entries[at]
+        entries[at] = PreparedEntry(
             path: path, kind: .hardLink, linkTarget: target,
             mode: entry.mode, uid: entry.uid, gid: entry.gid, modificationTime: entry.modificationTime
         )
-        kinds[path] = .hardLink
+    }
+
+    /// The entry at `path` as root leaves what it writes: root's, in
+    /// `group` or its directory's, or at the top in the group of the
+    /// directory the patcher unpacks into (mobile's, where RootHidePatcher
+    /// works), and with `umask` cleared from its mode.
+    mutating func makeRoots(_ path: String, clearing umask: UInt32 = 0, group: UInt32? = nil) {
+        guard let at = index[path] else { return }
+        let entry = entries[at]
+        let group = group ?? Self.parent(of: path).flatMap { index[$0] }.map { entries[$0].gid } ?? 501
+        entries[at] = PreparedEntry(
+            path: path, kind: entry.kind, file: entry.file, linkTarget: entry.linkTarget,
+            mode: entry.mode & ~umask, uid: 0, gid: group, modificationTime: entry.modificationTime
+        )
+    }
+
+    /// Up to the last `/`, which is a byte: a combining mark after it would
+    /// make one character of the two.
+    private static func parent(of path: String) -> String? {
+        path.utf8.lastIndex(of: 0x2F).map { String(decoding: path.utf8[..<$0], as: UTF8.self) }
     }
 }
 

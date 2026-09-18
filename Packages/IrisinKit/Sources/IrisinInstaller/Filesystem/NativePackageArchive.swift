@@ -59,7 +59,7 @@ struct NativePackageArchive {
             // name: `extrainst_` and friends included. A name it could not
             // spell as a path is the only refusal.
             guard !name.isEmpty, name != ".", name != "..", name.count <= 250,
-                  !name.utf8.contains(0), !name.contains("/")
+                  !name.utf8.contains(0), !name.utf8.contains(0x2F)
             else { throw NativePackageFailure("Invalid control member") }
             try validate(file)
         }
