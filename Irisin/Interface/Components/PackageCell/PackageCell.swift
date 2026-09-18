@@ -232,7 +232,9 @@ class PackageCell: UIView {
             }
         }
         badgedVersion = installedVersion
-        if let represent {
+        // a build this bootstrap cannot install, even through an adapter,
+        // is neither an update nor the installed version: no badge
+        if let represent, represent.isSupportedOnDevice {
             if let badgedVersion {
                 indicator.backgroundColor = .versionBadgeBacking
                 if let currentCellVersion = represent.latestVersion {
