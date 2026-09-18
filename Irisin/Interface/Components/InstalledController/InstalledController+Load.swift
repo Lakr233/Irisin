@@ -24,6 +24,9 @@ extension InstalledController {
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
         collectionView.backgroundColor = .clear
+        // the dashboard's edge: icons and date headers start 20 in
+        collectionView.contentInset.left = 20
+        collectionView.contentInset.right = 20
         collectionView.register(PackageCollectionCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(
             ReuseTimerHeaderView.self,

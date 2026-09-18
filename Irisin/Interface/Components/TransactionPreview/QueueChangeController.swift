@@ -109,13 +109,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     }
 
     private func prepare(within budget: Duration) async {
-        guard let work else { return }
-        // a task group waits for every child, and a task's value cannot be
-        // cancelled: the sleep is what gets cut short
-        let timer = Task { try await Task.sleep(for: budget) }
-        let answer = Task { await work.value; timer.cancel() }
-        _ = try? await timer.value
-        answer.cancel()
+        await work?.wait(upTo: budget)
     }
 
     override func viewDidLoad() {

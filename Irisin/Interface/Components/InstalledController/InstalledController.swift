@@ -80,11 +80,15 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
 
     static func section(of package: Package) -> String {
         let section = package.latestMetadata?["section"] ?? ""
-        return section.isEmpty ? String(localized: "Unknown Section") : section
+        return section.isEmpty ? String(localized: "Unknown Section") : section.sectionDisplayName
     }
 
+    /// Each author the way the package page names them: the name alone,
+    /// without the `<address>` or `<https://...>` after it.
     static func authors(of package: Package) -> [String] {
-        let authors = PackageCenter.authors(of: package).filter { !$0.isEmpty }
+        let authors = PackageCenter.authors(of: package)
+            .map { PackageController.contact($0).text }
+            .filter { !$0.isEmpty }
         return authors.isEmpty ? [String(localized: "Unknown Author")] : authors
     }
 
@@ -133,6 +137,7 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
             if let view = view as? ReuseTimerHeaderView,
                let key = diffableDataSource.sectionIdentifier(for: indexPath.section)
             {
+                view.horizontalPadding = 0
                 view.loadText(dataSource.first { $0.key == key }?.section ?? "")
             }
             return view
@@ -242,7 +247,7 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
 
     @objc
     func sendUpdate() {
-        present(next: UpdateController())
+        UpdateController.show(from: self)
     }
 
     // MARK: - MORE MENU

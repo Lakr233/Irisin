@@ -57,7 +57,8 @@ class SearchCell: UITableViewCell {
 
         image.snp.makeConstraints { x in
             x.centerY.equalTo(contentView.snp.centerY)
-            x.leading.equalTo(contentView.snp.leading).offset(12)
+            // the dashboard's edge, as on every package list
+            x.leading.equalTo(contentView.snp.leading).offset(20)
             x.height.equalTo(33)
             x.width.equalTo(33)
         }

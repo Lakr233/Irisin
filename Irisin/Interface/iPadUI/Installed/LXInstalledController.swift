@@ -12,7 +12,6 @@ import UIKit
 class LXInstalledController: InstalledController {
     override func viewDidLoad() {
         view.backgroundColor = .pageBackground
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         super.viewDidLoad()
     }
 }

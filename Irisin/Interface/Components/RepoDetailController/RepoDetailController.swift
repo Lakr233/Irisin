@@ -91,7 +91,7 @@ class RepoDetailController: UIViewController {
                 content.text = String(localized: "All")
                 content.secondaryText = String(repo.packageCount)
             case let .section(key):
-                content.text = key
+                content.text = key.sectionDisplayName
                 content.secondaryText = String(sections[key] ?? 0)
             }
             cell.contentConfiguration = content
@@ -413,7 +413,7 @@ extension RepoDetailController: UICollectionViewDelegate {
             let collection = PackageCollectionController()
             collection.title = switch filter {
             case .all: repo.nickName
-            case let .section(key): key
+            case let .section(key): key.sectionDisplayName
             }
             collection.dataSource = packages
             present(next: collection)

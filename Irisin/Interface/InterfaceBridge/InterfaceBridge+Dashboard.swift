@@ -51,7 +51,7 @@ extension InterfaceBridge {
             },
             shouldLimit: false,
             action: { controller in
-                controller?.present(next: UpdateController())
+                UpdateController.show(from: controller)
             }
         )
     }

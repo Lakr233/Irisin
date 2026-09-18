@@ -166,8 +166,8 @@ class SearchController: UITableViewController {
         label.textColor = .sectionCaption
         box.addSubview(label)
         label.snp.makeConstraints { x in
-            x.leading.equalToSuperview().offset(15)
-            x.trailing.equalToSuperview().offset(-15)
+            x.leading.equalToSuperview().offset(20)
+            x.trailing.equalToSuperview().offset(-20)
             x.top.bottom.equalToSuperview().inset(3)
         }
         switch kind {

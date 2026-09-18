@@ -27,4 +27,10 @@ nonisolated extension String {
         let hexBytes = digest.map { String(format: "%02hhx", $0) }
         return hexBytes.joined()
     }
+
+    /// A dpkg section as the interface spells it: `Terminal_Support` reads
+    /// `Terminal Support`. A filter keeps matching on the raw value.
+    var sectionDisplayName: String {
+        replacingOccurrences(of: "_", with: " ")
+    }
 }

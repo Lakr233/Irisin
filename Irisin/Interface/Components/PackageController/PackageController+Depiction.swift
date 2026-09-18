@@ -40,7 +40,10 @@ extension PackageController {
             (String(localized: "Maintainer"), "maintainer"),
         ] {
             var row: [String: Any] = ["title": title, "class": "DepictionTableTextView"]
-            let field = packageObject.latestMetadata?[key] ?? String(localized: "Unknown")
+            var field = packageObject.latestMetadata?[key] ?? String(localized: "Unknown")
+            if key == "section" {
+                field = field.sectionDisplayName
+            }
             (row["text"], row["action"]) = Self.contact(field)
             tabViewsArray.append(row)
         }

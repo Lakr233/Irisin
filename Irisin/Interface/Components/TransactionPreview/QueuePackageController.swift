@@ -77,13 +77,9 @@ final class QueuePackageController: UIViewController, UITableViewDelegate {
 
     /// Waits for the package to be read, up to `budget`, so a quick read
     /// arrives with the page and only a slow one fades in after it. A large
-    /// package takes seconds to read, and nothing that awaits the read can
-    /// be told to stop waiting, so this watches for its end instead.
+    /// package takes seconds to read; the page does not wait for that.
     func prepare(within budget: Duration) async {
-        let deadline = ContinuousClock.now.advanced(by: budget)
-        while work != nil, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(16))
-        }
+        await work?.wait(upTo: budget)
     }
 
     override func viewDidLoad() {

@@ -81,7 +81,9 @@ extension InstalledController {
             cell.overrideIndicator(with: .fluent(.arrowUpCircle24Filled), and: .updateAvailable)
         }
 
-        cell.horizontalPadding = 4
+        // PackageCell holds its icon 4 in from the edge; here, as on the
+        // dashboard, the icon starts at the inset
+        cell.horizontalPadding = -4
         return cell
     }
 

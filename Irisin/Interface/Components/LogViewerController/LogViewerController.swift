@@ -61,14 +61,7 @@ final class LogViewerController: UIViewController, UITableViewDelegate {
     /// it. A page pushed after this shows its rows at once when the parse
     /// made it in time; otherwise the rows land when it does.
     func prepare(within budget: Duration) async {
-        if let work {
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { await work.value }
-                group.addTask { try? await Task.sleep(for: budget) }
-                await group.next()
-                group.cancelAll()
-            }
-        }
+        await work?.wait(upTo: budget)
         loadViewIfNeeded()
         view.layoutIfNeeded()
     }

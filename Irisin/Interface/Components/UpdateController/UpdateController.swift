@@ -115,7 +115,25 @@ class UpdateController: UIViewController, UITableViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        // arriving, the list viewDidLoad started is still the current one
+        guard !isMovingToParent, !isBeingPresented else { return }
         reload()
+    }
+
+    /// Waits for the first list, up to `budget`, so the page is pushed with
+    /// its rows in place; a slower list animates in after the push.
+    func prepare(within budget: Duration) async {
+        loadViewIfNeeded()
+        await reloadTask?.wait(upTo: budget)
+    }
+
+    /// Pushes the page from `host` once its first list is in, or 200 ms on.
+    static func show(from host: UIViewController?) {
+        let page = UpdateController()
+        Task {
+            await page.prepare(within: .milliseconds(200))
+            host?.present(next: page)
+        }
     }
 
     @objc
