@@ -241,84 +241,84 @@
         }
       }
     },
-    "%@ cannot be installed in compatibility mode, which converts simple tweaks only. This package contains %@." : {
+    "%@ cannot be installed in compatibility mode, which does not convert %@." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لا يمكن تثبيت %1$@ في وضع التوافق، الذي لا يحوّل إلا التعديلات البسيطة. تحتوي هذه الحزمة على %2$@."
+            "value" : "لا يمكن تثبيت %1$@ في وضع التوافق، الذي لا يحوّل %2$@."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ kann nicht im Kompatibilitätsmodus installiert werden, der nur einfache Tweaks umwandelt. Dieses Paket enthält %2$@."
+            "value" : "%1$@ kann nicht im Kompatibilitätsmodus installiert werden, der %2$@ nicht umwandelt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ cannot be installed in compatibility mode, which converts simple tweaks only. This package contains %2$@."
+            "value" : "%1$@ cannot be installed in compatibility mode, which does not convert %2$@."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ no se puede instalar en el modo de compatibilidad, que solo convierte tweaks sencillos. Este paquete contiene %2$@."
+            "value" : "%1$@ no se puede instalar en el modo de compatibilidad, que no convierte %2$@."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ ne peut pas être installé en mode de compatibilité, qui ne convertit que les tweaks simples. Ce paquet contient %2$@."
+            "value" : "%1$@ ne peut pas être installé en mode de compatibilité, qui ne convertit pas %2$@."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ non può essere installato in modalità compatibilità, che converte solo i tweak semplici. Questo pacchetto contiene %2$@."
+            "value" : "%1$@ non può essere installato in modalità compatibilità, che non converte %2$@."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ は互換モードでインストールできません。互換モードで変換できるのはシンプルな Tweak だけですが、このパッケージには %2$@ が含まれています。"
+            "value" : "%1$@ は互換モードでインストールできません。互換モードは %2$@ を変換しません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 패키지는 호환 모드로 설치할 수 없습니다. 호환 모드는 단순한 트윅만 변환하며, 이 패키지에는 %2$@이(가) 포함되어 있습니다."
+            "value" : "%1$@ 패키지는 호환 모드로 설치할 수 없습니다. 호환 모드는 %2$@을(를) 변환하지 않습니다."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ não pode ser instalado no modo de compatibilidade, que converte apenas tweaks simples. Este pacote contém %2$@."
+            "value" : "%1$@ não pode ser instalado no modo de compatibilidade, que não converte %2$@."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ нельзя установить в режиме совместимости: он преобразует только простые твики. Этот пакет содержит %2$@."
+            "value" : "%1$@ нельзя установить в режиме совместимости: он не преобразует %2$@."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không thể cài đặt %1$@ ở chế độ tương thích, vốn chỉ chuyển đổi các tweak đơn giản. Gói này chứa %2$@."
+            "value" : "Không thể cài đặt %1$@ ở chế độ tương thích, vốn không chuyển đổi %2$@."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 无法以兼容模式安装：兼容模式只转换简易插件，而此软件包包含 %2$@。"
+            "value" : "%1$@ 无法以兼容模式安装：兼容模式不转换 %2$@。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 無法以相容模式安裝：相容模式只轉換簡易插件，而此套件包含 %2$@。"
+            "value" : "%1$@ 無法以相容模式安裝：相容模式不轉換 %2$@。"
           }
         }
       }

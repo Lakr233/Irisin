@@ -14,12 +14,15 @@ import XCTest
 /// roothide's `patch.sh` (Compat Layer mode) made of each on a device;
 /// `Scripts/adapter-reference.sh` fills both. Each input is prepared and
 /// adapted, each reference only prepared, and the two manifests must say
-/// the same: paths, kinds, modes, owners, link targets, every blob's
-/// SHA-256 (so a Mach-O the same to the byte, signature included), the
-/// control paragraph and every control member. What is allowed to differ is
+/// the same: paths, kinds, modes, owners, link targets (hard links
+/// included), every blob's SHA-256 (so a Mach-O the same to the byte,
+/// signature included, and a property list the same XML), the control
+/// paragraph and every control member. What is allowed to differ is
 /// written down in `compare` and nowhere else. A package the adapter
-/// refuses as more than a simple tweak is listed, not compared; one it
-/// refuses for any other reason fails. Skipped without the variable.
+/// refuses as more than it converts is listed, not compared, and so is a
+/// binary it could not convert where the script made nothing either (ldid
+/// refuses entitlements it cannot write as DER); a refusal for any other
+/// reason fails. Skipped without the variable.
 final class AdapterConformanceTests: XCTestCase {
     func testAdaptedPackagesMatchThePatcher() throws {
         guard let root = ProcessInfo.processInfo.environment["ADAPTER_CONFORMANCE_DIR"].map(URL.init(fileURLWithPath:)) else {
@@ -40,13 +43,15 @@ final class AdapterConformanceTests: XCTestCase {
             do {
                 digest = try PackageAdapters.installed.adapt(preparedPackageAt: ours, on: "iphoneos-arm64e")
             } catch let refusal as AdaptationFailure {
-                // Refusing a real package is in scope — the conversion takes
-                // simple tweaks and the script takes more — but only for
-                // that reason. A binary we could not read, or an adapter
-                // that is not there, is a divergence whatever the script
-                // made of the same package.
+                // Refusing a real package is in scope — the conversion
+                // refuses what the script would make otherwise — but only
+                // for that reason. A binary we could not convert is a divergence
+                // where the script converted it, and an adapter that is not
+                // there is one whatever the script made of the package.
+                let scriptRefused = !FileManager.default.fileExists(atPath: root.appendingPathComponent("ref/\(name)").path)
                 switch refusal {
                 case .notSimple, .incompatible: break
+                case .malformedBinary where scriptRefused: break
                 case .malformedBinary, .unavailable: XCTFail("\(name): \(refusal)")
                 }
                 print("conformance: \(name) refused: \(refusal)")
@@ -100,16 +105,7 @@ final class AdapterConformanceTests: XCTestCase {
             if entry.kind != .symbolicLink {
                 XCTAssertEqual(entry.mode, other.mode, label)
             }
-            guard let file = entry.file, let otherFile = other.file, file.sha256 != otherFile.sha256 else { continue }
-            // the script turns every property list into XML so that sed can
-            // read it, then edits only those of daemons and libSandy, which
-            // are refused here: the same values in another encoding
-            let mineList = try? PropertyListSerialization.propertyList(from: Data(contentsOf: ours.appendingPathComponent(file.name)), format: nil)
-            let otherList = try? PropertyListSerialization.propertyList(from: Data(contentsOf: theirs.appendingPathComponent(otherFile.name)), format: nil)
-            XCTAssertTrue(
-                path.hasSuffix(".plist") && mineList != nil && (mineList as? NSObject) == (otherList as? NSObject),
-                "\(label): contents differ"
-            )
+            XCTAssertEqual(entry.file?.sha256, other.file?.sha256, "\(label): contents differ")
         }
     }
 }

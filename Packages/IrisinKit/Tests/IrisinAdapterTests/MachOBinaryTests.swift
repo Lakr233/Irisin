@@ -53,27 +53,185 @@ final class MachOBinaryTests: XCTestCase {
         }
     }
 
-    /// A program is not rewritten, whatever else its slices are: the same
-    /// file with a 32-bit slice first is still refused as a program.
-    func testOnlyLibrariesAndBundlesAreTaken() throws {
-        XCTAssertThrowsError(try MachOBinary(contentsOf: fixture("input/fixture-tool"))) {
-            XCTAssertEqual($0 as? MachOFailure, .notLibrary)
+    /// Fat, signed by ldid with entitlements that exercise the merge, every
+    /// executable segment flag and every kind of value, and carrying an
+    /// `__info_plist` section for the info slot.
+    func testProgramSignedByLdid() throws {
+        try assertRewriteMatchesTheTools("FixtureApp")
+    }
+
+    /// Signed by codesign, as Xcode signs: the entitlements in Apple's own
+    /// XML, which the merge reads as libplist reads it.
+    func testProgramSignedByCodesign() throws {
+        try assertRewriteMatchesTheTools("FixtureCodesigned")
+    }
+
+    /// No entitlements of its own, then no signature at all: roothide's
+    /// four are all either gets.
+    func testProgramWithNoEntitlements() throws {
+        try assertRewriteMatchesTheTools("fixture-tool")
+        try assertRewriteMatchesTheTools("FixtureUnsignedTool")
+    }
+
+    /// A program slice beside a library slice is a program to `file`, so
+    /// both get the merge and only the program's is the main binary; the
+    /// library carries an `__info_plist` for the info slot.
+    func testProgramWithALibrarySlice() throws {
+        try assertRewriteMatchesTheTools("FixtureMixed")
+    }
+
+    /// The merge read back: the program's keys where they stood, the one
+    /// roothide also sets now true in its place, roothide's others after
+    /// them, and the flags the entitlements ask for.
+    func testTheMergedEntitlementsReadBack() throws {
+        let rewritten = try XCTUnwrap(MachOBinary(contentsOf: fixture("input/FixtureApp"))).rewritten(identifier: "FixtureApp")
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try rewritten.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        guard case let .fat(fat) = try MachOKit.loadFromFile(url: url) else { return XCTFail("not fat") }
+        for slice in try fat.machOFiles() {
+            let signature = try XCTUnwrap(slice.codeSign)
+            let entitlements = try LdidEntitlements(xml: XCTUnwrap(signature.embeddedEntitlementsData))
+            XCTAssertEqual(entitlements.entries.map(\.key), [
+                "application-identifier", "platform-application", "get-task-allow",
+                "com.apple.private.skip-library-validation", "dynamic-codesigning",
+                "com.apple.private.amfi.can-execute-cdhash", "com.apple.private.cs.debugger",
+                "com.apple.security.exception.files.absolute-path.read-write", "keychain-access-groups",
+                "com.example.nested", "com.example.blob", "com.example.long",
+                "com.apple.private.security.no-sandbox", "com.apple.private.security.storage.AppBundles",
+                "com.apple.private.security.storage.AppDataContainers",
+            ])
+            XCTAssertEqual(entitlements.entries[1].value, .boolean(true))
+            XCTAssertEqual(signature.embeddedDEREntitlementsData, entitlements.der)
+            let directory = try XCTUnwrap(signature.codeDirectory)
+            // main binary, get-task-allow, dynamic-codesigning, skip-library-validation, can-execute-cdhash
+            XCTAssertEqual(directory.executableSegment(in: signature)?.flags.rawValue, 0x1 | 0x10 | 0x40 | 0x80 | 0x100)
         }
+    }
+
+    /// What is not code is refused, whatever else its slices are: the same
+    /// file with a 32-bit slice first is still refused for what it is.
+    func testWhatIsNotCodeIsRefused() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }
         var fat = try Data(contentsOf: fixture("input/Fixture.dylib"))
         fat.replaceSubrange(16384 ..< 16384 + 4, with: [0xCE, 0xFA, 0xED, 0xFE])
-        for type: UInt8 in [2, 1, 10] { // program, object file, dSYM
+        for type: UInt8 in [1, 10] { // object file, dSYM
             fat[98304 + 12] = type
             try fat.write(to: url)
-            XCTAssertThrowsError(try MachOBinary(contentsOf: url)) { XCTAssertEqual($0 as? MachOFailure, .notLibrary) }
+            XCTAssertThrowsError(try MachOBinary(contentsOf: url)) { XCTAssertEqual($0 as? MachOFailure, .notCode) }
+        }
+    }
+
+    /// What ldid refuses to carry into DER, or libplist reads its own way,
+    /// is refused rather than signed with something ldid would not write.
+    func testEntitlementsThatCannotBeCarriedOver() {
+        let plist = { (body: String) in "<plist version=\"1.0\"><dict><key>k</key>\(body)</dict></plist>" }
+        let bodies = [
+            "<real>1.5</real>", "<date>2026-01-01T00:00:00Z</date>",
+            // strtoull in any base, and zero, which ldid's DER cannot spell
+            "<integer>0</integer>", "<integer>-1</integer>", "<integer>010</integer>", "<integer>0x10</integer>",
+            "<integer>&#49;</integer>", "<integer>\u{A0}5</integer>", "<integer/>",
+            // a second key in a row, stray text, markup inside a text
+            "<key>again</key><true/>", "<string><true/></string>", "stray<true/>", "<true>x</true>",
+            "<string>a<!--c-->b</string>", "<string><![CDATA[a]]></string>", "<string q='>'>b</string>",
+            // entities libplist matches by their first letters or not at all
+            "<string>x&ampy;z</string>", "<string>&foo;</string>", "<string>&#000000065;</string>", "<string>&#0;</string>",
+            "<string>&#xD800;</string>", "<string>&#+65;</string>", "<string>a&</string>", "<string>a\0b</string>",
+            // base64 libplist decodes its own way
+            "<data>QUFB<!--c-->QkJC</data>", "<data>&#81;UFB</data>", "<data>====</data>", "<data>QU=B</data>", "<data>QR==</data>",
+            String(repeating: "<array>", count: 64) + String(repeating: "</array>", count: 64),
+        ]
+        let documents = bodies.map(plist) + [
+            "bplist00", "  \n", "\u{FEFF}<dict/>", "<plist version=\"1.0\"><array/></plist>",
+            // libplist reads on past an empty root, into it
+            "<plist><dict/><key>get-task-allow</key><true/></plist>", "<dict/>\0garbage", "<plist><dict/>",
+            "<dict><key>a</key></dict>", "<dict><key/><true/></dict>", "<dict>\u{A0}</dict>",
+            "<plist><dict><key>CF$UID</key><integer>1</integer></dict></plist>",
+            "<!DOCTYPE plist [<!ENTITY x \"y\">]><dict/>",
+        ]
+        for document in documents {
+            XCTAssertThrowsError(try LdidEntitlements(xml: Data(document.utf8)), document) {
+                XCTAssertEqual($0 as? MachOFailure, .unsupportedEntitlements, document)
+            }
+        }
+        XCTAssertThrowsError(try LdidEntitlements(xml: Data(plist("<string>").utf8) + [0xFF] + Data("</string>".utf8)))
+        XCTAssertNoThrow(try LdidEntitlements(xml: Data(plist(String(repeating: "<array>", count: 63) + String(repeating: "</array>", count: 63)).utf8)))
+    }
+
+    /// What libplist reads as written: every byte of a string, CRs too, the
+    /// document up to the end of its root and not a byte further, the last
+    /// value of a key where the key first stood.
+    func testEntitlementsReadAsLibplistReadsThem() throws {
+        let cases: [(String, [LdidEntitlements.Entry])] = [
+            ("<dict><key>a\rb</key><string>c\r\nd</string></dict>", [.init(key: "a\rb", value: .string("c\r\nd"))]),
+            ("<dict><key>k</key><true/></dict>garbage<", [.init(key: "k", value: .boolean(true))]),
+            ("<dict><key>k</key><string>&lt;&gt;&amp;&quot;&apos;&#65;&#x42;&#X43;</string></dict>", [.init(key: "k", value: .string("<>&\"'ABC"))]),
+            ("<?xml version=\"1.0\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"x>y\">\n<plist version=\"1.0\"><dict/></plist>\n<!-- c -->", []),
+            ("<dict><!-- c --><key>k</key><?pi \"?>\"?><data>\n\tQUFB\n\tQkJC\n\t</data></dict>", [.init(key: "k", value: .data(Data("AAABBB".utf8)))]),
+            ("<dict><key>a</key><true/><key>b</key><true/><key>a</key><false/></dict>", [.init(key: "a", value: .boolean(false)), .init(key: "b", value: .boolean(true))]),
+            ("<dict><key>é</key><true/><key>e\u{301}</key><false/></dict>", [.init(key: "é", value: .boolean(true)), .init(key: "e\u{301}", value: .boolean(false))]),
+            ("<dict><key>k</key><integer> 300 \n</integer><key></key><string/></dict>", [.init(key: "k", value: .integer(300)), .init(key: "", value: .string(""))]),
+            ("", []),
+        ]
+        for (document, entries) in cases {
+            XCTAssertEqual(try LdidEntitlements(xml: Data(document.utf8)).entries, entries, document)
+        }
+    }
+
+    /// libplist writes Foundation's XML but for the order of the keys, and
+    /// the writer is held to Foundation on every list: base64 wrapped at
+    /// every depth, escapes, CRs, control characters, keys Foundation sorts
+    /// by UTF-16 (the emoji before the fullwidth letter) all write as it
+    /// writes them, and the keys stay where they arrived.
+    func testEntitlementsWriteAsFoundationWritesThem() throws {
+        let blob = "<data>" + Data((0 ..< 300).map { UInt8(truncatingIfNeeded: $0 &* 37) }).base64EncodedString() + "</data>"
+        let deep = (0 ..< 12).reduce(blob) { inner, _ in "<array>\(blob)\(inner)</array>" }
+        let document = """
+        <dict><key>zz</key>\(deep)<key>ｆ</key><string>a&lt;b&gt;c&amp;d"e'f]]&gt;\r\n\u{1}\u{7F}</string>\
+        <key>😀</key><true/><key>é</key><false/><key>e\u{301}</key><integer>9223372036854775807</integer>\
+        <key>a</key><dict/><key>b</key><array/><key>c</key><data></data><key></key><string/></dict>
+        """
+        var entitlements = try LdidEntitlements(xml: Data(document.utf8))
+        entitlements.merge(LdidEntitlements.roothide)
+        let xml = try entitlements.xml()
+        XCTAssertEqual(try LdidEntitlements(xml: xml).entries, entitlements.entries)
+        XCTAssertEqual(entitlements.entries.first?.key, "zz")
+        XCTAssertNotEqual(xml, try PropertyListSerialization.data(fromPropertyList: PropertyListSerialization.propertyList(from: xml, format: nil), format: .xml, options: 0))
+    }
+
+    /// An `__info_plist` said to run past the file, or to lie over the load
+    /// commands ldid rewrites before it reads, is refused, never read.
+    func testInfoPlistOutsideTheCodeIsRefused() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let original = try Data(contentsOf: fixture("input/FixtureApp"))
+        let section = Data("__info_plist".utf8) + Data(count: 4) + Data("__TEXT".utf8) + Data(count: 10)
+        // a section_64's size at 40, eight bytes, and its offset at 48, four
+        for (field, width, value) in [(40, 8, UInt64.max), (40, 8, UInt64(Int64.max)), (48, 4, 0)] {
+            var bytes = original
+            var found = 0
+            var from = bytes.startIndex
+            while let range = bytes.range(of: section, in: from ..< bytes.endIndex) {
+                let at = range.lowerBound + field
+                bytes.replaceSubrange(at ..< at + width, with: withUnsafeBytes(of: value.littleEndian) { Array($0.prefix(width)) })
+                from = range.upperBound
+                found += 1
+            }
+            XCTAssertEqual(found, 2) // one per slice
+            try bytes.write(to: url)
+            XCTAssertThrowsError(try XCTUnwrap(MachOBinary(contentsOf: url)).rewritten(identifier: "FixtureApp")) {
+                XCTAssertEqual($0 as? MachOFailure, .malformed)
+            }
         }
     }
 
     func testWhatIsNotMachO() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }
-        for bytes in [Data(), Data("#!/bin/sh\necho\n".utf8), Data([0xCA, 0xFE, 0xBA, 0xBE, 0, 0, 0, 0x34] + [UInt8](repeating: 0, count: 64))] {
+        // a Java class; and 20 architectures, which `file` calls data
+        let fat = { (count: UInt8) in Data([0xCA, 0xFE, 0xBA, 0xBE, 0, 0, 0, count] + [UInt8](repeating: 0, count: 64)) }
+        for bytes in [Data(), Data("#!/bin/sh\necho\n".utf8), fat(0x34), fat(20)] {
             try bytes.write(to: url)
             XCTAssertNil(try MachOBinary(contentsOf: url))
         }

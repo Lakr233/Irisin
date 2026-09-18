@@ -53,10 +53,11 @@ public enum AdaptationFailure: Error, Equatable, Sendable {
     /// (`canAttemptInstall`), so it is not converted.
     case incompatible(package: String)
     /// The package is more than the adapter converts. `path` is the entry
-    /// that says so, as the archive spells it: a program, an app, a file
-    /// outside the jailbreak root.
+    /// that says so, as the archive spells it: a file outside the jailbreak
+    /// root, conffiles, a daemon's list the patcher would garble.
     case notSimple(package: String, path: String)
-    /// A Mach-O the adapter cannot rewrite: damaged, not 64-bit, or with no
-    /// room left for the longer load commands.
+    /// A Mach-O the adapter cannot rewrite: damaged, not 64-bit, with no
+    /// room left for the longer load commands, or a program whose
+    /// entitlements it cannot carry over.
     case malformedBinary(package: String, path: String)
 }

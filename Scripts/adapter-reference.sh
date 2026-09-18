@@ -14,7 +14,9 @@
 # The device needs Procursus ldid, dpkg-deb and what patch.sh calls:
 #   apt install file gawk plutil odcctools
 # DEVICE_HOST, DEVICE_PORT and DEVICE_USER pick the device (a user that can
-# sudo, since the patcher refuses anyone but root).
+# sudo, since the patcher refuses anyone but root). With DEVICE_PASSWORD set
+# sudo reads it from standard input instead of asking, so that no process
+# list shows it (a vphone: DEVICE_PORT=2333 DEVICE_PASSWORD=alpine).
 
 set -Eeuo pipefail
 
@@ -42,7 +44,7 @@ scp -P "$port" "${ssh_opts[@]:2}" "$dir"/in/*.deb "$user@$host:$remote/in/"
 
 # patch.sh deletes its input on a device, so each sample is patched from a
 # copy; sudo resets PATH, which the bootstrap's tools need
-device -t "sudo env PATH=/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/sbin:/var/jb/sbin:\$PATH bash -c '
+patch="env PATH=/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/sbin:/var/jb/sbin:\$PATH bash -c '
     cd $remote
     for deb in in/*.deb; do
         name=\$(basename \"\$deb\" .deb)
@@ -52,6 +54,11 @@ device -t "sudo env PATH=/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/sbin:/var/jb/sb
         rm -f \"$remote/\$name.work.deb\"
     done
 '"
+if [[ -n "${DEVICE_PASSWORD:-}" ]]; then
+    printf '%s\n' "$DEVICE_PASSWORD" | device "sudo -S -p '' $patch"
+else
+    device -t "sudo $patch"
+fi
 
 rm -rf "$dir/ref"
 mkdir -p "$dir/ref"

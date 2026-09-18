@@ -4,12 +4,17 @@ import MachOKit
 /// Why a Mach-O cannot be rewritten. `RootlessToRoothide` turns each into
 /// the `AdaptationFailure` the app spells.
 enum MachOFailure: Error, Equatable {
-    /// A slice that is neither a library nor a bundle: a program, which the
-    /// patcher signs with entitlements of its own, or anything stranger (an
-    /// object file, a dSYM). Not what a simple tweak ships.
-    case notLibrary
-    /// A header, an architecture or a load command points outside the file.
+    /// A slice that is not a library, a bundle or a program: an object
+    /// file, a dSYM, anything stranger. Not what a package installs to run.
+    case notCode
+    /// A header, an architecture, a load command or the old signature
+    /// points outside the file.
     case malformed
+    /// A program whose entitlements ldid would not carry over as they are
+    /// read here: a binary plist, a date or a real (which ldid refuses), XML
+    /// libplist reads its own way, a list Foundation would write otherwise
+    /// than libplist but for the order of its keys (`LdidEntitlements`).
+    case unsupportedEntitlements
     /// A slice that is not 64-bit little-endian. The patcher's tools would
     /// rewrite and sign an armv7 slice as well; nothing a roothide device
     /// loads has one, so the package is refused instead.
@@ -21,7 +26,9 @@ enum MachOFailure: Error, Equatable {
 /// One Mach-O of a package, thin or fat, and what roothide's patcher does
 /// to it: every `/var/jb/` rpath and dependency becomes
 /// `@loader_path/.jbroot/`, the way `install_name_tool` writes it, and
-/// every slice is signed again the way `ldid -Hsha256 -S` signs it.
+/// every slice is signed again the way `ldid -Hsha256 -S` signs it, or for
+/// a program `ldid -Hsha256 -M -S<roothide.entitlements>`: its own
+/// entitlements with roothide's merged in.
 ///
 /// MachOKit says where a load command is and what it holds. It maps the
 /// file and trusts what it reads, so the bounds are checked here first, and
@@ -35,9 +42,13 @@ struct MachOBinary {
 
     private let data: Data
     private let slices: [Slice]
+    /// What `file` says of the whole file, which is what the patcher asks
+    /// before it picks ldid's arguments: a program if any slice is one.
+    private let isProgram: Bool
 
-    /// nil for a file that is not a Mach-O. A library or a bundle, 64-bit
-    /// in every slice and sound enough to rewrite, or `MachOFailure`.
+    /// nil for a file that is not a Mach-O. A library, a bundle or a
+    /// program, 64-bit in every slice and sound enough to rewrite, or
+    /// `MachOFailure`.
     init?(contentsOf url: URL) throws {
         data = try Data(contentsOf: url, options: .mappedIfSafe)
         guard data.count >= 8 else { return nil }
@@ -54,10 +65,11 @@ struct MachOBinary {
         case MH_CIGAM, MH_CIGAM_64, FAT_CIGAM_64:
             throw MachOFailure.unsupportedSlice
         case FAT_CIGAM:
-            // a Java class opens with the same four bytes and its version,
-            // 45 or more, where the architectures are counted
+            // a Java class opens with the same four bytes, so `file` calls
+            // the file a Mach-O only under 20 architectures, and the patcher
+            // leaves any other alone
             let count = Int((data.integer(at: 4) as UInt32).byteSwapped)
-            guard (1 ..< 31).contains(count) else { return nil }
+            guard (1 ..< 20).contains(count) else { return nil }
             guard 8 + count * MemoryLayout<fat_arch>.size <= data.count,
                   case let .fat(fat) = try MachOKit.loadFromFile(url: url)
             else { throw MachOFailure.malformed }
@@ -68,8 +80,8 @@ struct MachOBinary {
                 // the file out again in memory
                 guard arch.align <= 15, Int(arch.offset) + Int(arch.size) <= data.count else { throw MachOFailure.malformed }
             }
-            // what the file is before whether it can be rewritten: a program
-            // with an armv7 slice is a program
+            // what the file is before whether it can be rewritten: a dSYM
+            // with an armv7 slice is a dSYM
             for arch in arches {
                 try Self.checkType(data, at: Int(arch.offset))
             }
@@ -82,6 +94,7 @@ struct MachOBinary {
         default:
             return nil
         }
+        isProgram = slices.contains { $0.file.header.filetype == UInt32(MH_EXECUTE) }
     }
 
     /// The file as the patcher leaves it. `identifier` is what ldid signs
@@ -121,7 +134,12 @@ struct MachOBinary {
         var replacements: [(offset: Int, size: Int, bytes: Data)] = []
         var signature: LoadCommandInfo<linkedit_data_command>?
         var linkedit: SegmentCommand64?
-        var text: SegmentCommand64?
+        // ldid's executable segment: from the first byte of any segment
+        // that maps code to the last, in its own unsigned arithmetic
+        var executable: (start: UInt64, end: UInt64) = (.max, 0)
+        // the last `__info_plist` of any `__TEXT` segment: its file offset
+        // and size, as ldid finds it
+        var infoPlist: (offset: UInt64, size: UInt64)?
         // Where a segment that holds content without sections begins.
         // `install_name_tool` counts these when it measures the room in
         // front of the file, and so must anything that writes there.
@@ -141,8 +159,13 @@ struct MachOBinary {
                 if segment.segmentName == SEG_LINKEDIT {
                     linkedit = segment
                 }
+                if segment.layout.initprot & VM_PROT_EXECUTE != 0 {
+                    executable = (min(executable.start, segment.layout.fileoff), max(executable.end, segment.layout.fileoff &+ segment.layout.filesize))
+                }
                 if segment.segmentName == SEG_TEXT {
-                    text = segment
+                    for section in segment.sections(in: slice.file) where section.sectionName == "__info_plist" {
+                        infoPlist = (segment.layout.fileoff &+ UInt64(section.layout.offset), section.layout.size)
+                    }
                 }
                 if segment.numberOfSections == 0, segment.fileSize > 0 {
                     sectionlessContent.append(segment.fileOffset)
@@ -166,7 +189,7 @@ struct MachOBinary {
             bytes.store(UInt32(bytes.count), at: 4)
             replacements.append((path.offset, path.size, bytes))
         }
-        guard let linkedit, let text else { throw MachOFailure.malformed }
+        guard let linkedit else { throw MachOFailure.malformed }
 
         var commands = Data()
         var cursor = 0
@@ -204,8 +227,30 @@ struct MachOBinary {
         image.replaceSubrange(headerSize ..< headerSize + commands.count, with: commands)
         image.store(UInt32(commands.count), at: 20)
 
+        var signer = LdidStyleSignature(identifier: identifier)
+        if isProgram {
+            // each slice keeps its own, read before the old signature goes
+            var entitlements = try LdidEntitlements(xml: signature == nil ? Data() : Self.entitlements(in: Data(image[codeEnd...])))
+            entitlements.merge(LdidEntitlements.roothide)
+            signer.entitlements = try (entitlements.xml(), entitlements.der)
+            signer.executableSegmentFlags = entitlements.executableSegmentFlags(
+                mainBinary: slice.file.header.filetype == UInt32(MH_EXECUTE)
+            )
+        }
+        // ldid hashes it in the file it was given, at an offset it cuts to
+        // 32 bits: that file is this one, old signature and all, but for the
+        // signature command it adds itself, so a section over the commands
+        // is refused
+        if let infoPlist {
+            let start = Int(UInt32(truncatingIfNeeded: infoPlist.offset))
+            guard start >= headerSize + commands.count, start <= image.count, infoPlist.size <= UInt64(image.count - start) else {
+                throw MachOFailure.malformed
+            }
+            signer.infoPlist = image.subdata(in: start ..< start + Int(infoPlist.size))
+        }
+
         let codeLimit = codeEnd.aligned(to: 16)
-        let signatureSize = LdidStyleSignature.size(identifier: identifier, codeLimit: codeLimit).aligned(to: 16)
+        let signatureSize = signer.size(codeLimit: codeLimit).aligned(to: 16)
         image = image.prefix(codeEnd) + Data(count: codeLimit - codeEnd)
         image.store(UInt32(codeLimit), at: signatureCommand + 8)
         image.store(UInt32(signatureSize), at: signatureCommand + 12)
@@ -217,8 +262,26 @@ struct MachOBinary {
         image.store(UInt64(linkeditSize.aligned(to: pageSize)), at: moved(linkedit.offset) + 32)
         image.store(UInt64(linkeditSize), at: moved(linkedit.offset) + 48)
 
-        let blob = LdidStyleSignature.blob(identifier: identifier, code: image, text: (text.fileOffset, text.fileSize))
+        let blob = signer.blob(code: image, executable: (executable.start, executable.end &- executable.start))
         return image + blob + Data(count: signatureSize - blob.count)
+    }
+
+    /// The XML in the old signature's entitlements slot, as ldid reads it:
+    /// the last blob of that type, nothing where there is none, and the
+    /// SuperBlob's own magic unread.
+    private static func entitlements(in signature: Data) throws -> Data {
+        guard signature.count >= 12 else { throw MachOFailure.malformed }
+        let count = Int(signature.bigEndianInteger(at: 8) as UInt32)
+        guard 12 + count * 8 <= signature.count else { throw MachOFailure.malformed }
+        var found = Data()
+        for index in 0 ..< count where signature.bigEndianInteger(at: 12 + index * 8) as UInt32 == 5 {
+            let offset = Int(signature.bigEndianInteger(at: 16 + index * 8) as UInt32)
+            guard offset + 8 <= signature.count else { throw MachOFailure.malformed }
+            let length = Int(signature.bigEndianInteger(at: offset + 4) as UInt32)
+            guard length >= 8, offset + length <= signature.count else { throw MachOFailure.malformed }
+            found = signature.subdata(in: offset + 8 ..< offset + length)
+        }
+        return found
     }
 
     /// `filetype` sits at the same offset in either header; a slice that is
@@ -228,7 +291,7 @@ struct MachOBinary {
         let magic: UInt32 = data.integer(at: offset)
         guard magic == MH_MAGIC || magic == MH_MAGIC_64 else { return }
         let type: UInt32 = data.integer(at: offset + 12)
-        guard type == UInt32(MH_DYLIB) || type == UInt32(MH_BUNDLE) else { throw MachOFailure.notLibrary }
+        guard [MH_DYLIB, MH_BUNDLE, MH_EXECUTE].map(UInt32.init).contains(type) else { throw MachOFailure.notCode }
     }
 
     /// What MachOKit is about to take on trust: a 64-bit header, and load
@@ -278,6 +341,11 @@ private extension Data {
     /// A Mach-O field, little-endian as every slice that gets here is.
     func integer<T: FixedWidthInteger>(at offset: Int) -> T {
         T(littleEndian: withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: T.self) })
+    }
+
+    /// A code signing field, big-endian whatever the slice is.
+    func bigEndianInteger<T: FixedWidthInteger>(at offset: Int) -> T {
+        T(bigEndian: withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: T.self) })
     }
 
     mutating func store(_ value: some FixedWidthInteger, at offset: Int) {

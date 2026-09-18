@@ -50,6 +50,40 @@ final class RootlessToRoothideTextTests: XCTestCase {
         )
     }
 
+    /// The patcher's loose tests of a name and of a directory, as bash's
+    /// `=~` on the device answered them.
+    func testWhatThePatcherEditsByName() {
+        XCTAssertEqual(["postinst", "extrainst_", "rm", "inst", "in", "s", "postinst.sh"].map(RootlessToRoothide.isScript), [
+            true, true, true, true, false, false, false,
+        ])
+        XCTAssertEqual(["x.plist", "plist", ".plist", "x.plist.bak", "xplist"].map(RootlessToRoothide.isPropertyList), [
+            true, true, true, false, false,
+        ])
+        let rules: [String: RootlessToRoothide.PropertyListRule?] = [
+            "Library/LaunchDaemons/x.plist": .daemon, "x.plist": .daemon, "Library/x.plist": .daemon, "Lib/x.plist": .daemon,
+            "Library/LaunchDaemon./x.plist": .daemon, "Library/libSandy/x.plist": .sandbox,
+            "Library/LaunchDaemons/sub/x.plist": nil, "Library/Preferences/x.plist": nil,
+            "Library/Fixture (1)/x.plist": nil, "Library/[/x.plist": nil,
+        ]
+        for (path, rule) in rules {
+            XCTAssertEqual(RootlessToRoothide.propertyListRule(at: path), rule, path)
+        }
+    }
+
+    /// One string of a list, as the patcher's sed lines leave it in the
+    /// XML: a profile's paths only where the string starts.
+    func testPathsInAPropertyList() {
+        XCTAssertEqual(RootlessToRoothide.path("--root=/var/jb/x /var/jb", .daemon), "--root=/x /var/jb")
+        let profile = [
+            "/var/jb/Library/x": "/Library/x", "/Library/x": "/rootfs/Library/x", "/": "/rootfs/", "/usr": "/usr",
+            "see /usr/lib": "see /usr/lib", "/var/jb": "/var/jb", "/var/jbx": "/var/jbx", "/var/mobile": "/rootfs/var/mobile",
+            "/-var/jb-": "/var/jb", "/usr/\u{301}x": "/rootfs/usr/\u{301}x",
+        ]
+        for (string, respelled) in profile {
+            XCTAssertEqual(RootlessToRoothide.path(string, .sandbox), respelled, string)
+        }
+    }
+
     func testControlWithPreDepends() {
         let control = """
         Package: com.example.fixture

@@ -110,12 +110,16 @@ end.
   setting. One whose conversion is not written yet stays listed and throws
   `AdaptationFailure.unavailable` at staging, typed, spelled by the app.
   `RootlessToRoothide` is roothide's own RootHidePatcher (`patch.sh`,
-  Compat Layer) in Swift, nothing spawned: simple tweaks only, anything
-  more refused with a typed failure, never installed as built. Its output
+  Compat Layer) in Swift, nothing spawned: tweaks, apps, programs, daemons
+  and hard links converted as the script converts them, and what it would
+  make otherwise (files outside `/var/jb`, conffiles, a list sed would
+  garble) refused with a typed failure, never installed as built. Its output
   must equal the script's, blob for blob, save the one difference below
   (`AdapterConformanceTests`, fed by `Scripts/adapter-reference.sh`, writes
   it down in `compare`); Mach-O is read through MachOKit, and
-  ldid (AGPL) is matched byte for byte, never linked or ported. It adds
+  ldid (AGPL) is matched byte for byte, never linked or ported, down to the
+  way its libplist reads the entitlements it merges. A property list's
+  paths are respelled on the parsed list, never by editing its text. It adds
   the `rootless-compat` Pre-Depends to a package with a Mach-O in it and
   never adds a repository. A package with none (a theme) gets no
   Pre-Depends, the one place it parts from the script on purpose. The

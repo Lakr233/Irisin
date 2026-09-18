@@ -15,7 +15,7 @@ extension AdaptationFailure {
         case let .incompatible(package):
             String(localized: "\(package) is known not to work in compatibility mode.")
         case let .notSimple(package, path):
-            String(localized: "\(package) cannot be installed in compatibility mode, which converts simple tweaks only. This package contains \(path).")
+            String(localized: "\(package) cannot be installed in compatibility mode, which does not convert \(path).")
         case let .malformedBinary(package, path):
             String(localized: "\(package) cannot be installed in compatibility mode. \(path) could not be converted.")
         }

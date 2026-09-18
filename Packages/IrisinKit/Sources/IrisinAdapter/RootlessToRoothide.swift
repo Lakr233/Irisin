@@ -2,32 +2,39 @@ import CryptoKit
 import Foundation
 import IrisinProtocol
 
-/// rootless (`/var/jb`) to roothide, for a simple tweak: what roothide's own
-/// RootHidePatcher (`patch.sh`, its Compat Layer mode) makes of a package,
-/// made here without its tools. A package comes out of `adapt` as it comes
-/// out of the script, and the conformance test holds the two together:
+/// rootless (`/var/jb`) to roothide: what roothide's own RootHidePatcher
+/// (`patch.sh`, its Compat Layer mode) makes of a package, made here
+/// without its tools. A package comes out of `adapt` as it comes out of the
+/// script, and the conformance test holds the two together:
 ///
 /// - `var/jb/x` is installed as `x`, under the jailbreak root;
 /// - the package as it was shipped is kept beside it under
 ///   `var/mobile/Library/pkgmirror`, where rootless-compat looks it up;
 /// - every Mach-O has its `/var/jb` load commands respelled and is signed
-///   again (`MachOBinary`), and gets a `.roothidepatch` link beside it: the
-///   mark rootless-compat loads `AutoPatches.dylib` for, which redirects the
+///   again (`MachOBinary`), a program with roothide's entitlements merged
+///   into its own, and gets a `.roothidepatch` link beside it: the mark
+///   rootless-compat loads `AutoPatches.dylib` for, which redirects the
 ///   `/var/jb` strings still in the code at run time;
-/// - maintainer scripts and the control paragraph are edited
-///   (`RootlessToRoothide+Text`), the control gaining the Pre-Depends the
-///   resolver was told about when there is a Mach-O. The compat layer is
-///   there for code, so a package with none (a theme) goes without it and
-///   without `com.roothide.patchloader` behind it, where the script adds
-///   it to every package: the one place the two part ways.
+/// - every property list is written as XML, and a daemon's and a libSandy
+///   profile's paths are respelled in it; maintainer scripts and the control
+///   paragraph are edited (`RootlessToRoothide+Text`), the control gaining
+///   the Pre-Depends the resolver was told about when there is a Mach-O.
+///   The compat layer is there for code, so a package with none (a theme)
+///   goes without it and without `com.roothide.patchloader` behind it,
+///   where the script adds it to every package: the one place the two part
+///   ways;
+/// - a hard link stays one where nothing was written anew: a name that
+///   ldid or sed wrote is a file of its own, as the script leaves it.
 ///
-/// What is not a simple tweak is refused rather than half converted: a
-/// package with files outside `/var/jb`, a program or any Mach-O that is
-/// not a library or a bundle, an app, a daemon, a libSandy profile,
-/// conffiles, a set-id mode, a hard link, or a path that lies beneath one of
-/// its own links. Those need entitlements merged, plists rewritten or the
-/// system's side of the device written to, which the script does and this
-/// does not, or the script cannot build them at all.
+/// An app is no case of its own, to the script or here: its bundle moves
+/// like any directory and its programs are signed like any program.
+///
+/// What is left is refused rather than half converted: a package with
+/// files outside `/var/jb`, a Mach-O that is not a library, a bundle or a
+/// program, a Mach-O maintainer script, conffiles, a set-id mode, or a path
+/// that lies beneath one of its own links. The script writes the system's
+/// side of the device for the first and cannot build conffiles at all; the
+/// rest are not converted here yet.
 public struct RootlessToRoothide: PackageAdapter {
     public let source = BootstrapArchitecture.rootless
     public let target = BootstrapArchitecture.roothide
@@ -78,12 +85,19 @@ public struct RootlessToRoothide: PackageAdapter {
                 size: Int64(data.count)
             )
         }
+        func contents(_ file: PreparedFile) throws -> Data {
+            try Data(contentsOf: directory.appendingPathComponent(file.name))
+        }
+        /// `data` in place of `file`, which is kept when it holds that already.
+        func store(_ data: Data, over file: PreparedFile) throws -> PreparedFile {
+            try data == contents(file) ? file : store(data)
+        }
         /// nil for what is not a Mach-O, or has a name the patcher never opens.
         func binary(_ file: PreparedFile, at path: String, reportedAs reported: String) throws -> MachOBinary? {
             guard file.size > 0, Self.patcherOpens(path) else { return nil }
             do {
                 return try MachOBinary(contentsOf: directory.appendingPathComponent(file.name))
-            } catch MachOFailure.notLibrary {
+            } catch MachOFailure.notCode {
                 throw AdaptationFailure.notSimple(package: package, path: reported)
             } catch is MachOFailure {
                 throw AdaptationFailure.malformedBinary(package: package, path: reported)
@@ -111,41 +125,107 @@ public struct RootlessToRoothide: PackageAdapter {
         var mirror: [(entry: PreparedEntry, reported: String)] = []
         var rewritten: [String: PreparedFile] = [:]
 
+        // tar unpacks a hard link as one file under every name, with the
+        // mode and owner of the entry that brought it, and the patcher
+        // walks each name on its own
+        let named = Dictionary(manifest.entries.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
+        func origin(of entry: PreparedEntry) throws -> PreparedEntry {
+            var origin = entry
+            var seen: Set<String> = []
+            while origin.kind == .hardLink {
+                guard seen.insert(origin.path).inserted, let target = origin.linkTarget, let next = named[target] else {
+                    throw AdaptationFailure.notSimple(package: package, path: entry.path)
+                }
+                origin = next
+            }
+            guard entry.kind != .hardLink || origin.kind == .file else {
+                throw AdaptationFailure.notSimple(package: package, path: entry.path)
+            }
+            return origin
+        }
+        // plutil writes a property list in place, so every name of a file
+        // reads the XML once one of them is a list
+        var converted: Set<String> = []
+        for entry in manifest.entries where entry.path.hasPrefix("var/jb/") && [.file, .hardLink].contains(entry.kind) {
+            let path = String(entry.path.dropFirst("var/jb/".count))
+            let origin = try origin(of: entry)
+            if let file = origin.file, file.size > 0, Self.patcherOpens(path), Self.isPropertyList((path as NSString).lastPathComponent) {
+                converted.insert(origin.path)
+            }
+        }
+        /// That XML, by the entry of the file.
+        var lists: [String: PreparedFile] = [:]
+        /// The names of each file that still share it, in the payload and in
+        /// the mirror, by the entry of the file.
+        var linked: [String: [String]] = [:]
+        var mirrorLinked: [String: [String]] = [:]
+
         for entry in manifest.entries where (entry.path as NSString).lastPathComponent != ".DS_Store" {
             if entry.kind == .directory, entry.path == "var" || entry.path == "var/jb" {
                 continue
             }
-            guard entry.path.hasPrefix("var/jb/"), entry.kind != .hardLink, entry.mode & 0o6000 == 0 else {
+            let origin = try origin(of: entry)
+            guard entry.path.hasPrefix("var/jb/"), origin.mode & 0o6000 == 0 else {
                 throw AdaptationFailure.notSimple(package: package, path: entry.path)
             }
             let path = String(entry.path.dropFirst("var/jb/".count))
-            guard !["Applications/", "Library/LaunchDaemons/", "Library/libSandy/"].contains(where: path.hasPrefix),
-                  !reserved.contains(where: { path == $0 || path.hasPrefix($0 + "/") })
-            else {
+            guard !reserved.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) else {
                 throw AdaptationFailure.notSimple(package: package, path: entry.path)
             }
-            mirror.append((entry.moved(to: "\(mirrorRoot)/\(path)", owner: 501, mode: 0o755), entry.path))
-
-            guard let file = entry.file, let binary = try binary(file, at: path, reportedAs: entry.path) else {
+            mirror.append((origin.moved(to: "\(mirrorRoot)/\(path)", owner: 501, mode: 0o755), entry.path))
+            guard let file = origin.file else {
                 try tree.add(entry.moved(to: path), reportedAs: entry.path)
                 continue
             }
-            // ldid signs a file under its name, so one blob behind two
-            // names is two files
+            mirrorLinked[origin.path, default: []].append("\(mirrorRoot)/\(path)")
             let name = (path as NSString).lastPathComponent
-            let signed: PreparedFile
-            do {
-                signed = try rewritten["\(file.name)/\(name)"] ?? store(binary.rewritten(identifier: name))
-            } catch is MachOFailure {
-                throw AdaptationFailure.malformedBinary(package: package, path: entry.path)
+
+            if let binary = try binary(file, at: path, reportedAs: entry.path) {
+                // ldid signs a file under its name and writes it anew, so
+                // one blob behind two names, a hard link's or not, is two files
+                let signed: PreparedFile
+                do {
+                    signed = try rewritten["\(file.name)/\(name)"] ?? store(binary.rewritten(identifier: name))
+                } catch is MachOFailure {
+                    throw AdaptationFailure.malformedBinary(package: package, path: entry.path)
+                }
+                rewritten["\(file.name)/\(name)"] = signed
+                try tree.add(origin.moved(to: path, file: signed), reportedAs: entry.path)
+                try tree.add(PreparedEntry(
+                    path: path + ".roothidepatch", kind: .symbolicLink,
+                    linkTarget: "/usr/lib/DynamicPatches/AutoPatches.dylib",
+                    mode: 0o755, uid: 0, gid: 0, modificationTime: entry.modificationTime
+                ), reportedAs: entry.path + ".roothidepatch")
+                continue
             }
-            rewritten["\(file.name)/\(name)"] = signed
-            try tree.add(entry.moved(to: path, file: signed), reportedAs: entry.path)
-            try tree.add(PreparedEntry(
-                path: path + ".roothidepatch", kind: .symbolicLink,
-                linkTarget: "/usr/lib/DynamicPatches/AutoPatches.dylib",
-                mode: 0o755, uid: 0, gid: 0, modificationTime: entry.modificationTime
-            ), reportedAs: entry.path + ".roothidepatch")
+
+            let walked = file.size > 0 && Self.patcherOpens(path)
+            var edited: Data?
+            if walked, Self.isScript(name) {
+                // sed would read the file or plutil's XML of it, whichever
+                // name `find` happens to walk first
+                guard !converted.contains(origin.path) else {
+                    throw AdaptationFailure.notSimple(package: package, path: entry.path)
+                }
+                edited = try Self.maintainerScript(contents(file))
+            } else if walked, Self.isPropertyList(name), let rule = Self.propertyListRule(at: path) {
+                guard let list = try Self.propertyList(contents(file), rule) else {
+                    throw AdaptationFailure.notSimple(package: package, path: entry.path)
+                }
+                edited = list
+            }
+            if let edited {
+                // sed writes the file anew: this name leaves its hard link
+                try tree.add(origin.moved(to: path, file: store(edited, over: file)), reportedAs: entry.path)
+                continue
+            }
+            var shared = file
+            if converted.contains(origin.path) {
+                shared = try lists[origin.path] ?? store(Self.xml(contents(file)), over: file)
+                lists[origin.path] = shared
+            }
+            try tree.add(origin.moved(to: path, file: shared), reportedAs: entry.path)
+            linked[origin.path, default: []].append(path)
         }
 
         var controlFiles = manifest.controlFiles.filter { $0.key != ".DS_Store" }
@@ -161,15 +241,25 @@ public struct RootlessToRoothide: PackageAdapter {
                 path: "\(mirrorRoot)/DEBIAN.\(package)/\(name)", kind: .file, file: file,
                 mode: 0o755, uid: 501, gid: 501, modificationTime: earliest
             ), parents: 501, reportedAs: "DEBIAN/\(name)")
-            guard Self.maintainerScripts.contains(name), file.size > 0 else { continue }
-            let script = try Data(contentsOf: directory.appendingPathComponent(file.name))
-            let edited = Self.maintainerScript(script)
-            if edited != script {
-                controlFiles[name] = try store(edited)
-            }
+            // the patcher walks the control directory like the rest
+            guard file.size > 0, Self.patcherOpens(name) else { continue }
+            let member = try contents(file)
+            controlFiles[name] = try store(
+                Self.isScript(name) ? Self.maintainerScript(member) : Self.isPropertyList(name) ? Self.xml(member) : member,
+                over: file
+            )
         }
         for (entry, reported) in mirror {
             try tree.add(entry, parents: 501, reportedAs: reported)
+        }
+        // `dpkg-deb -b` stores the first name of a file it walks to as the
+        // file and the others as hard links to it. `cp -a` kept them all in
+        // the mirror, where nothing is written anew.
+        for names in Array(linked.values) + Array(mirrorLinked.values) where names.count > 1 {
+            let names = names.sorted(by: Self.walksBefore)
+            for name in names.dropFirst() {
+                tree.link(name, to: names[0])
+            }
         }
 
         let control = Self.control(manifest.control, preDepends: rewritten.isEmpty ? nil : Self.compatLayer)
@@ -186,6 +276,14 @@ public struct RootlessToRoothide: PackageAdapter {
         return !path.contains(".lproj/") && ![
             ".png", ".gif", ".jpg", ".jpeg", ".svg", ".strings", ".js", ".py", ".h", ".json", ".txt", ".xml",
         ].contains(where: path.hasSuffix)
+    }
+
+    /// The order `dpkg-deb -b` walks a tree in: depth first, each
+    /// directory's names sorted bytewise, so `a/b` comes before `a-c`.
+    private static func walksBefore(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.split(separator: "/").lexicographicallyPrecedes(rhs.split(separator: "/")) {
+            $0.utf8.lexicographicallyPrecedes($1.utf8)
+        }
     }
 }
 
@@ -245,6 +343,17 @@ private struct Tree {
         }
         kinds[entry.path] = entry.kind
         entries.append(entry)
+    }
+
+    /// The file at `path` as a hard link to `target`, which holds the same.
+    mutating func link(_ path: String, to target: String) {
+        guard let index = entries.firstIndex(where: { $0.path == path }) else { return }
+        let entry = entries[index]
+        entries[index] = PreparedEntry(
+            path: path, kind: .hardLink, linkTarget: target,
+            mode: entry.mode, uid: entry.uid, gid: entry.gid, modificationTime: entry.modificationTime
+        )
+        kinds[path] = .hardLink
     }
 }
 

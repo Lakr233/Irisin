@@ -168,25 +168,143 @@ final class RootlessToRoothideTests: XCTestCase {
         XCTAssertEqual(files[1], files[2])
     }
 
+    /// An app is a directory of files and programs like any other: its
+    /// bundle moves under the jailbreak root, each program is signed with
+    /// roothide's entitlements merged into its own and marked for the
+    /// compat layer, and the mirror keeps the package as it was shipped.
+    func testApp() throws {
+        let app = "var/jb/Applications/Fixture.app"
+        let directory = try prepared(entries: [
+            .file("\(app)/FixtureApp", fixture("input/FixtureApp"), mode: 0o755),
+            .file("\(app)/Info.plist", Data("{ CFBundleIdentifier = com.example.fixture; }".utf8)),
+            .file("\(app)/Frameworks/Fixture.dylib", fixture("input/Fixture.dylib"), mode: 0o755),
+            .file("var/jb/usr/bin/fixture-tool", fixture("input/fixture-tool"), mode: 0o755),
+        ], control: ["postinst": Data("#!/bin/sh\nuicache -p /var/jb/Applications/Fixture.app\n".utf8)])
+        let before = try PreparedPackage.read(from: directory)
+        _ = try XCTUnwrap(PackageAdapters.installed.adapt(preparedPackageAt: directory, on: "iphoneos-arm64e"))
+        let adapted = try PreparedPackage.read(from: directory)
+        let entries = Dictionary(uniqueKeysWithValues: adapted.entries.map { ($0.path, $0) })
+        let mirror = "var/mobile/Library/pkgmirror"
+
+        for (path, expected) in [
+            "Applications/Fixture.app/FixtureApp": "FixtureApp",
+            "Applications/Fixture.app/Frameworks/Fixture.dylib": "Fixture.dylib",
+            "usr/bin/fixture-tool": "fixture-tool",
+        ] {
+            XCTAssertEqual(try contents(XCTUnwrap(entries[path]?.file, path), in: directory), try fixture("expected/\(expected)"), path)
+            XCTAssertEqual(entries[path]?.mode, 0o755, path)
+            XCTAssertEqual(entries[path + ".roothidepatch"]?.linkTarget, "/usr/lib/DynamicPatches/AutoPatches.dylib", path)
+            XCTAssertEqual(entries["\(mirror)/\(path)"]?.file, before.entries.first { $0.path == "var/jb/" + path }?.file, path)
+        }
+        // plutil's XML, as for every property list
+        XCTAssertEqual(
+            try contents(XCTUnwrap(entries["Applications/Fixture.app/Info.plist"]?.file), in: directory),
+            try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier": "com.example.fixture"], format: .xml, options: 0)
+        )
+        XCTAssertTrue(adapted.control.contains("Pre-Depends: rootless-compat(>= 0.9)\n"))
+        XCTAssertEqual(
+            try contents(XCTUnwrap(adapted.controlFiles["postinst"]), in: directory),
+            Data("#!/bin/sh\nuicache -p /Applications/Fixture.app\n".utf8)
+        )
+    }
+
+    /// A daemon's list and a libSandy profile have their paths respelled,
+    /// and a list at the top is a daemon's to the patcher's pattern; any
+    /// other list is only written as XML. The names of a hard link stay one
+    /// file until ldid or sed writes one anew, the first of them in
+    /// `dpkg-deb`'s walk the file; in the mirror they all stay one.
+    func testDaemonsProfilesAndHardLinks() throws {
+        let daemon = Data("{ Label = fixture; ProgramArguments = (/var/jb/usr/libexec/fixtured, \"--root=/var/jb\"); }".utf8)
+        let profile = Data("{ Extensions = (/var/jb/Library/Fixture, /Library/Fixture, /, \"see /usr/lib\", /var/jb); }".utf8)
+        let program = try fixture("input/fixture-tool")
+        let script = Data("/var/jb/usr/bin/x /usr/lib\n".utf8)
+        let directory = try prepared(entries: [
+            .file("var/jb/Library/LaunchDaemons/fixtured.plist", daemon),
+            .hardLink("var/jb/usr/share/fixture/b.plist", to: "var/jb/Library/LaunchDaemons/fixtured.plist"),
+            .hardLink("var/jb/usr/share/fixture/a.plist", to: "var/jb/usr/share/fixture/b.plist"),
+            .file("var/jb/Library/libSandy/Fixture.plist", profile),
+            .file("var/jb/fixture.plist", daemon),
+            .file("var/jb/usr/libexec/fixtured", program, mode: 0o755),
+            .hardLink("var/jb/usr/bin/fixtured-link", to: "var/jb/usr/libexec/fixtured"),
+            .file("var/jb/usr/share/fixture/inst", script),
+            .hardLink("var/jb/usr/share/fixture/inst.copy", to: "var/jb/usr/share/fixture/inst"),
+        ])
+        _ = try RootlessToRoothide().adapt(preparedPackageAt: directory)
+        let entries = try Dictionary(uniqueKeysWithValues: PreparedPackage.read(from: directory).entries.map { ($0.path, $0) })
+        func text(_ path: String) throws -> Data {
+            try contents(XCTUnwrap(entries[path]?.file, path), in: directory)
+        }
+        func xml(_ list: Any) throws -> Data {
+            try PropertyListSerialization.data(fromPropertyList: list, format: .xml, options: 0)
+        }
+
+        let respelled = try xml(["Label": "fixture", "ProgramArguments": ["/usr/libexec/fixtured", "--root=/var/jb"]])
+        XCTAssertEqual(try text("Library/LaunchDaemons/fixtured.plist"), respelled)
+        XCTAssertEqual(try text("fixture.plist"), respelled)
+        XCTAssertEqual(
+            try text("Library/libSandy/Fixture.plist"),
+            try xml(["Extensions": ["/Library/Fixture", "/rootfs/Library/Fixture", "/rootfs/", "see /usr/lib", "/var/jb"]])
+        )
+        // the daemon's name was written anew; the other two share plutil's XML
+        XCTAssertEqual(try text("usr/share/fixture/a.plist"), try RootlessToRoothide.xml(daemon))
+        XCTAssertEqual(entries["usr/share/fixture/b.plist"]?.kind, .hardLink)
+        XCTAssertEqual(entries["usr/share/fixture/b.plist"]?.linkTarget, "usr/share/fixture/a.plist")
+        // ldid signs each name of the program as a file of its own, under that name
+        for path in ["usr/libexec/fixtured", "usr/bin/fixtured-link"] {
+            XCTAssertEqual(entries[path]?.kind, .file, path)
+            XCTAssertEqual(entries[path]?.mode, 0o755, path)
+            XCTAssertNotNil(entries[path + ".roothidepatch"], path)
+        }
+        XCTAssertNotEqual(entries["usr/libexec/fixtured"]?.file, entries["usr/bin/fixtured-link"]?.file)
+        // a payload file named like a script is edited as one; its other name is not
+        XCTAssertEqual(try text("usr/share/fixture/inst"), Data("/usr/bin/x /rootfs/usr/lib\n".utf8))
+        XCTAssertEqual(try text("usr/share/fixture/inst.copy"), script)
+
+        let mirror = "var/mobile/Library/pkgmirror/"
+        for (path, target) in [
+            "usr/share/fixture/a.plist": "Library/LaunchDaemons/fixtured.plist",
+            "usr/share/fixture/b.plist": "Library/LaunchDaemons/fixtured.plist",
+            "usr/libexec/fixtured": "usr/bin/fixtured-link",
+            "usr/share/fixture/inst.copy": "usr/share/fixture/inst",
+        ] {
+            XCTAssertEqual(entries[mirror + path]?.kind, .hardLink, path)
+            XCTAssertEqual(entries[mirror + path]?.linkTarget, mirror + target, path)
+            XCTAssertEqual(entries[mirror + path]?.mode, 0o755, path)
+        }
+        XCTAssertEqual(try text(mirror + "Library/LaunchDaemons/fixtured.plist"), daemon)
+        XCTAssertEqual(try text(mirror + "usr/bin/fixtured-link"), program)
+    }
+
     func testWhatIsNotASimpleTweakIsRefused() throws {
         let library = try fixture("input/Fixture.dylib")
-        var program = library // a fat program whose first slice is armv7
-        program.replaceSubrange(16384 ..< 16388, with: [0xCE, 0xFA, 0xED, 0xFE])
-        program[98304 + 12] = 2
+        var symbols = library // a fat dSYM whose first slice is armv7
+        symbols.replaceSubrange(16384 ..< 16388, with: [0xCE, 0xFA, 0xED, 0xFE])
+        symbols[98304 + 12] = 10
         var malformed = try fixture("input/FixtureBundle")
         malformed.replaceSubrange(20 ..< 24, with: [0xFF, 0xFF, 0xFF, 0x7F])
+        var armv7 = library // the same file a program: code, but not 64-bit throughout
+        armv7.replaceSubrange(16384 ..< 16388, with: [0xCE, 0xFA, 0xED, 0xFE])
+        armv7[98304 + 12] = 2
         let ok = Data("x".utf8)
         let cases: [(String, [Entry], [String: Data])] = try [
             ("Library/Fixture.dylib", [.file("Library/Fixture.dylib", library)], [:]),
             ("var/jb", [.link("var/jb", to: "/")], [:]),
             ("var", [.link("var", to: "/private/var")], [:]),
-            ("var/jb/usr/bin/fixture-tool", [.file("var/jb/usr/bin/fixture-tool", fixture("input/fixture-tool"))], [:]),
-            (tweak, [.file(tweak, program)], [:]),
-            ("var/jb/Applications/Fixture.app/Info.plist", [.file("var/jb/Applications/Fixture.app/Info.plist", ok)], [:]),
-            ("var/jb/Library/LaunchDaemons/fixture.plist", [.file("var/jb/Library/LaunchDaemons/fixture.plist", ok)], [:]),
-            ("var/jb/Library/libSandy/Fixture.plist", [.file("var/jb/Library/libSandy/Fixture.plist", ok)], [:]),
+            (tweak, [.file(tweak, symbols)], [:]),
+            ("DEBIAN/postinst", [.file(tweak, library)], ["postinst": fixture("input/fixture-tool")]),
+            // a daemon's list the patcher's sed would make otherwise: no
+            // property list, two keys made one, keys out of order, and a
+            // path in the base64 of some data
+            ("var/jb/Library/LaunchDaemons/fixture.plist", [.file("var/jb/Library/LaunchDaemons/fixture.plist", Data("{".utf8))], [:]),
+            ("var/jb/Library/LaunchDaemons/fixture.plist", [.file("var/jb/Library/LaunchDaemons/fixture.plist", Data("{ \"/var/jb/x\" = 1; \"/x\" = 2; }".utf8))], [:]),
+            ("var/jb/Library/fixture.plist", [.file("var/jb/Library/fixture.plist", Data("{ \"/b\" = 1; \"/var/jb/a\" = 2; }".utf8))], [:]),
+            // bytes whose base64 is `/var/jb/`
+            ("var/jb/Library/libSandy/Fixture.plist", [.file("var/jb/Library/libSandy/Fixture.plist", Data("{ k = <fef6abfe36ff>; }".utf8))], [:]),
             ("var/jb/usr/lib/fixture.sh", [.file("var/jb/usr/lib/fixture.sh", ok, mode: 0o4755)], [:]),
-            ("var/jb/usr/lib/Fixture.dylib", [.file(tweak, library), .hardLink("var/jb/usr/lib/Fixture.dylib", to: tweak)], [:]),
+            // a hard link to nothing, and one whose script-named name sed
+            // would read before or after plutil wrote its other name
+            ("var/jb/usr/lib/Fixture.dylib", [.hardLink("var/jb/usr/lib/Fixture.dylib", to: tweak)], [:]),
+            ("var/jb/usr/share/inst", [.file("var/jb/usr/share/x.plist", Data("{}".utf8)), .hardLink("var/jb/usr/share/inst", to: "var/jb/usr/share/x.plist")], [:]),
             ("DEBIAN/extrainst_", [.file(tweak, library)], ["extrainst_": library]),
             ("DEBIAN/conffiles", [.file("var/jb/etc/fixture.conf", ok)], ["conffiles": Data("/var/jb/etc/fixture.conf\n".utf8)]),
             // where the payload would land once `var/jb/` is gone
@@ -212,9 +330,11 @@ final class RootlessToRoothideTests: XCTestCase {
             XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before, path)
         }
 
-        let directory = try prepared(entries: [.file(tweak, malformed)])
-        XCTAssertThrowsError(try RootlessToRoothide().adapt(preparedPackageAt: directory)) {
-            XCTAssertEqual($0 as? AdaptationFailure, .malformedBinary(package: "com.example.fixture", path: tweak))
+        for binary in [malformed, armv7] {
+            let directory = try prepared(entries: [.file(tweak, binary)])
+            XCTAssertThrowsError(try RootlessToRoothide().adapt(preparedPackageAt: directory)) {
+                XCTAssertEqual($0 as? AdaptationFailure, .malformedBinary(package: "com.example.fixture", path: tweak))
+            }
         }
     }
 
