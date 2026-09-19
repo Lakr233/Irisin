@@ -138,25 +138,6 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             x.edges.equalToSuperview()
         }
 
-        if navigationController == nil {
-            let bigTitle = UILabel()
-            bigTitle.text = title ?? String(localized: "Packages")
-            bigTitle.font = .largeTitle
-            view.addSubview(bigTitle)
-            bigTitle.snp.makeConstraints { x in
-                x.leading.equalToSuperview().offset(15)
-                x.right.equalToSuperview().offset(-15)
-                x.top.equalToSuperview().offset(20)
-                x.height.equalTo(40)
-            }
-            collectionView.snp.remakeConstraints { x in
-                x.top.equalTo(bigTitle.snp.bottom).offset(15)
-                x.leading.equalToSuperview().offset(10)
-                x.trailing.equalToSuperview().offset(-10)
-                x.bottom.equalToSuperview()
-            }
-        }
-
         updateCellSize()
         applySnapshot()
 

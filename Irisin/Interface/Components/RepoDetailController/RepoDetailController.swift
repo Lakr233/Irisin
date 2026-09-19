@@ -22,8 +22,6 @@ class RepoDetailController: UIViewController {
     private var subscriptions = Set<AnyCancellable>()
 
     nonisolated enum Section: Hashable {
-        /// The name, only while no navigation bar carries it.
-        case header
         case featured
         /// The "All" row over the description.
         case all
@@ -38,7 +36,6 @@ class RepoDetailController: UIViewController {
     }
 
     nonisolated enum Item: Hashable {
-        case header
         case banner(Int)
         case filter(Filter)
     }
@@ -57,7 +54,6 @@ class RepoDetailController: UIViewController {
         // room under the last footer, clear of the floating tab bar
         $0.contentInset.bottom = 128
         $0.delegate = self
-        $0.register(RepoDetailHeaderCell.self, forCellWithReuseIdentifier: "header")
         $0.register(RepoDetailHostCell.self, forCellWithReuseIdentifier: "host")
         $0.register(UICollectionViewListCell.self, forCellWithReuseIdentifier: "filter")
         for kind in [UICollectionView.elementKindSectionHeader, UICollectionView.elementKindSectionFooter] {
@@ -69,11 +65,6 @@ class RepoDetailController: UIViewController {
         collectionView: collectionView
     ) { [unowned self] collectionView, indexPath, item in
         switch item {
-        case .header:
-            let cell = collectionView
-                .dequeueReusableCell(withReuseIdentifier: "header", for: indexPath) as! RepoDetailHeaderCell
-            cell.title.text = repo.nickName
-            return cell
         case let .banner(index):
             let cell = collectionView
                 .dequeueReusableCell(withReuseIdentifier: "host", for: indexPath) as! RepoDetailHostCell
@@ -170,10 +161,6 @@ class RepoDetailController: UIViewController {
         }
 
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        if navigationController == nil {
-            snapshot.appendSections([.header])
-            snapshot.appendItems([.header], toSection: .header)
-        }
         if !banners.isEmpty {
             snapshot.appendSections([.featured])
             snapshot.appendItems(banners.indices.map(Item.banner), toSection: .featured)
@@ -231,9 +218,6 @@ class RepoDetailController: UIViewController {
         snapshot.deleteItems(previous)
         snapshot.appendItems(current, toSection: .sections)
         snapshot.reconfigureItems([.filter(.all)] + current.filter { previous.contains($0) })
-        if snapshot.indexOfSection(.header) != nil {
-            snapshot.reconfigureItems([.header])
-        }
         dataSource.apply(snapshot, animatingDifferences: true)
         for kind in [UICollectionView.elementKindSectionHeader, UICollectionView.elementKindSectionFooter] {
             for case let cell as UICollectionViewListCell in collectionView.visibleSupplementaryViews(ofKind: kind) {
@@ -251,15 +235,6 @@ class RepoDetailController: UIViewController {
             // 20 on each side: the edge the inset grouped rows below sit on
             let inset = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 0, trailing: 20)
             switch section {
-            case .header:
-                let size = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(44))
-                let group = NSCollectionLayoutGroup.vertical(
-                    layoutSize: size,
-                    subitems: [NSCollectionLayoutItem(layoutSize: size)]
-                )
-                let layout = NSCollectionLayoutSection(group: group)
-                layout.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
-                return layout
             case .featured:
                 let size = NSCollectionLayoutSize(widthDimension: .absolute(300), heightDimension: .absolute(170))
                 let group = NSCollectionLayoutGroup.horizontal(
@@ -301,7 +276,7 @@ class RepoDetailController: UIViewController {
         switch section {
         case .all: String(localized: "Packages")
         case .sections: String(localized: "Sections")
-        case .header, .featured, nil: nil
+        case .featured, nil: nil
         }
     }
 
@@ -325,7 +300,7 @@ class RepoDetailController: UIViewController {
                 String(localized: "Packages: \(repo.packageCount) · Sections: \(sections.count)"),
                 String(localized: "Last updated: \(updated)"),
             ].joined(separator: "\n")
-        case .header, .featured, nil:
+        case .featured, nil:
             return nil
         }
     }
@@ -422,27 +397,6 @@ extension RepoDetailController: UICollectionViewDelegate {
 }
 
 // MARK: - CELLS
-
-/// The repository's name, when there is no navigation bar to carry it.
-final class RepoDetailHeaderCell: UICollectionViewCell {
-    let title = UILabel().then {
-        $0.font = .largeTitle
-        $0.numberOfLines = 1
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        contentView.addSubview(title)
-        title.snp.makeConstraints { x in
-            x.edges.equalToSuperview()
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-}
 
 /// A cell around a view that draws and handles itself: a featured banner.
 final class RepoDetailHostCell: UICollectionViewCell {

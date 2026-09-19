@@ -8,7 +8,6 @@
 
 import AptRepository
 import Combine
-import Then
 import UIKit
 
 class UpdateController: UIViewController, UITableViewDelegate {
@@ -67,27 +66,9 @@ class UpdateController: UIViewController, UITableViewDelegate {
             x.edges.equalToSuperview()
         }
 
+        // the bar carries the title: `show` loads this view before the page
+        // has a navigation controller, and `present(next:)` always gives it one
         title = String(localized: "Updates")
-
-        if navigationController == nil {
-            let bigTitle = UILabel().then {
-                $0.text = String(localized: "Updates")
-                $0.font = .largeTitle
-            }
-            view.addSubview(bigTitle)
-            bigTitle.snp.makeConstraints { x in
-                x.leading.equalToSuperview().offset(15)
-                x.right.equalToSuperview().offset(-15)
-                x.top.equalToSuperview().offset(20)
-                x.height.equalTo(40)
-            }
-            tableView.snp.remakeConstraints { x in
-                x.top.equalTo(bigTitle.snp.bottom).offset(15)
-                x.leading.equalToSuperview().offset(10)
-                x.trailing.equalToSuperview().offset(-10)
-                x.bottom.equalToSuperview()
-            }
-        }
 
         let rightItem = UIBarButtonItem(
             title: String(localized: "Update All"),
