@@ -157,10 +157,26 @@ public struct Package: Codable, Hashable, Identifiable, Sendable {
     /// The dpkg architectures the newest version was built for. `all` fits
     /// every bootstrap; a missing field is taken as `all`, the way dpkg does.
     public var architectures: [String] {
-        let field = latestMetadata?["architecture"] ?? "all"
-        return field
+        Self.architectures(in: latestMetadata ?? [:])
+    }
+
+    /// The `Architecture` field of one control paragraph, read as a list.
+    public static func architectures(in metadata: Metadata) -> [String] {
+        (metadata["architecture"] ?? "all")
             .split(whereSeparator: { $0 == " " || $0 == "," })
             .map(String.init)
+    }
+
+    /// The versions whose build carries one of `accepted` (or `all`), as a
+    /// package of their own; nil when none does. One repository can offer a
+    /// version built for this bootstrap beside a newer one built for
+    /// another, so the newest says nothing about the rest.
+    public func versions(supportingAnyOf accepted: Set<String>) -> Package? {
+        let kept = payload.filter { _, metadata in
+            Self.architectures(in: metadata).contains { $0 == "all" || accepted.contains($0) }
+        }
+        guard !kept.isEmpty else { return nil }
+        return kept.count == payload.count ? self : Package(identity: identity, payload: kept, repoRef: repoRef)
     }
 
     /// Whether dpkg on this bootstrap would install the newest version as

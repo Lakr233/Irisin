@@ -43,6 +43,25 @@ struct PackageSelectionAdviceTests {
         #expect(advice.newerAlternative(installedVersion: nil, adaptedUpdates: true) == nil)
     }
 
+    /// One repository listing the package for both systems: the record holds
+    /// the native version under the newer one an adapter rewrites.
+    @Test
+    func aNativeVersionUnderTheSelectedOneInTheSameRecordIsRecommended() {
+        let selected = Self.package("2.0", Self.foreign, repo: "a")
+        let native = Self.package("1.5", Self.device, repo: "a")
+        let record = Package(
+            identity: selected.identity,
+            payload: selected.payload.merging(native.payload) { $1 },
+            repoRef: selected.repoRef
+        )
+        let advice = Self.advice(selected: selected, offers: [record])
+        #expect(advice.nativeAlternative(installedVersion: nil) == native)
+        #expect(advice.nativeAlternative(installedVersion: "1.5") == native)
+        // not one that would take the installed package down
+        #expect(advice.nativeAlternative(installedVersion: "1.8") == nil)
+        #expect(advice.newerAlternative(installedVersion: nil, adaptedUpdates: true) == nil)
+    }
+
     @Test
     func theNewestNativeBuildIsTheOneRecommended() {
         let selected = Self.package("1.0", Self.foreign, repo: "a")

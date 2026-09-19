@@ -32,7 +32,16 @@ struct SolverPackage {
         if adapted {
             fields = snapshot.adaptedManifests[package] ?? snapshot.adaptedManifestPreview?(fields) ?? fields
         }
-        architecture = adapted ? snapshot.architecture : fields["architecture"] ?? "all"
+        // the field is a list to dpkg and to the catalogue; libsolv takes one
+        // name and drops a package whose name is not the bootstrap's or `all`
+        let listed = Package.architectures(in: fields)
+        architecture = if adapted || listed.contains(snapshot.architecture) {
+            snapshot.architecture
+        } else if listed.contains("all") {
+            "all"
+        } else {
+            fields["architecture"] ?? "all"
+        }
         var relations: [Group.RequirementType: [Group.Requirement]] = [:]
         for type in Group.RequirementType.allCases {
             guard let value = fields[type.rawValue],

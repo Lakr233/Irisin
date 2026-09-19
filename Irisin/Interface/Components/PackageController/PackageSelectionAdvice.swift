@@ -13,23 +13,28 @@ import Foundation
 /// its version; an offer is a repository's whole record, read at its newest.
 nonisolated struct PackageSelectionAdvice {
     let selected: Package
-    /// Every other installable record of the identifier, newest version each.
+    /// Every other installable record of the identifier: the newest version
+    /// of each, and its newest built for this system when that is another.
     let candidates: [Package]
     let device: String
 
     init(selected: Package, offers: [Package], device: String, installable: Set<String>) {
         self.selected = selected
         self.device = device
-        candidates = offers.compactMap { offer in
-            guard offer.identity == selected.identity,
-                  let version = offer.latestVersion,
-                  let trimmed = PackageCenter.default.trim(package: offer, toVersion: version),
-                  trimmed.supports(anyOf: installable),
-                  // what a menu would not offer is not recommended either
-                  trimmed.obtainDownloadLink() != PackageBadUrl,
-                  trimmed != selected
-            else { return nil }
-            return trimmed
+        // a record can hold a version built for this system under a newer
+        // one that is not, so each offers its newest and its newest native
+        candidates = offers.flatMap { offer -> [Package] in
+            guard offer.identity == selected.identity else { return [] }
+            let versions = Set([offer, offer.versions(supportingAnyOf: [device])].compactMap { $0?.latestVersion })
+            return versions.sorted().compactMap { version in
+                guard let trimmed = PackageCenter.default.trim(package: offer, toVersion: version),
+                      trimmed.supports(anyOf: installable),
+                      // what a menu would not offer is not recommended either
+                      trimmed.obtainDownloadLink() != PackageBadUrl,
+                      trimmed != selected
+                else { return nil }
+                return trimmed
+            }
         }
     }
 

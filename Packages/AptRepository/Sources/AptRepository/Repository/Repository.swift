@@ -129,17 +129,17 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     public internal(set) var lastUpdatePackage = Date(timeIntervalSince1970: 0)
     public internal(set) var packageCount = 0
 
-    /// The Packages indexes to try, one entry per architecture in the order
-    /// tried, each with one index per component; a flat repository has a
-    /// single entry of one. The refresh reads the first entry that answers
-    /// with packages, all of its components as one.
+    /// The Packages indexes to try, in the order tried, each entry read as
+    /// one catalogue; a flat repository has a single entry of one index.
+    /// The refresh reads the first entry that answers with packages.
     public var metaPackageCandidates: [[URL]] {
         Self.packageIndexUrls(
             suiteUrl: suiteUrl,
             distribution: distribution,
             components: components,
             release: metaRelease,
-            architectures: AptEnvironment.current.indexArchitectures
+            architectures: AptEnvironment.current.indexArchitectures,
+            installable: AptEnvironment.current.installableArchitectures
         )
     }
 
@@ -151,12 +151,21 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     /// BigBoss has `binary-iphoneos-arm64` and nothing for roothide. A
     /// Release that lists none of them, or says nothing, leaves the whole
     /// list to be probed. `all` is never a directory of its own.
+    ///
+    /// Every architecture in `installable` goes in the first entry, the
+    /// device's own ahead of those an adapter rewrites, one index per
+    /// component each: a suite with three packages built for this bootstrap
+    /// and three hundred for the one next to it offers them all, and
+    /// `invokePackages` picks the build of each version. The rest follow
+    /// one entry each, reached only when nothing before them answered, so a
+    /// suite with nothing that installs here still lists what it has.
     static func packageIndexUrls(
         suiteUrl: URL,
         distribution: String?,
         components: [String],
         release: [String: String],
-        architectures: [String]
+        architectures: [String],
+        installable: Set<String>
     ) -> [[URL]] {
         guard let distribution, !distribution.hasSuffix("/") else {
             return [[suiteUrl.appendingPathComponent("Packages")]]
@@ -165,12 +174,17 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
             .split(whereSeparator: \.isWhitespace)
             .map(String.init) ?? []
         let named = architectures.filter(offered.contains)
-        return (named.isEmpty ? architectures : named).map { architecture in
-            components.map {
-                suiteUrl
-                    .appendingPathComponent($0)
-                    .appendingPathComponent("binary-\(architecture)")
-                    .appendingPathComponent("Packages")
+        let chain = named.isEmpty ? architectures : named
+        let together = chain.filter(installable.contains)
+        let entries = (together.isEmpty ? [] : [together]) + chain.filter { !installable.contains($0) }.map { [$0] }
+        return entries.map { entry in
+            entry.flatMap { architecture in
+                components.map {
+                    suiteUrl
+                        .appendingPathComponent($0)
+                        .appendingPathComponent("binary-\(architecture)")
+                        .appendingPathComponent("Packages")
+                }
             }
         }
     }

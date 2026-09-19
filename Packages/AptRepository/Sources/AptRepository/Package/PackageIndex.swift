@@ -162,10 +162,15 @@ public struct PackageIndex: Sendable {
         let accepted = offersAdaptedUpdates
             ? AptEnvironment.current.installableArchitectures
             : [AptEnvironment.current.deviceArchitecture]
-        return offers.filter { item in
-            guard let version = item.latestVersion else { return false }
-            return Package.compareVersion(version, b: current) == .aIsBiggerThenB
-                && item.supports(anyOf: accepted)
+        // judged on the versions that may be an update, not on the newest:
+        // a repository can offer a version built for this bootstrap under a
+        // newer one an adapter would have to rewrite
+        return offers.compactMap { item in
+            guard let offer = item.versions(supportingAnyOf: accepted),
+                  let version = offer.latestVersion,
+                  Package.compareVersion(version, b: current) == .aIsBiggerThenB
+            else { return nil }
+            return offer
         }
     }
 

@@ -26,8 +26,8 @@ extension RepositoryCenter {
         /// where the icon may be, in the order asked
         let avatarUrls: [URL]
         let releaseUrl: URL
-        /// one entry per architecture in the order tried, each with one
-        /// index per component; a flat repository has one of one
+        /// the entries in the order tried, each read as one catalogue
+        /// (`Repository.packageIndexUrls`); a flat repository has one of one
         let packageCandidates: [[URL]]
         let preferredSearchPath: String
         let availableSearchPath: [String]
@@ -47,7 +47,8 @@ extension RepositoryCenter {
                 distribution: distribution,
                 components: components,
                 release: release,
-                architectures: AptEnvironment.current.indexArchitectures
+                architectures: AptEnvironment.current.indexArchitectures,
+                installable: AptEnvironment.current.installableArchitectures
             )
         }
     }
@@ -229,8 +230,8 @@ extension RepositoryCenter {
         NotificationCenter.default.post(name: RepositoryCenter.metadataUpdate, object: object)
     }
 
-    /// Every component's Packages index under one suffix, fetched at once
-    /// and kept as served: a component that does not answer is left out.
+    /// Every index of one entry under one suffix, fetched at once and kept
+    /// as served: one that does not answer is left out.
     nonisolated static func downloadPackageIndexes(
         _ bases: [URL],
         suffix: String,
@@ -252,7 +253,7 @@ extension RepositoryCenter {
         }
     }
 
-    /// The components' indexes read as one, in the components' order, or
+    /// An entry's indexes read as one, in the entry's order, or
     /// nil when there is nothing to read or the suffix cannot be taken
     /// whole: one index is not the file the Release lists, or one the
     /// Release lists did not arrive or cannot be read. Another spelling then
@@ -290,7 +291,7 @@ extension RepositoryCenter {
         return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
-    /// Every suffix of one architecture's indexes at once: the first that
+    /// Every suffix of one entry's indexes at once: the first that
     /// is what the Release lists and compiles to a non-empty index, or nil
     /// when none does.
     private nonisolated static func probeSearchPaths(
@@ -455,10 +456,10 @@ extension RepositoryCenter {
 
         // MARK: - STAGE 3
 
-        // STAGE 3 [try every architecture and search path if needed]
+        // STAGE 3 [try every entry and search path if needed]
         //
-        // One architecture at a time, in order, so the device's own index
-        // wins over a fallback wherever both exist. Within one, knock on
+        // One entry at a time, in order: what installs here first, then the
+        // other bootstraps' indexes one by one. Within one, knock on
         // every compression suffix and keep the first that compiles to a
         // non-empty index; cancelling the group stops the rest.
         aptLog(Self.self, "update \(id) enter stage 3", level: .verbose)

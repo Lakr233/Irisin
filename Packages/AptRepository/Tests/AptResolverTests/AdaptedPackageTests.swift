@@ -13,6 +13,33 @@ struct AdaptedPackageTests {
         #expect(throws: (any Error).self) { try solve([tweak], actions: [.install(tweak)]) }
     }
 
+    /// The field is a list: one that names the bootstrap's own among others
+    /// is native, and libsolv is told so, or it would drop the package.
+    @Test func aFieldNamingSeveralArchitecturesInstallsWhenOneIsTheBootstraps() throws {
+        let tweak = pkg("tweak", "1", ["architecture": "other arm64"])
+        #expect(try solve([tweak], actions: [.install(tweak)]).install == [tweak])
+        let portable = pkg("portable", "1", ["architecture": "other all"])
+        #expect(try solve([portable], actions: [.install(portable)]).install == [portable])
+        let stranger = pkg("stranger", "1", ["architecture": "other another"])
+        #expect(throws: (any Error).self) { try solve([stranger], actions: [.install(stranger)]) }
+    }
+
+    /// One record with a native version under a newer adapted one: the
+    /// native one is what a plain request for the package gets.
+    @Test func nativeOlderVersionBeatsNewerAdaptedInOneRecord() throws {
+        let native = pkg("tweak", "1")
+        let adapted = pkg("tweak", "2", foreign)
+        let record = Package(
+            identity: "tweak",
+            payload: native.payload.merging(adapted.payload) { $1 },
+            repoRef: native.repoRef
+        )
+        let app = pkg("app", "1", ["depends": "tweak"])
+        let plan = try solve([app, record], actions: [.install(app)], adapting: ["other"])
+        #expect(plan.install.first { $0.identity == "tweak" }?.latestVersion == "1")
+        #expect(try solve([record], actions: [.install(adapted)], adapting: ["other"]).install == [adapted])
+    }
+
     /// libsolv drops a solvable whose architecture is not the pool's own.
     @Test func adaptedCandidateInstallsExplicitlyAndAsADependency() throws {
         let tweak = pkg("tweak", "1", foreign)

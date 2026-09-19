@@ -68,9 +68,11 @@ public struct AptEnvironment: Sendable {
 
     /// The index directories a suite repository is probed for, in order:
     /// `deviceArchitecture` first, then the other bootstraps the embedder
-    /// knows. The first that answers with packages is the one read, so a
-    /// suite with nothing built for this device still lists what it has,
-    /// and each package says whether it installs here.
+    /// knows. Those in `installableArchitectures` are read together as one
+    /// catalogue; the rest are reached one by one only when nothing before
+    /// them answered, so a suite with nothing that installs here still
+    /// lists what it has, and each package says whether it installs here
+    /// (`Repository.packageIndexUrls`).
     public var indexArchitectures: [String] {
         let device = deviceArchitecture
         return [device] + readIndexFallbacks().filter { $0 != device }

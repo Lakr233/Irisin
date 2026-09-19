@@ -13,14 +13,17 @@ struct PackageIndexUrlTests {
         distribution: String? = "stable",
         components: [String] = ["main"],
         release: [String: String],
-        architectures: [String] = rootless
+        architectures: [String] = rootless,
+        installable: Set<String>? = nil
     ) -> [[String]] {
         Repository.packageIndexUrls(
             suiteUrl: distribution == nil ? URL(string: "https://example.org")! : suite,
             distribution: distribution,
             components: components,
             release: release,
-            architectures: architectures
+            architectures: architectures,
+            // no adapter unless the test names one: the device's own alone
+            installable: installable ?? [architectures[0]]
         ).map { $0.map(\.absoluteString) }
     }
 
@@ -61,6 +64,43 @@ struct PackageIndexUrlTests {
 
     @Test func releaseNamingNothingKnownLeavesTheWholeChain() {
         #expect(candidates(release: ["architectures": "all amd64"]).count == 3)
+    }
+
+    // MARK: what an adapter installs is read with the device's own
+
+    private static let adapting: Set<String> = ["iphoneos-arm64e", "iphoneos-arm64"]
+
+    @Test func installableArchitecturesAreReadTogetherDeviceFirst() {
+        #expect(candidates(release: [:], architectures: Self.roothide, installable: Self.adapting)
+            == [[index("iphoneos-arm64e"), index("iphoneos-arm64")], [index("iphoneos-arm")]])
+        #expect(candidates(
+            release: ["architectures": "iphoneos-arm64 iphoneos-arm64e"],
+            architectures: Self.roothide,
+            installable: Self.adapting
+        ) == [[index("iphoneos-arm64e"), index("iphoneos-arm64")]])
+    }
+
+    @Test func aReleaseWithoutTheDeviceLeavesTheAdaptableAlone() {
+        let bigBoss = ["architectures": "iphoneos-arm iphoneos-arm64"]
+        #expect(candidates(release: bigBoss, architectures: Self.roothide, installable: Self.adapting)
+            == [[index("iphoneos-arm64")], [index("iphoneos-arm")]])
+    }
+
+    @Test func nothingInstallableOfferedLeavesTheChain() {
+        #expect(candidates(release: ["architectures": "iphoneos-arm"], architectures: Self.roothide, installable: Self.adapting)
+            == [[index("iphoneos-arm")]])
+    }
+
+    @Test func architecturesComeBeforeComponentsInOneEntry() {
+        #expect(candidates(
+            components: ["main", "extra"],
+            release: ["architectures": "iphoneos-arm64 iphoneos-arm64e"],
+            architectures: Self.roothide,
+            installable: Self.adapting
+        ) == [[
+            index("iphoneos-arm64e"), index("iphoneos-arm64e", component: "extra"),
+            index("iphoneos-arm64"), index("iphoneos-arm64", component: "extra"),
+        ]])
     }
 
     @Test func oneIndexPerComponentInEveryCandidate() {

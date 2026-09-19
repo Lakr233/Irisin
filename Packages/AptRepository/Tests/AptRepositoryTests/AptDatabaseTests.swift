@@ -133,6 +133,16 @@ final class AptDatabaseTests: XCTestCase {
             installedFrom: [package("com.example.armv7", "1.0", repo: Self.repoA)]
         )
         XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.armv7", version: "1.0").count, 0)
+        // a record with a version for this device under a newer one for
+        // another offers the first, and the second only once adapted
+        // updates are on and something adapts it
+        let mixed = Package(identity: "com.example.mixed", payload: [
+            "1.5": ["package": "com.example.mixed", "version": "1.5", "architecture": "iphoneos-arm64"],
+            "2.0": ["package": "com.example.mixed", "version": "2.0", "architecture": "iphoneos-arm"],
+        ], repoRef: Self.repoB)
+        db.replacePackages(of: Self.repoB, with: ["com.example.mixed": mixed])
+        XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.mixed", version: "1.0").map(\.latestVersion), ["1.5"])
+        XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.mixed", version: "1.5").count, 0)
         index.blockedUpdateTable = ["com.example.shared"]
         XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.shared", version: "0").count, 0)
     }

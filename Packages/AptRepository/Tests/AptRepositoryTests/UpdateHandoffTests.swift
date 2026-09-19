@@ -28,7 +28,8 @@ import Testing
     private func update(
         host: String,
         serving files: [String: Data],
-        storedRelease: [String: String] = [:]
+        storedRelease: [String: String] = [:],
+        indexes: [[String]] = [["Packages"]]
     ) async -> RepositoryCenter.UpdateOutcome {
         _ = TestEnvironment.root
         StubServer.serve(files, on: host)
@@ -37,7 +38,7 @@ import Testing
             url: url,
             avatarUrls: [],
             releaseUrl: url.appendingPathComponent("Release"),
-            packageCandidates: [[url.appendingPathComponent("Packages")]],
+            packageCandidates: indexes.map { $0.map(url.appendingPathComponent) },
             preferredSearchPath: "xz",
             availableSearchPath: ["bz2", "", "xz", "gz"],
             storedRelease: storedRelease,
@@ -83,6 +84,48 @@ import Testing
         #expect(outcome.release == nil)
         #expect(outcome.packages?.values.first?.latestVersion == "2")
         #expect(outcome.searchPath == "xz")
+    }
+
+    /// A suite with a directory per architecture, both of which install
+    /// here: one catalogue, the build of each version chosen across them,
+    /// and a directory that is not there costs nothing but its request.
+    @Test func oneEntrysIndexesAreReadAsOneCatalogue() async {
+        let own = "main/binary-iphoneos-arm64/Packages"
+        let other = "main/binary-other/Packages"
+        let files = [
+            "/\(own).xz": Data("""
+            Package: shared
+            Version: 1
+            Architecture: iphoneos-arm64
+            Filename: own.deb
+
+            Package: only-own
+            Version: 1
+            Architecture: iphoneos-arm64
+            """.utf8),
+            "/\(other).xz": Data("""
+            Package: shared
+            Version: 1
+            Architecture: all
+            Filename: other.deb
+
+            Package: shared
+            Version: 2
+            Architecture: all
+
+            Package: only-other
+            Version: 1
+            Architecture: all
+            """.utf8),
+        ]
+        let outcome = await update(host: "two-arch.test", serving: files, indexes: [[own, other], ["never/Packages"]])
+        #expect(outcome.packages?.keys.sorted() == ["only-other", "only-own", "shared"])
+        #expect(outcome.packages?["shared"]?.payload["1"]?["filename"] == "own.deb")
+        #expect(outcome.packages?["shared"]?.latestVersion == "2")
+        #expect(outcome.searchPath == "xz")
+
+        let alone = await update(host: "one-arch.test", serving: files.filter { $0.key.contains("other") }, indexes: [[own, other]])
+        #expect(alone.packages?.keys.sorted() == ["only-other", "shared"])
     }
 
     @Test func pageThatIsNoIndexReplacesNothing() async {
