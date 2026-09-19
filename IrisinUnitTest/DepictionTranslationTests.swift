@@ -31,6 +31,14 @@ struct DepictionTranslationTests {
     }
 
     @Test
+    func comparingPutsTheTranslationUnderWhatWasWritten() {
+        let compared = DepictionTranslation.rewrite(markdown: "# Title\nA **bold** claim\n- item\n1.0", comparing: true) {
+            "«\($0)»"
+        }
+        #expect(compared == "# Title\n# «Title»\nA **bold** claim\n\n«A bold claim»\n- item\n- «item»\n1.0")
+    }
+
+    @Test
     func onlyProseIsTakenFromADepiction() {
         let depiction: [String: Any] = [
             "class": "DepictionTabView",
@@ -46,7 +54,7 @@ struct DepictionTranslationTests {
                 ],
             ]],
         ]
-        #expect(DepictionTranslation.texts(in: depiction) == ["Header", "Body", "Label"])
+        #expect(DepictionTranslation.texts(in: depiction) == ["Details", "Header", "Body", "Label"])
 
         let answer = DepictionTranslation.replacing(depiction, with: ["Body": "Corps", "Label": "Étiquette"])
         let views = (answer["tabs"] as? [[String: Any]])?.first?["views"] as? [[String: Any]]

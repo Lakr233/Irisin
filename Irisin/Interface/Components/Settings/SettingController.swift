@@ -24,7 +24,8 @@ class SettingController: UITableViewController {
         case repositories
         case packages
         case downloads
-        case actions
+        case system
+        case support
     }
 
     nonisolated enum Row: Hashable {
@@ -88,13 +89,6 @@ class SettingController: UITableViewController {
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     UIApplication.shared.open(url)
                 },
-                UIAction(
-                    title: String(localized: "Report Issue"),
-                    image: UIImage(systemName: "exclamationmark.bubble")
-                ) { _ in
-                    guard let url = URL(string: "https://github.com/Lakr233/Irisin/issues/new") else { return }
-                    UIApplication.shared.open(url)
-                },
             ])
         )
         // the grouped ground: the page and the cards match every other
@@ -112,14 +106,15 @@ class SettingController: UITableViewController {
             case .repositories: String(localized: "Vendor Accounts")
             case .packages: String(localized: "Packages")
             case .downloads: String(localized: "Downloads")
-            case .actions: String(localized: "Actions")
+            case .system: String(localized: "System")
+            case .support: String(localized: "Support")
             }
         }
 
         footer.onLicense = { [weak self] in self?.present(next: LicenseController()) }
         tableView.tableFooterView = footer
 
-        for item in packageItems() + downloadItems() + actionItems() {
+        for item in packageItems() + downloadItems() + systemItems() + supportItems() {
             items[item.id] = item
         }
         applySnapshot(animatingDifferences: false)
@@ -160,7 +155,8 @@ class SettingController: UITableViewController {
         for (section, list) in [
             (Section.packages, packageItems()),
             (.downloads, downloadItems()),
-            (.actions, actionItems()),
+            (.system, systemItems()),
+            (.support, supportItems()),
         ] {
             snapshot.appendSections([section])
             snapshot.appendItems(list.map { Row.item($0.id) }, toSection: section)

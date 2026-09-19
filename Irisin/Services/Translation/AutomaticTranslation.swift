@@ -18,6 +18,18 @@ enum AutomaticTranslation {
         set { store.wrappedValue = newValue }
     }
 
+    private static let targetStore = PropertiesWrapper(key: "package.translateTarget", defaultValue: "")
+
+    /// The language pages are translated into: the user's own until the
+    /// package page's Translate menu names another.
+    static var target: Locale {
+        get {
+            let identifier = targetStore.wrappedValue
+            return identifier.isEmpty ? SystemTranslator.preferredTarget : Locale(identifier: identifier)
+        }
+        set { targetStore.wrappedValue = newValue.identifier }
+    }
+
     /// A package page has told the user about a failure this launch.
     static var failureWasShown = false
 

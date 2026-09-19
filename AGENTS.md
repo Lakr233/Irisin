@@ -166,7 +166,13 @@ end.
   (Settings, off until `verify` passes) shows a package page as written,
   then renders the depiction again from `DepictionTranslation`'s answer and
   cross-dissolves to it; markdown syntax, links and code never reach the
-  engine. A failure alerts once per launch and logs every time.
+  engine. A failure alerts once per launch and logs every time. The page's
+  menu has Translate under Select Version: Original, Translated or
+  Compared (the translation under each piece), checked, then the source
+  (detected unless named, the page's alone) and target language (kept)
+  from the engine's own list; what is chosen there is always answered,
+  alert included. `TranslationCache` holds the answers of the fifty
+  packages read last, in memory only.
 - **No install prefix is written in Swift.** The daemon and the helper derive
   it from their own `proc_pidpath` (`ProcessPath.installRoot`); the app reads
   it from `hello`, and uses libroot (`JailbreakRoot`) only while there is no

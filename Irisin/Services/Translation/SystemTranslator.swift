@@ -46,11 +46,36 @@ nonisolated enum SystemTranslator {
         return pairs.contains { matches($0.target, target) > 0 } ? nil : .unsupportedLanguage
     }
 
-    /// `texts` in the user's language, in order, or nil when they are in it
-    /// already (or in no language the engine is sure of).
-    static func translate(_ texts: [String], to target: Locale = preferredTarget) async throws -> [String]? {
+    /// Whether this system has the engine at all. Says nothing of whether
+    /// it will answer: `verify` does.
+    static var isPresent: Bool { engine != nil }
+
+    /// The languages the engine reads and the ones it writes, by identifier,
+    /// nil when it does not answer.
+    static func languages() async -> (sources: [Locale], targets: [Locale])? {
+        guard let pairs = await availablePairs() else { return nil }
+        func distinct(_ locales: [Locale]) -> [Locale] {
+            var seen = Set<String>()
+            return locales.filter { seen.insert($0.identifier).inserted }
+        }
+        return (distinct(pairs.map(\.source)), distinct(pairs.map(\.target)))
+    }
+
+    /// `texts` in `target`, in order, or nil when they are in it already (or
+    /// in no language the engine is sure of). A nil `source` is detected.
+    static func translate(
+        _ texts: [String],
+        from source: Locale? = nil,
+        to target: Locale = preferredTarget
+    ) async throws -> [String]? {
         guard let pairs = await availablePairs() else { throw Failure.unavailable }
-        guard let source = await detectLanguage(of: texts.joined(separator: "\n")) else { return nil }
+        let named = source
+        let detected: Locale? = if named == nil {
+            await detectLanguage(of: texts.joined(separator: "\n"))
+        } else {
+            nil
+        }
+        guard let source = named ?? detected else { return nil }
         if matches(source, target) >= 2 { return nil }
         let candidates = pairs
             .map { (pair: $0, score: matches($0.source, source) * 4 + matches($0.target, target)) }
@@ -63,10 +88,6 @@ nonisolated enum SystemTranslator {
         var accurateRouteFailed = false
         for text in texts {
             try Task.checkCancellation()
-            if let known = cache.withLock({ $0[CacheKey(text: text, target: pair.target.identifier)] }) {
-                results.append(known)
-                continue
-            }
             var translated: String?
             if !accurateRouteFailed {
                 translated = try? await request(text, pair: pair, onDeviceOnly: false)
@@ -77,7 +98,6 @@ nonisolated enum SystemTranslator {
             } else {
                 try await request(text, pair: pair, onDeviceOnly: true)
             }
-            cache.withLock { $0[CacheKey(text: text, target: pair.target.identifier)] = answer }
             results.append(answer)
         }
         return results
@@ -90,13 +110,9 @@ nonisolated enum SystemTranslator {
         let target: Locale
     }
 
-    private struct CacheKey: Hashable {
-        let text: String
-        let target: String
-    }
-
-    /// What was translated this launch: a page opened twice asks once.
-    private static let cache = OSAllocatedUnfairLock(initialState: [CacheKey: String]())
+    /// The engine's pairs, once it has answered with some: the list is the
+    /// system's and does not change while the app runs.
+    private static let knownPairs = OSAllocatedUnfairLock<[Pair]?>(initialState: nil)
 
     /// How long the engine gets to answer before it counts as a failure.
     /// translationd drops a client it rejects without calling anything back.
@@ -145,6 +161,7 @@ nonisolated enum SystemTranslator {
     /// answer. A rejected client is answered with nothing.
     private static func availablePairs() async -> [Pair]? {
         guard let engine else { return nil }
+        if let known = knownPairs.withLock({ $0 }) { return known }
         let selector = NSSelectorFromString("availableLocalePairsForTask:completion:")
         guard let method = class_getClassMethod(engine.translator, selector) else { return nil }
         typealias Call = @convention(c) (AnyClass, Selector, Int, AnyObject) -> Void
@@ -163,7 +180,9 @@ nonisolated enum SystemTranslator {
             }
             call(engine.translator, selector, textTask, unsafeBitCast(block, to: AnyObject.self))
         }
-        return pairs?.isEmpty == false ? pairs : nil
+        guard let pairs, !pairs.isEmpty else { return nil }
+        knownPairs.withLock { $0 = pairs }
+        return pairs
     }
 
     /// The language `text` is written in, when the engine is confident.

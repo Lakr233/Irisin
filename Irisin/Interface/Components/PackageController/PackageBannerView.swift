@@ -131,7 +131,12 @@ class PackageBannerView: UIView {
     /// icon are set once.
     func updateValues() {
         name.text = PackageCenter.default.name(of: package)
-        version.text = package.latestVersion ?? String(localized: "Unknown")
+        // the version, then what the repository says the download weighs
+        // (what it takes on disk for a package only dpkg knows)
+        version.text = [
+            package.latestVersion ?? String(localized: "Unknown"),
+            (package.publishedSize ?? package.installedSize).map(DownloadCenter.shared.byteFormat),
+        ].compactMap(\.self).joined(separator: " · ")
         icon.showIcon(of: package)
         updateButton()
     }

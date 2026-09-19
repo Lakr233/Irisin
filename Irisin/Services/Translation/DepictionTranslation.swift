@@ -13,8 +13,8 @@ import Foundation
 /// from the answer through the same renderer as the original.
 ///
 /// Only what an author wrote as sentences is taken: markdown, labels,
-/// headers and review titles. Table rows (a version, a name), buttons, tab
-/// names and html stay as they are. Markdown goes to the engine a line at a
+/// headers, review titles and the names of tabs. Table rows (a version, a
+/// name), buttons and html stay as they are. Markdown goes to the engine a line at a
 /// time with its syntax held back, since an engine handed `[text](link)` or
 /// a code span returns something that no longer parses.
 nonisolated enum DepictionTranslation {
@@ -30,27 +30,43 @@ nonisolated enum DepictionTranslation {
     }
 
     /// `depiction` with each piece of prose looked up in `translations`; a
-    /// piece that is not there stays in its own language.
-    static func replacing(_ depiction: [String: Any], with translations: [String: String]) -> [String: Any] {
-        rewrite(depiction) { translations[$0] ?? $0 }
+    /// piece that is not there stays in its own language. `comparing` keeps
+    /// what the author wrote and puts the translation under it: line under
+    /// line in markdown, so a list stays a list with every item said twice.
+    static func replacing(
+        _ depiction: [String: Any],
+        with translations: [String: String],
+        comparing: Bool = false
+    ) -> [String: Any] {
+        rewrite(depiction, comparing: comparing) { translations[$0] ?? $0 }
     }
 
     // MARK: - The json
 
-    private static func rewrite(_ view: [String: Any], _ transform: (String) -> String) -> [String: Any] {
+    private static func rewrite(
+        _ view: [String: Any],
+        comparing: Bool = false,
+        _ transform: (String) -> String
+    ) -> [String: Any] {
         var view = view
         for key in proseKeys(of: view) {
             guard let text = view[key] as? String else { continue }
-            view[key] = key == "markdown"
-                ? rewrite(markdown: text, transform)
-                : rewrite(plain: text, transform)
+            if key == "markdown" {
+                view[key] = rewrite(markdown: text, comparing: comparing, transform)
+            } else {
+                let rewritten = rewrite(plain: text, transform)
+                // a tab has room for one name: compared, it wears the translation
+                view[key] = comparing && key != "tabname" && rewritten != text
+                    ? text + "\n" + rewritten
+                    : rewritten
+            }
         }
         for (key, value) in view {
             switch value {
             case let child as [String: Any]:
-                view[key] = rewrite(child, transform)
+                view[key] = rewrite(child, comparing: comparing, transform)
             case let children as [[String: Any]]:
-                view[key] = children.map { rewrite($0, transform) }
+                view[key] = children.map { rewrite($0, comparing: comparing, transform) }
             default:
                 break
             }
@@ -59,7 +75,9 @@ nonisolated enum DepictionTranslation {
     }
 
     private static func proseKeys(of view: [String: Any]) -> [String] {
-        switch view["class"] as? String {
+        // a tab is a stack like any other, told apart by having a name
+        if view["tabname"] is String { return ["tabname"] }
+        let keys: [String] = switch view["class"] as? String {
         case "DepictionMarkdownView":
             (view["useRawFormat"] as? Bool) == true ? [] : ["markdown"]
         case "DepictionReviewView":
@@ -71,6 +89,7 @@ nonisolated enum DepictionTranslation {
         default:
             []
         }
+        return keys
     }
 
     // MARK: - The text
@@ -93,7 +112,7 @@ nonisolated enum DepictionTranslation {
     /// so a translated line gives its emphasis up.
     private static var emphasis: Regex<(Substring, Substring, Substring)> { #/(\*\*\*|\*\*|\*|__|~~)(\S(?:.*?\S)?)\1/# }
 
-    static func rewrite(markdown: String, _ transform: (String) -> String) -> String {
+    static func rewrite(markdown: String, comparing: Bool = false, _ transform: (String) -> String) -> String {
         var fence: Substring?
         return markdown.components(separatedBy: "\n").map { line in
             let opening = line.drop(while: \.isWhitespace).prefix(3)
@@ -104,16 +123,24 @@ nonisolated enum DepictionTranslation {
             guard fence == nil else { return line }
 
             let marker = line.prefixMatch(of: lineMarker).map { String($0.output) } ?? ""
-            let body = String(line.dropFirst(marker.count))
-            var rewritten = marker
-            var cursor = body.startIndex
-            for match in body.matches(of: heldBack) {
-                rewritten += rewrite(plain: withoutEmphasis(body[cursor ..< match.range.lowerBound]), transform)
-                rewritten += body[match.range]
-                cursor = match.range.upperBound
-            }
-            return rewritten + rewrite(plain: withoutEmphasis(body[cursor...]), transform)
+            let rewritten = rewrite(line: line, after: marker, transform)
+            // a line the engine left alone is not said twice; a paragraph's
+            // translation is a paragraph of its own, a list item's the next item
+            guard comparing, rewritten != rewrite(line: line, after: marker, { $0 }) else { return rewritten }
+            return line + (marker.isEmpty ? "\n\n" : "\n") + rewritten
         }.joined(separator: "\n")
+    }
+
+    private static func rewrite(line: String, after marker: String, _ transform: (String) -> String) -> String {
+        let body = String(line.dropFirst(marker.count))
+        var rewritten = marker
+        var cursor = body.startIndex
+        for match in body.matches(of: heldBack) {
+            rewritten += rewrite(plain: withoutEmphasis(body[cursor ..< match.range.lowerBound]), transform)
+            rewritten += body[match.range]
+            cursor = match.range.upperBound
+        }
+        return rewritten + rewrite(plain: withoutEmphasis(body[cursor...]), transform)
     }
 
     private static func withoutEmphasis(_ text: Substring) -> String {

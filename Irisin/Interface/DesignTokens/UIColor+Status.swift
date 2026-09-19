@@ -17,6 +17,10 @@ extension UIColor {
     /// one count on its page worth a second look.
     static let diffReplacement = UIColor.systemOrange
 
+    /// Where a package's architecture parts from the device's, on the
+    /// package page: the letters too many and the letters missing.
+    static let architectureMismatch = UIColor.systemRed
+
     /// A package requirement has a matching candidate.
     static let requirementMatched = UIColor.systemGreen
 

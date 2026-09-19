@@ -156,6 +156,10 @@ class PackageMenuAction {
             let children = children(of: section)
             return children.isEmpty ? nil : UIMenu(options: .displayInline, children: children)
         }
+        // the package page reads in another language; a cell has no page
+        if let translate = (host as? PackageController)?.translateMenu {
+            elements.append(translate)
+        }
         let advanced = children(of: advancedSection)
         if !advanced.isEmpty {
             elements.append(UIMenu(

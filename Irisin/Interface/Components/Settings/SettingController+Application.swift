@@ -10,20 +10,9 @@ import AlertController
 import UIKit
 
 extension SettingController {
-    func actionItems() -> [SettingItem] {
-        var items: [SettingItem] = []
-        #if DEBUG
-            items.append(SettingItem(
-                id: "app.crash",
-                icon: "xmark.octagon.fill",
-                title: "Simulate Crash",
-                kind: .disclosure,
-                action: {
-                    fatalError("simulated application crash by user", file: #file, line: #line)
-                }
-            ))
-        #endif
-        items += [
+    /// What is done to the system around the app.
+    func systemItems() -> [SettingItem] {
+        [
             SettingItem(
                 id: "app.uicache",
                 icon: "square.grid.2x2",
@@ -59,6 +48,12 @@ extension SettingController {
                     }
                 }
             ),
+        ]
+    }
+
+    /// Where to look, and whom to tell, when something went wrong.
+    func supportItems() -> [SettingItem] {
+        [
             SettingItem(
                 id: "app.logs",
                 icon: "doc.richtext",
@@ -68,7 +63,16 @@ extension SettingController {
                     self?.presentLogViewer()
                 }
             ),
+            SettingItem(
+                id: "app.report",
+                icon: "exclamationmark.bubble",
+                title: String(localized: "Report Issue"),
+                kind: .disclosure,
+                action: {
+                    guard let url = URL(string: "https://github.com/Lakr233/Irisin/issues/new") else { return }
+                    UIApplication.shared.open(url)
+                }
+            ),
         ]
-        return items
     }
 }

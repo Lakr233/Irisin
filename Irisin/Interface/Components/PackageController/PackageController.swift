@@ -85,16 +85,7 @@ class PackageController: UIViewController {
                 x.top.equalTo(self.bannerPackageView.snp.bottom)
                 x.left.right.equalToSuperview()
             }
-            var architecture = String(localized: "Architecture: \(packageObject.architectures.joined(separator: ", "))")
-            let environment = AptEnvironment.current
-            if !packageObject.supports(architecture: environment.deviceArchitecture),
-               packageObject.supports(anyOf: environment.installableArchitectures)
-            {
-                architecture += "\n" + String(localized: "Installs in compatibility mode.")
-            }
-            depictionFooter.text = depictionIsPartial
-                ? String(localized: "Some of this package's content cannot be shown.") + "\n" + architecture
-                : architecture
+            depictionFooter.attributedText = footerText()
             card.addSubview(depictionFooter)
             // The page ends well below its last line so the floating bar
             // never covers it.
@@ -107,6 +98,48 @@ class PackageController: UIViewController {
             // animation (a sheet going down) must not slide into place
             UIView.performWithoutAnimation { card.layoutIfNeeded() }
         }
+    }
+
+    private func footerText() -> NSAttributedString {
+        let environment = AptEnvironment.current
+        let device = environment.deviceArchitecture
+        let differs = !packageObject.supports(architecture: device)
+        let marked = NSMutableAttributedString()
+        for (index, architecture) in packageObject.architectures.enumerated() {
+            if index > 0 { marked.append(NSAttributedString(string: ", ")) }
+            let runs = differs
+                ? ArchitectureDifference.runs(of: architecture, against: device)
+                : [.same(architecture)]
+            for run in runs {
+                switch run {
+                case let .same(text):
+                    marked.append(NSAttributedString(string: text))
+                case let .extra(text):
+                    marked.append(NSAttributedString(string: text, attributes: [
+                        .foregroundColor: UIColor.architectureMismatch,
+                        .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    ]))
+                case let .missing(text):
+                    marked.append(NSAttributedString(string: text, attributes: [
+                        .foregroundColor: UIColor.architectureMismatch,
+                    ]))
+                }
+            }
+        }
+        // the sentence is the catalog's; the architectures go where it puts them
+        let placeholder = "\u{FFFC}"
+        let footer = NSMutableAttributedString(string: String(localized: "Architecture: \(placeholder)"))
+        footer.replaceCharacters(in: (footer.string as NSString).range(of: placeholder), with: marked)
+        if differs, packageObject.supports(anyOf: environment.installableArchitectures) {
+            footer.append(NSAttributedString(string: "\n" + String(localized: "Installs in compatibility mode.")))
+        }
+        if depictionIsPartial {
+            footer.insert(
+                NSAttributedString(string: String(localized: "Some of this package's content cannot be shown.") + "\n"),
+                at: 0
+            )
+        }
+        return footer
     }
 
     /// The page becomes another version of the same package, in place. The
@@ -137,9 +170,22 @@ class PackageController: UIViewController {
     /// new depiction (another version of the package) cancels it.
     var depictionTranslation: Task<Void, Never>?
 
+    /// The depiction as its author wrote it, which every translation of the
+    /// page is made from.
+    var depictionOnShow: (json: [String: Any], tintColor: UIColor)?
+
+    /// How the page reads: what the Translate menu has checked. It starts
+    /// where Auto Translate puts it and is this page's alone after that.
+    var translationMode: TranslationMode = AutomaticTranslation.isEnabled ? .translated : .original
+
+    /// The language the page is read from; nil lets the engine tell.
+    var translationSource: Locale?
+
     /// Closes the card under the depiction, in the style of the home page
     /// footer: the architecture the package was built for, under a notice
-    /// when the depiction is partial.
+    /// when the depiction is partial. One the device does not run is read
+    /// against the device's like a diff, in red: the letters it has too
+    /// many struck through, the ones it lacks put where they belong.
     let depictionFooter = UILabel().then {
         $0.font = .footnote
         $0.textColor = .secondaryLabel

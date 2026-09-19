@@ -133,51 +133,73 @@ extension PackageController {
                 return
             }
             depictionView = view
-            translate(depiction, tintColor: color)
+            depictionOnShow = (depiction, color)
+            showTranslation(asked: false)
         }
     }
 
-    /// With Auto Translate on, the page shows as its author wrote it
-    /// and its prose is sent to the system's translator; the same depiction
-    /// rendered from the answer then fades in over it. Text already in the
-    /// user's language is left alone without a word. A failure is said once
-    /// per launch and logged every time: a device that is offline with no
-    /// language downloaded would otherwise answer every page with an alert.
-    private func translate(_ depiction: [String: Any], tintColor: UIColor) {
+    /// Shows the depiction in `translationMode`. The page is always there
+    /// as its author wrote it first; its prose goes to the system's
+    /// translator (or comes out of `TranslationCache`) and the same depiction
+    /// rendered from the answer fades in over it.
+    ///
+    /// `asked` is the user choosing from the Translate menu: every outcome
+    /// is said, and one that leaves the page as written puts the checkmark
+    /// back on Original. Without it this is Auto Translate, which leaves
+    /// text already in the user's language alone without a word and says a
+    /// failure once per launch (it is logged every time): a device offline
+    /// with no language downloaded would otherwise alert on every page.
+    func showTranslation(asked: Bool) {
         depictionTranslation?.cancel()
         depictionTranslation = nil
-        guard AutomaticTranslation.isEnabled else { return }
+        guard let (depiction, tintColor) = depictionOnShow else { return }
+        guard translationMode != .original else {
+            if asked { fade(to: depiction, tintColor: tintColor) }
+            return
+        }
         let texts = DepictionTranslation.texts(in: depiction)
         guard !texts.isEmpty else { return }
-        let identity = packageObject.identity
+        let package = "\(packageObject.identity) \(packageObject.latestVersion ?? "")"
+        let source = translationSource
+        let target = AutomaticTranslation.target
+        let pair = "\(source?.identifier ?? "auto")>\(target.identifier)"
+        let comparing = translationMode == .compared
+
+        func apply(_ translations: [String: String]) {
+            fade(
+                to: DepictionTranslation.replacing(depiction, with: translations, comparing: comparing),
+                tintColor: tintColor
+            )
+        }
+        if let known = TranslationCache.translations(of: package, pair: pair) {
+            return apply(known)
+        }
 
         depictionTranslation = Task { [weak self] in
             do {
+                let translated = try await SystemTranslator.translate(texts, from: source, to: target)
+                guard !Task.isCancelled, let self else { return }
                 // an engine unsure of the language hands the text back as it was
-                guard let translated = try await SystemTranslator.translate(texts),
-                      translated != texts,
-                      !Task.isCancelled,
-                      let self
-                else {
+                guard let translated, translated != texts else {
+                    translationMode = .original
+                    if asked {
+                        presentNotice(
+                            title: "Nothing to Translate",
+                            message: "This page is already in the target language."
+                        )
+                    }
                     return
                 }
-                let answer = DepictionTranslation.replacing(
-                    depiction,
-                    with: Dictionary(zip(texts, translated)) { first, _ in first }
-                )
-                guard let view = render(answer, tintColor: tintColor) else { return }
-                UIView.transition(
-                    with: card,
-                    duration: 0.35,
-                    options: [.transitionCrossDissolve, .allowUserInteraction]
-                ) {
-                    self.depictionView = view
-                }
+                let translations = Dictionary(zip(texts, translated)) { first, _ in first }
+                TranslationCache.store(translations, of: package, pair: pair)
+                apply(translations)
             } catch is CancellationError {
                 return
             } catch {
-                Dog.shared.join("Translation", "could not translate the depiction of \(identity): \(error)", level: .error)
-                guard let self, !Task.isCancelled, !AutomaticTranslation.failureWasShown,
+                Dog.shared.join("Translation", "could not translate the depiction of \(package): \(error)", level: .error)
+                guard let self, !Task.isCancelled else { return }
+                translationMode = .original
+                guard asked || !AutomaticTranslation.failureWasShown,
                       viewIfLoaded?.window != nil, presentedViewController == nil
                 else {
                     return
@@ -185,6 +207,17 @@ extension PackageController {
                 AutomaticTranslation.failureWasShown = true
                 presentNotice(title: "Unable to Translate", message: AutomaticTranslation.describe(error))
             }
+        }
+    }
+
+    private func fade(to depiction: [String: Any], tintColor: UIColor) {
+        guard let view = render(depiction, tintColor: tintColor) else { return }
+        UIView.transition(
+            with: card,
+            duration: 0.35,
+            options: [.transitionCrossDissolve, .allowUserInteraction]
+        ) {
+            self.depictionView = view
         }
     }
 
