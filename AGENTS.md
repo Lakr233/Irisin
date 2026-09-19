@@ -122,17 +122,23 @@ end.
   paths are respelled on the parsed list, never by editing its text. It adds
   the `rootless-compat` Pre-Depends to a package with a Mach-O in it and
   never adds a repository. A package with none (a theme) gets no
-  Pre-Depends, the one place it parts from the script on purpose. The
-  resolver adds it to every adapted package before anything downloads,
-  so `TaskManager.inspect` adapts each downloaded file on a scratch copy
-  and solves again without it where `adapt` left it out, and the queue
-  page waits while an inspection is out: rootless-compat and patchloader
-  leave the queue before it runs. Where that misses (a status left from
-  an earlier download, a catalogue refresh mid-download) the plan runs as
-  solved and the compat layer is installed for nothing, as it always was;
-  on the same file never the other way round, since the probe is `adapt`
-  itself. The queue
-  asks before an adapted package joins it (Compatibility Mode).
+  Pre-Depends, the one place it parts from the script on purpose. What an
+  adapter adds to a package's relations is the adapter's to say, never a
+  string the resolver is handed: `resolveAdaptedPackageManifestPreview`
+  answers with the control paragraph it expects to leave, from the
+  catalogue's alone, and the resolver solves an adapted package as that
+  says before anything downloads. The file may show otherwise, so the
+  queue page offers Patch in place of Execute while the plan installs an
+  adapted package that has not been through it: `TaskManager.patch` waits
+  for the files, adapts each once, keeps the tree for staging (which hands
+  it to the helper as it is and adapts only what Patch never saw) and
+  solves again with the control paragraphs `adapt` wrote, so
+  rootless-compat and patchloader leave a queue of themes before it runs.
+  A queue that is not what it was says so in an alert, and the button is
+  Execute from then on. On the same file the plan and the install never
+  disagree, since the paragraph solved with is the one installed. The queue
+  asks before an adapted package joins it (Compatibility Mode), and its
+  sheet says the queue may change at Patch.
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by
   `package-deb.sh` per flavor; a build that was never packaged uses the

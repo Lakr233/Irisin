@@ -23,7 +23,7 @@ struct AdaptedPackageTests {
     }
 
     /// Written the way roothide's patcher writes it, with no space before the version.
-    @Test func impliedPreDependsComesFirstAndOnlyForTheAdapted() throws {
+    @Test func previewedPreDependsComesFirstAndOnlyForTheAdapted() throws {
         let tweak = pkg("tweak", "1", foreign.merging(["pre-depends": "library"]) { $1 })
         let native = pkg("native")
         let plan = try solve(
@@ -45,7 +45,7 @@ struct AdaptedPackageTests {
     /// A theme's file showed it has no code: solved without the compat
     /// layer, which then neither comes in nor is required, while a tweak
     /// adapted beside it still brings it.
-    @Test func anAdaptedPackageWhoseFileNeedsNoneGetsNoImpliedPreDepends() throws {
+    @Test func anAdaptedPackageIsSolvedAsItsFileWasAdapted() throws {
         let theme = pkg("theme", "1", foreign)
         let tweak = pkg("tweak", "1", foreign)
         let compat = pkg("compat", "1")
@@ -65,7 +65,7 @@ struct AdaptedPackageTests {
         #expect(Set(both.install.map(\.identity)) == ["theme", "tweak", "compat"])
     }
 
-    @Test func missingImpliedPreDependsFailsTheAdaptedPackageAlone() throws {
+    @Test func missingPreviewedPreDependsFailsTheAdaptedPackageAlone() throws {
         let tweak = pkg("tweak", "1", foreign)
         #expect(throws: (any Error).self) {
             try solve([tweak], actions: [.install(tweak)], adapting: ["other"], implied: "compat(>= 0.9)")

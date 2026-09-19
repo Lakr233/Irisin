@@ -20,7 +20,12 @@ nonisolated enum AptRepositoryBootstrap {
             deviceArchitecture: { EnvironmentDetector.architecture },
             installableArchitectures: { installableArchitectures },
             indexFallbacks: { BootstrapArchitecture.probeOrder.map(\.rawValue) },
-            adaptedPreDepends: PackageAdapters.installed.impliedPreDepends(on: EnvironmentDetector.architecture),
+            adaptedManifestPreview: {
+                PackageAdapters.installed.resolveAdaptedPackageManifestPreview(
+                    control: $0,
+                    on: EnvironmentDetector.architecture
+                )
+            },
             storage: PropertiesStorage(),
             logger: DogLogger()
         )

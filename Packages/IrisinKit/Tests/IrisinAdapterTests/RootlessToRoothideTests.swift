@@ -142,15 +142,19 @@ final class RootlessToRoothideTests: XCTestCase {
             .file("var/jb/Library/Themes/.DS_Store", fixture("input/Fixture.dylib")),
         ]
         let theme = try prepared(entries: entries)
-        XCTAssertTrue(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: theme, on: "iphoneos-arm64e"))
+        XCTAssertNotNil(try PackageAdapters.installed.adapt(preparedPackageAt: theme, on: "iphoneos-arm64e"))
+        XCTAssertNil(try PackageAdapters.installed.control(ofPreparedPackageAt: theme)["pre-depends"])
         let adapted = try PreparedPackage.read(from: theme)
         XCTAssertEqual(adapted.control, "Package: com.example.fixture\nVersion: 1.0\nArchitecture: iphoneos-arm64e\n")
         XCTAssertFalse(adapted.entries.contains { $0.path.hasSuffix(".roothidepatch") })
 
         let code = try prepared(entries: entries + [.file(tweak, fixture("input/Fixture.dylib"))])
-        XCTAssertFalse(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: code, on: "iphoneos-arm64e"))
-        // on rootless no adapter adds anything, so there is nothing to leave out
-        XCTAssertFalse(try PackageAdapters.installed.addsNoPreDepends(adaptingPreparedPackageAt: code, on: "iphoneos-arm64"))
+        XCTAssertNotNil(try PackageAdapters.installed.adapt(preparedPackageAt: code, on: "iphoneos-arm64e"))
+        // what the preview said it would be
+        XCTAssertEqual(
+            try PackageAdapters.installed.control(ofPreparedPackageAt: code)["pre-depends"],
+            "rootless-compat(>= 0.9)"
+        )
     }
 
     /// ldid signs a file under its own name, so one blob the archive shares

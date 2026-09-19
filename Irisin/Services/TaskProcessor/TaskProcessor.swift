@@ -41,7 +41,7 @@ final class TaskProcessor {
         inProcessingQueue = true
         defer { inProcessingQueue = false }
         TaskManager.shared.operationBegan()
-        var sources: [(Package, URL)] = []
+        var sources: [(Package, URL, TaskManager.PatchedPackage?)] = []
         do {
             guard try await TaskManager.isCurrent(plan: plan, index: PackageCenter.default.index) else {
                 // read again, so the queue is solved against what moved and
@@ -57,7 +57,7 @@ final class TaskProcessor {
                 guard let file else {
                     throw MissingDownload(identity: package.identity)
                 }
-                sources.append((package, file))
+                sources.append((package, file, TaskManager.shared.patched[package]))
             }
             let install = try await Self.stage(sources, at: workingLocation.appendingPathComponent(plan.id.uuidString))
             // checked again after the await: staging takes a while
@@ -113,30 +113,39 @@ final class TaskProcessor {
 
     @concurrent
     private nonisolated static func stage(
-        _ sources: [(Package, URL)],
+        _ sources: [(Package, URL, TaskManager.PatchedPackage?)],
         at location: URL
     ) async throws -> [InstallerJob.Transaction.Package] {
         try reset(location)
         var result: [InstallerJob.Transaction.Package] = []
-        for (package, source) in sources {
+        for (package, source, patched) in sources {
             let destination = location.appendingPathComponent(package.identity + ".deb")
             try FileManager.default.copyItem(at: source, to: destination)
             let digest = try package.validateArchive(at: destination)
-            let prepared = location.appendingPathComponent(package.identity + ".contents")
-            var manifestDigest = try ArchiveStream.prepareDebianPackage(at: destination, in: prepared)
-            // a package built for another bootstrap is rewritten here, as
-            // mobile, before the helper hears of it; the adapter's failure
-            // is this attempt's reason and no transaction starts
-            if let adapted = try PackageAdapters.installed.adapt(
-                preparedPackageAt: prepared,
-                on: EnvironmentDetector.architecture
-            ) {
-                Dog.shared.join(
-                    "TaskProcessor",
-                    "adapted \(package.identity) for \(EnvironmentDetector.architecture)",
-                    level: .info
-                )
-                manifestDigest = adapted
+            var prepared = location.appendingPathComponent(package.identity + ".contents")
+            var manifestDigest: String
+            if let patched {
+                // Patch prepared and adapted this file already: its tree is
+                // what installs, and the helper checks it against the digest
+                prepared = patched.directory
+                manifestDigest = patched.manifestDigest
+            } else {
+                manifestDigest = try ArchiveStream.prepareDebianPackage(at: destination, in: prepared)
+                // a package built for another bootstrap that Patch never saw
+                // (Try Again's re-solved queue) is rewritten here, as mobile,
+                // before the helper hears of it; the adapter's failure is
+                // this attempt's reason and no transaction starts
+                if let adapted = try PackageAdapters.installed.adapt(
+                    preparedPackageAt: prepared,
+                    on: EnvironmentDetector.architecture
+                ) {
+                    Dog.shared.join(
+                        "TaskProcessor",
+                        "adapted \(package.identity) for \(EnvironmentDetector.architecture)",
+                        level: .info
+                    )
+                    manifestDigest = adapted
+                }
             }
             result.append(.init(
                 identity: package.identity,

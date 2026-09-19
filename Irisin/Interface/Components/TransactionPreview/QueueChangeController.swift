@@ -345,6 +345,13 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             if !unchanged, proposal.plan != nil {
                 lines.append(String(localized: "After you confirm, the queue prepares everything the install needs. Finish installing from the Queue page."))
             }
+            // what Patch finds in the files may take packages out of the
+            // queue or bring some in
+            if !unchanged, let plan = proposal.plan,
+               plan.install.contains(where: { plan.snapshot.adapts($0) && TaskManager.shared.patched[$0] == nil })
+            {
+                lines.append(String(localized: "Packages in compatibility mode are patched before they install. If patching changes the queue, review it again before you execute."))
+            }
             let note = Section.note(lines.joined(separator: "\n\n"))
             snapshot.appendSections([note])
             if unchanged {

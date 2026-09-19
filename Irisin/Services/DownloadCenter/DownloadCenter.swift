@@ -183,7 +183,6 @@ final class DownloadCenter {
                     totalBytes: size,
                     file: cached
                 ))
-                TaskManager.shared.inspect(package, at: cached)
                 return
             }
             Dog.shared.join(self, "cached \(package.identity) no longer matches its hash", level: .warning)
@@ -220,7 +219,6 @@ final class DownloadCenter {
                     completedFiles[url] = checkout
                     status.file = checkout
                     publish(status)
-                    TaskManager.shared.inspect(package, at: checkout)
                 }
             }
         } catch {

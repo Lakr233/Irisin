@@ -78,9 +78,9 @@ public struct AptEnvironment: Sendable {
 
     private let readIndexFallbacks: @Sendable () -> [String]
 
-    /// What the embedder's adapter prepends to the Pre-Depends of a package
-    /// it rewrites; nil when nothing is adapted. See `ResolutionSnapshot`.
-    public let adaptedPreDepends: String?
+    /// The embedder's adapters' preview of a package they rewrite; nil when
+    /// nothing is adapted. See `ResolutionSnapshot`.
+    public let adaptedManifestPreview: ResolutionSnapshot.ManifestPreview?
 
     public let storage: any AptStorage
     public let logger: any AptLogger
@@ -92,7 +92,7 @@ public struct AptEnvironment: Sendable {
         deviceArchitecture: @escaping @Sendable () -> String,
         installableArchitectures: (@Sendable () -> Set<String>)? = nil,
         indexFallbacks: @escaping @Sendable () -> [String] = { [] },
-        adaptedPreDepends: String? = nil,
+        adaptedManifestPreview: ResolutionSnapshot.ManifestPreview? = nil,
         storage: any AptStorage,
         logger: any AptLogger
     ) {
@@ -102,7 +102,7 @@ public struct AptEnvironment: Sendable {
         readDeviceArchitecture = deviceArchitecture
         readInstallableArchitectures = installableArchitectures ?? { [deviceArchitecture()] }
         readIndexFallbacks = indexFallbacks
-        self.adaptedPreDepends = adaptedPreDepends
+        self.adaptedManifestPreview = adaptedManifestPreview
         self.storage = storage
         self.logger = logger
     }

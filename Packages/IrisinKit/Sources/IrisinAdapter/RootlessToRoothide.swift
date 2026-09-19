@@ -46,8 +46,16 @@ public struct RootlessToRoothide: PackageAdapter {
     /// roothide's runtime half, spelled the way its patcher writes it.
     private static let compatLayer = "rootless-compat(>= 0.9)"
 
-    public var impliedPreDepends: String? {
-        Self.compatLayer
+    /// Every package is previewed with the compat layer in front of its
+    /// Pre-Depends: whether it has a Mach-O for the layer to load is in the
+    /// file, and one that has none (a theme) says so once it is adapted.
+    public func resolveAdaptedPackageManifestPreview(control: [String: String]) -> [String: String] {
+        var control = control
+        control["architecture"] = target.rawValue
+        control["pre-depends"] = [Self.compatLayer, control["pre-depends"]].compactMap(\.self)
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .joined(separator: ", ")
+        return control
     }
 
     public init() {}

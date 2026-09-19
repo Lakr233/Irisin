@@ -27,24 +27,20 @@ public struct PackageAdapters: Sendable {
         return accepted
     }
 
-    /// What an adapted package gains in front of its Pre-Depends on
-    /// `current`, for the resolver. One adapter per target ships, so the
-    /// first answer is the answer.
-    public func impliedPreDepends(on current: String) -> String? {
-        adapters.first { $0.target.rawValue == current && $0.impliedPreDepends != nil }?.impliedPreDepends
+    /// The control paragraph the resolver solves this package with on
+    /// `current`, before its file is here: its adapter's preview, or the
+    /// paragraph as it is when nothing adapts it.
+    public func resolveAdaptedPackageManifestPreview(
+        control: [String: String],
+        on current: String
+    ) -> [String: String] {
+        adapter(for: control, on: current)?.resolveAdaptedPackageManifestPreview(control: control) ?? control
     }
 
-    /// Whether adapting this prepared package for `current` leaves its
-    /// Pre-Depends without `impliedPreDepends(on:)`: a package with no
-    /// code for a compat layer to load (a theme). Answered by adapting the
-    /// tree, in place, so hand it a copy: the answer is staging's own and
-    /// cannot disagree with it. False when nothing adapts the package;
-    /// a refusal throws.
-    public func addsNoPreDepends(adaptingPreparedPackageAt directory: URL, on current: String) throws -> Bool {
-        guard let implied = impliedPreDepends(on: current),
-              try adapt(preparedPackageAt: directory, on: current) != nil
-        else { return false }
-        return try !PreparedPackage.read(from: directory).control.contains("Pre-Depends: \(implied)")
+    /// The control paragraph of a prepared package as it stands, lowercase
+    /// field names: read after `adapt`, it is what the preview stood in for.
+    public func control(ofPreparedPackageAt directory: URL) throws -> [String: String] {
+        try DebianControl.parse(PreparedPackage.read(from: directory).control, preservingLinesFor: ["description"])
     }
 
     /// The adapter that takes a package with this control paragraph to

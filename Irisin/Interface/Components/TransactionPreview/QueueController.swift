@@ -18,9 +18,13 @@ import UIKit
 /// the leading edge. The files download from the moment the queue takes a change,
 /// whether or not this page is open; the page only watches. Execute is the one
 /// thing the user does: tapped at any time, it stages the transaction and
-/// hands it to the console as soon as every file is here. The bar says no
-/// more than the button does: a spinner while the page works on its own,
-/// Retry after a failure whose reason heads the list.
+/// hands it to the console as soon as every file is here. A queue with a
+/// package built for another bootstrap shows Patch in its place first: the
+/// tap adapts those packages once their files are here, an alert says what
+/// solving again took out of the queue or brought in, and the button is
+/// Execute from then on. The bar says no more than the button does: a
+/// spinner while the page works on its own, Retry after a failure whose
+/// reason heads the list.
 final class QueueController: UIViewController, UITableViewDelegate {
     nonisolated enum Section: Hashable {
         /// Why the last attempt stopped, at the top where it is seen
@@ -68,12 +72,13 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     private var subscriptions = Set<AnyCancellable>()
     /// The poll that follows the downloads, while the page is on screen or
-    /// Execute is waiting for them.
+    /// a tap is waiting for them.
     private var watch: Task<Void, Never>?
     private var staging: Task<Void, Never>?
+    private var patching: Task<Void, Never>?
     /// A tapped row whose page is not pushed yet; a second tap waits for it.
     private var opening: Task<Void, Never>?
-    /// Execute was tapped while files were still downloading: the transaction
+    /// Patch or Execute was tapped while files were still downloading: it
     /// runs the moment they are here.
     private var committed = false {
         didSet { updateBar() }
@@ -83,11 +88,13 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private var shownPlan: ResolutionPlan?
     private var failure: String?
 
-    /// Where the queue stands, for Execute to know what its tap means.
+    /// Where the queue stands, for the button to know what its tap means.
     private enum Stage {
-        case empty, blocked, downloading, ready, staging
+        case empty, blocked, downloading, ready, patching, staging
         /// Retry runs the downloads again.
         case downloadFailed
+        /// Patch tries again; the files are here.
+        case patchFailed
         /// Retry stages again; the files are here.
         case stagingFailed
     }
@@ -153,7 +160,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             x.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
-        // the title is the bar's to set: Execute or Retry
+        // the title is the bar's to set: Patch, Execute or Retry
         executeButton.primaryAction = UIAction { [weak self] _ in self?.primaryAction() }
         if #available(iOS 26.0, *) {
             executeButton.style = .prominent
@@ -190,21 +197,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         let manager = TaskManager.shared
         let plan = manager.plan
         if plan?.id != shownPlan?.id {
-            // a plan that only leaves out dependencies the one shown brought
-            // in (a theme's compat layer, once its file showed it has no
-            // code) is still what Execute agreed to; a request leaving, or
-            // anything else, asks again
-            let narrowed = if let plan, let shown = shownPlan {
-                Set(plan.remove) == Set(shown.remove)
-                    && Set(plan.install).isSubset(of: shown.install)
-                    && Set(shown.install).subtracting(plan.install)
-                    .allSatisfy { shown.autoInstalled.contains($0.identity) }
-            } else {
-                false
-            }
-            if !narrowed {
-                committed = false
-            }
+            committed = false
             shownPlan = plan
             failure = nil
         }
@@ -240,20 +233,29 @@ final class QueueController: UIViewController, UITableViewDelegate {
             watch = nil
             return
         }
-        // staging runs to its end, and a failure stays until Retry or a new plan
-        if stage == .staging || (failure != nil && (stage == .downloadFailed || stage == .stagingFailed)) {
+        // patching and staging run to their end, and a failure stays until
+        // Retry or a new plan
+        let failed = stage == .downloadFailed || stage == .patchFailed || stage == .stagingFailed
+        if stage == .patching || stage == .staging || (failure != nil && failed) {
             return
         }
         follow(plan)
     }
 
-    /// Execute, a spinner in its place while the page works on its own, and
-    /// Retry after a failure.
+    /// Patch while a package of the plan is still to be adapted and Execute
+    /// once none is, a spinner in its place while the page works on its own,
+    /// and Retry after a failure.
     private func updateBar() {
         let queued = TaskManager.shared.plan != nil
-        let busy = stage == .staging || (stage == .downloading && committed)
+        let busy = stage == .patching || stage == .staging || (stage == .downloading && committed)
         let failed = stage == .downloadFailed || stage == .stagingFailed
-        executeButton.title = failed ? String(localized: "Retry") : String(localized: "Execute")
+        executeButton.title = if failed {
+            String(localized: "Retry")
+        } else if TaskManager.shared.unpatched.isEmpty {
+            String(localized: "Execute")
+        } else {
+            String(localized: "Patch")
+        }
         executeButton.isEnabled = stage != .blocked
         executeButton.isHidden = !queued || busy
         busyItem.isHidden = !queued || !busy
@@ -363,10 +365,11 @@ final class QueueController: UIViewController, UITableViewDelegate {
         return UISwipeActionsConfiguration(actions: [action])
     }
 
-    // MARK: - Download and execute
+    // MARK: - Download, patch and execute
 
-    /// Execute: Retry repeats what failed, otherwise the tap commits the
-    /// plan, now if every file is here and as soon as they are if not.
+    /// Patch or Execute: Retry repeats what failed, otherwise the tap
+    /// commits the plan, now if every file is here and as soon as they are
+    /// if not.
     private func primaryAction() {
         guard let plan = TaskManager.shared.plan else { return }
         switch stage {
@@ -374,16 +377,21 @@ final class QueueController: UIViewController, UITableViewDelegate {
             failure = nil
             DownloadCenter.shared.download(plan.install)
             reload()
-        case .ready where TaskManager.shared.inspecting > 0:
-            // a file is still being looked at: run once that is solved in
-            committed = true
-            follow(plan)
-        case .stagingFailed, .ready:
-            stageAndRun(plan)
+        case .patchFailed, .stagingFailed, .ready:
+            run(plan)
         case .downloading:
             committed = true
-        case .empty, .blocked, .staging:
+        case .empty, .blocked, .patching, .staging:
             break
+        }
+    }
+
+    /// What the button said when it was tapped, every file being here.
+    private func run(_ plan: ResolutionPlan) {
+        if TaskManager.shared.unpatched.isEmpty {
+            stageAndRun(plan)
+        } else {
+            patch(plan)
         }
     }
 
@@ -393,13 +401,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
         watch?.cancel()
         watch = nil
         let pending = plan.install.filter { $0.localFileURL == nil }
-        guard !pending.isEmpty || TaskManager.shared.inspecting > 0 else {
-            // a tap a narrowed plan carried over runs now
-            if committed {
-                stageAndRun(plan)
-            } else {
-                stage = .ready
-            }
+        guard !pending.isEmpty else {
+            stage = .ready
             return
         }
         stage = .downloading
@@ -424,9 +427,47 @@ final class QueueController: UIViewController, UITableViewDelegate {
                 return
             }
             if committed {
-                stageAndRun(plan)
+                run(plan)
             } else {
                 stage = .ready
+            }
+        }
+    }
+
+    /// Adapts what the plan installs for another bootstrap and solves again
+    /// with what the files showed. The button is Execute after this; a
+    /// queue that is not what it was says so first.
+    private func patch(_ plan: ResolutionPlan) {
+        failure = nil
+        committed = false
+        stage = .patching
+        patching = Task { [weak self] in
+            let result = await TaskManager.shared.patch()
+            guard let self else { return }
+            patching = nil
+            switch result {
+            case let .success(outcome):
+                stage = .empty
+                reload()
+                guard view.window != nil, !(outcome.left.isEmpty && outcome.joined.isEmpty) else { return }
+                func names(_ packages: [Package]) -> String {
+                    ListFormatter.localizedString(byJoining: packages.map {
+                        PackageCenter.default.name(of: $0)
+                    })
+                }
+                var lines: [String] = []
+                if !outcome.left.isEmpty {
+                    lines.append(String(localized: "Removed from the queue: \(names(outcome.left))."))
+                }
+                if !outcome.joined.isEmpty {
+                    lines.append(String(localized: "Added to the queue: \(names(outcome.joined))."))
+                }
+                lines.append(String(localized: "Review the queue before you execute."))
+                presentNotice(title: "Queue Changed", message: lines.joined(separator: "\n\n"))
+            case let .failure(reason):
+                failure = reason.message
+                stage = .patchFailed
+                reload()
             }
         }
     }
@@ -473,10 +514,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
         present(console, animated: true)
     }
 
-    /// Waits until every one of these packages is on disk and what the queue
-    /// learns from the files (`TaskManager.inspect`) is solved in, or
-    /// answers the first download's failure. Stops when `plan` is no longer
-    /// the queue's.
+    /// Waits until every one of these packages is on disk, or answers the
+    /// first download's failure. Stops when `plan` is no longer the queue's.
     private static func awaitDownloads(
         of packages: [Package],
         in plan: UUID,
@@ -493,7 +532,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             })?.status?.errorDescription {
                 return failed
             }
-            if statuses.allSatisfy({ $0.status?.file != nil }), TaskManager.shared.inspecting == 0 {
+            if statuses.allSatisfy({ $0.status?.file != nil }) {
                 return nil
             }
             // the queue starts every download it needs; one that is neither

@@ -20,21 +20,28 @@ func pkg(_ name: String, _ version: String = "1", _ fields: [String: String] = [
 /// takes it from any. The default follows every installed package to the
 /// fixtures' one repository. `auto` names the installed packages marked
 /// `Auto-Installed`. `adapting` names the architectures an adapter rewrites
-/// into the fixtures' `arm64`, and `implied` the Pre-Depends it adds;
-/// `withoutImplied` the adapted packages whose file showed they get none.
+/// into the fixtures' `arm64`, and `implied` the Pre-Depends its preview
+/// puts in front; `withoutImplied` the adapted packages whose file, once
+/// adapted, showed they get none.
 func solve(_ available: [Package], installed: [Package] = [], actions: [ResolutionAction], update: Bool = false, blocked: Set<String> = [], origins: [String: String]? = nil, auto: Set<String> = [], autoremove: Set<String> = [], allowSystemRemoval: Bool = false, adapting: Set<String> = [], implied: String? = nil, withoutImplied: Set<Package> = []) throws -> ResolutionPlan {
     let origins = origins ?? Dictionary(uniqueKeysWithValues: installed.map { ($0.identity, "https://example.test/") })
+    var preview: ResolutionSnapshot.ManifestPreview?
+    if let implied {
+        preview = { fields in
+            fields.merging(["pre-depends": [implied, fields["pre-depends"]].compactMap(\.self).joined(separator: ", ")]) { $1 }
+        }
+    }
     var snapshot = ResolutionSnapshot(
         packages: available,
         installed: installed,
         architecture: "arm64",
         installableArchitectures: adapting.union(["arm64"]),
-        adaptedPreDepends: implied,
+        adaptedManifestPreview: preview,
         blockedUpdates: blocked,
         origins: origins.compactMapValues(URL.init(string:)),
         autoInstalled: auto
     )
-    snapshot.adaptedWithoutPreDepends = withoutImplied
+    snapshot.adaptedManifests = Dictionary(uniqueKeysWithValues: withoutImplied.map { ($0, $0.latestMetadata ?? [:]) })
     return try PackageResolver.resolve(
         request: .init(actions: actions, updateAll: update, autoremove: autoremove, allowSystemRemoval: allowSystemRemoval),
         snapshot: snapshot

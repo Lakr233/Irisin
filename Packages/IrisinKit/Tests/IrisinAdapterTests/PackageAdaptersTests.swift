@@ -41,8 +41,20 @@ final class PackageAdaptersTests: XCTestCase {
     func testShippedAdapters() throws {
         XCTAssertEqual(PackageAdapters.installed.installable(on: "iphoneos-arm64e"), ["iphoneos-arm64e", "iphoneos-arm64"])
         XCTAssertEqual(PackageAdapters.installed.installable(on: "iphoneos-arm64"), ["iphoneos-arm64"])
-        XCTAssertEqual(PackageAdapters.installed.impliedPreDepends(on: "iphoneos-arm64e"), "rootless-compat(>= 0.9)")
-        XCTAssertNil(PackageAdapters.installed.impliedPreDepends(on: "iphoneos-arm64"))
+        let catalogued = ["package": "com.example.tweak", "architecture": "iphoneos-arm64", "pre-depends": "firmware"]
+        XCTAssertEqual(
+            PackageAdapters.installed.resolveAdaptedPackageManifestPreview(control: catalogued, on: "iphoneos-arm64e"),
+            [
+                "package": "com.example.tweak",
+                "architecture": "iphoneos-arm64e",
+                "pre-depends": "rootless-compat(>= 0.9), firmware",
+            ]
+        )
+        // nothing adapts a package on its own bootstrap: previewed as it is
+        XCTAssertEqual(
+            PackageAdapters.installed.resolveAdaptedPackageManifestPreview(control: catalogued, on: "iphoneos-arm64"),
+            catalogued
+        )
         let directory = try prepared(architecture: "iphoneos-arm64")
         let before = try Data(contentsOf: directory.appendingPathComponent("manifest.json"))
         XCTAssertThrowsError(try PackageAdapters.installed.adapt(preparedPackageAt: directory, on: "iphoneos-arm64e")) {

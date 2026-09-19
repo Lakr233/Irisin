@@ -10,14 +10,18 @@ public struct ResolutionSnapshot: Sendable {
     /// What a candidate may carry and still be picked: `architecture` plus
     /// every one an adapter rewrites into it.
     public let installableArchitectures: Set<String>
-    /// What an adapter prepends to the Pre-Depends of every package it
-    /// rewrites. The adapter runs after resolution, so the solver has to
-    /// hear of it here or the plan would miss what the helper then demands.
-    public let adaptedPreDepends: String?
-    /// Adapted packages whose own file gave the adapter no reason for
-    /// `adaptedPreDepends` (no code for a compat layer to load). Learned
-    /// once the file is downloaded; solved without it from then on.
-    public var adaptedWithoutPreDepends: Set<Package> = []
+    /// A control paragraph (lowercase field names) to the one its adapter
+    /// expects to leave it with.
+    public typealias ManifestPreview = @Sendable ([String: String]) -> [String: String]
+    /// The adapters' preview of a package they rewrite. The adapter runs
+    /// after resolution, so the solver has to hear here of the relations it
+    /// adds or the plan would miss what the helper then demands.
+    public let adaptedManifestPreview: ManifestPreview?
+    /// The control paragraph the adapter did write, for the packages it has
+    /// been through: solved with that from then on, never the preview. A
+    /// package whose file gave it no reason for the compat layer (a theme:
+    /// no code to load) loses it here.
+    public var adaptedManifests: [Package: [String: String]] = [:]
     public let blockedUpdates: Set<String>
     /// The repository each installed identity came from, for those this
     /// app installed. An identity follows its repository: only that
@@ -35,7 +39,7 @@ public struct ResolutionSnapshot: Sendable {
         installed: [Package],
         architecture: String,
         installableArchitectures: Set<String>? = nil,
-        adaptedPreDepends: String? = nil,
+        adaptedManifestPreview: ManifestPreview? = nil,
         blockedUpdates: Set<String> = [],
         origins: [String: URL] = [:],
         autoInstalled: Set<String> = [],
@@ -46,7 +50,7 @@ public struct ResolutionSnapshot: Sendable {
         self.installed = installed
         self.architecture = architecture
         self.installableArchitectures = installableArchitectures ?? [architecture]
-        self.adaptedPreDepends = adaptedPreDepends
+        self.adaptedManifestPreview = adaptedManifestPreview
         self.blockedUpdates = blockedUpdates
         self.origins = origins
         self.autoInstalled = autoInstalled

@@ -23,7 +23,7 @@ public extension PackageIndex {
             installed: installed,
             architecture: environment.deviceArchitecture,
             installableArchitectures: environment.installableArchitectures,
-            adaptedPreDepends: environment.adaptedPreDepends,
+            adaptedManifestPreview: environment.adaptedManifestPreview,
             blockedUpdates: Set(blockedUpdateTable),
             origins: db.installOrigins(),
             autoInstalled: environment.aptExtendedStatesLocation

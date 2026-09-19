@@ -20,10 +20,13 @@ public protocol PackageAdapter: Sendable {
     /// the adapter knows it cannot make work, not for one that might fail.
     func canAttemptInstall(control: [String: String]) -> Bool
 
-    /// What `adapt` puts in front of the package's Pre-Depends, spelled as
-    /// it is written there; nil when it adds nothing. The resolver is told
-    /// before anything is downloaded, since `adapt` runs after the plan.
-    var impliedPreDepends: String? { get }
+    /// The control paragraph `adapt` is expected to leave this package with,
+    /// told from the catalogue's paragraph alone (lowercase field names):
+    /// the resolver solves an adapted package as this says, since `adapt`
+    /// runs after the plan, on a file that is not here yet. A preview, and
+    /// the file may show otherwise: what `adapt` wrote is what the plan is
+    /// solved with from then on (`PackageAdapters.control`).
+    func resolveAdaptedPackageManifestPreview(control: [String: String]) -> [String: String]
 
     /// Rewrite the prepared package under `directory` for `target` and
     /// return the digest of the manifest as rewritten, the value the job
@@ -38,8 +41,12 @@ public protocol PackageAdapter: Sendable {
 }
 
 public extension PackageAdapter {
-    var impliedPreDepends: String? {
-        nil
+    /// An adapter that touches no relation: the package as the catalogue
+    /// has it, for `target`.
+    func resolveAdaptedPackageManifestPreview(control: [String: String]) -> [String: String] {
+        var control = control
+        control["architecture"] = target.rawValue
+        return control
     }
 }
 

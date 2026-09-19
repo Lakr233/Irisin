@@ -40,17 +40,12 @@ final class TaskManager {
     /// Lines the queue page closes with: held-back updates, diagnostics.
     private(set) var notices: [String] = []
     private(set) var revision = 0
-    /// Adapted packages whose file needs nothing from the adapter's
-    /// Pre-Depends (`inspect`); every solve hears of them.
-    private var adaptedWithoutPreDepends: Set<Package> = []
-    /// Every package `inspect` has looked at, whatever it found: once each.
-    private var inspected: Set<Package> = []
-    /// Inspections running, each until the solve after the last of them has
-    /// committed: the queue page does not run a plan while there are any.
-    private(set) var inspecting = 0
-    /// An inspection found a package that needs none, and no solve has
-    /// heard of it yet.
-    private var learned = false
+    /// The packages Patch has adapted, each with the tree staging hands the
+    /// helper and the control paragraph every solve from then on reads in
+    /// place of the adapter's preview; pruned as a package leaves the plan.
+    private(set) var patched: [Package: PatchedPackage] = [:]
+    /// Patch is running: nothing else starts one.
+    private(set) var patching = false
 
     /// The Settings switch: a plan may remove Essential and Protected
     /// packages, and the helper is told to let them go. A queued plan is
@@ -123,62 +118,147 @@ final class TaskManager {
         // this starts what the plan needs and stops what it no longer does,
         // except a download Download Archive is waiting for
         DownloadCenter.shared.download(proposal.plan?.install ?? [])
-        // a .deb opened by hand is never downloaded: its file is here now
-        for package in proposal.plan?.install ?? [] {
-            if let file = package.localFileURL {
-                inspect(package, at: file)
-            }
-        }
+        prunePatched()
         return true
     }
 
-    /// The file of a package the plan installs is on disk. The resolver
-    /// gives every adapted package its adapter's Pre-Depends before anything
-    /// is downloaded; one whose file needs none (a theme: no Mach-O, no
-    /// code for the compat layer to load) is solved again without, so what
-    /// the Pre-Depends brought in, rootless-compat and patchloader, leaves
-    /// the queue before it runs. Called as the file is published, so the
-    /// queue page never sees the file without `inspecting` counting it.
-    func inspect(_ package: Package, at file: URL) {
-        guard let plan, plan.snapshot.adaptedPreDepends != nil, plan.snapshot.adapts(package),
-              plan.install.contains(package), inspected.insert(package).inserted
-        else { return }
-        inspecting += 1
-        Task {
-            if await Self.addsNoPreDepends(file) {
-                adaptedWithoutPreDepends.insert(package)
-                learned = true
-                Dog.shared.join(self, "\(package.identity) has no code, solving again without its compat layer", level: .info)
-                // the plan was solved under less than this: a proposal made
-                // before it no longer commits, and is solved again
-                changed()
+    // MARK: - Patch
+
+    /// A package Patch adapted: the prepared tree staging hands the helper,
+    /// the digest of its rewritten manifest, and the control paragraph the
+    /// adapter left it with.
+    struct PatchedPackage {
+        let directory: URL
+        let manifestDigest: String
+        let control: [String: String]
+    }
+
+    /// What solving again after Patch did to the queue; both empty when the
+    /// plan is what it was.
+    struct PatchOutcome {
+        let left: [Package]
+        let joined: [Package]
+    }
+
+    struct PatchFailure: Error {
+        let message: String
+    }
+
+    /// The adapted packages the plan installs that Patch has not been
+    /// through. The queue page offers Patch while there are any and Execute
+    /// once there are none.
+    var unpatched: [Package] {
+        guard let plan else { return [] }
+        return plan.install.filter { plan.snapshot.adapts($0) && patched[$0] == nil }
+    }
+
+    /// Adapts every unpatched package of the plan, each file already on
+    /// disk, and keeps the trees for staging. The resolver solves an
+    /// adapted package as its adapter's preview says before anything is
+    /// downloaded, the compat layer in front of its Pre-Depends; the queue
+    /// is then solved again with the control paragraphs `adapt` wrote. One
+    /// whose file needs no compat layer (a theme: no Mach-O, no code for it
+    /// to load) has none there, so what the preview brought in,
+    /// rootless-compat and patchloader, leaves the queue before it runs,
+    /// and the outcome says so. The paragraph is the one on the tree that
+    /// installs, so the plan cannot disagree with what is installed. A
+    /// failure keeps what was patched before it.
+    func patch() async -> Result<PatchOutcome, PatchFailure> {
+        guard let before = plan, !patching, !TaskProcessor.shared.inProcessingQueue else {
+            return .failure(PatchFailure(message: Self.busy.message))
+        }
+        patching = true
+        defer { patching = false }
+        let location = TaskProcessor.shared.workingLocation.appendingPathComponent("Patched")
+        for package in unpatched {
+            var file = package.localFileURL
+            if file == nil {
+                file = await DownloadCenter.shared.downloadedFile(for: package)
             }
-            // the last inspection out, with no adapted file of the plan still
-            // on its way (that one's inspection will), solves once for all
-            // of them, until the plan has heard of everything learned; a
-            // solve that changes nothing (blocked, staging begun) with
-            // nothing new learned meanwhile is the last try
-            let arriving = self.plan.map { plan in
-                plan.install.contains { package in
-                    plan.snapshot.adapts(package) && !inspected.contains(package)
-                        && DownloadCenter.shared.isDownloading(package.obtainDownloadLink())
-                }
-            } ?? false
-            if inspecting == 1, !arriving {
-                while let plan = self.plan, plan.snapshot.adaptedWithoutPreDepends != adaptedWithoutPreDepends {
-                    learned = false
-                    refreshTask?.cancel()
-                    let task = Task { await refresh(force: true) }
-                    refreshTask = task
-                    await task.value
-                    // a refresh the packages moving started in its place
-                    await settled()
-                    if self.plan?.id == plan.id, !learned {
-                        break
-                    }
-                }
+            guard let file else {
+                return .failure(PatchFailure(message: String(localized: "The download was interrupted.")))
             }
-            inspecting -= 1
+            do {
+                patched[package] = try await Self.adapt(file, in: location.appendingPathComponent(UUID().uuidString))
+            } catch {
+                Dog.shared.join(self, "cannot patch \(package.identity): \(error)", level: .error)
+                return .failure(PatchFailure(
+                    message: (error as? AdaptationFailure)?.report
+                        ?? String(localized: "Unable to patch \(package.identity). Try again.")
+                ))
+            }
+        }
+        if let plan, !isSolvedAsPatched(plan) {
+            // the plan was solved under less than this: a proposal made
+            // before it no longer commits, and is solved again
+            changed()
+            refreshTask?.cancel()
+            let task = Task { await refresh(force: true) }
+            refreshTask = task
+            await task.value
+            // a refresh the packages moving started in its place
+            await settled()
+        }
+        // a package that left the queue while it was being patched
+        prunePatched()
+        let after = plan
+        func touched(_ plan: ResolutionPlan?) -> [Package] {
+            plan.map { $0.install + $0.remove } ?? []
+        }
+        let was = Set(touched(before).map(\.identity))
+        let now = Set(touched(after).map(\.identity))
+        return .success(PatchOutcome(
+            left: touched(before).filter { !now.contains($0.identity) },
+            joined: touched(after).filter { !was.contains($0.identity) }
+        ))
+    }
+
+    /// Trees of packages the plan no longer installs go, off the main actor:
+    /// a theme is thousands of files.
+    private func prunePatched() {
+        let installing = Set(plan?.install ?? [])
+        let stale = patched.filter { !installing.contains($0.key) }
+        guard !stale.isEmpty else { return }
+        for package in stale.keys {
+            patched[package] = nil
+        }
+        let directories = stale.values.map(\.directory)
+        Task.detached {
+            for directory in directories {
+                try? FileManager.default.removeItem(at: directory)
+            }
+        }
+    }
+
+    /// Whether every package of the plan that Patch has been through was
+    /// solved with the control paragraph it was left with.
+    private func isSolvedAsPatched(_ plan: ResolutionPlan) -> Bool {
+        plan.install.allSatisfy { plan.snapshot.adaptedManifests[$0] == patched[$0]?.control }
+    }
+
+    /// Prepares the file and adapts it in `directory`, as staging would.
+    @concurrent
+    private nonisolated static func adapt(_ file: URL, in directory: URL) async throws -> PatchedPackage {
+        do {
+            try FileManager.default.createDirectory(
+                at: directory.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            var digest = try ArchiveStream.prepareDebianPackage(at: file, in: directory)
+            if let adapted = try PackageAdapters.installed.adapt(
+                preparedPackageAt: directory,
+                on: EnvironmentDetector.architecture
+            ) {
+                digest = adapted
+            }
+            return try PatchedPackage(
+                directory: directory,
+                manifestDigest: digest,
+                control: PackageAdapters.installed.control(ofPreparedPackageAt: directory)
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
         }
     }
 
@@ -250,6 +330,7 @@ final class TaskManager {
         plan = nil
         notices = []
         blocked = nil
+        prunePatched()
         changed()
         DownloadCenter.shared.cancelAll()
     }
@@ -325,8 +406,8 @@ final class TaskManager {
         guard !TaskProcessor.shared.inProcessingQueue, let plan else { return }
         let revision = revision
         // current means the packages did not move and nothing was learned
-        // about them since (`inspect`)
-        if !force, plan.snapshot.adaptedWithoutPreDepends == adaptedWithoutPreDepends,
+        // about them since (`patch`)
+        if !force, isSolvedAsPatched(plan),
            await (try? Self.isCurrent(plan: plan, index: PackageCenter.default.index)) == true
         {
             return
@@ -381,7 +462,7 @@ final class TaskManager {
             let plan = try await Self.resolve(
                 request: request,
                 index: index,
-                adaptedWithoutPreDepends: adaptedWithoutPreDepends
+                adaptedManifests: patched.mapValues(\.control)
             )
             guard !TaskProcessor.shared.inProcessingQueue,
                   try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
@@ -426,32 +507,11 @@ final class TaskManager {
     private nonisolated static func resolve(
         request: ResolutionRequest,
         index: PackageIndex,
-        adaptedWithoutPreDepends: Set<Package>
+        adaptedManifests: [Package: [String: String]]
     ) async throws -> ResolutionPlan {
         var snapshot = try index.resolutionSnapshot()
-        snapshot.adaptedWithoutPreDepends = adaptedWithoutPreDepends
+        snapshot.adaptedManifests = adaptedManifests
         return try PackageResolver.resolve(request: request, snapshot: snapshot)
-    }
-
-    /// Whether adapting this file adds no Pre-Depends, asked of the adapter
-    /// itself on a scratch copy. False on any failure, which keeps the plan
-    /// as solved: installing the compat layer for nothing is the old way,
-    /// leaving it out of a package that needs it fails the install.
-    /// ponytail: the package is unpacked and adapted here and again at
-    /// staging; staging could reuse this tree if big themes make it slow.
-    @concurrent
-    private nonisolated static func addsNoPreDepends(_ file: URL) async -> Bool {
-        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: scratch) }
-        do {
-            _ = try ArchiveStream.prepareDebianPackage(at: file, in: scratch)
-            return try PackageAdapters.installed.addsNoPreDepends(
-                adaptingPreparedPackageAt: scratch,
-                on: EnvironmentDetector.architecture
-            )
-        } catch {
-            return false
-        }
     }
 
     @concurrent
