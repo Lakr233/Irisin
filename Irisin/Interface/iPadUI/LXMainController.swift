@@ -42,6 +42,13 @@ class LXMainNavigator: UINavigationController {
         .store(in: &subscriptions)
     }
 
+    /// The dashboard is what the column opens on: see
+    /// `DashboardController.prepare(within:)`.
+    func prepare(within budget: Duration) async {
+        loadViewIfNeeded()
+        await dashboard.prepare(within: budget)
+    }
+
     private func switchRoot(withNotification notification: Notification) {
         if let token = notification.object as? String, token != notificationToken {
             Dog.shared.join(self, "ignoring a root controller request meant for \(token)", level: .warning)

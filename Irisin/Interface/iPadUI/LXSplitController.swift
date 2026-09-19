@@ -53,6 +53,13 @@ class LXSplitController: UISplitViewController {
         navigator.delegate = self
     }
 
+    /// Loads both columns and waits for the detail column's first page, up
+    /// to `budget`, so the two arrive in the same frame.
+    func prepare(within budget: Duration) async {
+        loadViewIfNeeded()
+        await navigator.prepare(within: budget)
+    }
+
     private var isSidebarHidden = false
 
     /// One item per screen: a bar button item has one view, and a push

@@ -36,6 +36,14 @@ class NavigatorEnterViewController: UIViewController {
         setExceptedRootViewController()
     }
 
+    /// Waits for the split layout's first page, up to `budget`, so the
+    /// interface is presented whole: the sidebar has its cards at once,
+    /// and a detail column that fills in a moment later reads as a blink.
+    func prepare(within budget: Duration) async {
+        loadViewIfNeeded()
+        await lxMain?.prepare(within: budget)
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // a link that opened the app gets its sheet; onboarding waits for

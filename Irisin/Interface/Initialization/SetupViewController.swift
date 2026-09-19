@@ -56,7 +56,7 @@ class SetupViewController: UIViewController {
             await Self.bootstrapApplication { text in
                 self?.descriptionLabel.text = text
             }
-            self?.dispatchAllocInterface()
+            await self?.dispatchAllocInterface()
         }
     }
 
@@ -103,13 +103,15 @@ class SetupViewController: UIViewController {
         await bootstrap?.value
     }
 
-    func dispatchAllocInterface() {
+    func dispatchAllocInterface() async {
+        let controller = NavigatorEnterViewController()
+        controller.modalPresentationStyle = .fullScreen
+        // this screen is still the loading one while the first page fills in
+        await controller.prepare(within: .milliseconds(200))
         // the interface covers this screen; nothing here keeps spinning
         indicator.stopAnimating()
         indicator.removeFromSuperview()
         descriptionLabel.removeFromSuperview()
-        let controller = NavigatorEnterViewController()
-        controller.modalPresentationStyle = .fullScreen
         present(controller, animated: false)
     }
 }

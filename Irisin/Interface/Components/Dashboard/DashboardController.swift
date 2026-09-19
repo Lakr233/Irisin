@@ -13,6 +13,9 @@ import UIKit
 class DashboardController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     private var subscriptions = Set<AnyCancellable>()
 
+    /// The load viewDidLoad started, for whoever waits to show the page.
+    private var firstLoad: Task<Void, Never>?
+
     var dataSource = [InterfaceBridge.DashboardDataSection]()
     var reloadID = UUID()
     let refreshControl = UIRefreshControl()
@@ -99,6 +102,13 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         fatalError()
     }
 
+    /// Waits for the first sections, up to `budget`, so the page appears
+    /// with its rows in place; a slower load lands after it.
+    func prepare(within budget: Duration) async {
+        loadViewIfNeeded()
+        await firstLoad?.wait(upTo: budget)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -126,7 +136,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
         collectionView.addSubview(refreshControl)
 
-        Task { await reload(animated: false) }
+        firstLoad = Task { await reload(animated: false) }
 
         // Repository download ticks share one rebuild per second.
         Publishers.MergeMany([
