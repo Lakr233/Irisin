@@ -9,6 +9,8 @@ Description: Modern package manager for @FLAVOR@ custom firmware
  packages natively and registers apps with LaunchServices itself. No dpkg,
  no uicache.
 Icon: https://lakr233.github.io/Irisin/icon.png
+Depiction: https://lakr233.github.io/Irisin/
+SileoDepiction: https://lakr233.github.io/Irisin/depiction.json
 Homepage: https://github.com/Lakr233/Irisin
 Maintainer: OwnGoal Studio <no-reply@owngoal.dev>
 Author: OwnGoal Studio <no-reply@owngoal.dev>

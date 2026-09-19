@@ -1,9 +1,3 @@
-# The site is one icon and a redirect. It exists so `Icon:` in the Debian
-# control file — which Sileo, Zebra and Irisin itself fetch for every package
-# row — has a stable home that is not a raw.githubusercontent.com link into a
-# branch. Legacy Pages only accepts / or /docs, and the prose lives in
-# Documentation/, so the site is deployed from here instead and the
-# repository's Pages source must be set to "GitHub Actions".
 name: Pages
 
 on:
@@ -12,6 +6,11 @@ on:
     paths:
       - Documentation/Site/**
       - .github/workflows/pages.yml
+  release:
+    types: [published, edited]
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -25,13 +24,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  refresh-release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Refresh Pages from main-4.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref main-4.0
+
   deploy:
+    if: github.event_name != 'release' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main-4.0
+      - name: Check out the shared depiction updater
+        uses: actions/checkout@v4
+        with:
+          repository: owngoal-dev/owngoal-packages
+          ref: 4dab9b352c6b3e94c7b5efa96bd60fa94e69225a
+          path: .depiction-tools
+          sparse-checkout: scripts/update-depiction-changelogs.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Fetch GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .depiction-tools/scripts/update-depiction-changelogs.py --repository "$GITHUB_REPOSITORY" --depiction Documentation/Site/depiction.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
