@@ -73,10 +73,7 @@ class DashNavCard: UIView {
         }
 
         addSubview(queueCard)
-        queueCard.cardClosure = { [weak self] in
-            self?.selectQueue()
-            NotificationCenter.default.post(name: .LXMainControllerSwitchQueue, object: self?.notificationToken)
-        }
+        queueCard.cardClosure = { [weak self] in self?.openQueue() }
         queueCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.centerY).offset(8)
             x.leading.equalTo(self.snp.leading)
@@ -122,6 +119,12 @@ class DashNavCard: UIView {
 
     func selectQueue() {
         select(queueCard)
+    }
+
+    /// What a tap on the Queue card does.
+    func openQueue() {
+        selectQueue()
+        NotificationCenter.default.post(name: .LXMainControllerSwitchQueue, object: notificationToken)
     }
 
     func selectInstalled() {

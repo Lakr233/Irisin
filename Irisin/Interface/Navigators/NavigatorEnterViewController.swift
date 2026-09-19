@@ -30,6 +30,28 @@ class NavigatorEnterViewController: UIViewController {
         return (current as? UITabBarController)?.selectedViewController as? UINavigationController
     }
 
+    /// The interface `controller` is in, or is presented over.
+    static func enclosing(_ controller: UIViewController) -> NavigatorEnterViewController? {
+        var node: UIViewController? = controller
+        while let current = node {
+            if let interface = current as? NavigatorEnterViewController {
+                return interface
+            }
+            node = current.parent ?? current.presentingViewController
+        }
+        return nil
+    }
+
+    /// Shows the Queue page: whatever sheet is up leaves, then the Queue
+    /// card or tab is selected as a tap selects it.
+    func openQueue() {
+        if presentedViewController != nil {
+            dismiss(animated: true)
+        }
+        (current as? LXSplitController)?.showQueue()
+        (current as? HandyTabBarController)?.showQueue()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .plainBackground

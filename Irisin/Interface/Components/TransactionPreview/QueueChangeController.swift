@@ -19,7 +19,8 @@ import UIKit
 /// trailing edge. A removal that leaves dependencies nobody needs lists them
 /// below as boxes to tick, none ticked. The sheet solves on its own, again
 /// on every tick and whenever the queue or the packages move, and Confirm
-/// takes exactly what it shows. A request the solver refuses shows none of
+/// takes exactly what it shows; when that is nothing, Open Queue takes its
+/// place. A request the solver refuses shows none of
 /// this: `PackageDiagnosticController` is the sheet, with Close in place of
 /// a way back. A refusal that comes later, from a tick or a queue that
 /// moved, is pushed over the last answer, which is still there to go back to.
@@ -63,6 +64,14 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     private lazy var confirmButton = UIBarButtonItem(
         primaryAction: UIAction(title: String(localized: "Confirm")) { [weak self] _ in self?.commit() }
+    )
+    /// Stands in for Confirm when the request leaves the queue as it is:
+    /// there is nothing to confirm, and the queue is where the user was going.
+    private lazy var openQueueButton = UIBarButtonItem(
+        primaryAction: UIAction(title: String(localized: "Open Queue")) { [weak self] _ in
+            guard let self else { return }
+            NavigatorEnterViewController.enclosing(self)?.openQueue()
+        }
     )
     private let spinner = UIActivityIndicatorView(style: .medium)
 
@@ -152,8 +161,8 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         title = String(localized: "Queue Changes")
         if #available(iOS 26.0, *) {
             confirmButton.style = .prominent
+            openQueueButton.style = .prominent
         }
-        navigationItem.rightBarButtonItem = confirmButton
 
         // the queue or the packages moved: what the sheet shows is solved again
         NotificationCenter.default.publisher(for: .TaskQueueChanged)
@@ -368,7 +377,15 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         }
         // a solve in flight leaves the last answer on screen, and the button with it,
         // so a tick does not blink it
-        confirmButton.isEnabled = !(changes.isEmpty && dropped.isEmpty)
+        let unchanged = changes.isEmpty && dropped.isEmpty
+        confirmButton.isEnabled = !unchanged
+        // an answer that changes nothing, with a queue to open
+        let button = unchanged && proposal != nil && TaskManager.shared.plan != nil
+            ? openQueueButton
+            : confirmButton
+        if navigationItem.rightBarButtonItem !== button {
+            navigationItem.setRightBarButton(button, animated: animated)
+        }
     }
 
     private func content(for row: Row) -> UIListContentConfiguration {

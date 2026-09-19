@@ -111,7 +111,7 @@ class PackageBannerView: UIView {
         }
 
         updateValues()
-        // Queued follows the queue, whichever page changed it
+        // Open Queue follows the queue, whichever page changed it
         queueSubscription = NotificationCenter.default.publisher(for: .TaskQueueChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateButton() }
@@ -139,8 +139,10 @@ class PackageBannerView: UIView {
     func updateButton() {
         button.setTitle(grabButtonString(), for: .normal)
         // with nothing to install or update, the tap opens the menu itself;
-        // an unsupported package keeps its tap for the explanation
+        // a queued package keeps its tap for the queue, an unsupported one
+        // for the explanation
         button.showsMenuAsPrimaryAction = obtainQuickAction() == nil
+            && !opensQueue
             && (package.isSupportedOnDevice || package.localFileURL != nil)
 
         // now we need to update button size from localized string
@@ -167,7 +169,7 @@ class PackageBannerView: UIView {
             return String(localized: "Unsupported").uppercased()
         }
         if TaskManager.shared.isQueued(package.identity) {
-            return (obtainQuickAction()?.descriptor.describe() ?? String(localized: "Queued")).uppercased()
+            return (obtainQuickAction()?.descriptor.describe() ?? String(localized: "Open Queue")).uppercased()
         }
         if PackageCenter
             .default

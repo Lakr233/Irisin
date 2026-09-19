@@ -96,6 +96,19 @@ class HandyTabBarController: UITabBarController {
         }
     }
 
+    /// Selects the Queue tab, at its list. With no queue there is no tab.
+    func showQueue() {
+        updateQueueTab()
+        if #available(iOS 18.0, *) {
+            guard let tab = tabs.first(where: { $0.identifier == "queue" }) else { return }
+            selectedTab = tab
+        } else {
+            guard viewControllers?.contains(queue) == true else { return }
+            selectedViewController = queue
+        }
+        queue.popToRootViewController(animated: false)
+    }
+
     private var privSelectIndex: Int?
     private var privClicks = 0
     override func tabBar(_: UITabBar, didSelect _: UITabBarItem) {

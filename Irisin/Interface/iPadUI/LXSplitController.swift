@@ -17,6 +17,7 @@ import UIKit
 class LXSplitController: UISplitViewController {
     /// The detail column's stack, where the sidebar opens a repository.
     let navigator = LXMainNavigator()
+    private let panel = LXSplitPanelController()
 
     init() {
         super.init(style: .doubleColumn)
@@ -37,7 +38,7 @@ class LXSplitController: UISplitViewController {
 
     func makeViewControllers() {
         let notificationToken = UUID().uuidString
-        let split = LXSplitPanelController()
+        let split = panel
         split.notificationToken = notificationToken
         navigator.notificationToken = notificationToken
         let sidebar = UINavigationController(rootViewController: split)
@@ -59,6 +60,11 @@ class LXSplitController: UISplitViewController {
         loadViewIfNeeded()
         view.layoutIfNeeded()
         await navigator.prepare(within: budget)
+    }
+
+    /// The Queue card, as a tap on it.
+    func showQueue() {
+        panel.dashNavCard.openQueue()
     }
 
     private var isSidebarHidden = false
