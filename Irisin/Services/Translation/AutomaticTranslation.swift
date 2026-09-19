@@ -30,6 +30,14 @@ enum AutomaticTranslation {
         set { targetStore.wrappedValue = newValue.identifier }
     }
 
+    /// What is kept for `target`, empty while no language was named. A
+    /// cancelled choice puts this back, not `target`: writing the user's own
+    /// language down would hold pages to it after the system's changed.
+    static var targetIdentifier: String {
+        get { targetStore.wrappedValue }
+        set { targetStore.wrappedValue = newValue }
+    }
+
     /// A package page has told the user about a failure this launch.
     static var failureWasShown = false
 

@@ -172,7 +172,10 @@ end.
   (Settings, off until `verify` passes) shows a package page as written,
   then renders the depiction again from `DepictionTranslation`'s answer and
   cross-dissolves to it; markdown syntax, links and code never reach the
-  engine. A failure alerts once per launch and logs every time. The page's
+  engine. The package's name in the banner goes with the page's
+  prose and reads as the page does (`PackageBannerView.showName`); the
+  navigation title stays as written.
+  A failure alerts once per launch and logs every time. The page's
   menu has Translate under Select Version: Original, Translated or
   Compared (the translation under each piece), checked, then the source
   (detected unless named, the page's alone) and target language (kept)
@@ -182,9 +185,11 @@ end.
   and never a control) says Translating…, then that the page is
   translated or could not be (the package page is a diffable table of
   the views it owns, `PackageRowCell` around each, and the line is a row
-  that comes and goes by snapshot); with it off there is no line, and a
+  that comes and goes by snapshot); with it off there is no line. A
   translation asked for from the menu waits behind a progress alert with
-  Cancel. `TranslationCache` holds the answers of the fifty
+  Cancel, whatever the setting, and Cancel puts the menu back as it was:
+  the checkmark, the language whose choice asked, the line.
+  `TranslationCache` holds the answers of the fifty
   packages read last, in memory only.
 - **No install prefix is written in Swift.** The daemon and the helper derive
   it from their own `proc_pidpath` (`ProcessPath.installRoot`); the app reads

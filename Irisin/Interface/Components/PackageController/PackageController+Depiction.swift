@@ -153,22 +153,31 @@ extension PackageController {
     /// with no language downloaded would otherwise alert on every page.
     ///
     /// With Auto Translate on, the line under the banner says how it is
-    /// going, a failure included. With it off the page has no such line,
-    /// and a translation asked for from the menu waits behind a progress
-    /// alert that can cancel it.
-    func showTranslation(asked: Bool) {
+    /// going, a failure included. A translation asked for from the menu
+    /// waits behind a progress alert whatever the setting: its Cancel puts
+    /// the menu back as it was, the checkmark here and, through `revert`,
+    /// the language whose choice asked.
+    func showTranslation(asked: Bool, onCancel revert: (() -> Void)? = nil) {
         depictionTranslation?.cancel()
         depictionTranslation = nil
+        translationAlert = nil
         guard let (depiction, tintColor) = depictionOnShow else { return }
         guard translationMode != .original else {
             showTranslationStatus(.none)
             if asked {
                 translationModeOnShow = .original
+                bannerPackageView.showName(translated: nil, comparing: false)
                 fade(to: depiction, tintColor: tintColor)
             }
             return
         }
-        let texts = DepictionTranslation.texts(in: depiction)
+        // the name in the banner is read with the page, and goes with it:
+        // the banner's own, which for a dpkg row is its install origin's
+        let name = PackageCenter.default.name(of: bannerPackageView.package)
+        var texts = DepictionTranslation.texts(in: depiction)
+        if !name.isEmpty, !texts.contains(name) {
+            texts.append(name)
+        }
         guard !texts.isEmpty else {
             return showTranslationStatus(.none)
         }
@@ -181,6 +190,7 @@ extension PackageController {
         func apply(_ translations: [String: String]) {
             translationModeOnShow = mode
             showTranslationStatus(.translated)
+            bannerPackageView.showName(translated: translations[name], comparing: mode == .compared)
             fade(
                 to: DepictionTranslation.replacing(depiction, with: translations, comparing: mode == .compared),
                 tintColor: tintColor
@@ -190,7 +200,10 @@ extension PackageController {
             return apply(known)
         }
 
-        let alert = asked && !AutomaticTranslation.isEnabled ? translationProgressAlert() : nil
+        let alert = asked
+            ? translationProgressAlert(status: translationStatusView.status, onCancel: revert)
+            : nil
+        translationAlert = alert
         showTranslationStatus(.translating)
         depictionTranslation = Task { [weak self] in
             // on screen before the answer: a quick one would dismiss it
@@ -250,19 +263,26 @@ extension PackageController {
         }
     }
 
-    /// The alert a translation asked for from the menu waits behind while
-    /// Auto Translate is off. Cancel leaves the page and its checkmark as
-    /// they were.
-    private func translationProgressAlert() -> AlertProgressIndicatorViewController {
+    /// The alert a translation asked for from the menu waits behind. Cancel
+    /// leaves the page as it was, and the menu with it: the checkmark, the
+    /// language (`revert`) and the line under the banner.
+    private func translationProgressAlert(
+        status: TranslationStatusView.Status,
+        onCancel revert: (() -> Void)?
+    ) -> AlertProgressIndicatorViewController {
         let alert = progressAlert(
             title: "Translating…",
             message: "The system is translating this page."
         )
         alert.progressContext.addAction(title: "Cancel") { [weak self, weak alert] in
-            self?.depictionTranslation?.cancel()
-            self?.depictionTranslation = nil
-            if let self {
+            // the page may have moved on to another translation: not this
+            // alert's to cancel, and whoever replaced it takes the alert down
+            if let self, let alert, translationAlert === alert {
+                depictionTranslation?.cancel()
+                depictionTranslation = nil
                 translationMode = translationModeOnShow
+                showTranslationStatus(status)
+                revert?()
             }
             alert?.progressContext.dispose()
         }

@@ -6,6 +6,7 @@
 //  Copyright © 2020 Lakr Aream. All rights reserved.
 //
 
+import AlertController
 import AptRepository
 import Combine
 import PackageDepiction
@@ -244,6 +245,11 @@ class PackageController: UIViewController {
     /// The translation of the depiction on show, while it is on its way. A
     /// new depiction (another version of the package) cancels it.
     var depictionTranslation: Task<Void, Never>?
+
+    /// The alert the translation on its way waits behind, when the menu
+    /// asked for it. One left behind by a translation since replaced is no
+    /// longer this, and its Cancel cancels nothing.
+    weak var translationAlert: AlertProgressIndicatorViewController?
 
     /// The depiction as its author wrote it, which every translation of the
     /// page is made from.

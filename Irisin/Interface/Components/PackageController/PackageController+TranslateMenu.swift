@@ -39,13 +39,19 @@ extension PackageController {
             }
         }
         let target = AutomaticTranslation.target
+        let source = translationSource
+        let targetIdentifier = AutomaticTranslation.targetIdentifier
         let languages = [
             languageMenu(
                 title: String(localized: "Source Language"),
                 chosen: translationSource,
                 detects: true,
                 list: \.sources
-            ) { [weak self] in self?.translationSource = $0 },
+            ) { [weak self] in
+                self?.translationSource = $0
+            } restore: { [weak self] in
+                self?.translationSource = source
+            },
             languageMenu(
                 title: String(localized: "Target Language"),
                 chosen: target,
@@ -55,6 +61,8 @@ extension PackageController {
                 if let locale = $0 {
                     AutomaticTranslation.target = locale
                 }
+            } restore: {
+                AutomaticTranslation.targetIdentifier = targetIdentifier
             },
         ]
         return UIMenu(
@@ -69,13 +77,15 @@ extension PackageController {
 
     /// A language, chosen from what the engine lists when the menu opens.
     /// Choosing one translates the page again when it is showing a
-    /// translation; on Original it is kept for when it does.
+    /// translation; on Original it is kept for when it does. `restore` puts
+    /// back what was chosen when the menu opened, for a translation cancelled.
     private func languageMenu(
         title: String,
         chosen: Locale?,
         detects: Bool,
         list: KeyPath<(sources: [Locale], targets: [Locale]), [Locale]>,
-        choose: @escaping (Locale?) -> Void
+        choose: @escaping (Locale?) -> Void,
+        restore: @escaping () -> Void
     ) -> UIMenu {
         func name(_ locale: Locale) -> String {
             Locale.current.localizedString(forIdentifier: locale.identifier) ?? locale.identifier
@@ -92,7 +102,7 @@ extension PackageController {
             return UIAction(title: title, state: isChosen ? .on : .off) { [weak self] _ in
                 choose(locale)
                 guard let self, translationMode != .original else { return }
-                showTranslation(asked: true)
+                showTranslation(asked: true, onCancel: restore)
             }
         }
         let options = UIDeferredMenuElement.uncached { completion in

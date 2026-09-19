@@ -153,6 +153,24 @@ class PackageBannerView: UIView {
         updateButton()
     }
 
+    /// The name as the page reads: the translation in its place, under it
+    /// when the page compares, and as written with none. An engine that
+    /// hands the name back (a name is often no word at all) changes nothing.
+    func showName(translated: String?, comparing: Bool) {
+        let written = PackageCenter.default.name(of: package)
+        let text = if let translated, translated != written {
+            comparing ? written + "\n" + translated : translated
+        } else {
+            written
+        }
+        guard name.text != text else { return }
+        UIView.transition(
+            with: name,
+            duration: 0.35,
+            options: [.transitionCrossDissolve, .allowUserInteraction]
+        ) { self.name.text = text }
+    }
+
     func updateButton() {
         button.setTitle(grabButtonString(), for: .normal)
         // with nothing to install or update, the tap opens the menu itself;
