@@ -21,12 +21,11 @@ class PackageBannerView: UIView {
         $0.tintColor = .buttonNormal
     }
 
+    /// The name is read whole: it wraps, and the banner grows with it.
     var name = UILabel().then {
         $0.textColor = .textTitle
         $0.font = .title
-        $0.numberOfLines = 1
-        $0.minimumScaleFactor = 0.5
-        $0.adjustsFontSizeToFitWidth = true
+        $0.numberOfLines = 0
     }
 
     var version = UILabel().then {
@@ -76,21 +75,34 @@ class PackageBannerView: UIView {
         addSubview(buttonBackground)
         addSubview(button)
 
+        // 80 tall around a name of one line, as it always was; a longer
+        // name makes the banner taller and the icon stays beside its middle
+        snp.makeConstraints { x in
+            x.height.greaterThanOrEqualTo(80)
+        }
         icon.snp.makeConstraints { x in
             x.centerY.equalToSuperview()
             x.left.equalToSuperview().offset(padding)
-            x.width.equalTo(icon.snp.height)
-            x.top.equalToSuperview().offset(padding)
+            x.width.height.equalTo(50)
         }
         name.snp.makeConstraints { x in
             x.left.equalTo(icon.snp.right).offset(8)
-            x.bottom.equalTo(icon.snp.centerY).offset(4)
+            x.top.greaterThanOrEqualToSuperview().offset(padding)
             x.right.equalTo(button.snp.left).offset(-12)
         }
         version.snp.makeConstraints { x in
             x.left.equalTo(icon.snp.right).offset(8)
-            x.top.equalTo(icon.snp.centerY).offset(4)
+            x.top.equalTo(name.snp.bottom).offset(2)
+            x.bottom.lessThanOrEqualToSuperview().offset(-padding)
             x.right.equalTo(button.snp.left).offset(-8)
+        }
+        // the two lines sit around the middle together
+        let text = UILayoutGuide()
+        addLayoutGuide(text)
+        text.snp.makeConstraints { x in
+            x.top.equalTo(name)
+            x.bottom.equalTo(version)
+            x.centerY.equalToSuperview()
         }
 
         // a tap installs or updates, a long press opens the menu

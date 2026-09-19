@@ -9,12 +9,13 @@ import UIKit
 
 /// The line under a package page's banner that says how Auto Translate is
 /// going: a spinner while the page is with the translator, then that the
-/// page is translated, or that it could not be. It has no height while there
-/// is nothing to say. It only reports: the Translate menu is the page's.
+/// page is translated, or that it could not be. It only reports: the
+/// Translate menu is the page's.
 ///
 /// The page owns one for its whole life, outside the depiction, so a
 /// depiction that is rendered again or another version of the package
-/// leaves it where it is.
+/// leaves it where it is. It is a row of the page's list, there only while
+/// it has something to say.
 final class TranslationStatusView: UIView {
     enum Status {
         /// Nothing to say: the page reads as written.
@@ -24,19 +25,19 @@ final class TranslationStatusView: UIView {
         case failed
     }
 
-    var status: Status = .none {
-        didSet {
-            guard status != oldValue else { return }
-            if window == nil {
-                apply()
-            } else {
-                UIView.transition(
-                    with: self,
-                    duration: 0.25,
-                    options: [.transitionCrossDissolve, .allowUserInteraction]
-                ) { self.apply() }
-            }
-        }
+    private(set) var status: Status = .none
+
+    /// The page says whether this is seen: the words cross-dissolve on a
+    /// page that is on show and are simply there on one still arriving.
+    func show(_ status: Status, animated: Bool) {
+        guard status != self.status else { return }
+        self.status = status
+        guard animated else { return apply() }
+        UIView.transition(
+            with: self,
+            duration: 0.25,
+            options: [.transitionCrossDissolve, .allowUserInteraction]
+        ) { self.apply() }
     }
 
     private let spinner = UIActivityIndicatorView(style: .medium).then {
@@ -57,11 +58,8 @@ final class TranslationStatusView: UIView {
         $0.numberOfLines = 0
     }
 
-    private var collapsed: Constraint?
-
     init() {
         super.init(frame: .zero)
-        clipsToBounds = true
         isAccessibilityElement = true
         accessibilityTraits = .staticText
 
@@ -94,11 +92,8 @@ final class TranslationStatusView: UIView {
         caption.snp.makeConstraints { x in
             x.leading.equalTo(slot.snp.trailing).offset(6)
             x.trailing.lessThanOrEqualToSuperview().offset(-20)
-            x.top.equalToSuperview().priority(.high)
-            x.bottom.equalToSuperview().offset(-8).priority(.high)
-        }
-        snp.makeConstraints { x in
-            collapsed = x.height.equalTo(0).constraint
+            x.top.equalToSuperview()
+            x.bottom.equalToSuperview().offset(-8)
         }
         apply()
     }
@@ -111,7 +106,7 @@ final class TranslationStatusView: UIView {
     private func apply() {
         switch status {
         case .none:
-            break // the words stay while the line closes over them
+            break // the words stay while the row leaves
         case .translating:
             caption.text = String(localized: "Translating…")
         case .translated:
@@ -127,12 +122,6 @@ final class TranslationStatusView: UIView {
             spinner.stopAnimating()
         }
         symbol.isHidden = status == .translating
-        alpha = status == .none ? 0 : 1
         accessibilityLabel = status == .none ? nil : caption.text
-        if status == .none {
-            collapsed?.activate()
-        } else {
-            collapsed?.deactivate()
-        }
     }
 }

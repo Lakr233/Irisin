@@ -180,7 +180,9 @@ end.
   alert included. With Auto Translate on, a line under the banner
   (`TranslationStatusView`, the page's own, outside the depiction, a note
   and never a control) says Translating…, then that the page is
-  translated or could not be; with it off there is no line, and a
+  translated or could not be (the package page is a diffable table of
+  the views it owns, `PackageRowCell` around each, and the line is a row
+  that comes and goes by snapshot); with it off there is no line, and a
   translation asked for from the menu waits behind a progress alert with
   Cancel. `TranslationCache` holds the answers of the fifty
   packages read last, in memory only.

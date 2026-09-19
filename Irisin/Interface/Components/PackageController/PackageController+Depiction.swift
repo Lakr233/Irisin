@@ -273,24 +273,19 @@ extension PackageController {
     /// setting off it stays closed whatever happens.
     private func showTranslationStatus(_ status: TranslationStatusView.Status) {
         let status = AutomaticTranslation.isEnabled ? status : .none
-        guard translationStatusView.status != status else { return }
-        translationStatusView.status = status
-        guard viewIfLoaded?.window != nil else { return }
-        UIView.animate(
-            withDuration: 0.5,
-            delay: 0,
-            usingSpringWithDamping: 1,
-            initialSpringVelocity: 0.8,
-            options: [.curveEaseInOut, .allowUserInteraction]
-        ) {
-            self.card.layoutIfNeeded()
-        }
+        let last = translationStatusView.status
+        guard last != status else { return }
+        // Words that give way to other words cross-dissolve; the line
+        // itself is a row, which the list brings in and takes out. Only a
+        // page on show animates: one still being pushed arrives settled.
+        translationStatusView.show(status, animated: hasAppeared && last != .none && status != .none)
+        applyRows(animated: hasAppeared)
     }
 
     private func fade(to depiction: [String: Any], tintColor: UIColor) {
         guard let view = render(depiction, tintColor: tintColor) else { return }
         UIView.transition(
-            with: card,
+            with: tableView,
             duration: 0.35,
             options: [.transitionCrossDissolve, .allowUserInteraction]
         ) {

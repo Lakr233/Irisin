@@ -9,6 +9,7 @@
 import AptRepository
 import Combine
 import PackageDepiction
+import SnapKit
 import Then
 import UIKit
 import WebKit
@@ -35,13 +36,52 @@ class PackageController: UIViewController {
     /// The gutter around the photo.
     let inset: CGFloat = 16
 
-    let container = UIScrollView()
+    /// What the page is made of, top to bottom. Each row is a view the page
+    /// owns, in a cell around it (`PackageRowCell`).
+    enum Row: String, CaseIterable {
+        /// The header photo on its ground.
+        case artwork
+        /// The package's icon, name, version and button.
+        case banner
+        /// How Auto Translate is going; there only while it has something
+        /// to say.
+        case translationStatus
+        case depiction
+        /// The architecture, under the depiction.
+        case footer
+    }
+
+    /// The page is a list of `Row`, so a row that comes, goes or changes
+    /// its height is a snapshot and the table moves the rest.
+    let tableView = UITableView(frame: .zero, style: .plain).then {
+        $0.backgroundColor = .plainBackground
+        $0.separatorStyle = .none
+        $0.allowsSelection = false
+        $0.rowHeight = UITableView.automaticDimension
+        $0.estimatedRowHeight = 200
+        $0.sectionHeaderTopPadding = 0
+        for row in Row.allCases {
+            $0.register(PackageRowCell.self, forCellReuseIdentifier: row.rawValue)
+        }
+    }
+
+    private(set) lazy var dataSource = UITableViewDiffableDataSource<Int, Row>(
+        tableView: tableView
+    ) { [weak self] tableView, indexPath, row in
+        let cell = tableView.dequeueReusableCell(withIdentifier: row.rawValue, for: indexPath)
+        guard let self, let cell = cell as? PackageRowCell else { return cell }
+        fill(cell, with: row)
+        return cell
+    }.then {
+        $0.defaultRowAnimation = .fade
+    }
 
     /// The ground behind the photo, a step below the card in both modes. It
     /// reaches far above the content so it shows through the translucent bar
     /// and fills an overscroll.
     let bannerBackdrop = UIView().then {
         $0.backgroundColor = .panelBackground
+        $0.autoresizingMask = .flexibleWidth
     }
 
     /// The header photo, at most a third of the page tall
@@ -51,11 +91,6 @@ class PackageController: UIViewController {
         $0.layer.cornerRadius = 16
         $0.layer.cornerCurve = .continuous
         $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-    }
-
-    /// The content below the photo: the package header, then the depiction.
-    let card = UIView().then {
-        $0.backgroundColor = .plainBackground
     }
 
     var bannerPackageView = PackageBannerView(package: Package(identity: ""))
@@ -76,27 +111,74 @@ class PackageController: UIViewController {
     /// the banner for it.
     private var bannerPhotoSize: CGSize?
 
+    /// The height the photo is laid out at, the one thing a row's height
+    /// hangs on that is not its content's own.
+    private var artworkHeight: Constraint?
+
     var depictionView = UIView() {
         didSet {
-            oldValue.removeFromSuperview()
-            card.addSubview(depictionView)
-            // the depiction is Auto Layout throughout: its height is its own
-            depictionView.snp.makeConstraints { x in
-                x.top.equalTo(translationStatusView.snp.bottom)
-                x.left.right.equalToSuperview()
-            }
-            depictionFooter.attributedText = footerText()
-            card.addSubview(depictionFooter)
-            // The page ends well below its last line so the floating bar
-            // never covers it.
-            depictionFooter.snp.remakeConstraints { x in
-                x.top.equalTo(depictionView.snp.bottom).offset(inset)
-                x.left.right.equalToSuperview().inset(inset)
-                x.bottom.equalToSuperview().inset(inset + 128)
-            }
             // settled at once: a depiction that lands during another
             // animation (a sheet going down) must not slide into place
-            UIView.performWithoutAnimation { card.layoutIfNeeded() }
+            applyRows(reconfiguring: [.depiction, .footer], animated: false)
+        }
+    }
+
+    private func fill(_ cell: PackageRowCell, with row: Row) {
+        cell.onHeightMismatch = { [weak self] in self?.setNeedsRowHeights() }
+        switch row {
+        case .artwork:
+            // the content meets the photo with no gap between them
+            cell.backgroundColor = .panelBackground
+            cell.host(bannerArtwork, insets: UIEdgeInsets(top: inset, left: inset, bottom: 0, right: inset))
+        case .banner:
+            cell.host(bannerPackageView)
+        case .translationStatus:
+            cell.host(translationStatusView)
+        case .depiction:
+            // the depiction is Auto Layout throughout: its height is its own
+            cell.host(depictionView)
+        case .footer:
+            depictionFooter.attributedText = footerText()
+            // The page ends well below its last line so the floating bar
+            // never covers it.
+            cell.host(
+                depictionFooter,
+                insets: UIEdgeInsets(top: inset, left: inset, bottom: inset + 128, right: inset)
+            )
+        }
+    }
+
+    /// Brings the list to the rows the page has now. `reconfiguring` names
+    /// rows that stay but whose view was exchanged or whose text changed.
+    func applyRows(reconfiguring changed: [Row] = [], animated: Bool) {
+        guard isViewLoaded else { return }
+        var rows: [Row] = [.artwork, .banner]
+        if translationStatusView.status != .none {
+            rows.append(.translationStatus)
+        }
+        rows += [.depiction, .footer]
+        let before = Set(dataSource.snapshot().itemIdentifiers)
+        var snapshot = NSDiffableDataSourceSnapshot<Int, Row>()
+        snapshot.appendSections([0])
+        snapshot.appendItems(rows)
+        snapshot.reconfigureItems(changed.filter { before.contains($0) && rows.contains($0) })
+        dataSource.apply(snapshot, animatingDifferences: animated)
+    }
+
+    private var rowHeightsAreStale = false
+
+    /// A view outgrew its row or fell short of it: the rows are measured
+    /// again, once for however many said so in this pass, and in place, as
+    /// the scroll view this page used to be would have followed.
+    private func setNeedsRowHeights() {
+        guard !rowHeightsAreStale else { return }
+        rowHeightsAreStale = true
+        Task { [weak self] in
+            guard let self else { return }
+            rowHeightsAreStale = false
+            UIView.performWithoutAnimation {
+                self.tableView.performBatchUpdates(nil)
+            }
         }
     }
 
@@ -149,28 +231,11 @@ class PackageController: UIViewController {
     /// loaded, so nothing falls back to a placeholder in between.
     func show(_ package: Package) {
         packageObject = package
-        bannerPackageView.removeFromSuperview()
         bannerPackageView = PackageBannerView(package: package)
-        placeBanner()
+        applyRows(reconfiguring: [.banner], animated: false)
         navigationItem.rightBarButtonItem?.menu = bannerPackageView.actionMenu
         bannerArtwork.write(nameOf: bannerPackageView.package)
         downloadDepictionIfAvailable()
-    }
-
-    /// The banner at the head of the card and, under it, the line that says
-    /// how the translation is going. The banner is made again for another
-    /// version; the line is the page's own and only follows it.
-    private func placeBanner() {
-        card.addSubview(bannerPackageView)
-        bannerPackageView.snp.makeConstraints { x in
-            x.top.leading.trailing.equalToSuperview()
-            x.height.equalTo(80)
-        }
-        card.addSubview(translationStatusView)
-        translationStatusView.snp.remakeConstraints { x in
-            x.top.equalTo(bannerPackageView.snp.bottom)
-            x.leading.trailing.equalToSuperview()
-        }
     }
 
     /// Whether the depiction on show named views this build could not build.
@@ -236,36 +301,14 @@ class PackageController: UIViewController {
             menu: bannerPackageView.actionMenu
         ).then { $0.tintColor = .textTitle }
 
-        view.addSubview(container)
-        container.alwaysBounceVertical = true
-        container.snp.makeConstraints { x in
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints { x in
             x.edges.equalToSuperview()
         }
-        container.contentLayoutGuide.snp.makeConstraints { x in
-            x.width.equalTo(container.frameLayoutGuide)
-        }
-
-        container.addSubview(bannerBackdrop)
-        container.addSubview(bannerArtwork)
-        container.addSubview(card)
-        placeBanner()
+        tableView.insertSubview(bannerBackdrop, at: 0)
         bannerArtwork.write(nameOf: bannerPackageView.package)
-
-        let content = container.contentLayoutGuide
         bannerArtwork.snp.makeConstraints { x in
-            x.top.leading.trailing.equalTo(content).inset(inset)
-            x.height.equalTo(preferredBannerHeight)
-        }
-        // the content meets the photo with no gap between them
-        card.snp.makeConstraints { x in
-            x.top.equalTo(bannerArtwork.snp.bottom)
-            x.leading.trailing.equalTo(content)
-            x.bottom.equalTo(content)
-        }
-        bannerBackdrop.snp.makeConstraints { x in
-            x.top.equalTo(content).offset(-1000)
-            x.leading.trailing.equalTo(content)
-            x.bottom.equalTo(card.snp.top)
+            artworkHeight = x.height.equalTo(preferredBannerHeight).constraint
         }
 
         bannerArtwork.imageView.publisher(for: \.image)
@@ -281,6 +324,12 @@ class PackageController: UIViewController {
         depictionView = defaultDepiction()
 
         downloadDepictionIfAvailable()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        bannerBackdrop.frame = CGRect(x: 0, y: -1000, width: tableView.bounds.width, height: 1000)
+        resizeBanner()
     }
 
     /// A dpkg row: the page was opened from the installed list, not from a
@@ -313,7 +362,7 @@ class PackageController: UIViewController {
 
     /// The page is on screen. Before that a photo lands where it belongs;
     /// after, one that arrives moves the banner in front of the user.
-    private var hasAppeared = false
+    private(set) var hasAppeared = false
 
     /// A pushed page for a dpkg row that dpkg no longer has, and that no
     /// repository offers either, shows a package that is gone: leave it.
@@ -331,11 +380,6 @@ class PackageController: UIViewController {
     /// The banner height the constraints were last set to.
     private var appliedBannerHeight: CGFloat?
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        resizeBanner()
-    }
-
     /// Brings the banner to its preferred height: at once before the page
     /// shows, in an animation after.
     private func resizeBanner() {
@@ -344,12 +388,11 @@ class PackageController: UIViewController {
             return
         }
         appliedBannerHeight = preferredBannerHeight
+        artworkHeight?.update(offset: preferredBannerHeight)
         guard hasAppeared else {
             UIView.performWithoutAnimation {
-                bannerArtwork.snp.updateConstraints { x in
-                    x.height.equalTo(preferredBannerHeight)
-                }
-                container.layoutIfNeeded()
+                tableView.performBatchUpdates(nil)
+                tableView.layoutIfNeeded()
             }
             return
         }
@@ -358,12 +401,10 @@ class PackageController: UIViewController {
             delay: 0,
             usingSpringWithDamping: 1,
             initialSpringVelocity: 0.8,
-            options: .curveEaseInOut,
+            options: [.curveEaseInOut, .allowUserInteraction],
             animations: { [self] in
-                bannerArtwork.snp.updateConstraints { x in
-                    x.height.equalTo(preferredBannerHeight)
-                }
-                container.layoutIfNeeded()
+                tableView.performBatchUpdates(nil)
+                tableView.layoutIfNeeded()
             }
         )
     }
