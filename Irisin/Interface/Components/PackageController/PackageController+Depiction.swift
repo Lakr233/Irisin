@@ -113,8 +113,13 @@ extension PackageController {
 
             let depiction = json ?? localDepictionJSON()
 
-            // a version without a photo does not keep the last one's
-            bannerArtwork.load((depiction["headerImage"] as? String).flatMap(URL.init(string:)))
+            // a version without a photo does not keep the last one's. One
+            // that is cached is here before the page shows; one that is not
+            // waits for the page to have settled, then resizes the banner
+            bannerArtwork.load(
+                (depiction["headerImage"] as? String).flatMap(URL.init(string:)),
+                uncachedNotBefore: bannerPhotoDeadline
+            )
 
             let color = UIColor(css: depiction["tintColor"] as? String) ?? .buttonNormal
             bannerPackageView.buttonBackground.backgroundColor = color

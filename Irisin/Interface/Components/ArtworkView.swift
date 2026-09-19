@@ -79,9 +79,17 @@ final class ArtworkView: UIView {
         showScribble(!scribble.isHidden)
     }
 
+    /// An uncached picture waiting for its moment (`load(_:uncachedNotBefore:)`).
+    private var pendingLoad: Task<Void, Never>?
+
     /// Shows the picture at `url`. The one on show stays until the new one
     /// has arrived; no `url` takes it away and the handwriting shows again.
-    func load(_ url: URL?) {
+    /// A picture SDWebImage has cached loads at once; one that must be
+    /// fetched is not asked for before `deadline`, so it cannot land in the
+    /// middle of the transition that brings its page in.
+    func load(_ url: URL?, uncachedNotBefore deadline: ContinuousClock.Instant? = nil) {
+        pendingLoad?.cancel()
+        pendingLoad = nil
         // under a picture that fades in, the old one fades out over the
         // handwriting, not over nothing
         showScribble(true)
@@ -92,6 +100,25 @@ final class ArtworkView: UIView {
             imageView.sd_cancelCurrentImageLoad()
             return
         }
+        guard let deadline, deadline > .now, !Self.isCached(url) else {
+            fetch(url)
+            return
+        }
+        pendingLoad = Task { [weak self] in
+            try? await Task.sleep(until: deadline, clock: .continuous)
+            guard !Task.isCancelled else { return }
+            self?.fetch(url)
+        }
+    }
+
+    /// In memory, or on disk where reading it takes no time worth waiting for.
+    private static func isCached(_ url: URL) -> Bool {
+        guard let key = SDWebImageManager.shared.cacheKey(for: url) else { return false }
+        return SDImageCache.shared.imageFromMemoryCache(forKey: key) != nil
+            || SDImageCache.shared.diskImageDataExists(withKey: key)
+    }
+
+    private func fetch(_ url: URL) {
         // the handwriting stops once a picture fully covers it: the one on
         // show, which a failed load leaves as it was
         imageView.sd_setImage(

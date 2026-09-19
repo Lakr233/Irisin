@@ -61,6 +61,21 @@ class PackageController: UIViewController {
     var bannerPackageView = PackageBannerView(package: Package(identity: ""))
     var preferredBannerHeight: CGFloat = 120
 
+    /// How long after it loads a page takes to settle: a photo that must be
+    /// fetched is not asked for sooner, so the banner resizes on a page
+    /// that has stopped moving.
+    private static let settlingTime: Duration = .seconds(2.5)
+
+    /// When this page has settled, counted from `viewDidLoad`. A cached
+    /// photo does not wait for it.
+    private(set) var bannerPhotoDeadline = ContinuousClock.now
+
+    /// The size of the photo the banner is laid out for, which follows the
+    /// photo on show through `resizeBanner`: a layout pass that happens to
+    /// run as a photo arrives, perhaps with animations off, never resizes
+    /// the banner for it.
+    private var bannerPhotoSize: CGSize?
+
     var depictionView = UIView() {
         didSet {
             oldValue.removeFromSuperview()
@@ -133,6 +148,7 @@ class PackageController: UIViewController {
 
         view.backgroundColor = .plainBackground
 
+        bannerPhotoDeadline = .now + Self.settlingTime
         bannerPackageView = PackageBannerView(package: packageObject)
         title = PackageCenter.default.name(of: describedPackage)
         navigationItem.largeTitleDisplayMode = .never
@@ -187,6 +203,16 @@ class PackageController: UIViewController {
             x.top.leading.trailing.equalToSuperview()
             x.height.equalTo(80)
         }
+
+        bannerArtwork.imageView.publisher(for: \.image)
+            .map { $0?.size }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] size in
+                self?.bannerPhotoSize = size
+                self?.resizeBanner()
+            }
+            .store(in: &subscriptions)
 
         depictionView = defaultDepiction()
 
@@ -243,6 +269,12 @@ class PackageController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        resizeBanner()
+    }
+
+    /// Brings the banner to its preferred height: at once before the page
+    /// shows, in an animation after.
+    private func resizeBanner() {
         updatePreferredImageHeight()
         guard preferredBannerHeight != appliedBannerHeight else {
             return
@@ -277,7 +309,7 @@ class PackageController: UIViewController {
     /// in a 5:2 strip, capped at a quarter: on a wide page it is only a name.
     func updatePreferredImageHeight() {
         let width = view.frame.width - inset * 2
-        preferredBannerHeight = if let size = bannerArtwork.imageView.image?.size, size.width > 0 {
+        preferredBannerHeight = if let size = bannerPhotoSize, size.width > 0 {
             min(width * size.height / size.width, view.frame.height / 3)
         } else {
             min(width * 2 / 5, view.frame.height / 4)
