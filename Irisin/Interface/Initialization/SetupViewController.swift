@@ -107,7 +107,7 @@ class SetupViewController: UIViewController {
         let controller = NavigatorEnterViewController()
         controller.modalPresentationStyle = .fullScreen
         // this screen is still the loading one while the first page fills in
-        await controller.prepare(within: .milliseconds(200))
+        await controller.prepare(filling: view.bounds, within: .milliseconds(200))
         // the interface covers this screen; nothing here keeps spinning
         indicator.stopAnimating()
         indicator.removeFromSuperview()

@@ -13,8 +13,10 @@ private let kCellLineLimit = 6
 extension DashboardController {
     // MARK: - CELL SIZE
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    /// Before the collection view lays out, never after it: a size that
+    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
         if collectionView.frame.size == collectionViewFrameCache,
            traitCollection.preferredContentSizeCategory == collectionViewTextSizeCache
         {
@@ -22,18 +24,22 @@ extension DashboardController {
         }
         collectionViewFrameCache = collectionView.frame.size
         collectionViewTextSizeCache = traitCollection.preferredContentSizeCategory
-        Task {
-            updateCellSize()
-        }
+        updateCellSize()
     }
 
     func updateCellSize() {
         let inset = collectionView.contentInset.left + collectionView.contentInset.right
         let layout = InterfaceBridge.calculatesPackageCellSize(availableWidth: view.frame.width - inset)
         collectionViewCellSizeCache = layout.size
-        cellLimit = layout.itemsPerRow * kCellLineLimit
         collectionView.collectionViewLayout.invalidateLayout()
-        // the row limit follows the width: re-cut every section, no motion
+
+        let limit = layout.itemsPerRow * kCellLineLimit
+        guard limit != cellLimit else { return }
+        cellLimit = limit
+        // the row limit follows the width: re-cut every section, no motion,
+        // and in this pass: off a window the detail column has no sidebar
+        // beside it, so the width that counts arrives with the first frame
+        guard !dataSource.isEmpty else { return }
         applySnapshot(animatingDifferences: false)
     }
 

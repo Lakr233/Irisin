@@ -33,14 +33,20 @@ class NavigatorEnterViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .plainBackground
-        setExceptedRootViewController()
     }
 
-    /// Waits for the split layout's first page, up to `budget`, so the
-    /// interface is presented whole: the sidebar has its cards at once,
-    /// and a detail column that fills in a moment later reads as a blink.
-    func prepare(within budget: Duration) async {
+    /// Takes the size it is about to be presented at and lays out, so the
+    /// layout is picked for that size and every page under it has its width
+    /// before its first snapshot: a page that fills in with no width draws
+    /// `minimumPackageCellSize` cells for a frame. Then waits for the split
+    /// layout's first page, up to `budget`, so the interface is presented
+    /// whole: the sidebar has its cards at once, and a detail column that
+    /// fills in a moment later reads as a blink.
+    func prepare(filling bounds: CGRect, within budget: Duration) async {
         loadViewIfNeeded()
+        view.frame = bounds
+        setExceptedRootViewController()
+        view.layoutIfNeeded()
         await lxMain?.prepare(within: budget)
     }
 

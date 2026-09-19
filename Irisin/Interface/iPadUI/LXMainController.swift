@@ -46,6 +46,7 @@ class LXMainNavigator: UINavigationController {
     /// `DashboardController.prepare(within:)`.
     func prepare(within budget: Duration) async {
         loadViewIfNeeded()
+        view.layoutIfNeeded()
         await dashboard.prepare(within: budget)
     }
 

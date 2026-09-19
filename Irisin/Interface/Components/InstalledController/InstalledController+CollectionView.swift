@@ -12,8 +12,10 @@ import UIKit
 extension InstalledController {
     // MARK: - CELL SIZE
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    /// Before the collection view lays out, never after it: a size that
+    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
         if collectionView.frame.size == collectionViewFrameCache,
            traitCollection.preferredContentSizeCategory == collectionViewTextSizeCache
         {
@@ -21,9 +23,7 @@ extension InstalledController {
         }
         collectionViewFrameCache = collectionView.frame.size
         collectionViewTextSizeCache = traitCollection.preferredContentSizeCategory
-        Task {
-            updateCellSize()
-        }
+        updateCellSize()
     }
 
     func updateCellSize() {

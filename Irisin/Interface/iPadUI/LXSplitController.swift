@@ -53,10 +53,11 @@ class LXSplitController: UISplitViewController {
         navigator.delegate = self
     }
 
-    /// Loads both columns and waits for the detail column's first page, up
-    /// to `budget`, so the two arrive in the same frame.
+    /// Loads and lays out both columns, then waits for the detail column's
+    /// first page, up to `budget`, so the two arrive in the same frame.
     func prepare(within budget: Duration) async {
         loadViewIfNeeded()
+        view.layoutIfNeeded()
         await navigator.prepare(within: budget)
     }
 

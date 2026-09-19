@@ -100,10 +100,13 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         fatalError()
     }
 
-    /// Waits for the first sections, up to `budget`, so the page appears
-    /// with its rows in place; a slower load lands after it.
+    /// Lays out at the width its container gave it, so the first snapshot
+    /// is cut and sized for that width, then waits for the first sections,
+    /// up to `budget`, so the page appears with its rows in place; a slower
+    /// load lands after it.
     func prepare(within budget: Duration) async {
         loadViewIfNeeded()
+        view.layoutIfNeeded()
         await firstLoad?.wait(upTo: budget)
     }
 

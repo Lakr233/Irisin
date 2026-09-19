@@ -164,11 +164,11 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         }
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        Task {
-            updateCellSize()
-        }
+    /// Before the collection view lays out, never after it: a size that
+    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        updateCellSize()
     }
 
     /// What the page is showing, one package a line.
@@ -188,11 +188,14 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     func updateCellSize() {
         let inset: CGFloat = 15
         collectionView.contentInset = UIEdgeInsets(top: 10, left: inset, bottom: 10, right: inset)
-        collectionViewCellSizeCache = InterfaceBridge
+        let size = InterfaceBridge
             // we are not inside UICollectionViewController
             // so don't use collectionView.contentSize
             // otherwise it will load all of the cells when boot
             .calculatesPackageCellSize(availableWidth: view.frame.width - inset * 2).size
+        // asked on every layout pass; only a new size is worth a new layout
+        guard size != collectionViewCellSizeCache else { return }
+        collectionViewCellSizeCache = size
         collectionView.collectionViewLayout.invalidateLayout()
     }
 
