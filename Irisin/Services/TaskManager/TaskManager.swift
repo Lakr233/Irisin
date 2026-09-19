@@ -45,7 +45,7 @@ final class TaskManager {
     /// place of the adapter's preview; pruned as a package leaves the plan.
     private(set) var patched: [Package: PatchedPackage] = [:]
     /// Patch is running: nothing else starts one.
-    private(set) var patching = false
+    private var patching = false
 
     /// The Settings switch: a plan may remove Essential and Protected
     /// packages, and the helper is told to let them go. A queued plan is
@@ -142,6 +142,10 @@ final class TaskManager {
 
     struct PatchFailure: Error {
         let message: String
+        /// A file of the plan is not on disk any more (a cached download
+        /// that no longer matched its hash was discarded): downloading
+        /// again is what repeats this, not patching again.
+        var missingDownload = false
     }
 
     /// The adapted packages the plan installs that Patch has not been
@@ -162,21 +166,33 @@ final class TaskManager {
     /// rootless-compat and patchloader, leaves the queue before it runs,
     /// and the outcome says so. The paragraph is the one on the tree that
     /// installs, so the plan cannot disagree with what is installed. A
-    /// failure keeps what was patched before it.
+    /// failure keeps what was patched before it. A queue that moved while
+    /// its files were adapted (the user's own change, a catalogue refresh)
+    /// is not Patch's doing and is not reported as its outcome: what the new
+    /// plan still has unpatched is the next tap's.
     func patch() async -> Result<PatchOutcome, PatchFailure> {
-        guard let before = plan, !patching, !TaskProcessor.shared.inProcessingQueue else {
+        guard let before = plan else { return .success(PatchOutcome(left: [], joined: [])) }
+        guard !patching, !TaskProcessor.shared.inProcessingQueue else {
             return .failure(PatchFailure(message: Self.busy.message))
         }
         patching = true
         defer { patching = false }
         let location = TaskProcessor.shared.workingLocation.appendingPathComponent("Patched")
+        var moved = false
         for package in unpatched {
+            guard plan?.id == before.id else {
+                moved = true
+                break
+            }
             var file = package.localFileURL
             if file == nil {
                 file = await DownloadCenter.shared.downloadedFile(for: package)
             }
             guard let file else {
-                return .failure(PatchFailure(message: String(localized: "The download was interrupted.")))
+                return .failure(PatchFailure(
+                    message: String(localized: "The download was interrupted."),
+                    missingDownload: true
+                ))
             }
             do {
                 patched[package] = try await Self.adapt(file, in: location.appendingPathComponent(UUID().uuidString))
@@ -188,9 +204,14 @@ final class TaskManager {
                 ))
             }
         }
-        if let plan, !isSolvedAsPatched(plan) {
-            // the plan was solved under less than this: a proposal made
-            // before it no longer commits, and is solved again
+        moved = moved || plan?.id != before.id
+        // the plan was solved under less than this: a proposal made before
+        // it no longer commits, and is solved again. A solve the packages
+        // moving under it threw away is tried again; one that failed is the
+        // queue's `blocked`, which the page shows
+        var tries = 0
+        while let plan, !isSolvedAsPatched(plan), blocked == nil, tries < 3 {
+            tries += 1
             changed()
             refreshTask?.cancel()
             let task = Task { await refresh(force: true) }
@@ -201,6 +222,7 @@ final class TaskManager {
         }
         // a package that left the queue while it was being patched
         prunePatched()
+        guard !moved else { return .success(PatchOutcome(left: [], joined: [])) }
         let after = plan
         func touched(_ plan: ResolutionPlan?) -> [Package] {
             plan.map { $0.install + $0.remove } ?? []

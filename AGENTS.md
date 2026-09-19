@@ -102,13 +102,13 @@ end.
   after the transcript ends when `Transaction.touchesSelf`.
 - **A package built for another bootstrap is rewritten in the app, never
   by the helper.** `IrisinAdapter` runs as `mobile` inside
-  `TaskProcessor.stage`, after `prepareDebianPackage` and before the job is
-  sent: it rewrites the prepared tree and hands back the new manifest
+  `TaskManager.patch` (and inside `TaskProcessor.stage` for a package Patch
+  never saw), after `prepareDebianPackage` and before the job is sent: it rewrites the prepared tree and hands back the new manifest
   digest, and the helper installs what it is given. `PackageAdapters.installed`
   is the switch: an adapter listed there makes its `source` architecture
   installable (`AptEnvironment.installableArchitectures`); there is no
   setting. One whose conversion is not written yet stays listed and throws
-  `AdaptationFailure.unavailable` at staging, typed, spelled by the app.
+  `AdaptationFailure.unavailable` at Patch, typed, spelled by the app.
   `RootlessToRoothide` is roothide's own RootHidePatcher (`patch.sh`,
   Compat Layer) in Swift, nothing spawned: tweaks, apps, programs, daemons
   and hard links converted as the script converts them, and what it would

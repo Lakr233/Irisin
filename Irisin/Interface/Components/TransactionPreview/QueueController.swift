@@ -76,6 +76,9 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private var watch: Task<Void, Never>?
     private var staging: Task<Void, Never>?
     private var patching: Task<Void, Never>?
+    /// What Patch did to the queue, until the alert that says so is up: the
+    /// page may be covered or off screen when Patch finishes.
+    private var patchOutcome: TaskManager.PatchOutcome?
     /// A tapped row whose page is not pushed yet; a second tap waits for it.
     private var opening: Task<Void, Never>?
     /// Patch or Execute was tapped while files were still downloading: it
@@ -179,6 +182,11 @@ final class QueueController: UIViewController, UITableViewDelegate {
         reload()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        presentPatchOutcome()
+    }
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         // the downloads go on without the page; only a committed Execute
@@ -248,8 +256,9 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private func updateBar() {
         let queued = TaskManager.shared.plan != nil
         let busy = stage == .patching || stage == .staging || (stage == .downloading && committed)
-        let failed = stage == .downloadFailed || stage == .stagingFailed
-        executeButton.title = if failed {
+        // a failed patch keeps Patch: the tap is the same one again
+        let retries = stage == .downloadFailed || stage == .stagingFailed
+        executeButton.title = if retries {
             String(localized: "Retry")
         } else if TaskManager.shared.unpatched.isEmpty {
             String(localized: "Execute")
@@ -259,7 +268,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
         executeButton.isEnabled = stage != .blocked
         executeButton.isHidden = !queued || busy
         busyItem.isHidden = !queued || !busy
-        menuItem.isHidden = !queued
+        // the queue is not cleared from under a patch
+        menuItem.isHidden = !queued || stage == .patching
     }
 
     // MARK: - Export
@@ -351,7 +361,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
         guard case let .change(change) = dataSource.itemIdentifier(for: indexPath),
-              !TaskProcessor.shared.inProcessingQueue
+              !TaskProcessor.shared.inProcessingQueue, stage != .patching
         else { return nil }
         let action = UIContextualAction(
             style: .normal,
@@ -391,7 +401,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         if TaskManager.shared.unpatched.isEmpty {
             stageAndRun(plan)
         } else {
-            patch(plan)
+            patch()
         }
     }
 
@@ -437,7 +447,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// Adapts what the plan installs for another bootstrap and solves again
     /// with what the files showed. The button is Execute after this; a
     /// queue that is not what it was says so first.
-    private func patch(_ plan: ResolutionPlan) {
+    private func patch() {
         failure = nil
         committed = false
         stage = .patching
@@ -449,27 +459,38 @@ final class QueueController: UIViewController, UITableViewDelegate {
             case let .success(outcome):
                 stage = .empty
                 reload()
-                guard view.window != nil, !(outcome.left.isEmpty && outcome.joined.isEmpty) else { return }
-                func names(_ packages: [Package]) -> String {
-                    ListFormatter.localizedString(byJoining: packages.map {
-                        PackageCenter.default.name(of: $0)
-                    })
+                if !(outcome.left.isEmpty && outcome.joined.isEmpty) {
+                    patchOutcome = outcome
+                    presentPatchOutcome()
                 }
-                var lines: [String] = []
-                if !outcome.left.isEmpty {
-                    lines.append(String(localized: "Removed from the queue: \(names(outcome.left))."))
-                }
-                if !outcome.joined.isEmpty {
-                    lines.append(String(localized: "Added to the queue: \(names(outcome.joined))."))
-                }
-                lines.append(String(localized: "Review the queue before you execute."))
-                presentNotice(title: "Queue Changed", message: lines.joined(separator: "\n\n"))
             case let .failure(reason):
                 failure = reason.message
-                stage = .patchFailed
+                // a file that is gone is downloaded again, not patched again
+                stage = reason.missingDownload ? .downloadFailed : .patchFailed
                 reload()
             }
         }
+    }
+
+    /// The alert for a queue Patch changed, now if the page is on screen
+    /// with nothing over it, otherwise when it next appears.
+    private func presentPatchOutcome() {
+        guard let outcome = patchOutcome, view.window != nil, presentedViewController == nil else { return }
+        patchOutcome = nil
+        func names(_ packages: [Package]) -> String {
+            ListFormatter.localizedString(byJoining: packages.map {
+                PackageCenter.default.name(of: $0)
+            })
+        }
+        var lines: [String] = []
+        if !outcome.left.isEmpty {
+            lines.append(String(localized: "Removed from the queue: \(names(outcome.left))."))
+        }
+        if !outcome.joined.isEmpty {
+            lines.append(String(localized: "Added to the queue: \(names(outcome.joined))."))
+        }
+        lines.append(String(localized: "Review the queue before you execute."))
+        presentNotice(title: "Queue Changed", message: lines.joined(separator: "\n\n"))
     }
 
     private func stageAndRun(_ plan: ResolutionPlan) {

@@ -122,12 +122,14 @@ final class TaskProcessor {
             let destination = location.appendingPathComponent(package.identity + ".deb")
             try FileManager.default.copyItem(at: source, to: destination)
             let digest = try package.validateArchive(at: destination)
-            var prepared = location.appendingPathComponent(package.identity + ".contents")
+            let prepared = location.appendingPathComponent(package.identity + ".contents")
             var manifestDigest: String
             if let patched {
                 // Patch prepared and adapted this file already: its tree is
-                // what installs, and the helper checks it against the digest
-                prepared = patched.directory
+                // what installs, and the helper checks it against the digest.
+                // A copy (a clone, on APFS), so the queue pruning its trees
+                // cannot take this one from under the helper
+                try FileManager.default.copyItem(at: patched.directory, to: prepared)
                 manifestDigest = patched.manifestDigest
             } else {
                 manifestDigest = try ArchiveStream.prepareDebianPackage(at: destination, in: prepared)
