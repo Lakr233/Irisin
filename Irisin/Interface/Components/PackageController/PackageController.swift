@@ -249,7 +249,7 @@ class PackageController: UIViewController {
     /// The alert the translation on its way waits behind, when the menu
     /// asked for it. One left behind by a translation since replaced is no
     /// longer this, and its Cancel cancels nothing.
-    weak var translationAlert: AlertProgressIndicatorViewController?
+    weak var translationAlert: AlertViewController?
 
     /// The depiction as its author wrote it, which every translation of the
     /// page is made from.

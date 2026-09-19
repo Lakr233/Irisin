@@ -269,23 +269,22 @@ extension PackageController {
     private func translationProgressAlert(
         status: TranslationStatusView.Status,
         onCancel revert: (() -> Void)?
-    ) -> AlertProgressIndicatorViewController {
-        let alert = progressAlert(
-            title: "Translating…",
-            message: "The system is translating this page."
-        )
-        alert.progressContext.addAction(title: "Cancel") { [weak self, weak alert] in
+    ) -> AlertViewController {
+        // the card is made with its Cancel, which has the alert to take down
+        weak var presented: AlertViewController?
+        let alert = TranslationProgressController.alert { [weak self] in
             // the page may have moved on to another translation: not this
             // alert's to cancel, and whoever replaced it takes the alert down
-            if let self, let alert, translationAlert === alert {
+            if let self, let presented, translationAlert === presented {
                 depictionTranslation?.cancel()
                 depictionTranslation = nil
                 translationMode = translationModeOnShow
                 showTranslationStatus(status)
                 revert?()
             }
-            alert?.progressContext.dispose()
+            presented?.dismiss(animated: true)
         }
+        presented = alert
         return alert
     }
 
