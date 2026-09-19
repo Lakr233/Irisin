@@ -3,6 +3,18 @@ import Foundation
 /// RFC822-style Debian control paragraphs. A malformed/duplicate field must
 /// not silently replace or discard a dependency constraint.
 public enum DebianControl {
+    /// The paragraph's field names as it spells them, in its order. `parse`
+    /// lowercases them to match as dpkg does; dpkg writes a field it does
+    /// not know back as it read it, and this is what that takes.
+    public static func fieldNames(_ paragraph: String) -> [String] {
+        paragraph.utf8.split(separator: 0x0A).compactMap { line in
+            guard let first = line.first, first != 0x20, first != 0x09, first != UInt8(ascii: "#"),
+                  let separator = line.firstIndex(of: UInt8(ascii: ":"))
+            else { return nil }
+            return String(decoding: line[..<separator], as: UTF8.self)
+        }
+    }
+
     public static func parse(_ paragraph: String, preservingLinesFor: Set<String> = []) throws -> [String: String] {
         var fields: [String: String] = [:]
         var previous: String?

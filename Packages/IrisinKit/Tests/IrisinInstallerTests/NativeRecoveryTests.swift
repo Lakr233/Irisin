@@ -177,13 +177,15 @@ struct NativeRecoveryTests {
         #expect(try String(contentsOf: path, encoding: .utf8) == "elsewhere")
     }
 
-    @Test func fileListNeverContainsEmptyOrRootEntries() throws {
+    /// A blank line or a bare `/` stops dpkg on any package; `/.` is the
+    /// root as dpkg writes it, once, at the head of every list.
+    @Test func fileListNeverContainsEmptyOrBareRootEntries() throws {
         let fixture = try NativeInstallFixture()
         let database = try NativePackageDatabase(directory: fixture.database)
         try database.writeInfo("example", member: "list", text: "\n/\n/.\n")
-        #expect(try fixture.text("Library/dpkg/info/example.list").isEmpty)
+        #expect(try fixture.text("Library/dpkg/info/example.list") == "/.\n")
         try database.writeInfo("example", member: "list", text: "/usr/share/example\n\n")
-        #expect(try fixture.text("Library/dpkg/info/example.list") == "/usr/share/example\n")
+        #expect(try fixture.text("Library/dpkg/info/example.list") == "/.\n/usr/share/example\n")
     }
 
     @Test func standardPendingUpdateIsIncorporated() throws {

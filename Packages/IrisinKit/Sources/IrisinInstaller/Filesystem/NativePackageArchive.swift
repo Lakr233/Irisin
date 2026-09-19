@@ -83,6 +83,25 @@ struct NativePackageArchive {
         Set(package.entries.map { "/" + $0.path })
     }
 
+    /// dpkg's `write_filehash_except`: the `md5sums` dpkg writes for a
+    /// package that ships none, one line per regular file and hard link in
+    /// the archive's order, conffiles left out, no leading slash.
+    func generatedHashes(excluding conffiles: Set<String>) throws -> String {
+        let byPath = Dictionary(uniqueKeysWithValues: package.entries.map { ($0.path, $0) })
+        var lines = ""
+        for entry in package.entries where !conffiles.contains("/" + entry.path) {
+            let file: PreparedFile? = switch entry.kind {
+            case .file: entry.file
+            case .hardLink: try byPath[regularFileTarget(of: entry)]?.file
+            default: nil
+            }
+            if let file {
+                lines += file.md5 + "  " + entry.path + "\n"
+            }
+        }
+        return lines
+    }
+
     func regularFileTarget(of entry: PreparedEntry) throws -> String {
         guard let target = hardLinkTargets[entry.path] else {
             throw NativePackageFailure("Missing hard link target: \(entry.path)")

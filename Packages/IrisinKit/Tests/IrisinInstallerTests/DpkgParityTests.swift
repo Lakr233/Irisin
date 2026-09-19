@@ -17,8 +17,55 @@ struct DpkgParityTests {
         #expect(NativePackageDatabase.paragraph(["package": "x", "description": "a\r\nStatus: b"]) == "Package: x\nDescription: a\r\n Status: b\n")
     }
 
+    /// dpkg keeps a field it does not know as the stanza spelled it and
+    /// where it stood among the others: what a vphone's dpkg 1.22.6 wrote
+    /// for a tweak's control file, read back and written again.
+    @Test func arbitraryFieldsKeepTheirSpellingAndOrder() throws {
+        let stanza = """
+        Package: example.package
+        Status: install ok installed
+        Section: Tweaks
+        Maintainer: someone
+        Architecture: iphoneos-arm64
+        Version: 1.0.4
+        Description: A tweak
+        Name: Example
+        Author: someone
+        Icon: https://example.com/icon.png
+        SileoDepiction: https://example.com/depiction.json
+
+        """
+        let fixture = try NativeInstallFixture()
+        try Data(stanza.utf8).write(to: fixture.database.appendingPathComponent("status"))
+        let database = try NativePackageDatabase(directory: fixture.database)
+        try database.consolidate()
+        #expect(try fixture.text("Library/dpkg/status") == stanza)
+        // a field nothing spelled follows them, capitalised by word
+        #expect(NativePackageDatabase.paragraph(["package": "x", "tag": "a", "sileodepiction": "b"], names: ["SileoDepiction"]) == "Package: x\nSileoDepiction: b\nTag: a\n")
+    }
+
+    // MARK: process_archive
+
+    /// dpkg's list starts at the root, `/.`, and `write_filehash_except`
+    /// writes the md5sums of a package that ships none: every regular file
+    /// in the archive's order, conffiles left out, no leading slash.
+    @Test func unpackWritesTheRootEntryAndTheHashesDpkgWould() throws {
+        let fixture = try NativeInstallFixture()
+        let package = try fixture.package(
+            files: ["usr/share/example": "one", "etc/example": "conf"],
+            controls: ["conffiles": "/etc/example\n"]
+        )
+        try fixture.run(install: [package])
+        #expect(try fixture.text("Library/dpkg/info/example.package.list").hasPrefix("/.\n"))
+        #expect(try fixture.text("Library/dpkg/info/example.package.md5sums") == "f97c5d29941bfb1b2fdab0874906ab82  usr/share/example\n")
+        // one the package ships is installed as it is
+        let shipped = try fixture.package("shipper.package", files: ["usr/share/shipped": "x"], controls: ["md5sums": "its own\n"])
+        try fixture.run(install: [shipped])
+        #expect(try fixture.text("Library/dpkg/info/shipper.package.md5sums") == "its own\n")
+    }
+
     private func seed(_ fixture: NativeInstallFixture, _ paragraphs: [[String: String]]) throws {
-        let text = paragraphs.map(NativePackageDatabase.paragraph).joined(separator: "\n")
+        let text = paragraphs.map { NativePackageDatabase.paragraph($0) }.joined(separator: "\n")
         try Data(text.utf8).write(to: fixture.database.appendingPathComponent("status"))
     }
 
@@ -39,7 +86,7 @@ struct DpkgParityTests {
         #expect(record["triggers-pending"] == nil)
         // dpkg keeps the list and the postrm for the purge and nothing else
         #expect(try Set(NativePackageDatabase(directory: fixture.database).infoMembers(package.identity)) == ["list", "postrm"])
-        #expect(try fixture.text("Library/dpkg/info/example.package.list") == "/etc/example\n")
+        #expect(try fixture.text("Library/dpkg/info/example.package.list") == "/.\n/etc/example\n")
         #expect(try fixture.text("etc/example") == "conf")
         #expect(try fixture.text("script log") == "postrm:remove\n")
         try fixture.run(remove: [package.identity])
@@ -264,7 +311,7 @@ struct DpkgParityTests {
         #expect(try fixture.status("old.package") == "deinstall ok config-files")
         try fixture.run(install: [fixture.package("new.package", files: ["etc/shared": "new"])])
         #expect(try fixture.text("etc/shared") == "new")
-        #expect(try fixture.text("Library/dpkg/info/old.package.list").isEmpty)
+        #expect(try fixture.text("Library/dpkg/info/old.package.list") == "/.\n")
     }
 
     @Test func packageWhoseFilesAreAllTakenOverDisappears() throws {
@@ -368,7 +415,7 @@ struct DpkgParityTests {
         #expect(record?["conffiles"]?.contains("/etc/drop") == true)
         #expect(record?["conffiles"]?.contains("remove-on-upgrade") == true)
         // in the field, as dpkg keeps it, but not in the list of files it has
-        #expect(try fixture.text("Library/dpkg/info/example.package.list") == "/etc/keep\n")
+        #expect(try fixture.text("Library/dpkg/info/example.package.list") == "/.\n/etc/keep\n")
         try Data("local".utf8).write(to: fixture.root.appendingPathComponent("etc/drop"))
         try fixture.run(install: [fixture.package(version: "3", files: ["etc/keep": "k"], controls: ["conffiles": "/etc/keep\nremove-on-upgrade /etc/drop\n"])])
         #expect(try fixture.text("etc/drop.dpkg-old") == "local")

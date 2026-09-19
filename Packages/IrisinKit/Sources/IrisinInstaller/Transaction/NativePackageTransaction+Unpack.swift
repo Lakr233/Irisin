@@ -38,6 +38,11 @@ extension NativePackageTransaction {
             try finishUpgrade(archive, old: old)
             removed = try removeOldFiles(identity, archive: archive, owners: owners, conffiles: &conffiles)
             try installControlFiles(identity, archive: archive)
+            // dpkg writes the hashes itself for a package that ships none
+            if archive.package.controlFiles["md5sums"] == nil {
+                let hashes = try archive.generatedHashes(excluding: declarations.keep)
+                try writeInfo(identity, member: "md5sums", text: hashes)
+            }
             // a conffile removed on upgrade stays in the field, not in the list
             let paths = archive.absolutePaths
                 .union(conffiles.hashes.keys.filter { !conffiles.removeOnUpgrade.contains($0) })
@@ -51,6 +56,7 @@ extension NativePackageTransaction {
             fields["triggers-awaited"] = old?["triggers-awaited"]
             fields["status"] = "install ok unpacked"
             try filesystem.finish()
+            database.noteFieldNames(identity, control: archive.package.control)
             try database.commit(identity, fields)
         } catch {
             try filesystem.rollback()

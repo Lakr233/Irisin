@@ -21,6 +21,10 @@ import IrisinProtocol
 final class NativePackageDatabase {
     let directory: URL
     var records: [String: [String: String]] = [:]
+    /// Each record's field names as its stanza or its control file spelled
+    /// them, in that order: how `paragraph` writes the fields dpkg does not
+    /// know, which dpkg keeps as it read them (`SileoDepiction`).
+    private(set) var fieldNames: [String: [String]] = [:]
 
     init(directory: URL) throws {
         self.directory = directory
@@ -61,7 +65,14 @@ final class NativePackageDatabase {
             }
             fields["package"] = identity
             records[identity] = fields
+            fieldNames[identity] = DebianControl.fieldNames(paragraph)
         }
+    }
+
+    /// The new version's control file decides how its fields are spelled
+    /// from the unpack on, as the record dpkg takes from it does.
+    func noteFieldNames(_ identity: String, control: String) {
+        fieldNames[identity.lowercased()] = DebianControl.fieldNames(control)
     }
 
     // MARK: - Status words
@@ -169,9 +180,11 @@ final class NativePackageDatabase {
             withIntermediateDirectories: true
         )
         let contents: String = if member == "list" {
-            // dpkg rejects a blank line and a bare root entry in any .list file,
-            // even when it is operating on an unrelated package.
-            text.split(separator: "\n").filter { $0 != "/" && $0 != "/." }.map { $0 + "\n" }.joined()
+            // dpkg rejects a blank line and a bare `/` in any .list file,
+            // even when it is operating on an unrelated package. The root
+            // it writes itself is `/.`, first in every list: the archive's
+            // own `./` entry, and what a removal always leaves over.
+            "/.\n" + text.split(separator: "\n").filter { $0 != "/" && $0 != "/." }.map { $0 + "\n" }.joined()
         } else {
             text
         }
@@ -206,7 +219,7 @@ final class NativePackageDatabase {
         // Incorporate earlier interrupted updates before reusing the record name.
         try consolidate()
         if let value {
-            try Self.write(Data(Self.paragraph(value).utf8), to: update)
+            try Self.write(Data(Self.paragraph(value, names: fieldNames[identity] ?? []).utf8), to: update)
         }
         records[identity] = value
         try consolidate()
@@ -260,7 +273,11 @@ final class NativePackageDatabase {
 
     func consolidate() throws {
         let status = directory.appendingPathComponent("status")
-        let data = Data(records.keys.sorted().map { Self.paragraph(records[$0]!) }.joined(separator: "\n").utf8)
+        let data = Data(
+            records.keys.sorted()
+                .map { Self.paragraph(records[$0]!, names: fieldNames[$0] ?? []) }
+                .joined(separator: "\n").utf8
+        )
         if let previous = try? Data(contentsOf: status) {
             try Self.write(previous, to: directory.appendingPathComponent("status-old"))
         }
@@ -287,11 +304,24 @@ final class NativePackageDatabase {
         "recommended", "optional", "class", "revision", "package-revision", "package_revision",
     ]
 
-    static func paragraph(_ fields: [String: String]) -> String {
+    /// `names` is the stanza's own spelling of its fields, in its order: a
+    /// field dpkg does not know is written under that name and in that
+    /// place among the others, as dpkg's `arbitraryfield` list keeps it.
+    /// One `names` does not cover follows them, capitalised by word.
+    static func paragraph(_ fields: [String: String], names: [String] = []) -> String {
         let known = fieldOrder.filter { fields[$0] != nil }
-        let arbitrary = fields.keys.filter { !fieldOrder.contains($0) }.sorted()
+        var spelling: [String: String] = [:]
+        var arbitrary: [String] = []
+        for name in names {
+            let key = name.lowercased()
+            if !fieldOrder.contains(key), fields[key] != nil, spelling[key] == nil {
+                spelling[key] = name
+                arbitrary.append(key)
+            }
+        }
+        arbitrary += fields.keys.filter { !fieldOrder.contains($0) && spelling[$0] == nil }.sorted()
         return (known + arbitrary).map { key in
-            let title = key.split(separator: "-")
+            let title = spelling[key] ?? key.split(separator: "-")
                 .map { $0.prefix(1).uppercased() + $0.dropFirst() }
                 .joined(separator: "-")
             let value = fields[key]!
