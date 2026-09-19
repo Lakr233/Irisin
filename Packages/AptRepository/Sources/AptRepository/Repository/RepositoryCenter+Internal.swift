@@ -31,6 +31,8 @@ extension RepositoryCenter {
         let packageCandidates: [[URL]]
         let preferredSearchPath: String
         let availableSearchPath: [String]
+        /// the Release of the last refresh, to tell an older one by
+        let storedRelease: [String: String]
         let networking: NetworkingConfiguration
         /// what the index paths were computed from, so a Release read by
         /// this very update can move them
@@ -57,8 +59,8 @@ extension RepositoryCenter {
         var release: [String: String]?
         var packages: [String: Package]?
         var searchPath: String?
-        var paymentEndpoint: URL?
-        var featured: String?
+        var paymentEndpoint = Detected<URL>.unanswered
+        var featured = Detected<String>.unanswered
 
         var succeeded: Bool {
             (packages?.count ?? 0) > 0
@@ -74,6 +76,7 @@ extension RepositoryCenter {
             packageCandidates: repo.metaPackageCandidates,
             preferredSearchPath: repo.preferredSearchPath,
             availableSearchPath: repo.availableSearchPath,
+            storedRelease: repo.metaRelease,
             networking: networkingConfiguration,
             suiteUrl: repo.suiteUrl,
             distribution: repo.distribution,
@@ -85,12 +88,16 @@ extension RepositoryCenter {
     /// pending to in-flight and starts each download off the main actor.
     func dispatchUpdateOnCurrentCenter() {
         updateDispatchThrottle.throttle { [self] in
+            // One update per repository at a time: two would share a
+            // progress, the first to finish would call the repository idle,
+            // and the older fetch could land its rows last. A request for
+            // one in flight (deleted and added again, say) waits its turn.
             var dispatchContainer = [URL]()
-            while pendingUpdateRequest.count > 0,
-                  dispatchContainer.count + currentlyInUpdate.count < updateConcurrencyLimit
-            {
-                dispatchContainer.append(pendingUpdateRequest.removeFirst())
+            for url in pendingUpdateRequest where !currentlyInUpdate.contains(url) {
+                guard dispatchContainer.count + currentlyInUpdate.count < updateConcurrencyLimit else { break }
+                dispatchContainer.append(url)
             }
+            pendingUpdateRequest.subtract(dispatchContainer)
 
             for url in dispatchContainer {
                 currentlyInUpdate.insert(url)
@@ -106,8 +113,9 @@ extension RepositoryCenter {
                     let outcome = await Self.performUpdate(request) { units, absolute in
                         await self.advanceUpdate(of: url, by: units, to: absolute)
                     }
-                    // the heavy write, still off the main actor
-                    if let packages = outcome.packages {
+                    // the heavy write, still off the main actor; an update
+                    // that read nothing leaves the rows that are there
+                    if outcome.succeeded, let packages = outcome.packages {
                         db.replacePackages(of: url, with: packages)
                     }
                     await self.finishUpdate(outcome)
@@ -171,15 +179,23 @@ extension RepositoryCenter {
             if let description = builder.repositoryDescription {
                 printDescription = description
             }
-            if let paymentEndpoint = outcome.paymentEndpoint {
+            // a refresh with no network is no reason to forget where a
+            // repository takes payment
+            switch outcome.paymentEndpoint {
+            case let .found(paymentEndpoint):
                 builder.paymentInfo[.endpoint] = paymentEndpoint.absoluteString
-            } else {
+            case .absent:
                 builder.paymentInfo.removeValue(forKey: .endpoint)
+            case .unanswered:
+                break
             }
-            if let featured = outcome.featured {
+            switch outcome.featured {
+            case let .found(featured):
                 builder.attachment[.featured] = featured
-            } else {
+            case .absent:
                 builder.attachment.removeValue(forKey: .featured)
+            case .unanswered:
+                break
             }
         }
 
@@ -214,20 +230,19 @@ extension RepositoryCenter {
     }
 
     /// Every component's Packages index under one suffix, fetched at once
-    /// and read as one: a component that does not answer is left out, and
-    /// nil means none did.
+    /// and kept as served: a component that does not answer is left out.
     nonisolated static func downloadPackageIndexes(
         _ bases: [URL],
         suffix: String,
         networking: NetworkingConfiguration
-    ) async -> String? {
-        let parts = await withTaskGroup(of: String?.self, returning: [String].self) { group in
+    ) async -> [FetchedIndex] {
+        await withTaskGroup(of: FetchedIndex?.self, returning: [FetchedIndex].self) { group in
             for base in bases {
                 group.addTask {
                     await downloadUpdatePackage(withBaseUrl: base, suffix: suffix, networking: networking)
                 }
             }
-            var parts = [String]()
+            var parts = [FetchedIndex]()
             for await part in group {
                 if let part {
                     parts.append(part)
@@ -235,15 +250,54 @@ extension RepositoryCenter {
             }
             return parts
         }
+    }
+
+    /// The components' indexes read as one, in the components' order, or
+    /// nil when there is nothing to read or the suffix cannot be taken
+    /// whole: one index is not the file the Release lists, or one the
+    /// Release lists did not arrive or cannot be read. Another spelling then
+    /// gets its turn, rather than a catalogue short of a component or half
+    /// from an older publish. A component the Release does not list is one
+    /// the repository may never have had, and is left out as before.
+    /// - Parameter digests: from the Release this very update fetched, nil
+    ///   when it fetched none. Never a stored one, which every index would
+    ///   differ from the day the repository publishes.
+    nonisolated static func readPackageIndexes(
+        _ indexes: [FetchedIndex],
+        of bases: [URL],
+        suffix: String,
+        digests: IndexDigests?
+    ) -> String? {
+        var parts = [String]()
+        for base in bases {
+            let url = base.appendingPathExtension(suffix)
+            let index = indexes.first { $0.url == url }
+            if let index, digests?.verdict(of: index.data, at: url) == .differs {
+                aptLog(
+                    Self.self,
+                    "\(url.absoluteString) is not the file its Release lists, so it is not read",
+                    level: .error
+                )
+                return nil
+            }
+            if let index, let part = decodeUpdatePackage(index, suffix: suffix) {
+                parts.append(part)
+            } else if digests?.lists(url) == true {
+                aptLog(Self.self, "\(url.absoluteString) is in the Release and could not be had", level: .error)
+                return nil
+            }
+        }
         return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
     /// Every suffix of one architecture's indexes at once: the first that
-    /// compiles to a non-empty index, or nil when none does.
+    /// is what the Release lists and compiles to a non-empty index, or nil
+    /// when none does.
     private nonisolated static func probeSearchPaths(
         _ searchPaths: [String],
         of baseUrls: [URL],
         fromRepo: URL,
+        digests: IndexDigests?,
         networking: NetworkingConfiguration
     ) async -> SearchPathProbe? {
         await withTaskGroup(
@@ -252,10 +306,16 @@ extension RepositoryCenter {
         ) { group in
             for searchPath in searchPaths {
                 group.addTask {
-                    guard let body = await downloadPackageIndexes(
+                    let indexes = await downloadPackageIndexes(
                         baseUrls,
                         suffix: searchPath,
                         networking: networking
+                    )
+                    guard let body = readPackageIndexes(
+                        indexes,
+                        of: baseUrls,
+                        suffix: searchPath,
+                        digests: digests
                     )
                     else { return nil }
                     let packages = invokePackages(withContext: body, fromRepo: fromRepo)
@@ -321,7 +381,7 @@ extension RepositoryCenter {
             await progress(10, nil)
             return value
         }()
-        async let packageTask: String? = {
+        async let packageTask: [FetchedIndex] = {
             let value = await downloadPackageIndexes(
                 request.packageCandidates.first ?? [],
                 suffix: request.preferredSearchPath,
@@ -330,12 +390,12 @@ extension RepositoryCenter {
             await progress(10, nil)
             return value
         }()
-        async let paymentTask: URL? = {
+        async let paymentTask: Detected<URL> = {
             let value = await detectPaymentEndpoint(withUrl: request.url, networking: networking)
             await progress(10, nil)
-            return value.flatMap { URL(string: $0) }
+            return value
         }()
-        async let featuredTask: String? = {
+        async let featuredTask: Detected<String> = {
             let value = await detectFeaturedMetadata(withUrl: request.url, networking: networking)
             await progress(10, nil)
             return value
@@ -343,7 +403,7 @@ extension RepositoryCenter {
 
         outcome.avatar = await avatarTask
         let releaseStr = await releaseTask
-        let packageStr = await packageTask
+        let preferredIndexes = await packageTask
         outcome.paymentEndpoint = await paymentTask
         outcome.featured = await featuredTask
 
@@ -355,8 +415,35 @@ extension RepositoryCenter {
         if let release = releaseStr {
             outcome.release = try? DebianControl.parse(release)
         }
-        if let package = packageStr {
-            outcome.packages = invokePackages(withContext: package, fromRepo: request.url)
+        // A CDN can as well have the old Release beside new indexes. Held
+        // to that one every index would differ and the refresh fail, so a
+        // Release written before the one already read is not read at all.
+        if let release = outcome.release,
+           let written = IndexDigests.date(of: release),
+           let known = IndexDigests.date(of: request.storedRelease),
+           written < known
+        {
+            aptLog(Self.self, "update \(id) was served a Release older than the one it has", level: .error)
+            outcome.release = nil
+        }
+        // The index came down beside the Release, not after it, so it is
+        // held to the Release here. One that differs is dropped, and stage
+        // 3 asks for every spelling: a CDN that still has yesterday's
+        // `Packages.xz` has usually let go of yesterday's `Packages`.
+        let digests = outcome.release.map { IndexDigests(release: $0, releaseUrl: request.releaseUrl) }
+        let preferredIsStale = preferredIndexes.contains {
+            digests?.verdict(of: $0.data, at: $0.url) == .differs
+        }
+        if let package = readPackageIndexes(
+            preferredIndexes,
+            of: request.packageCandidates.first ?? [],
+            suffix: request.preferredSearchPath,
+            digests: digests
+        ) {
+            // An answer that compiles to nothing (a captive portal's page
+            // under HTTP 200) is no catalogue: nil, so nothing is replaced.
+            let packages = invokePackages(withContext: package, fromRepo: request.url)
+            outcome.packages = packages.isEmpty ? nil : packages
         }
         do {
             let compileInterval = Date().timeIntervalSince(compileStart)
@@ -387,13 +474,19 @@ extension RepositoryCenter {
                     request.availableSearchPath,
                     of: baseUrls,
                     fromRepo: request.url,
+                    digests: digests,
                     networking: networking
                 ) else { continue }
                 if baseUrls != request.packageCandidates.first {
                     aptLog(Self.self, "update \(id) moves to \(baseUrls.map(\.absoluteString))", level: .info)
                 }
                 outcome.packages = winner.packages
-                outcome.searchPath = winner.suffix
+                // a spelling that stood in for a stale one is not the one
+                // to remember: the preferred is back with the CDN's next
+                // fetch, and the stand-in may be the uncompressed index
+                if !(preferredIsStale && baseUrls == request.packageCandidates.first) {
+                    outcome.searchPath = winner.suffix
+                }
                 break
             }
         } else {

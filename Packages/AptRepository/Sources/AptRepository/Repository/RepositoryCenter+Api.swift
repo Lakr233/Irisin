@@ -177,6 +177,8 @@ public extension RepositoryCenter {
             aptLog(self, "repository \(url.absoluteString) was not found for metadata update")
             return
         }
+        // asked for again while it is being fetched: that fetch is the answer
+        guard !currentlyInUpdate.contains(url) else { return }
         pendingUpdateRequest.insert(url)
         dispatchUpdateOnCurrentCenter()
     }

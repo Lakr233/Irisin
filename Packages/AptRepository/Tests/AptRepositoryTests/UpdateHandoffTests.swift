@@ -1,0 +1,159 @@
+@testable import AptRepository
+import CryptoKit
+import Foundation
+import Testing
+
+/// One refresh against a stubbed server: what the update does with an index
+/// the Release disowns, a Release older than the one it has, and an answer
+/// that is no index at all.
+@Suite(.serialized) struct UpdateHandoffTests {
+    private static let current = Data("Package: a\nVersion: 2\nArchitecture: iphoneos-arm64\n".utf8)
+    private static let stale = Data("Package: a\nVersion: 1\nArchitecture: iphoneos-arm64\n".utf8)
+
+    private static func release(of index: Data, date: String) -> Data {
+        let digest = SHA256.hash(data: index).map { String(format: "%02x", $0) }.joined()
+        return Data("""
+        Origin: Example
+        Date: \(date)
+        SHA256:
+         \(digest) \(index.count) Packages
+         \(digest) \(index.count) Packages.xz
+
+        """.utf8)
+    }
+
+    private static let morning = "Sat, 19 Sep 2026 11:54:05 +0000"
+    private static let evening = "Sat, 19 Sep 2026 18:21:09 +0000"
+
+    private func update(
+        host: String,
+        serving files: [String: Data],
+        storedRelease: [String: String] = [:]
+    ) async -> RepositoryCenter.UpdateOutcome {
+        _ = TestEnvironment.root
+        StubServer.serve(files, on: host)
+        let url = URL(string: "https://\(host)")!
+        let request = RepositoryCenter.UpdateRequest(
+            url: url,
+            avatarUrls: [],
+            releaseUrl: url.appendingPathComponent("Release"),
+            packageCandidates: [[url.appendingPathComponent("Packages")]],
+            preferredSearchPath: "xz",
+            availableSearchPath: ["bz2", "", "xz", "gz"],
+            storedRelease: storedRelease,
+            networking: NetworkingConfiguration(headers: [:], timeout: 5, verboseLogging: false),
+            suiteUrl: url,
+            distribution: nil,
+            components: []
+        )
+        return await RepositoryCenter.performUpdate(request) { _, _ in }
+    }
+
+    /// apt.owngoal.dev on 2026-09-19: the Release and `Packages` of the
+    /// evening beside the morning's `Packages.xz`.
+    @Test func staleSpellingGivesWayAndIsStillTheOneRemembered() async {
+        let outcome = await update(host: "stale-xz.test", serving: [
+            "/Release": Self.release(of: Self.current, date: Self.evening),
+            "/Packages": Self.current,
+            "/Packages.xz": Self.stale,
+        ])
+        #expect(outcome.packages?.values.first?.latestVersion == "2")
+        #expect(outcome.searchPath == nil)
+    }
+
+    @Test func everySpellingStaleLeavesTheCatalogue() async {
+        let outcome = await update(host: "all-stale.test", serving: [
+            "/Release": Self.release(of: Self.current, date: Self.evening),
+            "/Packages": Self.stale,
+            "/Packages.xz": Self.stale,
+        ])
+        #expect(outcome.packages == nil)
+        #expect(!outcome.succeeded)
+    }
+
+    @Test func releaseOlderThanTheOneKnownJudgesNothing() async {
+        let outcome = await update(
+            host: "stale-release.test",
+            serving: [
+                "/Release": Self.release(of: Self.stale, date: Self.morning),
+                "/Packages.xz": Self.current,
+            ],
+            storedRelease: ["date": Self.evening]
+        )
+        #expect(outcome.release == nil)
+        #expect(outcome.packages?.values.first?.latestVersion == "2")
+        #expect(outcome.searchPath == "xz")
+    }
+
+    @Test func pageThatIsNoIndexReplacesNothing() async {
+        let page = Data("<html><body>Sign in to this network</body></html>".utf8)
+        let outcome = await update(host: "portal.test", serving: [
+            "/Release": page, "/Packages": page, "/Packages.xz": page, "/Packages.bz2": page, "/Packages.gz": page,
+            "/payment_endpoint": page, "/sileo-featured.json": page,
+        ])
+        #expect(outcome.packages == nil)
+        #expect(!outcome.succeeded)
+    }
+
+    @Test func serverThatDoesNotAnswerForgetsNothing() async {
+        let outcome = await update(host: "down.test", serving: [:])
+        guard case .absent = outcome.paymentEndpoint else {
+            Issue.record("a 404 for payment_endpoint is the repository saying it has none")
+            return
+        }
+        StubServer.fail(host: "offline.test")
+        let offline = await update(host: "offline.test", serving: [:])
+        guard case .unanswered = offline.paymentEndpoint, case .unanswered = offline.featured else {
+            Issue.record("a request that failed says nothing about what the repository has")
+            return
+        }
+    }
+}
+
+/// Answers `URLSession.shared` for the hosts it was given: a file, 404 for
+/// anything else, or no answer at all.
+final class StubServer: URLProtocol, @unchecked Sendable {
+    private static let lock = NSLock()
+    private nonisolated(unsafe) static var files = [String: [String: Data]]()
+    private nonisolated(unsafe) static var failing = Set<String>()
+    private nonisolated(unsafe) static var registered = false
+
+    static func serve(_ served: [String: Data], on host: String) {
+        lock.withLock {
+            // `fail(host:)` comes first for a host that is to stay silent
+            files[host] = served
+            if !registered {
+                registered = true
+                URLProtocol.registerClass(StubServer.self)
+            }
+        }
+    }
+
+    static func fail(host: String) {
+        lock.withLock { _ = failing.insert(host) }
+    }
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        guard let host = request.url?.host else { return false }
+        return lock.withLock { files[host] != nil || failing.contains(host) }
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        guard let url = request.url, let host = url.host else { return }
+        let (body, fails) = Self.lock.withLock { (Self.files[host]?[url.path], Self.failing.contains(host)) }
+        if fails {
+            client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+            return
+        }
+        let response = HTTPURLResponse(url: url, statusCode: body == nil ? 404 : 200, httpVersion: "HTTP/1.1", headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: body ?? Data())
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
