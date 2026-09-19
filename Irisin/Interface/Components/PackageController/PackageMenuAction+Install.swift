@@ -38,19 +38,17 @@ extension PackageMenuAction {
         }
         // before a purchase is checked: nobody pays for the record the
         // alert is about to talk them out of
-        guard let trimmedPackage = await recommended(inPlaceOf: selected, from: host) else { return }
-        // from here on the record going in, which may be a repository's
-        // where a file was opened
-        if trimmedPackage.localFileURL != nil {
-            await enqueue([.install(trimmedPackage)], from: host)
+        guard await keeps(selected, from: host) else { return }
+        if selected.localFileURL != nil {
+            await enqueue([.install(selected)], from: host)
             return
         }
 
-        guard trimmedPackage.isCommercial else {
-            await enqueue([.install(trimmedPackage)], from: host)
+        guard selected.isCommercial else {
+            await enqueue([.install(selected)], from: host)
             return
         }
-        guard let repoUrl = signedInStore(of: trimmedPackage, from: host) else { return }
+        guard let repoUrl = signedInStore(of: selected, from: host) else { return }
         let alert = progressAlert(
             title: "Checking Purchase…",
             message: "Communicating with the vendor…"
@@ -61,7 +59,7 @@ extension PackageMenuAction {
             host.present(alert, animated: true) { done.resume() }
         }
         // the requests time out on their own; nothing waits forever
-        let check = await checkPurchase(of: trimmedPackage, in: repoUrl)
+        let check = await checkPurchase(of: selected, in: repoUrl)
         // gone before the next sheet: the host cannot present while it is leaving
         await alert.dismissFinishing(animated: true)
         if case let .purchased(purchased) = check {
@@ -71,13 +69,13 @@ extension PackageMenuAction {
         }
     }
 
-    /// The record to queue for a request: the selected one, or the one the
-    /// user took in its place after a look at what else the repositories
-    /// offer under its identifier. One built for this system comes ahead of
-    /// one an adapter would rewrite, then a newer version of the same build;
-    /// taking a recommendation ends the questions, since it is the newest of
-    /// its kind. Nil when the user backed out.
-    static func recommended(inPlaceOf selected: Package, from host: UIViewController) async -> Package? {
+    /// Whether the request goes on with the selected record, after a look
+    /// at what else the repositories offer under its identifier. One built
+    /// for this system comes ahead of one an adapter would rewrite, then a
+    /// newer version of the same build. Taking a recommendation opens its
+    /// page and queues nothing: the request for it is made there, by the
+    /// user, with the package in front of them.
+    static func keeps(_ selected: Package, from host: UIViewController) async -> Bool {
         let center = PackageCenter.default
         let advice = PackageSelectionAdvice(
             selected: selected,
@@ -95,9 +93,11 @@ extension PackageMenuAction {
                 anywayTitle: anyway
             )
             switch choice {
-            case .recommended: return native
+            case .recommended:
+                host.present(next: PackageController(package: native))
+                return false
             case .anyway: break
-            case .cancel: return nil
+            case .cancel: return false
             }
         }
         // blocked updates are news the user asked not to hear
@@ -113,12 +113,14 @@ extension PackageMenuAction {
                 anywayTitle: anyway
             )
             switch choice {
-            case .recommended: return newer
+            case .recommended:
+                host.present(next: PackageController(package: newer))
+                return false
             case .anyway: break
-            case .cancel: return nil
+            case .cancel: return false
             }
         }
-        return selected
+        return true
     }
 
     /// The button that goes on as asked, named after the menu item that asked.
