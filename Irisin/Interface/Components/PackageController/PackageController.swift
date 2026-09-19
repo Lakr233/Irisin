@@ -139,7 +139,7 @@ class PackageController: UIViewController {
             // the depiction is Auto Layout throughout: its height is its own
             cell.host(depictionView)
         case .footer:
-            depictionFooter.attributedText = footerText()
+            depictionFooter.text = footerText()
             // The page ends well below its last line so the floating bar
             // never covers it.
             cell.host(
@@ -183,46 +183,15 @@ class PackageController: UIViewController {
         }
     }
 
-    private func footerText() -> NSAttributedString {
+    private func footerText() -> String {
         let environment = AptEnvironment.current
-        let device = environment.deviceArchitecture
-        let differs = !packageObject.supports(architecture: device)
-        let marked = NSMutableAttributedString()
-        for (index, architecture) in packageObject.architectures.enumerated() {
-            if index > 0 {
-                marked.append(NSAttributedString(string: ", "))
-            }
-            let runs = differs
-                ? ArchitectureDifference.runs(of: architecture, against: device)
-                : [.same(architecture)]
-            for run in runs {
-                switch run {
-                case let .same(text):
-                    marked.append(NSAttributedString(string: text))
-                case let .extra(text):
-                    marked.append(NSAttributedString(string: text, attributes: [
-                        .foregroundColor: UIColor.architectureMismatch,
-                        .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                    ]))
-                case let .missing(text):
-                    marked.append(NSAttributedString(string: text, attributes: [
-                        .foregroundColor: UIColor.architectureMismatch,
-                    ]))
-                }
-            }
-        }
-        // the sentence is the catalog's; the architectures go where it puts them
-        let placeholder = "\u{FFFC}"
-        let footer = NSMutableAttributedString(string: String(localized: "Architecture: \(placeholder)"))
-        footer.replaceCharacters(in: (footer.string as NSString).range(of: placeholder), with: marked)
+        let differs = !packageObject.supports(architecture: environment.deviceArchitecture)
+        var footer = String(localized: "Architecture: \(packageObject.architectures.joined(separator: ", "))")
         if differs, packageObject.supports(anyOf: environment.installableArchitectures) {
-            footer.append(NSAttributedString(string: "\n" + String(localized: "Installs in compatibility mode.")))
+            footer += "\n" + String(localized: "Installs in compatibility mode.")
         }
         if depictionIsPartial {
-            footer.insert(
-                NSAttributedString(string: String(localized: "Some of this package's content cannot be shown.") + "\n"),
-                at: 0
-            )
+            footer = String(localized: "Some of this package's content cannot be shown.") + "\n" + footer
         }
         return footer
     }
@@ -272,9 +241,7 @@ class PackageController: UIViewController {
 
     /// Closes the card under the depiction, in the style of the home page
     /// footer: the architecture the package was built for, under a notice
-    /// when the depiction is partial. One the device does not run is read
-    /// against the device's like a diff, in red: the letters it has too
-    /// many struck through, the ones it lacks put where they belong.
+    /// when the depiction is partial.
     let depictionFooter = UILabel().then {
         $0.font = .footnote
         $0.textColor = .secondaryLabel
