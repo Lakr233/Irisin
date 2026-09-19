@@ -154,7 +154,9 @@ extension PackageController {
         depictionTranslation = nil
         guard let (depiction, tintColor) = depictionOnShow else { return }
         guard translationMode != .original else {
-            if asked { fade(to: depiction, tintColor: tintColor) }
+            if asked {
+                fade(to: depiction, tintColor: tintColor)
+            }
             return
         }
         let texts = DepictionTranslation.texts(in: depiction)

@@ -42,13 +42,31 @@ nonisolated enum ArchitectureDifference {
         var here = 0, there = 0
         while here < package.count || there < device.count {
             if here < package.count, removed.contains(here) {
-                append(package[here], Run.extra) { if case let .extra(text) = $0 { text } else { nil } }
+                append(package[here], Run.extra) {
+                    if case let .extra(text) = $0 {
+                        text
+                    } else {
+                        nil
+                    }
+                }
                 here += 1
             } else if there < device.count, inserted.contains(there) {
-                append(device[there], Run.missing) { if case let .missing(text) = $0 { text } else { nil } }
+                append(device[there], Run.missing) {
+                    if case let .missing(text) = $0 {
+                        text
+                    } else {
+                        nil
+                    }
+                }
                 there += 1
             } else if here < package.count {
-                append(package[here], Run.same) { if case let .same(text) = $0 { text } else { nil } }
+                append(package[here], Run.same) {
+                    if case let .same(text) = $0 {
+                        text
+                    } else {
+                        nil
+                    }
+                }
                 here += 1
                 there += 1
             } else {

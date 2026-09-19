@@ -48,7 +48,9 @@ nonisolated enum SystemTranslator {
 
     /// Whether this system has the engine at all. Says nothing of whether
     /// it will answer: `verify` does.
-    static var isPresent: Bool { engine != nil }
+    static var isPresent: Bool {
+        engine != nil
+    }
 
     /// The languages the engine reads and the ones it writes, by identifier,
     /// nil when it does not answer.
@@ -76,7 +78,9 @@ nonisolated enum SystemTranslator {
             nil
         }
         guard let source = named ?? detected else { return nil }
-        if matches(source, target) >= 2 { return nil }
+        if matches(source, target) >= 2 {
+            return nil
+        }
         let candidates = pairs
             .map { (pair: $0, score: matches($0.source, source) * 4 + matches($0.target, target)) }
             .filter { matches($0.pair.source, source) > 0 && matches($0.pair.target, target) > 0 }
@@ -148,7 +152,9 @@ nonisolated enum SystemTranslator {
                     defer { done = true }
                     return !done
                 }
-                if first { continuation.resume(returning: value) }
+                if first {
+                    continuation.resume(returning: value)
+                }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(Int(patience.components.seconds))) {
                 finish(nil)
@@ -161,7 +167,9 @@ nonisolated enum SystemTranslator {
     /// answer. A rejected client is answered with nothing.
     private static func availablePairs() async -> [Pair]? {
         guard let engine else { return nil }
-        if let known = knownPairs.withLock({ $0 }) { return known }
+        if let known = knownPairs.withLock({ $0 }) {
+            return known
+        }
         let selector = NSSelectorFromString("availableLocalePairsForTask:completion:")
         guard let method = class_getClassMethod(engine.translator, selector) else { return nil }
         typealias Call = @convention(c) (AnyClass, Selector, Int, AnyObject) -> Void

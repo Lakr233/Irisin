@@ -1,6 +1,6 @@
+import CAptArchive
 import Foundation
 import IrisinProtocol
-import CAptArchive
 
 /// libarchive over the shapes this app reads: a compressed repository
 /// index, the `control` member of a `.deb`, and a `.deb`'s listing.

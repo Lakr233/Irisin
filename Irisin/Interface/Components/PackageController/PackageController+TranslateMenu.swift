@@ -51,7 +51,11 @@ extension PackageController {
                 chosen: target,
                 detects: false,
                 list: \.targets
-            ) { if let locale = $0 { AutomaticTranslation.target = locale } },
+            ) {
+                if let locale = $0 {
+                    AutomaticTranslation.target = locale
+                }
+            },
         ]
         return UIMenu(
             title: String(localized: "Translate"),

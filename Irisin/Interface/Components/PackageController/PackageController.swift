@@ -106,7 +106,9 @@ class PackageController: UIViewController {
         let differs = !packageObject.supports(architecture: device)
         let marked = NSMutableAttributedString()
         for (index, architecture) in packageObject.architectures.enumerated() {
-            if index > 0 { marked.append(NSAttributedString(string: ", ")) }
+            if index > 0 {
+                marked.append(NSAttributedString(string: ", "))
+            }
             let runs = differs
                 ? ArchitectureDifference.runs(of: architecture, against: device)
                 : [.same(architecture)]

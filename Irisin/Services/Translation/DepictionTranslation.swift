@@ -23,7 +23,9 @@ nonisolated enum DepictionTranslation {
         var seen = Set<String>()
         var texts: [String] = []
         _ = rewrite(depiction) { text in
-            if seen.insert(text).inserted { texts.append(text) }
+            if seen.insert(text).inserted {
+                texts.append(text)
+            }
             return text
         }
         return texts
@@ -76,8 +78,10 @@ nonisolated enum DepictionTranslation {
 
     private static func proseKeys(of view: [String: Any]) -> [String] {
         // a tab is a stack like any other, told apart by having a name
-        if view["tabname"] is String { return ["tabname"] }
-        let keys: [String] = switch view["class"] as? String {
+        if view["tabname"] is String {
+            return ["tabname"]
+        }
+        return switch view["class"] as? String {
         case "DepictionMarkdownView":
             (view["useRawFormat"] as? Bool) == true ? [] : ["markdown"]
         case "DepictionReviewView":
@@ -89,7 +93,6 @@ nonisolated enum DepictionTranslation {
         default:
             []
         }
-        return keys
     }
 
     // MARK: - The text
@@ -101,23 +104,33 @@ nonisolated enum DepictionTranslation {
     }
 
     /// Block markers a line opens with: heading, list item, quote.
-    private static var lineMarker: Regex<Substring> { #/^(?:\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?))+/# }
+    private static var lineMarker: Regex<Substring> {
+        #/^(?:\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?))+/#
+    }
 
     /// What must come back exactly as written: code spans, a link's or an
     /// image's target, html tags and bare addresses.
-    private static var heldBack: Regex<Substring> { #/`[^`]+`|!?\[|\]\([^)]*\)|\]|<[^>]+>|https?:\/\/\S+/# }
+    private static var heldBack: Regex<Substring> {
+        #/`[^`]+`|!?\[|\]\([^)]*\)|\]|<[^>]+>|https?:\/\/\S+/#
+    }
 
     /// Emphasis around a run of text. An engine moves the markers apart from
     /// their words, where they stop being emphasis and print as asterisks,
     /// so a translated line gives its emphasis up.
-    private static var emphasis: Regex<(Substring, Substring, Substring)> { #/(\*\*\*|\*\*|\*|__|~~)(\S(?:.*?\S)?)\1/# }
+    private static var emphasis: Regex<(Substring, Substring, Substring)> {
+        #/(\*\*\*|\*\*|\*|__|~~)(\S(?:.*?\S)?)\1/#
+    }
 
     static func rewrite(markdown: String, comparing: Bool = false, _ transform: (String) -> String) -> String {
         var fence: Substring?
         return markdown.components(separatedBy: "\n").map { line in
             let opening = line.drop(while: \.isWhitespace).prefix(3)
             if opening == "```" || opening == "~~~" {
-                if fence == nil { fence = opening } else if fence == opening { fence = nil }
+                if fence == nil {
+                    fence = opening
+                } else if fence == opening {
+                    fence = nil
+                }
                 return line
             }
             guard fence == nil else { return line }

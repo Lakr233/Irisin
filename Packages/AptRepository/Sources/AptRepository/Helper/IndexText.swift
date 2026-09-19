@@ -11,7 +11,9 @@ import Foundation
 /// is read as whichever of the two makes words of it.
 enum IndexText {
     static func decode(_ data: Data) -> String {
-        if let text = String(data: data, encoding: .utf8) { return text }
+        if let text = String(data: data, encoding: .utf8) {
+            return text
+        }
         return data
             .split(separator: 0x0A, omittingEmptySubsequences: false)
             .map { line in String(data: Data(line), encoding: .utf8) ?? legacy(Data(line)) }
