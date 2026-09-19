@@ -136,15 +136,12 @@ class RepoAddViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "action")
         tableView.keyboardDismissMode = .onDrag
         tableView.dataSource = dataSource
+        tableView.register(RepoAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "candidates")
+        // the offered sources have a header view of their own, and a title
+        // given here as well would be drawn over it
         dataSource.headerTitle = { section in
-            switch section {
-            case .pending: String(localized: "Repository URL")
-            case .paste, .candidates(.clipboard): String(localized: "Clipboard")
-            case .candidates(.link): String(localized: "From Link")
-            case .candidates(.file): String(localized: "From File")
-            case .history: String(localized: "History")
-            case .advanced: nil
-            }
+            if case .candidates = section { return nil }
+            return Self.headerTitle(of: section)
         }
         dataSource.footerTitle = { section in
             switch section {
@@ -158,6 +155,17 @@ class RepoAddViewController: UITableViewController {
         loadHistory()
         applySnapshot(animatingDifferences: false)
         inputChanged(initialInput ?? "")
+    }
+
+    private static func headerTitle(of section: Section) -> String? {
+        switch section {
+        case .pending: String(localized: "Repository URL")
+        case .paste, .candidates(.clipboard): String(localized: "Clipboard")
+        case .candidates(.link): String(localized: "From Link")
+        case .candidates(.file): String(localized: "From File")
+        case .history: String(localized: "History")
+        case .advanced: nil
+        }
     }
 
     // MARK: - CANDIDATES
@@ -248,6 +256,27 @@ class RepoAddViewController: UITableViewController {
         added.insert(line)
         registered.insert(source.url)
         reconfigure(line)
+        updateCandidatesHeader()
+    }
+
+    /// Add All, in the header over the offered sources: every one of them
+    /// not registered yet.
+    private func addAll() {
+        for line in candidates {
+            add(line)
+        }
+    }
+
+    private var offersAddAll: Bool {
+        candidates.contains { !isRegistered($0) }
+    }
+
+    /// Add All leaves with the last source it could add.
+    private func updateCandidatesHeader() {
+        guard let index = dataSource.snapshot().indexOfSection(.candidates(candidateOrigin)),
+              let header = tableView.headerView(forSection: index) as? RepoAddSectionHeaderView
+        else { return }
+        header.showsButton = offersAddAll
     }
 
     /// Whatever the clipboard holds becomes a section to pick from, and the
@@ -385,6 +414,19 @@ class RepoAddViewController: UITableViewController {
         case .advanced: openAdvanced()
         default: break
         }
+    }
+
+    /// The offered sources get a header with Add All; every other section
+    /// keeps the data source's title.
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard let identifier = dataSource.sectionIdentifier(for: section),
+              case .candidates = identifier,
+              let header = tableView
+              .dequeueReusableHeaderFooterView(withIdentifier: "candidates") as? RepoAddSectionHeaderView
+        else { return nil }
+        header.configure(title: Self.headerTitle(of: identifier) ?? "", showsButton: offersAddAll)
+        header.onAddAll = { [weak self] in self?.addAll() }
+        return header
     }
 
     override func tableView(

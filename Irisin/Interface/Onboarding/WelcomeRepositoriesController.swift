@@ -125,6 +125,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         tableView.backgroundColor = .groupedBackground
         tableView.register(RepoAddCandidateCell.self, forCellReuseIdentifier: "candidate")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "action")
+        tableView.register(RepoAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "recommended")
         tableView.dataSource = dataSource
         tableView.delegate = self
 
@@ -156,6 +157,28 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         RepositoryCenter.default.registerRepository(source)
         registered.insert(source.url)
         reconfigure(line)
+        updateRecommendedHeader()
+    }
+
+    /// Add All, in the header over the list: every source not registered yet.
+    private func addAll() {
+        for line in lines {
+            add(line)
+        }
+    }
+
+    private var offersAddAll: Bool {
+        lines.contains { line in
+            RepositorySource(line: line).map { !registered.contains($0.url) } ?? false
+        }
+    }
+
+    /// Add All leaves with the last source it could add.
+    private func updateRecommendedHeader() {
+        guard let index = dataSource.snapshot().indexOfSection(.recommended),
+              let header = tableView.headerView(forSection: index) as? RepoAddSectionHeaderView
+        else { return }
+        header.showsButton = offersAddAll
     }
 
     private func reconfigure(_ line: String) {
@@ -172,14 +195,18 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         present(RepoAddViewController.sheet(), animated: true)
     }
 
-    func tableView(_: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         switch dataSource.sectionIdentifier(for: section) {
         case .notice:
-            Self.text(.groupedHeader(), "A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and we cannot verify that its packages are safe.")
+            return Self.text(.groupedHeader(), "A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and we cannot verify that its packages are safe.")
         case .recommended:
-            Self.text(.groupedHeader(), "Recommended Repositories")
+            let header = tableView
+                .dequeueReusableHeaderFooterView(withIdentifier: "recommended") as? RepoAddSectionHeaderView
+            header?.configure(title: String(localized: "Recommended Repositories"), showsButton: offersAddAll)
+            header?.onAddAll = { [weak self] in self?.addAll() }
+            return header
         default:
-            nil
+            return nil
         }
     }
 
