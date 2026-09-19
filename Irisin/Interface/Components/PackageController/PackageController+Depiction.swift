@@ -6,6 +6,7 @@
 //  Copyright © 2021 Lakr Aream. All rights reserved.
 //
 
+import AlertController
 import AptRepository
 import Dog
 import PackageDepiction
@@ -134,6 +135,7 @@ extension PackageController {
             }
             depictionView = view
             depictionOnShow = (depiction, color)
+            translationModeOnShow = .original
             showTranslation(asked: false)
         }
     }
@@ -144,32 +146,43 @@ extension PackageController {
     /// rendered from the answer fades in over it.
     ///
     /// `asked` is the user choosing from the Translate menu: every outcome
-    /// is said, and one that leaves the page as written puts the checkmark
-    /// back on Original. Without it this is Auto Translate, which leaves
+    /// is said, and one that leaves the page as it was puts the checkmark
+    /// back where it stood. Without it this is Auto Translate, which leaves
     /// text already in the user's language alone without a word and says a
     /// failure once per launch (it is logged every time): a device offline
     /// with no language downloaded would otherwise alert on every page.
+    ///
+    /// With Auto Translate on, the line under the banner says how it is
+    /// going, a failure included. With it off the page has no such line,
+    /// and a translation asked for from the menu waits behind a progress
+    /// alert that can cancel it.
     func showTranslation(asked: Bool) {
         depictionTranslation?.cancel()
         depictionTranslation = nil
         guard let (depiction, tintColor) = depictionOnShow else { return }
         guard translationMode != .original else {
+            showTranslationStatus(.none)
             if asked {
+                translationModeOnShow = .original
                 fade(to: depiction, tintColor: tintColor)
             }
             return
         }
         let texts = DepictionTranslation.texts(in: depiction)
-        guard !texts.isEmpty else { return }
+        guard !texts.isEmpty else {
+            return showTranslationStatus(.none)
+        }
         let package = "\(packageObject.identity) \(packageObject.latestVersion ?? "")"
         let source = translationSource
         let target = AutomaticTranslation.target
         let pair = "\(source?.identifier ?? "auto")>\(target.identifier)"
-        let comparing = translationMode == .compared
+        let mode = translationMode
 
         func apply(_ translations: [String: String]) {
+            translationModeOnShow = mode
+            showTranslationStatus(.translated)
             fade(
-                to: DepictionTranslation.replacing(depiction, with: translations, comparing: comparing),
+                to: DepictionTranslation.replacing(depiction, with: translations, comparing: mode == .compared),
                 tintColor: tintColor
             )
         }
@@ -177,13 +190,38 @@ extension PackageController {
             return apply(known)
         }
 
+        let alert = asked && !AutomaticTranslation.isEnabled ? translationProgressAlert() : nil
+        showTranslationStatus(.translating)
         depictionTranslation = Task { [weak self] in
+            // on screen before the answer: a quick one would dismiss it
+            // while it is still coming in, which UIKit ignores
+            if let alert, let self {
+                await withCheckedContinuation { done in
+                    self.present(alert, animated: true) { done.resume() }
+                }
+            }
+            let outcome: Result<[String]?, Error>
             do {
-                let translated = try await SystemTranslator.translate(texts, from: source, to: target)
-                guard !Task.isCancelled, let self else { return }
+                outcome = try await .success(SystemTranslator.translate(texts, from: source, to: target))
+            } catch {
+                outcome = .failure(error)
+            }
+            // Cancel took the alert down itself; a page that moved on has
+            // said what it shows now, and only the alert is left to go
+            guard !Task.isCancelled, let self else {
+                if let alert, !alert.isBeingDismissed {
+                    await alert.dismissFinishing(animated: true)
+                }
+                return
+            }
+            // gone before a notice: the page cannot present while it is leaving
+            await alert?.dismissFinishing(animated: true)
+            switch outcome {
+            case let .success(translated):
                 // an engine unsure of the language hands the text back as it was
                 guard let translated, translated != texts else {
-                    translationMode = .original
+                    translationMode = translationModeOnShow
+                    showTranslationStatus(translationModeOnShow == .original ? .none : .translated)
                     if asked {
                         presentNotice(
                             title: "Nothing to Translate",
@@ -195,12 +233,12 @@ extension PackageController {
                 let translations = Dictionary(zip(texts, translated)) { first, _ in first }
                 TranslationCache.store(translations, of: package, pair: pair)
                 apply(translations)
-            } catch is CancellationError {
+            case .failure(is CancellationError):
                 return
-            } catch {
+            case let .failure(error):
                 Dog.shared.join("Translation", "could not translate the depiction of \(package): \(error)", level: .error)
-                guard let self, !Task.isCancelled else { return }
-                translationMode = .original
+                translationMode = translationModeOnShow
+                showTranslationStatus(.failed)
                 guard asked || !AutomaticTranslation.failureWasShown,
                       viewIfLoaded?.window != nil, presentedViewController == nil
                 else {
@@ -209,6 +247,43 @@ extension PackageController {
                 AutomaticTranslation.failureWasShown = true
                 presentNotice(title: "Unable to Translate", message: AutomaticTranslation.describe(error))
             }
+        }
+    }
+
+    /// The alert a translation asked for from the menu waits behind while
+    /// Auto Translate is off. Cancel leaves the page and its checkmark as
+    /// they were.
+    private func translationProgressAlert() -> AlertProgressIndicatorViewController {
+        let alert = progressAlert(
+            title: "Translating…",
+            message: "The system is translating this page."
+        )
+        alert.progressContext.addAction(title: "Cancel") { [weak self, weak alert] in
+            self?.depictionTranslation?.cancel()
+            self?.depictionTranslation = nil
+            if let self {
+                translationMode = translationModeOnShow
+            }
+            alert?.progressContext.dispose()
+        }
+        return alert
+    }
+
+    /// What the line under the banner says. It is Auto Translate's: with the
+    /// setting off it stays closed whatever happens.
+    private func showTranslationStatus(_ status: TranslationStatusView.Status) {
+        let status = AutomaticTranslation.isEnabled ? status : .none
+        guard translationStatusView.status != status else { return }
+        translationStatusView.status = status
+        guard viewIfLoaded?.window != nil else { return }
+        UIView.animate(
+            withDuration: 0.5,
+            delay: 0,
+            usingSpringWithDamping: 1,
+            initialSpringVelocity: 0.8,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            self.card.layoutIfNeeded()
         }
     }
 

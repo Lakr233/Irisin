@@ -82,7 +82,7 @@ class PackageController: UIViewController {
             card.addSubview(depictionView)
             // the depiction is Auto Layout throughout: its height is its own
             depictionView.snp.makeConstraints { x in
-                x.top.equalTo(self.bannerPackageView.snp.bottom)
+                x.top.equalTo(translationStatusView.snp.bottom)
                 x.left.right.equalToSuperview()
             }
             depictionFooter.attributedText = footerText()
@@ -151,18 +151,26 @@ class PackageController: UIViewController {
         packageObject = package
         bannerPackageView.removeFromSuperview()
         bannerPackageView = PackageBannerView(package: package)
+        placeBanner()
+        navigationItem.rightBarButtonItem?.menu = bannerPackageView.actionMenu
+        bannerArtwork.write(nameOf: bannerPackageView.package)
+        downloadDepictionIfAvailable()
+    }
+
+    /// The banner at the head of the card and, under it, the line that says
+    /// how the translation is going. The banner is made again for another
+    /// version; the line is the page's own and only follows it.
+    private func placeBanner() {
         card.addSubview(bannerPackageView)
         bannerPackageView.snp.makeConstraints { x in
             x.top.leading.trailing.equalToSuperview()
             x.height.equalTo(80)
         }
-        navigationItem.rightBarButtonItem?.menu = bannerPackageView.actionMenu
-        bannerArtwork.write(nameOf: bannerPackageView.package)
-        depictionView.snp.remakeConstraints { x in
-            x.top.equalTo(self.bannerPackageView.snp.bottom)
-            x.left.right.equalToSuperview()
+        card.addSubview(translationStatusView)
+        translationStatusView.snp.remakeConstraints { x in
+            x.top.equalTo(bannerPackageView.snp.bottom)
+            x.leading.trailing.equalToSuperview()
         }
-        downloadDepictionIfAvailable()
     }
 
     /// Whether the depiction on show named views this build could not build.
@@ -180,8 +188,16 @@ class PackageController: UIViewController {
     /// where Auto Translate puts it and is this page's alone after that.
     var translationMode: TranslationMode = AutomaticTranslation.isEnabled ? .translated : .original
 
+    /// How the depiction on show reads, which the checkmark goes back to
+    /// when a translation is cancelled or fails.
+    var translationModeOnShow: TranslationMode = .original
+
     /// The language the page is read from; nil lets the engine tell.
     var translationSource: Locale?
+
+    /// Says how Auto Translate is going, between the banner and the
+    /// depiction (`showTranslationStatus`).
+    let translationStatusView = TranslationStatusView()
 
     /// Closes the card under the depiction, in the style of the home page
     /// footer: the architecture the package was built for, under a notice
@@ -232,7 +248,7 @@ class PackageController: UIViewController {
         container.addSubview(bannerBackdrop)
         container.addSubview(bannerArtwork)
         container.addSubview(card)
-        card.addSubview(bannerPackageView)
+        placeBanner()
         bannerArtwork.write(nameOf: bannerPackageView.package)
 
         let content = container.contentLayoutGuide
@@ -250,10 +266,6 @@ class PackageController: UIViewController {
             x.top.equalTo(content).offset(-1000)
             x.leading.trailing.equalTo(content)
             x.bottom.equalTo(card.snp.top)
-        }
-        bannerPackageView.snp.makeConstraints { x in
-            x.top.leading.trailing.equalToSuperview()
-            x.height.equalTo(80)
         }
 
         bannerArtwork.imageView.publisher(for: \.image)

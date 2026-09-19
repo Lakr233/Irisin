@@ -171,7 +171,12 @@ end.
   Compared (the translation under each piece), checked, then the source
   (detected unless named, the page's alone) and target language (kept)
   from the engine's own list; what is chosen there is always answered,
-  alert included. `TranslationCache` holds the answers of the fifty
+  alert included. With Auto Translate on, a line under the banner
+  (`TranslationStatusView`, the page's own, outside the depiction, a note
+  and never a control) says Translating…, then that the page is
+  translated or could not be; with it off there is no line, and a
+  translation asked for from the menu waits behind a progress alert with
+  Cancel. `TranslationCache` holds the answers of the fifty
   packages read last, in memory only.
 - **No install prefix is written in Swift.** The daemon and the helper derive
   it from their own `proc_pidpath` (`ProcessPath.installRoot`); the app reads
