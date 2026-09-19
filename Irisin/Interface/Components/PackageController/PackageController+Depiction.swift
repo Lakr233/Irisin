@@ -16,6 +16,7 @@ extension PackageController {
     /// what dpkg already told us. Every package has a page; a repository that
     /// supplied no `SileoDepiction:` only means this app writes it instead.
     func localDepictionJSON() -> [String: Any] {
+        let package = describedPackage
         var targetJsonData: [String: Any] = [:]
         targetJsonData["minVersion"] = "0.1"
         targetJsonData["class"] = "DepictionTabView"
@@ -24,7 +25,7 @@ extension PackageController {
                                       "class": "DepictionStackView"]
         var tabViewsArray: [[String: Any]] = []
 
-        if let descMarkDown = packageObject.latestMetadata?["description"] {
+        if let descMarkDown = package.latestMetadata?["description"] {
             var newmd: [String: Any] = [:]
             newmd["class"] = "DepictionMarkdownView"
             newmd["useSpacing"] = "true"
@@ -40,7 +41,7 @@ extension PackageController {
             (String(localized: "Maintainer"), "maintainer"),
         ] {
             var row: [String: Any] = ["title": title, "class": "DepictionTableTextView"]
-            var field = packageObject.latestMetadata?[key] ?? String(localized: "Unknown")
+            var field = package.latestMetadata?[key] ?? String(localized: "Unknown")
             if key == "section" {
                 field = field.sectionDisplayName
             }
@@ -85,7 +86,7 @@ extension PackageController {
     /// read, land in the same place: the json written locally. The difference
     /// between the two is a line in the log, not a different page.
     func downloadDepictionIfAvailable() {
-        let package = packageObject
+        let package = describedPackage
         Task { [weak self] in
             guard let self else { return }
 

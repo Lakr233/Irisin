@@ -155,6 +155,25 @@ final class AptDatabaseTests: XCTestCase {
         XCTAssertTrue(db.installOrigins().isEmpty)
     }
 
+    func testADpkgRowIsDescribedByItsOrigin() {
+        let installed = package("test.described", "1", repo: nil)
+        let remote = package(installed.identity, "1", repo: Self.repoA, ["icon": "https://example.com/icon.png"])
+        db.replaceInstalled([installed.identity: installed])
+        XCTAssertEqual(index.obtainDescription(of: installed), installed)
+
+        db.replaceInstalled([installed.identity: installed], installedFrom: [remote])
+        XCTAssertEqual(index.obtainDescription(of: installed), remote)
+        XCTAssertEqual(index.obtainInstallOrigins(), [installed.identity: remote])
+        // a repository's package is its own description, whatever is installed
+        let other = package(installed.identity, "2", repo: Self.repoB)
+        XCTAssertEqual(index.obtainDescription(of: other), other)
+
+        // dpkg moved on without us: the origin is gone and the row stands alone
+        let newer = package(installed.identity, "2", repo: nil)
+        db.replaceInstalled([newer.identity: newer])
+        XCTAssertEqual(index.obtainDescription(of: newer), newer)
+    }
+
     func testRefreshReplacesOnlyThatRepository() {
         seed()
         db.replacePackages(of: Self.repoB, with: [

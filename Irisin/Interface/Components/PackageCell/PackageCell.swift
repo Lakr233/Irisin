@@ -63,6 +63,8 @@ class PackageCell: UIView {
     /// The package the row is drawn for, and with that what decides whether
     /// a `loadValue` has anything to draw: nil once the row is reused.
     private(set) var represent: Package?
+    /// what `represent` was last drawn from: itself, or its install origin
+    private var described: Package?
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -158,6 +160,7 @@ class PackageCell: UIView {
     /// is the next package's, its icon least of all.
     func prepareForReuse() {
         represent = nil
+        described = nil
         overrideIcon = nil
         avatar.showIcon(nil)
         clearText()
@@ -194,12 +197,18 @@ class PackageCell: UIView {
     /// reload, and a `Package` is equal only when all of it is: the row that
     /// already shows this one has nothing to redraw but the badge, which is
     /// the one thing here that lives outside the package.
-    func loadValue(package: Package) {
-        guard package != represent else {
+    ///
+    /// A dpkg row is drawn as its install origin describes it: the icon and
+    /// the name are the repository's to give, and the control file rarely
+    /// has either. `represent` stays the row the list handed over.
+    func loadValue(package row: Package) {
+        let package = PackageCenter.default.obtainDescription(of: row)
+        guard row != represent || package != described else {
             updateIndicator()
             return
         }
-        represent = package
+        represent = row
+        described = package
         clearText()
 
         avatar.showIcon(of: package)

@@ -107,6 +107,9 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
     var dataSource: [InstalledData] = []
     /// Installed packages with a candidate. Answering this per row costs two
     /// index lookups, so the whole set is refreshed on a reload and read from.
+    /// The install origins by identity, as of the last reload: the rows are
+    /// dpkg's, and they sort and search by the name the origin gives them.
+    var origins: [String: Package] = [:]
     var identitiesWithUpdate: Set<String> = []
     var updateFound: Bool {
         !identitiesWithUpdate.isEmpty

@@ -120,6 +120,22 @@ public struct PackageIndex: Sendable {
         db.installOrigin(identity: identity)
     }
 
+    /// Every install origin by identity, for a list that sorts and searches
+    /// its installed rows by what they show.
+    public func obtainInstallOrigins() -> [String: Package] {
+        db.installOriginPackages()
+    }
+
+    /// The package a row or a page describes `package` with. dpkg's record
+    /// is the control file and rarely names an icon or a depiction; the
+    /// origin is the repository's record of that same version and does. Only
+    /// a dpkg row is described by another: a repository's package or a
+    /// `.deb` on disk is its own description.
+    public func obtainDescription(of package: Package) -> Package {
+        guard package.repoRef == nil, package.localFileURL == nil else { return package }
+        return obtainInstallOrigin(of: package.identity) ?? package
+    }
+
     /// The updates on offer for an installed package: a newer version from
     /// the repository it was installed from, and from nowhere else. An
     /// identity with no origin (another package manager installed it, or

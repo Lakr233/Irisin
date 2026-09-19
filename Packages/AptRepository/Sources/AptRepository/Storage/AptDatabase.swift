@@ -314,6 +314,17 @@ final class AptDatabase: @unchecked Sendable {
         }
     }
 
+    /// Every origin whole, by identity.
+    func installOriginPackages() -> [String: Package] {
+        read([:]) {
+            let rows: [OriginRow] = try database.getObjects(
+                on: OriginRow.Properties.all,
+                fromTable: Table.installOrigin
+            )
+            return Dictionary(uniqueKeysWithValues: rows.map { ($0.identity, $0.package) })
+        }
+    }
+
     /// The repository package an identity was installed from, or nil when
     /// this app did not install what dpkg reports.
     func installOrigin(identity: String) -> Package? {

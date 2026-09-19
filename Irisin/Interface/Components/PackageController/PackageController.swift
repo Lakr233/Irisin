@@ -134,7 +134,7 @@ class PackageController: UIViewController {
         view.backgroundColor = .plainBackground
 
         bannerPackageView = PackageBannerView(package: packageObject)
-        title = PackageCenter.default.name(of: packageObject)
+        title = PackageCenter.default.name(of: describedPackage)
         navigationItem.largeTitleDisplayMode = .never
         // a page for a repository the user just deleted must not stay up
         // offering an install from a catalogue that is gone
@@ -197,6 +197,13 @@ class PackageController: UIViewController {
     /// repository or a `.deb` on disk.
     private var showsInstalledRow: Bool {
         packageObject.repoRef == nil && packageObject.localFileURL == nil
+    }
+
+    /// What the title and the depiction are made from: a dpkg row is
+    /// described by its install origin, the repository's record of the same
+    /// version, which names the depiction and the icon dpkg's does not.
+    var describedPackage: Package {
+        PackageCenter.default.obtainDescription(of: packageObject)
     }
 
     /// Refresh installed status after a transaction. An explicitly opened

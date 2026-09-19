@@ -13,6 +13,7 @@ extension InstalledController {
     /// Update datasource in this routine
     /// - Parameter withSearchText: search controller passed text
     func updateSource(withSearchText: String? = nil) {
+        origins = PackageCenter.default.obtainInstallOrigins()
         var read = PackageCenter
             .default
             .obtainInstalledPackageList()
@@ -104,15 +105,16 @@ extension InstalledController {
         let key = key.lowercased()
         result = result
             .filter {
-                let name = PackageCenter.default.name(of: $0).lowercased()
-                let describe = PackageCenter.default.description(of: $0).lowercased()
+                let shown = origins[$0.identity] ?? $0
+                let name = PackageCenter.default.name(of: shown).lowercased()
+                let describe = PackageCenter.default.description(of: shown).lowercased()
                 return name.contains(key) || describe.contains(key)
             }
     }
 
     func compareName(a: Package, b: Package) -> Bool {
-        PackageCenter.default.name(of: a).lowercased()
+        PackageCenter.default.name(of: origins[a.identity] ?? a).lowercased()
             <
-            PackageCenter.default.name(of: b).lowercased()
+            PackageCenter.default.name(of: origins[b.identity] ?? b).lowercased()
     }
 }

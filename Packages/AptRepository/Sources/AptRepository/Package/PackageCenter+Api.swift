@@ -31,6 +31,17 @@ public extension PackageCenter {
         index.obtainInstallOrigin(of: identity)
     }
 
+    /// every install origin by identity
+    func obtainInstallOrigins() -> [String: Package] {
+        index.obtainInstallOrigins()
+    }
+
+    /// The package a row or a page describes `package` with: the install
+    /// origin of a dpkg row, the package itself otherwise.
+    func obtainDescription(of package: Package) -> Package {
+        index.obtainDescription(of: package)
+    }
+
     // MARK: - QUERIES
 
     // Each of these is the same lookup on `index`; the value is public for
