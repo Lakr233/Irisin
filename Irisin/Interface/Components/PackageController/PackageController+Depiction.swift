@@ -133,6 +133,58 @@ extension PackageController {
                 return
             }
             depictionView = view
+            translate(depiction, tintColor: color)
+        }
+    }
+
+    /// With Auto Translate on, the page shows as its author wrote it
+    /// and its prose is sent to the system's translator; the same depiction
+    /// rendered from the answer then fades in over it. Text already in the
+    /// user's language is left alone without a word. A failure is said once
+    /// per launch and logged every time: a device that is offline with no
+    /// language downloaded would otherwise answer every page with an alert.
+    private func translate(_ depiction: [String: Any], tintColor: UIColor) {
+        depictionTranslation?.cancel()
+        depictionTranslation = nil
+        guard AutomaticTranslation.isEnabled else { return }
+        let texts = DepictionTranslation.texts(in: depiction)
+        guard !texts.isEmpty else { return }
+        let identity = packageObject.identity
+
+        depictionTranslation = Task { [weak self] in
+            do {
+                // an engine unsure of the language hands the text back as it was
+                guard let translated = try await SystemTranslator.translate(texts),
+                      translated != texts,
+                      !Task.isCancelled,
+                      let self
+                else {
+                    return
+                }
+                let answer = DepictionTranslation.replacing(
+                    depiction,
+                    with: Dictionary(zip(texts, translated)) { first, _ in first }
+                )
+                guard let view = render(answer, tintColor: tintColor) else { return }
+                UIView.transition(
+                    with: card,
+                    duration: 0.35,
+                    options: [.transitionCrossDissolve, .allowUserInteraction]
+                ) {
+                    self.depictionView = view
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                Dog.shared.join("Translation", "could not translate the depiction of \(identity): \(error)", level: .error)
+                guard let self, !Task.isCancelled, !AutomaticTranslation.failureWasShown,
+                      viewIfLoaded?.window != nil, presentedViewController == nil
+                else {
+                    return
+                }
+                AutomaticTranslation.failureWasShown = true
+                presentNotice(title: "Unable to Translate", message: AutomaticTranslation.describe(error))
+            }
         }
     }
 

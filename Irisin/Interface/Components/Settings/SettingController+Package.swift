@@ -10,12 +10,81 @@ import AptRepository
 import UIKit
 
 extension SettingController {
+    /// How packages are shown and handled.
     func packageItems() -> [SettingItem] {
+        [
+            SettingItem(
+                id: "package.translate",
+                icon: "character.bubble",
+                title: String(localized: "Auto Translate"),
+                kind: .toggle,
+                isOn: { AutomaticTranslation.isEnabled },
+                setOn: { [weak self] isOn in
+                    guard isOn else {
+                        AutomaticTranslation.isEnabled = false
+                        return
+                    }
+                    // on only once the device has shown it can: the switch
+                    // goes back until the translator has answered
+                    Task { [weak self] in
+                        if let failure = await SystemTranslator.verify() {
+                            self?.presentNotice(
+                                title: "Unable to Translate",
+                                message: AutomaticTranslation.describe(failure)
+                            )
+                        } else {
+                            AutomaticTranslation.isEnabled = true
+                            AutomaticTranslation.failureWasShown = false
+                        }
+                        self?.dispatchValueUpdate()
+                    }
+                    self?.dispatchValueUpdate()
+                }
+            ),
+            SettingItem(
+                id: "package.blocked",
+                icon: "hand.raised.fill",
+                title: String(localized: "Blocked Updates"),
+                kind: .disclosure,
+                action: { [weak self] in
+                    self?.present(next: BlockUpdateController())
+                }
+            ),
+            SettingItem(
+                id: "package.systemRemoval",
+                icon: "exclamationmark.shield",
+                title: String(localized: "Power Operations"),
+                kind: .toggle,
+                isOn: { TaskManager.shared.allowSystemRemoval },
+                setOn: { [weak self] isOn in
+                    guard isOn else {
+                        TaskManager.shared.allowSystemRemoval = false
+                        return
+                    }
+                    self?.presentConfirmation(
+                        title: "Allow Power Operations?",
+                        message: "Removing a package the system requires can stop the custom firmware or this app from working.",
+                        confirmTitle: "Allow",
+                        destructive: true
+                    ) { [weak self] in
+                        TaskManager.shared.allowSystemRemoval = true
+                        self?.dispatchValueUpdate()
+                    }
+                    // the switch follows the stored value: it goes back
+                    // until the confirmation says otherwise
+                    self?.dispatchValueUpdate()
+                }
+            ),
+        ]
+    }
+
+    /// The files the app has fetched and keeps.
+    func downloadItems() -> [SettingItem] {
         [
             SettingItem(
                 id: "package.downloads",
                 icon: "tray.full",
-                title: String(localized: "Open Downloads Folder"),
+                title: String(localized: "Downloads Folder"),
                 kind: .disclosure,
                 action: { [weak self] in
                     self?.openInFila(path: DownloadCenter.shared.workingLocation.path)
@@ -24,7 +93,7 @@ extension SettingController {
             SettingItem(
                 id: "package.clean",
                 icon: "trash",
-                title: String(localized: "Delete All Downloads"),
+                title: String(localized: "Clear Downloads"),
                 kind: .value,
                 value: {
                     var compute = 0
@@ -51,7 +120,7 @@ extension SettingController {
                 },
                 menu: { [weak self] in
                     guard let self else { return [] }
-                    return confirmMenu(String(localized: "Delete All Downloads")) {
+                    return confirmMenu(String(localized: "Clear Downloads")) {
                         DownloadCenter.shared.clear()
                         try? FileManager.default
                             .removeItem(at: documentsDirectory.appendingPathComponent("DirectInstallCache"))
@@ -61,40 +130,6 @@ extension SettingController {
                         }
                         self.dispatchValueUpdate()
                     }
-                }
-            ),
-            SettingItem(
-                id: "package.blocked",
-                icon: "hand.raised.fill",
-                title: String(localized: "Blocked Updates"),
-                kind: .disclosure,
-                action: { [weak self] in
-                    self?.present(next: BlockUpdateController())
-                }
-            ),
-            SettingItem(
-                id: "package.systemRemoval",
-                icon: "exclamationmark.shield",
-                title: String(localized: "Allow Removing System Packages"),
-                kind: .toggle,
-                isOn: { TaskManager.shared.allowSystemRemoval },
-                setOn: { [weak self] isOn in
-                    guard isOn else {
-                        TaskManager.shared.allowSystemRemoval = false
-                        return
-                    }
-                    self?.presentConfirmation(
-                        title: "Allow Removing System Packages?",
-                        message: "Removing a package the system requires can stop the jailbreak or this app from working.",
-                        confirmTitle: "Allow",
-                        destructive: true
-                    ) { [weak self] in
-                        TaskManager.shared.allowSystemRemoval = true
-                        self?.dispatchValueUpdate()
-                    }
-                    // the switch follows the stored value: it goes back
-                    // until the confirmation says otherwise
-                    self?.dispatchValueUpdate()
                 }
             ),
         ]

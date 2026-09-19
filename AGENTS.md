@@ -23,6 +23,12 @@ end.
   `Lakr233/Irisin`. `chromatic` and `Saily` are gone from every file and
   every filename, with no exception left; `make check` greps the tracked
   tree for both, case-insensitively, and fails on a hit.
+- **The user never reads "jailbreak".** What the app runs on is custom
+  firmware, in the app's text, in every translation (where the word comes
+  back on its own), on the Settings page and in the package's control
+  file. `make check` runs `Scripts/check-wording.py`, which reads every
+  locale's value for the word in each language and fails on a hit. Code,
+  comments and these notes say jailbreak where that is the plain word.
 - **Two links and two file types, and nothing to repair.** The app answers
   `irisin://repository/add?url=…[&suite=…][&component=…]` and
   `irisin://package/<identity>`; `IrisinLink` parses with `URLComponents` and
@@ -148,6 +154,19 @@ end.
   and does not open the interface.
   Install the matching official package; Irisin itself must not be converted
   with a patcher, including its own compatibility adapter.
+- **Translation is the system's engine, asked privately, and the json is
+  what gets translated.** `SystemTranslator` speaks `_LTTranslator` (the
+  same class from iOS 16 to 26; the public `TranslationSession` needs iOS 18
+  and a SwiftUI view), opened by path and looked up by name. translationd
+  rejects a client without `com.apple.private.translation`, in the simulator
+  too, so the key is in `irisin.entitlements` and in
+  `irisin-simulator.entitlements`, the simulator build's alone. A request
+  goes the system's preferred route first (server or large model), then
+  `forcedOfflineTranslation`, then fails typed. Auto Translate
+  (Settings, off until `verify` passes) shows a package page as written,
+  then renders the depiction again from `DepictionTranslation`'s answer and
+  cross-dissolves to it; markdown syntax, links and code never reach the
+  engine. A failure alerts once per launch and logs every time.
 - **No install prefix is written in Swift.** The daemon and the helper derive
   it from their own `proc_pidpath` (`ProcessPath.installRoot`); the app reads
   it from `hello`, and uses libroot (`JailbreakRoot`) only while there is no
@@ -174,7 +193,7 @@ end.
   `IrisinInstaller` and, through it, `IcliKit`, which is ours and brings
   libarchive with it. Nothing else is added to either.
 - **User-facing text is a `String.LocalizationValue` spelled out in
-  English** (`String(localized: "Delete All Downloads")`, `presentNotice(title:
+  English** (`String(localized: "Clear Downloads")`, `presentNotice(title:
   "Error")`), resolved against `Localizable.xcstrings`. No `NSLocalizedString`,
   no `SHOUTING_KEY` identifiers; `make check` greps for both.
   **Changing a string changes its English key**, never only a translation:

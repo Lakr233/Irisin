@@ -29,6 +29,11 @@
 	the vphone's names for the same hardware. Both spellings of the key
 	carry the same list. Sileo's SMC, SEP, baseband and USB clients are
 	left out: nothing here opens them.
+
+	`com.apple.private.translation` is what translationd asks of a client
+	before it translates anything for it ("Rejected Translation client …
+	lacking the appropriate entitlement"); VoiceOver carries the same key.
+	Translate Descriptions goes through it (`SystemTranslator`).
 -->
 <plist version="1.0">
 <dict>
@@ -133,6 +138,9 @@
 	</array>
 
 	<key>com.apple.developer.device-information.user-assigned-device-name</key>
+	<true/>
+
+	<key>com.apple.private.translation</key>
 	<true/>
 </dict>
 </plist>

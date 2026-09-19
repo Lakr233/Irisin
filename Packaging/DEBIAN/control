@@ -2,7 +2,7 @@ Package: @PACKAGE_ID@
 Name: Irisin
 Version: @VERSION@
 Architecture: @ARCHITECTURE@
-Description: Modern package manager for @FLAVOR@ jailbreaks
+Description: Modern package manager for @FLAVOR@ custom firmware
  Browse your repositories, install and remove packages, keep tweaks updated
  and read every depiction, on iPhone and iPad. The app runs without root;
  installs go through a small on-demand root daemon whose helper installs

@@ -544,6 +544,7 @@
 		CA1000000000000000000031 /* Debug configuration for PBXNativeTarget "Irisin" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Packaging/irisin-simulator.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -573,6 +574,7 @@
 		CA1000000000000000000032 /* Release configuration for PBXNativeTarget "Irisin" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Packaging/irisin-simulator.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;

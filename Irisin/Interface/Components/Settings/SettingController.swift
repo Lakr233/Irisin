@@ -23,6 +23,7 @@ class SettingController: UITableViewController {
     nonisolated enum Section: Hashable {
         case repositories
         case packages
+        case downloads
         case actions
     }
 
@@ -75,20 +76,20 @@ class SettingController: UITableViewController {
             image: UIImage(systemName: "ellipsis"),
             menu: UIMenu(children: [
                 UIAction(
-                    title: String(localized: "Show Welcome Page"),
+                    title: String(localized: "Welcome Page"),
                     image: UIImage(systemName: "hand.wave")
                 ) { [weak self] _ in
                     self?.present(WelcomeController.makeNavigator(), animated: true)
                 },
                 UIAction(
-                    title: String(localized: "Open System Settings"),
+                    title: String(localized: "System Settings"),
                     image: UIImage(systemName: "gear")
                 ) { _ in
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     UIApplication.shared.open(url)
                 },
                 UIAction(
-                    title: String(localized: "Report an Issue"),
+                    title: String(localized: "Report Issue"),
                     image: UIImage(systemName: "exclamationmark.bubble")
                 ) { _ in
                     guard let url = URL(string: "https://github.com/Lakr233/Irisin/issues/new") else { return }
@@ -110,6 +111,7 @@ class SettingController: UITableViewController {
             switch section {
             case .repositories: String(localized: "Vendor Accounts")
             case .packages: String(localized: "Packages")
+            case .downloads: String(localized: "Downloads")
             case .actions: String(localized: "Actions")
             }
         }
@@ -117,7 +119,7 @@ class SettingController: UITableViewController {
         footer.onLicense = { [weak self] in self?.present(next: LicenseController()) }
         tableView.tableFooterView = footer
 
-        for item in packageItems() + actionItems() {
+        for item in packageItems() + downloadItems() + actionItems() {
             items[item.id] = item
         }
         applySnapshot(animatingDifferences: false)
@@ -155,7 +157,11 @@ class SettingController: UITableViewController {
             snapshot.appendSections([.repositories])
             snapshot.appendItems(accounts, toSection: .repositories)
         }
-        for (section, list) in [(Section.packages, packageItems()), (.actions, actionItems())] {
+        for (section, list) in [
+            (Section.packages, packageItems()),
+            (.downloads, downloadItems()),
+            (.actions, actionItems()),
+        ] {
             snapshot.appendSections([section])
             snapshot.appendItems(list.map { Row.item($0.id) }, toSection: section)
         }

@@ -45,7 +45,8 @@ class SettingCell: UITableViewCell {
     let titleLabel = UILabel().then {
         $0.font = .body
         $0.textColor = .label
-        $0.numberOfLines = 1
+        // a title is never cut: it wraps and the row grows around it
+        $0.numberOfLines = 0
     }
 
     let operationContainer = UIView()

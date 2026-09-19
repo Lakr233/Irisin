@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	The simulator build's entitlements, and only its: the packaged app is
+	signed with `irisin.entitlements` by `package-deb.sh`. The simulator's
+	translationd checks `com.apple.private.translation` like a device's, so
+	Translate Descriptions is nothing to look at there without it.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.private.translation</key>
+	<true/>
+</dict>
+</plist>

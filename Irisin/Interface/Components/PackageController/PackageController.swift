@@ -133,6 +133,10 @@ class PackageController: UIViewController {
     /// Whether the depiction on show named views this build could not build.
     var depictionIsPartial = false
 
+    /// The translation of the depiction on show, while it is on its way. A
+    /// new depiction (another version of the package) cancels it.
+    var depictionTranslation: Task<Void, Never>?
+
     /// Closes the card under the depiction, in the style of the home page
     /// footer: the architecture the package was built for, under a notice
     /// when the depiction is partial.

@@ -193,6 +193,8 @@ check:
 		[[ -n "$$names" ]] && echo "$$names" >&2; \
 		exit 65; \
 	fi
+	@# What the user reads says custom firmware, in every language.
+	@"$(ROOT_DIR)/Scripts/check-wording.py" "$(ROOT_DIR)"
 
 # The IrisinKit and AptRepository tests on the Mac. This is where a
 # malformed job that reaches an argv, a mis-spelled bootstrap path, a
