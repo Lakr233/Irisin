@@ -13,9 +13,11 @@ import UIKit
 /// A depiction is Auto Layout throughout and changes its own height (a tab,
 /// a picture that arrives) without telling anyone. A scroll view followed;
 /// a table has measured the row already. So the view is pinned at the
-/// bottom a step below required, free to outgrow the row or fall short of
-/// it, and the cell says so (`onHeightMismatch`) for the page to have its
-/// rows measured again.
+/// bottom a step below a text's own hugging, free to outgrow the row or
+/// fall short of it, and the cell says so (`onHeightMismatch`) for the page
+/// to have its rows measured again. A pin any stronger wins against the
+/// text instead: a markdown that learns its height at its first layout,
+/// after the row was measured, is squeezed into the row and nobody hears.
 final class PackageRowCell: UITableViewCell {
     /// Called when the view inside is no longer the height the row was
     /// measured for.
@@ -49,7 +51,7 @@ final class PackageRowCell: UITableViewCell {
             x.top.equalToSuperview().offset(insets.top)
             x.leading.equalToSuperview().offset(insets.left)
             x.trailing.equalToSuperview().offset(-insets.right)
-            x.bottom.equalToSuperview().offset(-insets.bottom).priority(999)
+            x.bottom.equalToSuperview().offset(-insets.bottom).priority(UILayoutPriority.defaultLow.rawValue - 1)
         }
     }
 
