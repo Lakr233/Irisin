@@ -74,7 +74,9 @@ extension ArchiveStream {
                     guard kind == .file, !path.utf8.contains(0x2F), let file else { throw CocoaError(.fileReadCorruptFile) }
                     controls[path] = file
                     if path == "control" {
-                        control = try String(contentsOf: directory.appendingPathComponent(file.name), encoding: .utf8)
+                        control = try IndexText.decode(
+                            Data(contentsOf: directory.appendingPathComponent(file.name))
+                        )
                     }
                 } else {
                     let owner = try owner(of: entry)

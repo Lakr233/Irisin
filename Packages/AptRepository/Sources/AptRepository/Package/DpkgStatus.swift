@@ -4,7 +4,9 @@ public enum DpkgStatus {
     /// Keep unpacked/half-configured entries: they are present, but not valid
     /// Pre-Depends witnesses. Residual configuration is not an installed package.
     public static func packages(in data: Data) throws -> [String: Package] {
-        guard let text = String(data: data, encoding: .utf8) else { throw CocoaError(.fileReadCorruptFile) }
+        // dpkg keeps whatever bytes the control file had; one description
+        // in another encoding must not take the installed list with it.
+        let text = IndexText.decode(data)
         var result: [String: Package] = [:]
         for paragraph in text.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n\n") {
             guard !paragraph.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }

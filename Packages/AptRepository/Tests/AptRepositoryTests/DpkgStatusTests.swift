@@ -15,6 +15,17 @@ struct DpkgStatusTests {
         #expect(try DpkgStatus.packages(in: Data("Package: aa\nStatus: \(state)\n".utf8)).isEmpty)
     }
 
+    /// BigBoss ships MacRoman in a few fields: that line is read as what it
+    /// is, and every other line stays UTF-8.
+    @Test func aLineThatIsNotUTF8CostsNoOtherLine() throws {
+        var data = Data("Package: aa\nVersion: 1\nStatus: install ok installed\nDescription: you".utf8)
+        data.append(0xD5)
+        data.append(Data("ll\n\nPackage: bb\nVersion: 1\nStatus: install ok installed\nName: 位置伪装\n".utf8))
+        let packages = try DpkgStatus.packages(in: data)
+        #expect(packages["aa"]?.latestMetadata?["description"] == "you’ll")
+        #expect(packages["bb"]?.latestMetadata?["name"] == "位置伪装")
+    }
+
     @Test func corruptStatusCannotBecomeAnEmptyInstallation() {
         #expect(throws: (any Error).self) { try DpkgStatus.packages(in: Data("Package: aa\nVersion: 1\n".utf8)) }
     }

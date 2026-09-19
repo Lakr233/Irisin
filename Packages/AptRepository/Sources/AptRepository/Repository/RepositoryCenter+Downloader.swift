@@ -59,26 +59,12 @@ extension RepositoryCenter {
         }
     }
 
-    /// download release metadata from repo, re-encode if isoLatin1 found
+    /// download release metadata from repo
     /// - Parameter withUrl: target url
     /// - Returns: release metadata if success
     nonisolated static func downloadUpdateRelease(withUrl: URL, networking: NetworkingConfiguration) async -> String? {
         guard let data = await downloadData(fromUrl: withUrl, networking: networking) else { return nil }
-        guard let original = String(data: data, encoding: .utf8) else {
-            aptLog(Self.self, "\(withUrl.absoluteString) is not text, \(data.count) bytes", level: .error)
-            return nil
-        }
-        return repaired(original)
-    }
-
-    /// Text that is UTF-8 read as Latin-1, read again as UTF-8; anything else unchanged.
-    private nonisolated static func repaired(_ text: String) -> String {
-        if let decode = text.data(using: .isoLatin1, allowLossyConversion: false),
-           let reEncoded = String(data: decode, encoding: .utf8)
-        {
-            return reEncoded
-        }
-        return text
+        return IndexText.decode(data)
     }
 
     /// detect if this repo supports commercial package
@@ -123,32 +109,20 @@ extension RepositoryCenter {
     ) async -> String? {
         let targetUrl = withBaseUrl.appendingPathExtension(suffix)
         guard let data = await downloadData(fromUrl: targetUrl, networking: networking) else { return nil }
-        var resultBuilder: String?
         switch suffix {
         case "":
-            resultBuilder = String(data: data, encoding: .utf8)
+            return IndexText.decode(data)
         case "bz", "bz2", "gz", "gz2", "lzma", "lzma2", "xz", "xz2", "zst", "zstd", "lz4":
             // libarchive picks the filter from the bytes, so the suffix only
             // decides whether an index is expected to be compressed at all.
             do {
-                let decompress = try ArchiveStream.decompress(data)
-                if let str = String(data: decompress, encoding: .utf8) {
-                    resultBuilder = str
-                } else if let str = String(data: decompress, encoding: .ascii) {
-                    resultBuilder = str
-                } else {
-                    aptLog(
-                        Self.self,
-                        "\(targetUrl.absoluteString) decompressed to \(decompress.count) bytes of neither utf8 nor ascii",
-                        level: .error
-                    )
-                }
+                return try IndexText.decode(ArchiveStream.decompress(data))
             } catch {
                 aptLog(Self.self, "\(targetUrl.absoluteString) could not be decompressed: \(error)", level: .error)
             }
         default:
             aptLog(Self.self, "unknown archive path extension \(suffix)", level: .error)
         }
-        return resultBuilder.map(repaired)
+        return nil
     }
 }
