@@ -20,4 +20,13 @@ struct PathListTests {
             "/usr/libexec/irisind",
         ])
     }
+
+    /// Each path is walked up a component a turn, to the root or to nothing.
+    @Test func aPathThatIsNotOneStillEnds() {
+        let odd = ["", "/", "//", "///a//", "a", "./", "../..", "/a/\u{034F}", "\u{034F}/", "/a\u{0301}/b\r\n/"]
+        let sorted = PathListController.expandingAncestors(of: odd)
+        #expect(!sorted.contains(""))
+        #expect(!sorted.contains("/"))
+        #expect(sorted.contains("/a"))
+    }
 }

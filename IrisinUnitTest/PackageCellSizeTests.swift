@@ -20,4 +20,13 @@ struct PackageCellSizeTests {
         #expect(layout.size.width > 0)
         #expect(layout.size.width <= 280)
     }
+
+    /// The columns are counted by a loop with a limit of its own: a width
+    /// no screen has must reach it.
+    @Test(arguments: [.infinity, .greatestFiniteMagnitude, .nan, -.infinity] as [CGFloat])
+    func aWidthNoScreenHasStillMakesACell(width: CGFloat) {
+        let layout = InterfaceBridge.calculatesPackageCellSize(availableWidth: width)
+        #expect(layout.itemsPerRow >= 1)
+        #expect(layout.itemsPerRow <= 11)
+    }
 }
