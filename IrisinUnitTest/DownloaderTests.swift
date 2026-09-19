@@ -10,6 +10,10 @@ import AptRepository
 @testable import irisin
 import XCTest
 
+// The await inside XCTAssertThrowsErrorAsync's autoclosure is the closure's
+// own; hoisted out of it, the file stops compiling.
+// swiftformat:disable hoistAwait
+
 /// The downloader's byte accounting, against a stubbed server. The invariant
 /// under test: the count of bytes on disk never passes the count the server
 /// announced, and a bar built from the two never passes full.
@@ -131,7 +135,7 @@ final class DownloaderTests: XCTestCase {
         StubServer.respond = { _ in
             (200, ["Content-Length": "10", "Accept-Ranges": "bytes"], [Data("012345".utf8), Data("6789ab".utf8)])
         }
-        await XCTAssertThrowsErrorAsync(try collect()) {
+        await XCTAssertThrowsErrorAsync(try await collect()) {
             XCTAssertEqual($0 as? DownloadError, .overrun(expected: 10, received: 12))
         }
         XCTAssertFalse(FileManager.default.fileExists(atPath: PartialDownloads.file(for: url).path))
@@ -139,13 +143,13 @@ final class DownloaderTests: XCTestCase {
 
     func testFewerBytesThanAnnouncedFailsAndKeepsThePartialOnlyForARangeServer() async throws {
         StubServer.respond = { _ in (200, ["Content-Length": "10"], [Data("01234".utf8)]) }
-        await XCTAssertThrowsErrorAsync(try collect()) {
+        await XCTAssertThrowsErrorAsync(try await collect()) {
             XCTAssertEqual($0 as? DownloadError, .truncated(expected: 10, received: 5))
         }
         XCTAssertFalse(FileManager.default.fileExists(atPath: PartialDownloads.file(for: url).path))
 
         StubServer.respond = { _ in (200, ["Content-Length": "10", "Accept-Ranges": "bytes"], [Data("01234".utf8)]) }
-        await XCTAssertThrowsErrorAsync(try collect()) {
+        await XCTAssertThrowsErrorAsync(try await collect()) {
             XCTAssertEqual($0 as? DownloadError, .truncated(expected: 10, received: 5))
         }
         XCTAssertEqual(try Data(contentsOf: PartialDownloads.file(for: url)), body.prefix(5))
@@ -174,7 +178,7 @@ final class DownloaderTests: XCTestCase {
     func testAPartialResponseThatSkipsAheadIsRejected() async throws {
         try body.prefix(4).write(to: PartialDownloads.file(for: url))
         StubServer.respond = { _ in (206, ["Content-Range": "bytes 6-9/10"], [Data("6789".utf8)]) }
-        await XCTAssertThrowsErrorAsync(try collect()) {
+        await XCTAssertThrowsErrorAsync(try await collect()) {
             XCTAssertEqual($0 as? DownloadError, .malformedResponse)
         }
     }
