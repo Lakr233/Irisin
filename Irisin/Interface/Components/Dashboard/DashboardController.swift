@@ -25,7 +25,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The text size the cached cell size was measured at: a row is as tall
     /// as its lines, so a change of text size has to measure it again.
     var collectionViewTextSizeCache: UIContentSizeCategory?
-    var collectionViewCellSizeCache = CGSize()
+    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
 
     var cellLimit = 16
 

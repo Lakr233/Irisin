@@ -10,7 +10,16 @@ import AptRepository
 import UIKit
 
 extension InterfaceBridge {
-    static func calculatesPackageCellSize(availableWidth available: CGFloat) -> (size: CGSize, itemsPerRow: Int) {
+    /// The smallest cell a package list lays out, whatever width it is given.
+    static let minimumPackageCellSize = CGSize(width: 32, height: 32)
+
+    /// A page asks while its view has no width yet, or less than its own
+    /// insets: the layout the root container swapped out stays alive and
+    /// keeps applying snapshots. The flow layout asserts on a negative size,
+    /// so a cell is never smaller than `minimumPackageCellSize`.
+    static func calculatesPackageCellSize(availableWidth: CGFloat) -> (size: CGSize, itemsPerRow: Int) {
+        let minimum = minimumPackageCellSize
+        let available = max(availableWidth, minimum.width)
         var itemsPerRow = 1
         let padding: CGFloat = 8
         var result = CGSize(width: available, height: 0)
@@ -29,7 +38,7 @@ extension InterfaceBridge {
             }
         }
 
-        let height = PackageCell.rowHeight
+        let height = max(PackageCell.rowHeight, minimum.height)
         if itemsPerRow < 2 {
             // no padding for single element
             return (CGSize(width: available, height: height), itemsPerRow)

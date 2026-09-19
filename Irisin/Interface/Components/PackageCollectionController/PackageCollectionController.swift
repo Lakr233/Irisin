@@ -22,7 +22,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     let searchController = UISearchController()
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
-    var collectionViewCellSizeCache = CGSize()
+    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
 
     /// Sections are their header text; the plain list is one untitled section.
     private(set) lazy var diffableDataSource: UICollectionViewDiffableDataSource<String, Package> = {
