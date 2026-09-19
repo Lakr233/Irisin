@@ -28,14 +28,22 @@ let package = Package(
         // binary. It comes through the package rather than a binary target of
         // our own because icli, linked into the helper, brings the same
         // package into the graph, and two targets named `libarchive` do not
-        // resolve. The sources `import LibArchive`, the wrapper, which is
-        // one `@_exported import libarchive`: asking for the binary module
-        // by its own name finds `LibArchive.swiftmodule` instead on a
-        // case-insensitive volume, and Xcode 26 refuses it.
+        // resolve. No Swift file imports it: the package's Swift wrapper is
+        // `LibArchive` and its binary module `libarchive`, and on a
+        // case-insensitive volume a Swift compiler asked for the second
+        // opens the first's `.swiftmodule` and refuses it. CAptArchive
+        // declares what the sources call, as C, where no `.swiftmodule` is
+        // ever looked for.
+        .target(
+            name: "CAptArchive",
+            dependencies: [
+                .product(name: "LibArchive", package: "libarchive.xcframework"),
+            ]
+        ),
         .target(
             name: "AptRepository",
             dependencies: [
-                .product(name: "LibArchive", package: "libarchive.xcframework"),
+                "CAptArchive",
                 .product(name: "IrisinProtocol", package: "IrisinKit"),
                 .product(name: "WCDBSwift", package: "wcdb.xcframework"),
             ]

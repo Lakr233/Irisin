@@ -375,33 +375,29 @@ is `/var/jb/var/log/irisin-install.log`.
 
 ## Gotchas that bit us
 
-- **One libarchive in the package graph.** icli depends on the
-  libarchive.xcframework package, whose binary target is named `libarchive`;
-  a second binary target of that name in `Packages/AptRepository` fails
-  resolution ("multiple packages declare targets with a conflicting name"),
-  so AptRepository takes the package's `LibArchive` product too. Its sources
-  `import LibArchive`, the wrapper, whose whole body is `@_exported import
-  libarchive`: the two names differ by case alone, so on a case-insensitive
-  volume a request for the binary module finds `LibArchive.swiftmodule` and
-  the compiler refuses it — "cannot load module 'LibArchive' as
-  'libarchive'". Xcode 27 lets `import libarchive` through and Xcode 26,
-  which is what the macos-26 runner has, does not; importing the wrapper is
-  unambiguous on both. If the error comes back, that is where to look.
+- **One libarchive in the package graph, and no Swift file imports it.**
+  icli depends on the libarchive.xcframework package, whose binary target is
+  named `libarchive`; a second binary target of that name in
+  `Packages/AptRepository` fails resolution ("multiple packages declare
+  targets with a conflicting name"), so AptRepository takes the package's
+  `LibArchive` product too. That product is a Swift wrapper, `LibArchive`,
+  around the binary module `libarchive`: the names differ by case alone,
+  `xcodebuild` puts `LibArchive.swiftmodule` in one flat Products directory,
+  and on a case-insensitive volume Xcode 26's compiler, asked for
+  `libarchive`, opens that file and refuses it — "cannot load module
+  'LibArchive' as 'libarchive'". Importing the wrapper asks the same
+  question through its `@_exported import`. So nothing in Swift imports
+  either: `CAptArchive`, a C target, declares the functions `ArchiveStream`
+  calls, and its `.c` file includes libarchive's own headers so a prototype
+  that drifts stops the build. icli reaches libarchive from Objective-C and
+  never had the problem. If the error comes back, a Swift file has imported
+  `LibArchive` again.
 - **The project is built with Xcode 27 and CI has 26.6.** The runner image
-  has no Xcode 27, so two things on CI are workarounds and both come out
-  the day it does:
-  - `xcodebuild` writes `LibArchive.swiftmodule` and `libarchive.swiftmodule`
-    into one flat Products directory, and on a case-insensitive volume that
-    is one directory: the compiler opens the wrapper when asked for the
-    binary module and refuses it. `ci.yml` puts DerivedData
-    on a case-sensitive sparse image to keep the two apart. Importing the
-    wrapper does not help — its `@_exported import libarchive` puts both in
-    the map either way. `swift build` is unaffected; only `xcodebuild` has
-    the flat directory.
-  - `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and not
-    in Xcode 26's, and `#available` guards the call, not the reference, so
-    `HandyTabBarController` sets it through KVC under its `iOS 27.0` check.
-    Same behaviour, any SDK.
+  has no Xcode 27, so one thing is a workaround and comes out the day it
+  does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and
+  not in Xcode 26's, and `#available` guards the call, not the reference, so
+  `HandyTabBarController` sets it through KVC under its `iOS 27.0` check.
+  Same behaviour, any SDK.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller
   `isShowingColumn:`, which iOS 26 answers with an exception, and nothing

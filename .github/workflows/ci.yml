@@ -68,27 +68,11 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      # DerivedData goes on a case-sensitive volume. libarchive.xcframework
-      # builds two modules whose names differ by case alone — the binary
-      # `libarchive` and the `LibArchive` wrapper that re-exports it — and
-      # Xcode writes both into one flat Products directory. On the runner's
-      # case-insensitive disk that is one directory, and the compiler, asked
-      # for `libarchive`, opens the wrapper and refuses it: "cannot load
-      # module 'LibArchive' as 'libarchive'". Xcode 27 gets away with it and
-      # the runners have 26.6. A case-sensitive volume keeps them apart.
-      #
-      # Drop this step and go back to a plain $RUNNER_TEMP directory the day
-      # the runner image ships Xcode 27. The same day, HandyTabBarController
-      # can set `prominentTabIdentifier` by name again instead of through KVC.
       - name: Configure build paths
         shell: bash
         run: |
           set -euo pipefail
-          image="$RUNNER_TEMP/derived.sparseimage"
-          hdiutil create -size 60g -fs 'Case-sensitive APFS' -volname IrisinBuild \
-            -type SPARSE -quiet "$image"
-          hdiutil attach "$image" -mountpoint /Volumes/IrisinBuild -quiet
-          echo "DERIVED_DATA=/Volumes/IrisinBuild/irisin-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          echo "DERIVED_DATA=$RUNNER_TEMP/irisin-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
 
       - name: Check out repository
         uses: actions/checkout@v4
