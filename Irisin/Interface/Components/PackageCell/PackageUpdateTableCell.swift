@@ -55,8 +55,8 @@ class PackageUpdateTableCell: PackageTableCell {
         Task { await PackageMenuAction.enqueue([.install(package)], from: host) }
     }
 
-    override func prepareForNewValue() {
-        super.prepareForNewValue()
+    override func prepareForReuse() {
+        super.prepareForReuse()
         updateCandidate = nil
     }
 

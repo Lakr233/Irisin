@@ -60,8 +60,9 @@ class PackageCell: UIView {
     /// text; empty, it has no width and the text runs to the edge.
     let accessory = UIView()
 
-    var represent: Package?
-    var currentToken = UUID()
+    /// The package the row is drawn for, and with that what decides whether
+    /// a `loadValue` has anything to draw: nil once the row is reused.
+    private(set) var represent: Package?
 
     private var subscriptions = Set<AnyCancellable>()
 
@@ -153,22 +154,25 @@ class PackageCell: UIView {
         fatalError()
     }
 
-    func prepareForNewValue() {
+    /// The row is leaving the screen for the reuse pool: nothing it shows
+    /// is the next package's, its icon least of all.
+    func prepareForReuse() {
         represent = nil
         overrideIcon = nil
-        avatar.image = nil
+        avatar.showIcon(nil)
+        clearText()
+        clearIndicator()
+    }
+
+    private func clearText() {
         // a label keeps the attributes of its last attributed text through
         // a later `text`: a removal's strikethrough would outlive the row
         for label in [title, subtitle, describe] {
             label.attributedText = nil
         }
-        title.text = ""
         title.textColor = .textTitle
-        subtitle.text = ""
         subtitle.textColor = .textSubtitle
-        describe.text = ""
         describe.textColor = .textSubtitle
-        clearIndicator()
     }
 
     func clearIndicator() {
@@ -186,25 +190,19 @@ class PackageCell: UIView {
         contentView.setNeedsLayout()
     }
 
+    /// Draws `package`. A list reconfigures every row that survived a
+    /// reload, and a `Package` is equal only when all of it is: the row that
+    /// already shows this one has nothing to redraw but the badge, which is
+    /// the one thing here that lives outside the package.
     func loadValue(package: Package) {
-        let token = UUID()
-        currentToken = token
-        represent = package
-
-        avatar.image = UIImage(named: "PackageDefaultIcon")
-        if let url = PackageCenter.default.avatarUrl(with: package) {
-            SDWebImageManager
-                .shared
-                .loadImage(
-                    with: url,
-                    options: .highPriority,
-                    progress: nil
-                ) { [weak self] image, _, _, _, _, _ in
-                    if let image, self?.currentToken == token {
-                        self?.avatar.image = image
-                    }
-                }
+        guard package != represent else {
+            updateIndicator()
+            return
         }
+        represent = package
+        clearText()
+
+        avatar.showIcon(of: package)
 
         if package.latestMetadata?["tag"]?.contains("cydia::commercial") ?? false {
             title.textColor = .paidPackage

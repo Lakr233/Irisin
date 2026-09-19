@@ -7,7 +7,6 @@
 //
 
 import AptRepository
-import SDWebImage
 import Then
 import UIKit
 
@@ -37,8 +36,6 @@ class SearchCell: UITableViewCell {
         $0.lineBreakMode = .byTruncatingTail
         $0.textColor = .textSubtitle
     }
-
-    var displayToken: UUID = .init()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -75,51 +72,57 @@ class SearchCell: UITableViewCell {
         fatalError()
     }
 
-    func prepareNewValue() -> UUID {
-        image.image = nil
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        image.showIcon(nil)
+    }
+
+    /// What every row starts from. The picture is not part of it: each row
+    /// below sets its own, and a row redrawn in place keeps the one it has
+    /// until then.
+    private func clearText() {
         title.text = ""
         title.textColor = .textTitle
         subtitle.text = ""
-        describe.text = ""
         describe.attributedText = nil
+        describe.text = ""
         describe.textColor = .textSubtitle
-        let token = UUID()
-        displayToken = token
-        return token
     }
 
     func makeEmptyHinter() {
-        image.image = UIImage.fluent(.documentNone24Regular)
+        clearText()
+        image.showIcon(.fluent(.documentNone24Regular))
         title.text = String(localized: "No results found")
         subtitle.text = String(localized: "Try a different search or refresh your repositories.")
         describe.text = ""
     }
 
-    func insertValue(with result: SearchResult, token: UUID) {
+    func insertValue(with result: SearchResult) {
+        clearText()
         switch result.associatedValue {
         // MARK: - AUTHOR
 
         case let .author(name):
             title.text = name
             subtitle.text = String(localized: "Packages by this author")
-            image.image = UIImage.fluent(.peopleSearch24Regular)
+            image.showIcon(.fluent(.peopleSearch24Regular))
 
         // MARK: - INSTALLED
 
         case let .installed(package):
-            insertPackageValue(package, withToken: token)
+            insertPackageValue(package)
 
         // MARK: - PACKAGE
 
         case let .package(identity, repository):
             guard let package = PackageCenter.default.obtainPackage(with: identity, in: repository) else {
                 // the index still remembers a row the repository no longer has
-                image.image = UIImage.fluent(.documentNone24Regular)
+                image.showIcon(.fluent(.documentNone24Regular))
                 title.text = identity
                 subtitle.text = String(localized: "No longer available in this repository")
                 return
             }
-            insertPackageValue(package, withToken: token)
+            insertPackageValue(package)
 
         // MARK: - REPO
 
@@ -129,11 +132,7 @@ class SearchCell: UITableViewCell {
                 .obtainImmutableRepository(withUrl: url)
             title.text = repo?.nickName
             subtitle.text = url.absoluteString
-            if let data = repo?.avatar, let img = UIImage(data: data) {
-                image.image = img
-            } else {
-                image.image = UIImage.fluent(.bookCompass24Filled)
-            }
+            image.showIcon(repo.flatMap { UIImage(data: $0.avatar) } ?? .fluent(.bookCompass24Filled))
         }
 
         // MARK: - SEARCH HIGHLIGHT
@@ -147,7 +146,7 @@ class SearchCell: UITableViewCell {
         describe.limitedLeadingHighlight(text: result.underKey, color: .buttonNormal)
     }
 
-    private func insertPackageValue(_ package: Package, withToken token: UUID) {
+    private func insertPackageValue(_ package: Package) {
         if package.latestMetadata?["tag"]?.contains("cydia::commercial") ?? false {
             title.textColor = .paidPackage
         }
@@ -160,19 +159,6 @@ class SearchCell: UITableViewCell {
         } else {
             subtitle.text = description
         }
-        image.image = UIImage(named: "PackageDefaultIcon")
-        if let iconUrl = PackageCenter.default.avatarUrl(with: package) {
-            SDWebImageManager
-                .shared
-                .loadImage(
-                    with: iconUrl,
-                    options: .highPriority,
-                    progress: nil
-                ) { [weak self] img, _, _, _, _, _ in
-                    if let img, self?.displayToken == token {
-                        self?.image.image = img
-                    }
-                }
-        }
+        image.showIcon(of: package)
     }
 }

@@ -46,11 +46,6 @@ class RepoTableViewCell: UITableViewCell {
         fatalError()
     }
 
-    func prepareForNewValue() {
-        coordinatedCell.prepareForNewValue()
-        updateFill.url = nil
-    }
-
     func setRepository(withUrl: URL) {
         coordinatedCell.setRepository(withUrl: withUrl)
         updateFill.url = withUrl
@@ -58,5 +53,6 @@ class RepoTableViewCell: UITableViewCell {
 
     func setNoRepoAvailable() {
         coordinatedCell.setNoRepoAvailable()
+        updateFill.url = nil
     }
 }

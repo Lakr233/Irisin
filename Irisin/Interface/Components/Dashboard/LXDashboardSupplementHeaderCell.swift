@@ -53,13 +53,6 @@ class LXDashboardSupplementHeaderCell: UICollectionReusableView {
         }
     }
 
-    func prepareNewValue() {
-        representSection = nil
-        currentSection = nil
-        overrideButtonAction = nil
-        label.text = ""
-    }
-
     func loadSection(data: InterfaceBridge.DashboardDataSection) {
         representSection = data
         label.text = data.title

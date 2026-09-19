@@ -84,7 +84,6 @@ class LXSplitPanelController: UIViewController {
             configureHeader(cell)
         }
         let row = UICollectionView.CellRegistration<RepoListCell, Item> { cell, _, item in
-            cell.row.prepareForNewValue()
             cell.updateFill.url = nil
             if case let .repository(url) = item {
                 cell.row.setRepository(withUrl: url)

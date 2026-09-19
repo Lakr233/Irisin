@@ -63,10 +63,9 @@ class SearchController: UITableViewController {
         tableView: tableView
     ) { [unowned self] tableView, indexPath, item in
         let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath) as! SearchCell
-        let token = cell.prepareNewValue()
         switch item {
         case .empty: cell.makeEmptyHinter()
-        case let .result(result): cell.insertValue(with: result, token: token)
+        case let .result(result): cell.insertValue(with: result)
         }
         return cell
     }

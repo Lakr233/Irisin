@@ -28,7 +28,6 @@ class UpdateController: UIViewController, UITableViewDelegate {
         tableView: tableView
     ) { [unowned self] tableView, indexPath, fetch in
         let cell = tableView.dequeueReusableCell(withIdentifier: cellID, for: indexPath) as! PackageUpdateTableCell
-        cell.prepareForNewValue()
         if view.frame.width > 500 {
             cell.padding = 15
         } else {

@@ -121,14 +121,10 @@ class RepoCell: UIView {
         }
     }
 
-    func prepareForNewValue() {
-        title.text = ""
-        subtitle.text = ""
-        icon.image = nil
-        repoUrl = nil
-        indicator.backgroundColor = .clear
-    }
-
+    /// Draws the repository at `withUrl` as the center holds it now. What a
+    /// row says lives there and not in the address, so this draws every
+    /// field every time, and nothing wipes the row first: a redraw in place
+    /// goes from one full picture to the next.
     func setRepository(withUrl: URL) {
         arrow.isHidden = false
         repoUrl = withUrl
@@ -154,6 +150,8 @@ class RepoCell: UIView {
     }
 
     func setNoRepoAvailable() {
+        repoUrl = nil
+        indicator.backgroundColor = .clear
         arrow.isHidden = true
         title.text = String(localized: "No repositories")
         subtitle.text = String(localized: "Use the add button above to add a repository.")

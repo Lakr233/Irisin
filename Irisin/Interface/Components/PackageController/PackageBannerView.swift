@@ -8,7 +8,6 @@
 
 import AptRepository
 import Combine
-import SDWebImage
 import Then
 import UIKit
 
@@ -133,20 +132,7 @@ class PackageBannerView: UIView {
     func updateValues() {
         name.text = PackageCenter.default.name(of: package)
         version.text = package.latestVersion ?? String(localized: "Unknown")
-        icon.image = UIImage(named: "PackageDefaultIcon")
-        if let iconUrl = PackageCenter.default.avatarUrl(with: package) {
-            SDWebImageManager
-                .shared
-                .loadImage(
-                    with: iconUrl,
-                    options: .highPriority,
-                    progress: nil
-                ) { [weak self] img, _, _, _, _, _ in
-                    if let img {
-                        self?.icon.image = img
-                    }
-                }
-        }
+        icon.showIcon(of: package)
         updateButton()
     }
 

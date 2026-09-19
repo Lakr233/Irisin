@@ -71,7 +71,6 @@ class HDRepoController: UIViewController {
             as! RepoTableViewCell
         cell.backgroundColor = .clear
         cell.contentInsets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
-        cell.prepareForNewValue()
         switch row {
         case .none: cell.setNoRepoAvailable()
         case let .repository(url): cell.setRepository(withUrl: url)

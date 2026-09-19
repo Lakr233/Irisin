@@ -59,7 +59,6 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             if let view = view as? LXDashboardSupplementHeaderCell,
                let section = section(at: indexPath.section)
             {
-                view.prepareNewValue()
                 view.loadSection(data: section)
                 view.currentSection = { [weak self, title = section.title] in
                     self?.dataSource.first { $0.title == title }
@@ -83,7 +82,6 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             let cell = collectionView
                 .dequeueReusableCell(withReuseIdentifier: packageCellID, for: indexPath)
                 as! DashboardPackageCell
-            cell.prepareForNewValue()
             cell.loadValue(package: package)
             return cell
         }

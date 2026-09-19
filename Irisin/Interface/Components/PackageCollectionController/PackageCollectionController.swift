@@ -32,7 +32,6 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             let cell = collectionView
                 .dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
                 as! PackageCollectionCell
-            cell.prepareForNewValue()
             cell.loadValue(package: package)
             return cell
         }

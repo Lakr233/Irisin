@@ -220,7 +220,7 @@ final class PackageIconCache {
     }
 
     func icon(of package: Package) -> UIImage? {
-        let placeholder = UIImage(named: "PackageDefaultIcon")
+        let placeholder = UIImage.packageDefaultIcon
         guard let url = PackageCenter.default.avatarUrl(with: package) else { return placeholder }
         if let icon = icons[url] {
             return icon

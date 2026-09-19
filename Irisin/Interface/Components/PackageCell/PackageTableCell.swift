@@ -12,8 +12,9 @@ import UIKit
 class PackageTableCell: UITableViewCell {
     let originalCell = PackageCell()
 
-    func prepareForNewValue() {
-        originalCell.prepareForNewValue()
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        originalCell.prepareForReuse()
     }
 
     func loadValue(package: Package) {

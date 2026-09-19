@@ -56,8 +56,9 @@ class PackageCollectionCell: UICollectionViewCell {
         }
     }
 
-    func prepareForNewValue() {
-        originalCell.prepareForNewValue()
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        originalCell.prepareForReuse()
     }
 
     func loadValue(package: Package) {

@@ -74,7 +74,6 @@ extension InstalledController {
     ) -> UICollectionViewCell {
         let cell = collectionView
             .dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PackageCollectionCell
-        cell.prepareForNewValue()
         cell.loadValue(package: fetch)
 
         if identitiesWithUpdate.contains(fetch.identity) {
