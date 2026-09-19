@@ -402,6 +402,7 @@ class PackageController: UIViewController {
             }
             return
         }
+        let artworkSize = bannerArtwork.bounds.size
         UIView.animate(
             withDuration: 0.5,
             delay: 0,
@@ -411,6 +412,7 @@ class PackageController: UIViewController {
             animations: { [self] in
                 tableView.performBatchUpdates(nil)
                 tableView.layoutIfNeeded()
+                bannerArtwork.carryHandwriting(from: artworkSize)
             }
         )
     }

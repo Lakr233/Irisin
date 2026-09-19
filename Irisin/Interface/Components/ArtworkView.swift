@@ -4,7 +4,6 @@
 //
 
 import AptRepository
-import CoreImage
 import ScribbleLetter
 import SDWebImage
 import SnapKit
@@ -13,12 +12,12 @@ import UIKit
 
 /// A package's picture, which may never come. Until it does, and when there
 /// is none, the package's name writes itself out over and over; when it
-/// does, it comes into focus over the handwriting.
+/// does, it fades in over the handwriting.
 final class ArtworkView: UIView {
     let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
-        $0.sd_imageTransition = .blurFade
+        $0.sd_imageTransition = .fade(duration: 0.35)
     }
 
     /// Written, held for a second, unwritten, and written again.
@@ -46,6 +45,30 @@ final class ArtworkView: UIView {
             x.height.equalToSuperview().multipliedBy(0.35)
         }
         imageView.snp.makeConstraints { $0.edges.equalToSuperview() }
+    }
+
+    /// Takes the handwriting along with a resize. Called inside the
+    /// animation that resizes this view, after its layout pass, with the
+    /// size the view had before: the handwriting draws shape layers whose
+    /// paths are set for its bounds and cannot animate, and the table lays
+    /// a cell out where it will be before it animates it there, so by now
+    /// the name is drawn in its new place at its new size. It is put back
+    /// where it was with a transform, and the transform animates away.
+    func carryHandwriting(from old: CGSize) {
+        layoutIfNeeded()
+        let box = { (size: CGSize) in CGSize(width: size.width * 0.7, height: size.height * 0.35) }
+        let before = scribble.sizeThatFits(box(old)).width
+        let now = scribble.sizeThatFits(box(bounds.size)).width
+        guard old != bounds.size, before > 0, now > 0 else { return }
+        UIView.performWithoutAnimation {
+            // a pass that did animate it there must not move it twice
+            scribble.layer.removeAllAnimations()
+            scribble.transform = CGAffineTransform(
+                translationX: (old.width - bounds.width) / 2,
+                y: (old.height - bounds.height) / 2
+            ).scaledBy(x: before / now, y: before / now)
+        }
+        scribble.transform = .identity
     }
 
     @available(*, unavailable)
@@ -129,58 +152,5 @@ final class ArtworkView: UIView {
             guard let self else { return }
             showScribble(imageView.image == nil)
         }
-    }
-}
-
-private extension SDWebImageTransition {
-    /// The picture fades in out of focus, then sharpens: a blurred copy on
-    /// top of it fades in with it and out after it.
-    static var blurFade: SDWebImageTransition {
-        let transition = SDWebImageTransition()
-        transition.duration = 0.35
-        transition.animationOptions = [.allowUserInteraction, .curveEaseOut]
-        let blurred = UIImageView().then {
-            $0.contentMode = .scaleAspectFill
-            $0.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        }
-        transition.prepares = { view, image, _, _, _ in
-            view.alpha = 0
-            blurred.image = image.flatMap(blur)
-            blurred.alpha = 1
-            blurred.frame = view.bounds
-            view.addSubview(blurred)
-        }
-        transition.animations = { view, _ in
-            view.alpha = 1
-        }
-        transition.completion = { _ in
-            UIView.animate(withDuration: 0.5, delay: 0, options: [.allowUserInteraction, .curveEaseInOut]) {
-                blurred.alpha = 0
-            } completion: { _ in
-                // a newer picture may be fading in under it already
-                if blurred.alpha == 0 {
-                    blurred.removeFromSuperview()
-                }
-            }
-        }
-        return transition
-    }
-
-    private static let context = CIContext()
-
-    /// A small, heavily blurred copy; drawn scaled up, it looks the part.
-    /// Shrunk before Core Image sees it, so the full picture is never
-    /// uploaded on the main actor.
-    /// ponytail: EXIF orientation is ignored, a rotated photo blurs sideways
-    /// for the length of the fade.
-    private static func blur(_ image: UIImage) -> UIImage? {
-        guard image.size.width > 0,
-              let thumbnail = image.preparingThumbnail(
-                  of: CGSize(width: 48, height: 48 * image.size.height / image.size.width)
-              ),
-              let source = CIImage(image: thumbnail)
-        else { return nil }
-        let output = source.clampedToExtent().applyingGaussianBlur(sigma: 3).cropped(to: source.extent)
-        return context.createCGImage(output, from: source.extent).map(UIImage.init(cgImage:))
     }
 }
