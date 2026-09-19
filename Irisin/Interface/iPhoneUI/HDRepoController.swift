@@ -53,9 +53,10 @@ class HDRepoController: UIViewController {
 
     private let footer = FootnoteView()
 
-    private var dataSourceCache: [URL] = RepositoryCenter
-        .default
-        .obtainRepositoryUrls(sortedByName: true)
+    /// Read as the view loads, never at init: the tab bar makes this page
+    /// at launch and nothing listens until the tab is opened, so what
+    /// onboarding added in between would be missing.
+    private var dataSourceCache: [URL] = []
     private var lastUpdateTouched: Date?
 
     nonisolated enum Row: Hashable {
@@ -100,8 +101,7 @@ class HDRepoController: UIViewController {
 
         setEditing(false, animated: false)
 
-        applySnapshot(animatingDifferences: false)
-        updateFooter()
+        reloadDataSource(animated: false)
 
         Publishers.MergeMany([RepositoryCenter.registrationUpdate, RepositoryCenter.metadataUpdate].map {
             NotificationCenter.default.publisher(for: $0)
@@ -128,11 +128,11 @@ class HDRepoController: UIViewController {
         diffableDataSource.apply(snapshot, animatingDifferences: animatingDifferences)
     }
 
-    private func reloadDataSource() {
+    private func reloadDataSource(animated: Bool = true) {
         dataSourceCache = RepositoryCenter
             .default
             .obtainRepositoryUrls(sortedByName: true)
-        applySnapshot(animatingDifferences: tableView.shouldAnimateDiff)
+        applySnapshot(animatingDifferences: animated && tableView.shouldAnimateDiff)
         updateFooter()
     }
 
