@@ -526,10 +526,13 @@ final class QueueController: UIViewController, UITableViewDelegate {
         reload()
     }
 
+    /// The sheet takes the system's form sheet size and no content size of
+    /// its own: the iPad adds the navigation bar to a content size, the
+    /// operation page has a large title and the log and the failed
+    /// package's page have none, so the sheet would shrink on every push.
     private func showConsole(_ payload: TaskProcessor.OperationPayload) {
         let console = UINavigationController(rootViewController: OperationController(operation: payload))
         console.modalPresentationStyle = traitCollection.userInterfaceIdiom == .pad ? .formSheet : .fullScreen
-        console.preferredContentSize = preferredPopOverSize
         committed = false
         stage = .empty
         present(console, animated: true)
