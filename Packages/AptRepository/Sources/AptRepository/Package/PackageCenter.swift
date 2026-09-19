@@ -63,6 +63,20 @@ public final class PackageCenter {
         }
     }
 
+    /// updates an adapter would have to rewrite, off until the user asks
+    private let offersAdaptedUpdatesStore = AptSetting<Bool>(
+        key: "\(kPackageCenterIdentity).offersAdaptedUpdates",
+        defaultValue: false
+    )
+    public var offersAdaptedUpdates: Bool {
+        get { index.offersAdaptedUpdates }
+        set {
+            index.offersAdaptedUpdates = newValue
+            offersAdaptedUpdatesStore.wrappedValue = newValue
+            dispatchNotification()
+        }
+    }
+
     // MARK: - NOTIFICATIONS
 
     public nonisolated static let packageRecordChanged = Notification.Name(
@@ -85,6 +99,7 @@ public final class PackageCenter {
         aptLog(self, "tracing package status with \(AptEnvironment.current.dpkgStatusLocation)", level: .info)
 
         index.blockedUpdateTable = blockedUpdateStore.wrappedValue
+        index.offersAdaptedUpdates = offersAdaptedUpdatesStore.wrappedValue
 
         await reloadLocalPackages()
     }

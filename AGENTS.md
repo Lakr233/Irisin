@@ -145,6 +145,12 @@ end.
   disagree, since the paragraph solved with is the one installed. The queue
   asks before an adapted package joins it (Compatibility Mode), and its
   sheet says the queue may change at Patch.
+  A newer version an adapter would have to rewrite is not an update until
+  the user turns on Compatibility Updates (Settings, off, confirmed, and no
+  row where nothing is adapted): `PackageCenter.offersAdaptedUpdates` keeps
+  it out of the Updates page, the badge, the dashboard and the banner, and
+  the resolver locks it out of an update of everything without reporting
+  it held back. Asked for by name it installs as ever.
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by
   `package-deb.sh` per flavor; a build that was never packaged uses the

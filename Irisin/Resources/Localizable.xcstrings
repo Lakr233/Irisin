@@ -3977,6 +3977,88 @@
         }
       }
     },
+    "Allow Compatibility Updates?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السماح بتحديثات التوافق؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompatibilitätsupdates erlauben?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Compatibility Updates?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Permitir actualizaciones de compatibilidad?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autoriser les mises à jour de compatibilité ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consentire gli aggiornamenti di compatibilità?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換モードのアップデートを許可しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "호환 모드 업데이트를 허용하시겠습니까?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir atualizações de compatibilidade?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешить обновления совместимости?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép cập nhật tương thích?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许兼容模式更新？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許相容模式更新？"
+          }
+        }
+      }
+    },
     "Allow Power Operations?" : {
       "localizations" : {
         "ar" : {
@@ -4295,6 +4377,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "也可安裝適用於 %@ 的套件"
+          }
+        }
+      }
+    },
+    "An update to a package installed in compatibility mode is converted again. It may stop working and damage the system." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُحوَّل تحديث الحزمة المثبَّتة في وضع التوافق من جديد. قد تتوقف عن العمل وتُلحق الضرر بالنظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Update für ein im Kompatibilitätsmodus installiertes Paket wird erneut konvertiert. Es funktioniert danach möglicherweise nicht mehr und kann das System beschädigen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An update to a package installed in compatibility mode is converted again. It may stop working and damage the system."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización de un paquete instalado en el modo de compatibilidad se convierte de nuevo. Puede dejar de funcionar y dañar el sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour d’un paquet installé en mode de compatibilité est convertie à nouveau. Il peut cesser de fonctionner et endommager le système."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’aggiornamento di un pacchetto installato in modalità compatibilità viene convertito di nuovo. Potrebbe smettere di funzionare e danneggiare il sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換モードでインストールしたパッケージのアップデートは、再度変換されます。動作しなくなり、システムが損傷する可能性があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "호환 모드로 설치한 패키지의 업데이트는 다시 변환됩니다. 작동이 중단되고 시스템이 손상될 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A atualização de um pacote instalado no modo de compatibilidade é convertida novamente. Ele pode parar de funcionar e danificar o sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление пакета, установленного в режиме совместимости, конвертируется заново. Пакет может перестать работать и повредить систему."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bản cập nhật của gói được cài đặt ở chế độ tương thích sẽ được chuyển đổi lại. Gói có thể ngừng hoạt động và làm hỏng hệ thống."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以兼容模式安装的软件包在更新时会被重新转换。更新后可能无法工作，并导致系统损坏。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以相容模式安裝的套件在更新時會重新轉換。更新後可能無法運作，並導致系統損壞。"
           }
         }
       }
@@ -6321,6 +6485,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "對照"
+          }
+        }
+      }
+    },
+    "Compatibility Updates" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديثات التوافق"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompatibilitätsupdates"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compatibility Updates"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizaciones de compatibilidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour de compatibilité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti di compatibilità"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換モードのアップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "호환 모드 업데이트"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizações de compatibilidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновления совместимости"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cập nhật tương thích"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兼容模式更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相容模式更新"
           }
         }
       }

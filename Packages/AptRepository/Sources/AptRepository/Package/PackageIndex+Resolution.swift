@@ -25,6 +25,7 @@ public extension PackageIndex {
             installableArchitectures: environment.installableArchitectures,
             adaptedManifestPreview: environment.adaptedManifestPreview,
             blockedUpdates: Set(blockedUpdateTable),
+            offersAdaptedUpdates: offersAdaptedUpdates,
             origins: db.installOrigins(),
             autoInstalled: environment.aptExtendedStatesLocation
                 .flatMap { FileManager.default.contents(atPath: $0) }
@@ -38,7 +39,8 @@ public extension PackageIndex {
         guard try snapshot.catalogueRevision == (db.resolutionRevision()),
               snapshot.architecture == AptEnvironment.current.deviceArchitecture,
               snapshot.installableArchitectures == AptEnvironment.current.installableArchitectures,
-              snapshot.blockedUpdates == Set(blockedUpdateTable) else { return false }
+              snapshot.blockedUpdates == Set(blockedUpdateTable),
+              snapshot.offersAdaptedUpdates == offersAdaptedUpdates else { return false }
         let status = try Self.statusContents(at: URL(fileURLWithPath: AptEnvironment.current.dpkgStatusLocation))
         return snapshot.statusDigest == ResolutionSnapshot.digest(status)
     }

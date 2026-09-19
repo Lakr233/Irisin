@@ -186,6 +186,14 @@ public enum PackageResolver {
                 jobs.append(Job(.lock, .package(ids[index])))
             }
         }
+        // Updating everything leaves a converted package where it is unless
+        // the user asked otherwise: the newer version is kept out by name.
+        let frozen = request.updateAll && !snapshot.offersAdaptedUpdates
+            ? adapted.filter { installedByName[records[$0].name] != nil && !explicitInstall.contains($0) }
+            : []
+        for index in frozen.sorted() {
+            jobs.append(Job(.lock, .package(ids[index])))
+        }
         if request.updateAll {
             jobs.append(Job(.update, .all))
         }
@@ -298,7 +306,8 @@ public enum PackageResolver {
         let stages = try TransactionPlanner.plan(universe: universe, selected: selected)
         let selectedByName = Dictionary(uniqueKeysWithValues: selected.map { (records[$0].name, $0) })
         var newestAvailable: [String: String] = [:]
-        for record in records where !record.installed {
+        // a frozen version is not one the update left behind
+        for (index, record) in records.enumerated() where !record.installed && !frozen.contains(index) {
             if newestAvailable[record.name].map({ DebianVersion.compare(record.version, $0) > 0 }) ?? true {
                 newestAvailable[record.name] = record.version
             }

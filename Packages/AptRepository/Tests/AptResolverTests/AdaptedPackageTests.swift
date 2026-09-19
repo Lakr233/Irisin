@@ -95,4 +95,26 @@ struct AdaptedPackageTests {
         #expect(plan.install.first { $0.identity == "tweak" } == native)
         #expect(try solve([native, adapted], actions: [.install(adapted)], adapting: ["other"]).install == [adapted])
     }
+
+    /// A converted package stays where it is when everything updates, is
+    /// not reported as left behind, and still updates when asked by name.
+    @Test func updateOfEverythingLeavesAConvertedPackageUnlessAsked() throws {
+        let old = pkg("tweak", "1", installed: true)
+        let newer = pkg("tweak", "2", foreign)
+        let native = pkg("native", "2")
+        let installed = [old, pkg("native", "1", installed: true)]
+        let frozen = try solve(
+            [newer, native], installed: installed, actions: [], update: true,
+            adapting: ["other"], adaptedUpdates: false
+        )
+        #expect(frozen.install == [native])
+        #expect(frozen.heldBack.isEmpty)
+        let offered = try solve([newer, native], installed: installed, actions: [], update: true, adapting: ["other"])
+        #expect(Set(offered.install) == [newer, native])
+        let asked = try solve(
+            [newer], installed: installed, actions: [.install(newer)],
+            adapting: ["other"], adaptedUpdates: false
+        )
+        #expect(asked.install == [newer])
+    }
 }

@@ -20,10 +20,11 @@ func pkg(_ name: String, _ version: String = "1", _ fields: [String: String] = [
 /// takes it from any. The default follows every installed package to the
 /// fixtures' one repository. `auto` names the installed packages marked
 /// `Auto-Installed`. `adapting` names the architectures an adapter rewrites
-/// into the fixtures' `arm64`, and `implied` the Pre-Depends its preview
+/// into the fixtures' `arm64`, `adaptedUpdates` whether an update of
+/// everything takes their newer versions, and `implied` the Pre-Depends its preview
 /// puts in front; `withoutImplied` the adapted packages whose file, once
 /// adapted, showed they get none.
-func solve(_ available: [Package], installed: [Package] = [], actions: [ResolutionAction], update: Bool = false, blocked: Set<String> = [], origins: [String: String]? = nil, auto: Set<String> = [], autoremove: Set<String> = [], allowSystemRemoval: Bool = false, adapting: Set<String> = [], implied: String? = nil, withoutImplied: Set<Package> = []) throws -> ResolutionPlan {
+func solve(_ available: [Package], installed: [Package] = [], actions: [ResolutionAction], update: Bool = false, blocked: Set<String> = [], origins: [String: String]? = nil, auto: Set<String> = [], autoremove: Set<String> = [], allowSystemRemoval: Bool = false, adapting: Set<String> = [], adaptedUpdates: Bool = true, implied: String? = nil, withoutImplied: Set<Package> = []) throws -> ResolutionPlan {
     let origins = origins ?? Dictionary(uniqueKeysWithValues: installed.map { ($0.identity, "https://example.test/") })
     var preview: ResolutionSnapshot.ManifestPreview?
     if let implied {
@@ -38,6 +39,7 @@ func solve(_ available: [Package], installed: [Package] = [], actions: [Resoluti
         installableArchitectures: adapting.union(["arm64"]),
         adaptedManifestPreview: preview,
         blockedUpdates: blocked,
+        offersAdaptedUpdates: adaptedUpdates,
         origins: origins.compactMapValues(URL.init(string:)),
         autoInstalled: auto
     )

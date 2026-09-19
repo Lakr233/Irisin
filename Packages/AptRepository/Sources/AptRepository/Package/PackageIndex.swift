@@ -18,6 +18,10 @@ public struct PackageIndex: Sendable {
     /// identities the user asked never to be offered an update for
     public internal(set) var blockedUpdateTable: [String] = []
 
+    /// whether a newer version an adapter would have to rewrite counts as
+    /// an update; off, a converted package stays at the version it has
+    public internal(set) var offersAdaptedUpdates = false
+
     // MARK: - QUERIES
 
     /// grab every package identity, useful for search
@@ -141,7 +145,9 @@ public struct PackageIndex: Sendable {
     /// identity with no origin (another package manager installed it, or
     /// dpkg by hand) has no repository to keep to, so every repository's
     /// newer version is on offer, as apt would have it; installing one makes
-    /// that repository the origin.
+    /// that repository the origin. A version built for another bootstrap is
+    /// an update only while `offersAdaptedUpdates` says so: what converted
+    /// once and works may not convert as well the next time.
     /// - Parameters:
     ///   - identity: identity in string
     ///   - current: current version
@@ -153,10 +159,13 @@ public struct PackageIndex: Sendable {
         } else {
             db.packages(identity: identity)
         }
+        let accepted = offersAdaptedUpdates
+            ? AptEnvironment.current.installableArchitectures
+            : [AptEnvironment.current.deviceArchitecture]
         return offers.filter { item in
             guard let version = item.latestVersion else { return false }
             return Package.compareVersion(version, b: current) == .aIsBiggerThenB
-                && item.supports(anyOf: AptEnvironment.current.installableArchitectures)
+                && item.supports(anyOf: accepted)
         }
     }
 

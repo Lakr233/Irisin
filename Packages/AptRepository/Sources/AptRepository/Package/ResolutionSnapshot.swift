@@ -23,6 +23,10 @@ public struct ResolutionSnapshot: Sendable {
     /// no code to load) loses it here.
     public var adaptedManifests: [Package: [String: String]] = [:]
     public let blockedUpdates: Set<String>
+    /// Whether updating everything may move an installed package to a
+    /// version an adapter would have to rewrite. Asked for by name, such a
+    /// version installs either way.
+    public let offersAdaptedUpdates: Bool
     /// The repository each installed identity came from, for those this
     /// app installed. An identity follows its repository: only that
     /// repository's versions are candidates for it. An identity with no
@@ -41,6 +45,7 @@ public struct ResolutionSnapshot: Sendable {
         installableArchitectures: Set<String>? = nil,
         adaptedManifestPreview: ManifestPreview? = nil,
         blockedUpdates: Set<String> = [],
+        offersAdaptedUpdates: Bool = true,
         origins: [String: URL] = [:],
         autoInstalled: Set<String> = [],
         statusDigest: String = "",
@@ -52,6 +57,7 @@ public struct ResolutionSnapshot: Sendable {
         self.installableArchitectures = installableArchitectures ?? [architecture]
         self.adaptedManifestPreview = adaptedManifestPreview
         self.blockedUpdates = blockedUpdates
+        self.offersAdaptedUpdates = offersAdaptedUpdates
         self.origins = origins
         self.autoInstalled = autoInstalled
         self.statusDigest = statusDigest
