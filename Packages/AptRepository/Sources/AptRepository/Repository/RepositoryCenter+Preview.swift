@@ -23,17 +23,17 @@ public extension RepositoryCenter {
         let repository = Repository(source: source)
         return await Self.fetchPreview(
             releaseUrl: repository.metaReleaseUrl,
-            avatarUrl: repository.avatarUrl,
+            avatarUrls: repository.avatarUrls,
             networking: networkingConfiguration
         )
     }
 
     internal nonisolated static func fetchPreview(
         releaseUrl: URL,
-        avatarUrl: URL,
+        avatarUrls: [URL],
         networking: NetworkingConfiguration
     ) async -> RepositoryPreview? {
-        async let avatar = downloadData(fromUrl: avatarUrl, networking: networking)
+        async let avatar = downloadAvatar(from: avatarUrls, networking: networking)
         guard let release = await downloadUpdateRelease(withUrl: releaseUrl, networking: networking),
               let meta = try? DebianControl.parse(release)
         else {

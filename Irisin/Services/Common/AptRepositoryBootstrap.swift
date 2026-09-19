@@ -19,6 +19,7 @@ nonisolated enum AptRepositoryBootstrap {
             aptExtendedStatesLocation: JailbreakRoot.path("/var/lib/apt/extended_states"),
             deviceArchitecture: { EnvironmentDetector.architecture },
             installableArchitectures: { installableArchitectures },
+            indexFallbacks: { BootstrapArchitecture.probeOrder.map(\.rawValue) },
             adaptedPreDepends: PackageAdapters.installed.impliedPreDepends(on: EnvironmentDetector.architecture),
             storage: PropertiesStorage(),
             logger: DogLogger()

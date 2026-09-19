@@ -23,10 +23,12 @@ extension RepositoryCenter {
     /// so the download never reads the repositories.
     struct UpdateRequest: Sendable {
         let url: URL
-        let avatarUrl: URL
+        /// where the icon may be, in the order asked
+        let avatarUrls: [URL]
         let releaseUrl: URL
-        /// one per component; a flat repository has one
-        let packageBaseUrls: [URL]
+        /// one entry per architecture in the order tried, each with one
+        /// index per component; a flat repository has one of one
+        let packageCandidates: [[URL]]
         let preferredSearchPath: String
         let availableSearchPath: [String]
         let networking: NetworkingConfiguration
@@ -37,13 +39,13 @@ extension RepositoryCenter {
         let components: [String]
 
         /// The index paths as the given Release describes them.
-        func packageBaseUrls(release: [String: String]) -> [URL] {
+        func packageCandidates(release: [String: String]) -> [[URL]] {
             Repository.packageIndexUrls(
                 suiteUrl: suiteUrl,
                 distribution: distribution,
                 components: components,
                 release: release,
-                device: AptEnvironment.current.deviceArchitecture
+                architectures: AptEnvironment.current.indexArchitectures
             )
         }
     }
@@ -67,9 +69,9 @@ extension RepositoryCenter {
         guard let repo = repositories[url] else { return nil }
         return UpdateRequest(
             url: url,
-            avatarUrl: repo.avatarUrl,
+            avatarUrls: repo.avatarUrls,
             releaseUrl: repo.metaReleaseUrl,
-            packageBaseUrls: repo.metaPackageUrls,
+            packageCandidates: repo.metaPackageCandidates,
             preferredSearchPath: repo.preferredSearchPath,
             availableSearchPath: repo.availableSearchPath,
             networking: networkingConfiguration,
@@ -236,6 +238,54 @@ extension RepositoryCenter {
         return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
+    /// Every suffix of one architecture's indexes at once: the first that
+    /// compiles to a non-empty index, or nil when none does.
+    private nonisolated static func probeSearchPaths(
+        _ searchPaths: [String],
+        of baseUrls: [URL],
+        fromRepo: URL,
+        networking: NetworkingConfiguration
+    ) async -> SearchPathProbe? {
+        await withTaskGroup(
+            of: SearchPathProbe?.self,
+            returning: SearchPathProbe?.self
+        ) { group in
+            for searchPath in searchPaths {
+                group.addTask {
+                    guard let body = await downloadPackageIndexes(
+                        baseUrls,
+                        suffix: searchPath,
+                        networking: networking
+                    )
+                    else { return nil }
+                    let packages = invokePackages(withContext: body, fromRepo: fromRepo)
+                    guard packages.count > 0 else { return nil }
+                    return SearchPathProbe(suffix: searchPath, packages: packages)
+                }
+            }
+            for await result in group {
+                if let result {
+                    group.cancelAll()
+                    return result
+                }
+            }
+            return nil
+        }
+    }
+
+    /// The icon from the first address that has one.
+    nonisolated static func downloadAvatar(
+        from urls: [URL],
+        networking: NetworkingConfiguration
+    ) async -> Data? {
+        for url in urls {
+            if let data = await downloadData(fromUrl: url, networking: networking) {
+                return data
+            }
+        }
+        return nil
+    }
+
     /// Downloads and compiles one repository. Off the main actor throughout;
     /// `progress` is the only way back in until the outcome is committed.
     /// - Parameters:
@@ -262,7 +312,7 @@ extension RepositoryCenter {
         aptLog(Self.self, "update \(id) enter stage 1", level: .verbose)
 
         async let avatarTask: Data? = {
-            let value = await downloadData(fromUrl: request.avatarUrl, networking: networking)
+            let value = await downloadAvatar(from: request.avatarUrls, networking: networking)
             await progress(10, nil)
             return value
         }()
@@ -273,7 +323,7 @@ extension RepositoryCenter {
         }()
         async let packageTask: String? = {
             let value = await downloadPackageIndexes(
-                request.packageBaseUrls,
+                request.packageCandidates.first ?? [],
                 suffix: request.preferredSearchPath,
                 networking: networking
             )
@@ -318,49 +368,33 @@ extension RepositoryCenter {
 
         // MARK: - STAGE 3
 
-        // STAGE 3 [try all search path for package if needed]
+        // STAGE 3 [try every architecture and search path if needed]
         //
-        // Knock on every compression suffix the repo advertises and keep the
-        // first one that compiles to a non-empty index; cancelling the group
-        // stops the rest.
+        // One architecture at a time, in order, so the device's own index
+        // wins over a fallback wherever both exist. Within one, knock on
+        // every compression suffix and keep the first that compiles to a
+        // non-empty index; cancelling the group stops the rest.
         aptLog(Self.self, "update \(id) enter stage 3", level: .verbose)
 
         if outcome.packages?.count ?? 0 < 1 {
-            // a Release fetched just now may name another index directory
-            // than the one the stored Release did (or an empty one, on a
-            // repository added a moment ago): the probes read the fresh one
-            let baseUrls = outcome.release.map { request.packageBaseUrls(release: $0) } ?? request.packageBaseUrls
-            if baseUrls != request.packageBaseUrls {
-                aptLog(Self.self, "update \(id) moves to \(baseUrls.map(\.absoluteString))", level: .info)
-            }
-            let winner = await withTaskGroup(
-                of: SearchPathProbe?.self,
-                returning: SearchPathProbe?.self
-            ) { group in
-                for searchPath in request.availableSearchPath {
-                    group.addTask {
-                        guard let body = await downloadPackageIndexes(
-                            baseUrls,
-                            suffix: searchPath,
-                            networking: networking
-                        )
-                        else { return nil }
-                        let packages = invokePackages(withContext: body, fromRepo: request.url)
-                        guard packages.count > 0 else { return nil }
-                        return SearchPathProbe(suffix: searchPath, packages: packages)
-                    }
+            // a Release fetched just now may name other index directories
+            // than the stored one did (or an empty one, on a repository
+            // added a moment ago): the probes read the fresh one
+            let candidates = outcome.release.map { request.packageCandidates(release: $0) }
+                ?? request.packageCandidates
+            for baseUrls in candidates {
+                guard let winner = await probeSearchPaths(
+                    request.availableSearchPath,
+                    of: baseUrls,
+                    fromRepo: request.url,
+                    networking: networking
+                ) else { continue }
+                if baseUrls != request.packageCandidates.first {
+                    aptLog(Self.self, "update \(id) moves to \(baseUrls.map(\.absoluteString))", level: .info)
                 }
-                for await result in group {
-                    if let result {
-                        group.cancelAll()
-                        return result
-                    }
-                }
-                return nil
-            }
-            if let winner {
                 outcome.packages = winner.packages
                 outcome.searchPath = winner.suffix
+                break
             }
         } else {
             outcome.searchPath = request.preferredSearchPath

@@ -28,10 +28,11 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         case addMore
     }
 
-    /// Rootless and roothide get separate lists, never mixed. Havoc and
-    /// Chariz publish rootless packages only, which roothide installs
-    /// through the adapter; ElleKit is rootless alone, since roothide
-    /// brings its own injector.
+    /// Rootless and roothide get separate lists, never mixed. Havoc,
+    /// Chariz and BigBoss publish rootless packages only, which roothide
+    /// installs through the adapter; ElleKit is rootless alone, since
+    /// roothide brings its own injector. BigBoss is a suite and plain
+    /// HTTP: a bare address has no Release, and its certificate expired.
     private static var recommendedSources: [String] {
         if EnvironmentDetector.architecture == BootstrapArchitecture.roothide.rawValue {
             return [
@@ -41,6 +42,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
                 "deb https://roothide.github.io/procursus iphoneos-arm64e/1900 main",
                 "https://havoc.app",
                 "https://repo.chariz.com",
+                "deb http://apt.thebigboss.org/repofiles/cydia stable main",
                 "https://apt.owngoal.dev",
             ]
         }
@@ -48,6 +50,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
             "deb https://apt.procurs.us \(procursusSuite) main",
             "https://havoc.app",
             "https://repo.chariz.com",
+            "deb http://apt.thebigboss.org/repofiles/cydia stable main",
             "https://ellekit.space",
             "https://apt.owngoal.dev",
         ]

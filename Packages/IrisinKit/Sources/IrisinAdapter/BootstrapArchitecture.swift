@@ -12,4 +12,9 @@ public enum BootstrapArchitecture: String, Hashable, Sendable {
     case rootless = "iphoneos-arm64"
     /// Files at rootful paths, relocated by dpkg into a randomized root.
     case roothide = "iphoneos-arm64e"
+
+    /// The order a suite repository with nothing built for this device is
+    /// probed in, after the device's own. Rootful is last: nothing installs
+    /// it, and its index is there to say so rather than fail the refresh.
+    public static let probeOrder: [BootstrapArchitecture] = [.roothide, .rootless, .rootful]
 }

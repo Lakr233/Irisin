@@ -2,49 +2,70 @@
 import Foundation
 import Testing
 
-/// Which Packages index a suite is read from, given what its Release offers.
+/// Which Packages indexes a suite is probed for, and in what order, given
+/// what its Release offers.
 struct PackageIndexUrlTests {
-    private let suite = URL(string: "https://example.org/dists/iphoneos-arm64/1800")!
+    private let suite = URL(string: "https://example.org/dists/stable")!
+    private static let rootless = ["iphoneos-arm64", "iphoneos-arm64e", "iphoneos-arm"]
+    private static let roothide = ["iphoneos-arm64e", "iphoneos-arm64", "iphoneos-arm"]
 
-    private func urls(distribution: String?, components: [String] = ["main"], release: [String: String], device: String = "iphoneos-arm64") -> [String] {
+    private func candidates(
+        distribution: String? = "stable",
+        components: [String] = ["main"],
+        release: [String: String],
+        architectures: [String] = rootless
+    ) -> [[String]] {
         Repository.packageIndexUrls(
             suiteUrl: distribution == nil ? URL(string: "https://example.org")! : suite,
             distribution: distribution,
             components: components,
             release: release,
-            device: device
-        ).map(\.absoluteString)
+            architectures: architectures
+        ).map { $0.map(\.absoluteString) }
+    }
+
+    private func index(_ architecture: String, component: String = "main") -> String {
+        "https://example.org/dists/stable/\(component)/binary-\(architecture)/Packages"
     }
 
     @Test func flatRepositoryHasOneIndex() {
-        #expect(urls(distribution: nil, release: [:]) == ["https://example.org/Packages"])
+        #expect(candidates(distribution: nil, release: [:]) == [["https://example.org/Packages"]])
     }
 
-    @Test func deviceArchitectureWhenOfferedOrUnknown() {
-        #expect(urls(distribution: "iphoneos-arm64/1800", release: [:])
-            == ["https://example.org/dists/iphoneos-arm64/1800/main/binary-iphoneos-arm64/Packages"])
-        #expect(urls(distribution: "iphoneos-arm64/1800", release: ["architectures": "iphoneos-arm iphoneos-arm64"])
-            == ["https://example.org/dists/iphoneos-arm64/1800/main/binary-iphoneos-arm64/Packages"])
+    @Test func silentReleaseLeavesTheWholeChainInOrder() {
+        #expect(candidates(release: [:])
+            == [[index("iphoneos-arm64")], [index("iphoneos-arm64e")], [index("iphoneos-arm")]])
+        #expect(candidates(release: [:], architectures: Self.roothide)
+            == [[index("iphoneos-arm64e")], [index("iphoneos-arm64")], [index("iphoneos-arm")]])
     }
 
-    @Test func procursusLegacyDirectoryForASuiteNamedAfterTheDevice() {
-        #expect(urls(distribution: "iphoneos-arm64/1800", release: ["architectures": "iphoneos-arm"])
-            == ["https://example.org/dists/iphoneos-arm64/1800/main/binary-iphoneos-arm/Packages"])
+    @Test func releaseDropsWhatItDoesNotOffer() {
+        // BigBoss: rootless reads its own index, roothide the rootless one,
+        // and neither asks for the rootful one first
+        let bigBoss = ["architectures": "iphoneos-arm iphoneos-arm64"]
+        #expect(candidates(release: bigBoss) == [[index("iphoneos-arm64")], [index("iphoneos-arm")]])
+        #expect(candidates(release: bigBoss, architectures: Self.roothide)
+            == [[index("iphoneos-arm64")], [index("iphoneos-arm")]])
     }
 
-    @Test func rootfulSuiteIsNotSubstituted() {
-        // a legacy repository for another bootstrap keeps failing at the device's own path
-        #expect(urls(distribution: "stable", release: ["architectures": "iphoneos-arm"])
-            == ["https://example.org/dists/iphoneos-arm64/1800/main/binary-iphoneos-arm64/Packages"])
+    @Test func deviceArchitectureComesFirstWhenOffered() {
+        #expect(candidates(release: ["architectures": "iphoneos-arm64 iphoneos-arm64e"], architectures: Self.roothide)
+            == [[index("iphoneos-arm64e")], [index("iphoneos-arm64")]])
     }
 
-    @Test func allAndForeignArchitecturesAreNeverChosen() {
-        #expect(urls(distribution: "iphoneos-arm64/1800", release: ["architectures": "all iphoneos-arm64e"])
-            == ["https://example.org/dists/iphoneos-arm64/1800/main/binary-iphoneos-arm64/Packages"])
+    @Test func legacyDirectoryIsReachedThroughTheChain() {
+        // Procursus keeps a rootless suite in binary-iphoneos-arm, and a
+        // rootful repository has nothing else: both are read, not failed
+        #expect(candidates(release: ["architectures": "iphoneos-arm"]) == [[index("iphoneos-arm")]])
     }
 
-    @Test func oneIndexPerComponent() {
-        #expect(urls(distribution: "iphoneos-arm64/1800", components: ["main", "extra"], release: [:]).count == 2)
+    @Test func releaseNamingNothingKnownLeavesTheWholeChain() {
+        #expect(candidates(release: ["architectures": "all amd64"]).count == 3)
+    }
+
+    @Test func oneIndexPerComponentInEveryCandidate() {
+        #expect(candidates(components: ["main", "extra"], release: ["architectures": "iphoneos-arm64"])
+            == [[index("iphoneos-arm64"), index("iphoneos-arm64", component: "extra")]])
     }
 }
 

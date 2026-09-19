@@ -299,17 +299,22 @@ final class AptDatabaseTests: XCTestCase {
     func testIndexUrls() {
         let flat = Repository(source: RepositorySource(url: Self.repoA))
         XCTAssertEqual(flat.metaReleaseUrl.absoluteString, "https://a.example/Release")
-        XCTAssertEqual(flat.metaPackageUrls.map(\.absoluteString), ["https://a.example/Packages"])
+        XCTAssertEqual(flat.metaPackageCandidates.map { $0.map(\.absoluteString) }, [["https://a.example/Packages"]])
 
         let flatSuite = Repository(source: RepositorySource(url: Self.repoA, distribution: "ios/"))
         XCTAssertEqual(flatSuite.metaReleaseUrl.absoluteString, "https://a.example/ios/Release")
-        XCTAssertEqual(flatSuite.metaPackageUrls.map(\.absoluteString), ["https://a.example/ios/Packages"])
+        XCTAssertEqual(flatSuite.metaPackageCandidates.map { $0.map(\.absoluteString) }, [["https://a.example/ios/Packages"]])
 
         let dist = Repository(source: RepositorySource(url: Self.repoA, distribution: "1900", components: ["main", "extra"]))
         XCTAssertEqual(dist.metaReleaseUrl.absoluteString, "https://a.example/dists/1900/Release")
-        XCTAssertEqual(dist.metaPackageUrls.map(\.absoluteString), [
+        XCTAssertEqual(dist.metaPackageCandidates.map { $0.map(\.absoluteString) }, [[
             "https://a.example/dists/1900/main/binary-iphoneos-arm64/Packages",
             "https://a.example/dists/1900/extra/binary-iphoneos-arm64/Packages",
+        ]])
+        XCTAssertEqual(dist.avatarUrls.map(\.absoluteString), [
+            "https://a.example/CydiaIcon.png",
+            "https://a.example/dists/1900/CydiaIcon.png",
         ])
+        XCTAssertEqual(flat.avatarUrls.map(\.absoluteString), ["https://a.example/CydiaIcon.png"])
     }
 }

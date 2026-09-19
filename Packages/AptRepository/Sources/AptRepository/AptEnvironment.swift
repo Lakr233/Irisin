@@ -58,14 +58,25 @@ public struct AptEnvironment: Sendable {
     /// Every architecture a package may carry and still install here:
     /// `deviceArchitecture` plus those the embedder's adapters rewrite into
     /// it. `all` is always accepted and never listed. Decides what the
-    /// catalogue keeps and what the resolver may pick; which Packages index
-    /// a suite repository is asked for still follows `deviceArchitecture`,
-    /// so only a flat repository can offer an adapter's source packages.
+    /// resolver may pick and which flavour of a package the catalogue
+    /// prefers; what a suite repository is asked for is `indexArchitectures`.
     public var installableArchitectures: Set<String> {
         readInstallableArchitectures()
     }
 
     private let readInstallableArchitectures: @Sendable () -> Set<String>
+
+    /// The index directories a suite repository is probed for, in order:
+    /// `deviceArchitecture` first, then the other bootstraps the embedder
+    /// knows. The first that answers with packages is the one read, so a
+    /// suite with nothing built for this device still lists what it has,
+    /// and each package says whether it installs here.
+    public var indexArchitectures: [String] {
+        let device = deviceArchitecture
+        return [device] + readIndexFallbacks().filter { $0 != device }
+    }
+
+    private let readIndexFallbacks: @Sendable () -> [String]
 
     /// What the embedder's adapter prepends to the Pre-Depends of a package
     /// it rewrites; nil when nothing is adapted. See `ResolutionSnapshot`.
@@ -80,6 +91,7 @@ public struct AptEnvironment: Sendable {
         aptExtendedStatesLocation: String? = nil,
         deviceArchitecture: @escaping @Sendable () -> String,
         installableArchitectures: (@Sendable () -> Set<String>)? = nil,
+        indexFallbacks: @escaping @Sendable () -> [String] = { [] },
         adaptedPreDepends: String? = nil,
         storage: any AptStorage,
         logger: any AptLogger
@@ -89,6 +101,7 @@ public struct AptEnvironment: Sendable {
         self.aptExtendedStatesLocation = aptExtendedStatesLocation
         readDeviceArchitecture = deviceArchitecture
         readInstallableArchitectures = installableArchitectures ?? { [deviceArchitecture()] }
+        readIndexFallbacks = indexFallbacks
         self.adaptedPreDepends = adaptedPreDepends
         self.storage = storage
         self.logger = logger

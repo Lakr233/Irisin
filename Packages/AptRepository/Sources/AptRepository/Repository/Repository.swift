@@ -98,10 +98,14 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     // MARK: - METADATA
 
     public internal(set) var avatar = Data()
-    public var avatarUrl: URL {
-        url
-            .appendingPathComponent("CydiaIcon")
-            .appendingPathExtension("png")
+    /// Where the icon may be, in the order asked: the address itself, then
+    /// the suite's directory, which is where BigBoss keeps it.
+    public var avatarUrls: [URL] {
+        var bases = [url]
+        if suiteUrl != url {
+            bases.append(suiteUrl)
+        }
+        return bases.map { $0.appendingPathComponent("CydiaIcon").appendingPathExtension("png") }
     }
 
     public internal(set) var lastUpdateRelease = Date(timeIntervalSince1970: 0)
@@ -125,51 +129,49 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     public internal(set) var lastUpdatePackage = Date(timeIntervalSince1970: 0)
     public internal(set) var packageCount = 0
 
-    /// One Packages index per component, or the single one of a flat
-    /// repository. The refresh fetches them all and reads them as one.
-    public var metaPackageUrls: [URL] {
+    /// The Packages indexes to try, one entry per architecture in the order
+    /// tried, each with one index per component; a flat repository has a
+    /// single entry of one. The refresh reads the first entry that answers
+    /// with packages, all of its components as one.
+    public var metaPackageCandidates: [[URL]] {
         Self.packageIndexUrls(
             suiteUrl: suiteUrl,
             distribution: distribution,
             components: components,
             release: metaRelease,
-            device: AptEnvironment.current.deviceArchitecture
+            architectures: AptEnvironment.current.indexArchitectures
         )
     }
 
-    /// The index directory to read for `device` given what the Release
-    /// offers: the device's own, or the legacy `binary-iphoneos-arm` that
-    /// Procursus keeps for its rootless and roothide suites, accepted only
-    /// when the suite is named after the device's architecture
-    /// (`iphoneos-arm64/1800`). A suite that offers neither is fetched at
-    /// the device's own path and fails as it always did; `all` and other
-    /// architectures are never substituted, since their packages could not
-    /// be installed here.
+    /// The index directories to probe given what the Release offers:
+    /// `architectures` in order, the device's own first, less those a
+    /// Release that lists its architectures leaves out, so a directory known
+    /// to be missing costs no request: Procursus keeps its rootless suites
+    /// in the legacy `binary-iphoneos-arm` and its Release says so, and
+    /// BigBoss has `binary-iphoneos-arm64` and nothing for roothide. A
+    /// Release that lists none of them, or says nothing, leaves the whole
+    /// list to be probed. `all` is never a directory of its own.
     static func packageIndexUrls(
         suiteUrl: URL,
         distribution: String?,
         components: [String],
         release: [String: String],
-        device: String
-    ) -> [URL] {
+        architectures: [String]
+    ) -> [[URL]] {
         guard let distribution, !distribution.hasSuffix("/") else {
-            return [suiteUrl.appendingPathComponent("Packages")]
+            return [[suiteUrl.appendingPathComponent("Packages")]]
         }
         let offered = release["architectures"]?
             .split(whereSeparator: \.isWhitespace)
             .map(String.init) ?? []
-        var chosen = device
-        if !offered.isEmpty, !offered.contains(device),
-           offered.contains("iphoneos-arm"), distribution.contains(device)
-        {
-            chosen = "iphoneos-arm"
-        }
-        let architecture = "binary-\(chosen)"
-        return components.map {
-            suiteUrl
-                .appendingPathComponent($0)
-                .appendingPathComponent(architecture)
-                .appendingPathComponent("Packages")
+        let named = architectures.filter(offered.contains)
+        return (named.isEmpty ? architectures : named).map { architecture in
+            components.map {
+                suiteUrl
+                    .appendingPathComponent($0)
+                    .appendingPathComponent("binary-\(architecture)")
+                    .appendingPathComponent("Packages")
+            }
         }
     }
 
