@@ -244,7 +244,12 @@ class PackageCell: UIView {
         if let represent, represent.isSupportedOnDevice {
             if let badgedVersion {
                 indicator.backgroundColor = .versionBadgeBacking
-                if let currentCellVersion = represent.latestVersion {
+                // against the versions that may be an update, as the Updates
+                // page judges them
+                if let currentCellVersion = represent.version(
+                    comparedWith: badgedVersion,
+                    accepted: PackageCenter.default.index.updateArchitectures
+                ) {
                     let compare = Package.compareVersion(currentCellVersion, b: badgedVersion)
                     switch compare {
                     case .aIsBiggerThenB:

@@ -156,9 +156,14 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     /// device's own ahead of those an adapter rewrites, one index per
     /// component each: a suite with three packages built for this bootstrap
     /// and three hundred for the one next to it offers them all, and
-    /// `invokePackages` picks the build of each version. The rest follow
-    /// one entry each, reached only when nothing before them answered, so a
+    /// `invokePackages` picks the build of each version. An entry is read
+    /// whole or not at all, and two directories are not published as one:
+    /// where the Release lists one the server does not have, or has an
+    /// older copy of, each is asked again on its own. The rest follow one
+    /// entry each, reached only when nothing before them answered, so a
     /// suite with nothing that installs here still lists what it has.
+    /// An entry is asked for under one compression at a time, so
+    /// directories that share none are read through the single entries.
     static func packageIndexUrls(
         suiteUrl: URL,
         distribution: String?,
@@ -176,7 +181,9 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
         let named = architectures.filter(offered.contains)
         let chain = named.isEmpty ? architectures : named
         let together = chain.filter(installable.contains)
-        let entries = (together.isEmpty ? [] : [together]) + chain.filter { !installable.contains($0) }.map { [$0] }
+        let entries = (together.count > 1 ? [together] : [])
+            + together.map { [$0] }
+            + chain.filter { !installable.contains($0) }.map { [$0] }
         return entries.map { entry in
             entry.flatMap { architecture in
                 components.map {

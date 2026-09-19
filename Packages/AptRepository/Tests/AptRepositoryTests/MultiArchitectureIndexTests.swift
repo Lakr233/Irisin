@@ -114,4 +114,29 @@ struct MultiArchitectureIndexTests {
         let adapted = try #require(read([stanza("bar", "2.0", Self.rootless)])["bar"])
         #expect(adapted.versions(supportingAnyOf: [Self.roothide]) == nil)
     }
+
+    // MARK: update(over:device:accepted:)
+
+    /// A version built for the bootstrap is the update while one is newer
+    /// than what is installed, as the resolver would pick; the newer one an
+    /// adapter rewrites comes after, and only when it is accepted at all.
+    @Test func theNativeUpdateComesAheadOfANewerAdaptedOne() throws {
+        let foo = try #require(read([stanza("foo", "1.5", Self.roothide), stanza("foo", "2.0", Self.rootless)])["foo"])
+        let both: Set = [Self.roothide, Self.rootless]
+        #expect(foo.update(over: "1.0", device: Self.roothide, accepted: both)?.latestVersion == "1.5")
+        #expect(foo.update(over: "1.5", device: Self.roothide, accepted: both)?.latestVersion == "2.0")
+        #expect(foo.update(over: "1.5", device: Self.roothide, accepted: [Self.roothide]) == nil)
+        #expect(foo.update(over: "2.0", device: Self.roothide, accepted: both) == nil)
+    }
+
+    /// What a list row compares the installed version with.
+    @Test func aRowIsJudgedOnTheVersionsThatMayBeAnUpdate() throws {
+        let foo = try #require(read([stanza("foo", "1.5", Self.roothide), stanza("foo", "2.0", Self.rootless)])["foo"])
+        #expect(foo.version(comparedWith: "1.0", accepted: [Self.roothide]) == "1.5")
+        #expect(foo.version(comparedWith: "1.5", accepted: [Self.roothide]) == "1.5")
+        #expect(foo.version(comparedWith: "2.0", accepted: [Self.roothide]) == "2.0")
+        #expect(foo.version(comparedWith: "1.5", accepted: [Self.roothide, Self.rootless]) == "2.0")
+        let adapted = try #require(read([stanza("bar", "2.0", Self.rootless)])["bar"])
+        #expect(adapted.version(comparedWith: "1.0", accepted: [Self.roothide]) == "2.0")
+    }
 }

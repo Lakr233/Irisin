@@ -39,6 +39,9 @@ extension RepositoryCenter {
         let suiteUrl: URL
         let distribution: String?
         let components: [String]
+        /// the bootstrap's index directories and what installs on it
+        var architectures = AptEnvironment.current.indexArchitectures
+        var installable = AptEnvironment.current.installableArchitectures
 
         /// The index paths as the given Release describes them.
         func packageCandidates(release: [String: String]) -> [[URL]] {
@@ -47,8 +50,8 @@ extension RepositoryCenter {
                 distribution: distribution,
                 components: components,
                 release: release,
-                architectures: AptEnvironment.current.indexArchitectures,
-                installable: AptEnvironment.current.installableArchitectures
+                architectures: architectures,
+                installable: installable
             )
         }
     }

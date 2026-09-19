@@ -29,12 +29,13 @@ import Testing
         host: String,
         serving files: [String: Data],
         storedRelease: [String: String] = [:],
-        indexes: [[String]] = [["Packages"]]
+        indexes: [[String]] = [["Packages"]],
+        suite: (distribution: String, components: [String], architectures: [String], installable: Set<String>)? = nil
     ) async -> RepositoryCenter.UpdateOutcome {
         _ = TestEnvironment.root
         StubServer.serve(files, on: host)
         let url = URL(string: "https://\(host)")!
-        let request = RepositoryCenter.UpdateRequest(
+        var request = RepositoryCenter.UpdateRequest(
             url: url,
             avatarUrls: [],
             releaseUrl: url.appendingPathComponent("Release"),
@@ -44,9 +45,13 @@ import Testing
             storedRelease: storedRelease,
             networking: NetworkingConfiguration(headers: [:], timeout: 5, verboseLogging: false),
             suiteUrl: url,
-            distribution: nil,
-            components: []
+            distribution: suite?.distribution,
+            components: suite?.components ?? []
         )
+        if let suite {
+            request.architectures = suite.architectures
+            request.installable = suite.installable
+        }
         return await RepositoryCenter.performUpdate(request) { _, _ in }
     }
 
@@ -126,6 +131,33 @@ import Testing
 
         let alone = await update(host: "one-arch.test", serving: files.filter { $0.key.contains("other") }, indexes: [[own, other]])
         #expect(alone.packages?.keys.sorted() == ["only-other", "shared"])
+    }
+
+    /// The Release lists both directories and the server has one: the two
+    /// are not read together, and the one that is there is read on its own
+    /// before anything built for another bootstrap is.
+    @Test func aDirectoryTheReleaseListsAndTheServerLacksLeavesTheOther() async {
+        let own = "main/binary-iphoneos-arm64e/Packages"
+        let other = "main/binary-iphoneos-arm64/Packages"
+        let legacy = "main/binary-iphoneos-arm/Packages"
+        let index = Data("Package: adaptable\nVersion: 1\nArchitecture: iphoneos-arm64\n".utf8)
+        let rootful = Data("Package: rootful\nVersion: 1\nArchitecture: iphoneos-arm\n".utf8)
+        let digest = SHA256.hash(data: index).map { String(format: "%02x", $0) }.joined()
+        let release = Data("""
+        Origin: Example
+        Date: \(Self.evening)
+        SHA256:
+         \(digest) \(index.count) \(own)
+         \(digest) \(index.count) \(other)
+
+        """.utf8)
+        let outcome = await update(
+            host: "half-published.test",
+            serving: ["/Release": release, "/\(other)": index, "/\(legacy)": rootful],
+            indexes: [[own, other], [own], [other], [legacy]],
+            suite: ("stable", ["main"], ["iphoneos-arm64e", "iphoneos-arm64", "iphoneos-arm"], ["iphoneos-arm64e", "iphoneos-arm64"])
+        )
+        #expect(outcome.packages?.keys.sorted() == ["adaptable"])
     }
 
     @Test func pageThatIsNoIndexReplacesNothing() async {

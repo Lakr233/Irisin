@@ -144,4 +144,18 @@ struct AdaptedPackageTests {
         )
         #expect(asked.install == [newer])
     }
+
+    /// One record, a native version under a newer adapted one, everything
+    /// updating with adapted updates on: the native one is the update, which
+    /// is what `Package.update(over:device:accepted:)` tells the Updates page.
+    @Test func updateOfEverythingTakesTheNativeVersionOfAMixedRecord() throws {
+        let native = pkg("tweak", "1.5")
+        let record = Package(
+            identity: "tweak",
+            payload: native.payload.merging(pkg("tweak", "2", foreign).payload) { $1 },
+            repoRef: native.repoRef
+        )
+        let plan = try solve([record], installed: [pkg("tweak", "1", installed: true)], actions: [], update: true, adapting: ["other"])
+        #expect(plan.install.map(\.latestVersion) == ["1.5"])
+    }
 }

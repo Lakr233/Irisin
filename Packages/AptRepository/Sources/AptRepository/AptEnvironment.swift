@@ -72,7 +72,8 @@ public struct AptEnvironment: Sendable {
     /// catalogue; the rest are reached one by one only when nothing before
     /// them answered, so a suite with nothing that installs here still
     /// lists what it has, and each package says whether it installs here
-    /// (`Repository.packageIndexUrls`).
+    /// (`Repository.packageIndexUrls`). An installable architecture the
+    /// embedder leaves out of its fallbacks has no directory read.
     public var indexArchitectures: [String] {
         let device = deviceArchitecture
         return [device] + readIndexFallbacks().filter { $0 != device }

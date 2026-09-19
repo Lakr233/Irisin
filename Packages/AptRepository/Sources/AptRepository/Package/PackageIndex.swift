@@ -159,19 +159,29 @@ public struct PackageIndex: Sendable {
         } else {
             db.packages(identity: identity)
         }
-        let accepted = offersAdaptedUpdates
+        return offers.compactMap { updateOffer(in: $0, over: current) }
+    }
+
+    /// What of a repository's record is an update over `current`, nil when
+    /// nothing is. Judged on the versions that may be one, not on the
+    /// newest: a repository can offer a version built for this bootstrap
+    /// under a newer one an adapter would have to rewrite, which is an
+    /// update only with `offersAdaptedUpdates`, and then only once the
+    /// native ones are behind.
+    public func updateOffer(in record: Package, over current: String) -> Package? {
+        record.update(
+            over: current,
+            device: AptEnvironment.current.deviceArchitecture,
+            accepted: updateArchitectures
+        )
+    }
+
+    /// What a version may be built for and be an update: the bootstrap's
+    /// own, and what an adapter rewrites only with `offersAdaptedUpdates`.
+    public var updateArchitectures: Set<String> {
+        offersAdaptedUpdates
             ? AptEnvironment.current.installableArchitectures
             : [AptEnvironment.current.deviceArchitecture]
-        // judged on the versions that may be an update, not on the newest:
-        // a repository can offer a version built for this bootstrap under a
-        // newer one an adapter would have to rewrite
-        return offers.compactMap { item in
-            guard let offer = item.versions(supportingAnyOf: accepted),
-                  let version = offer.latestVersion,
-                  Package.compareVersion(version, b: current) == .aIsBiggerThenB
-            else { return nil }
-            return offer
-        }
     }
 
     /// search with virtual package identity that provided by package in return value

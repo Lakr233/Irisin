@@ -72,12 +72,17 @@ struct PackageIndexUrlTests {
 
     @Test func installableArchitecturesAreReadTogetherDeviceFirst() {
         #expect(candidates(release: [:], architectures: Self.roothide, installable: Self.adapting)
-            == [[index("iphoneos-arm64e"), index("iphoneos-arm64")], [index("iphoneos-arm")]])
+            == [
+                [index("iphoneos-arm64e"), index("iphoneos-arm64")],
+                [index("iphoneos-arm64e")], [index("iphoneos-arm64")], [index("iphoneos-arm")],
+            ])
+        // each directory again on its own: one the server does not have as
+        // the Release lists it must not take the other down with it
         #expect(candidates(
             release: ["architectures": "iphoneos-arm64 iphoneos-arm64e"],
             architectures: Self.roothide,
             installable: Self.adapting
-        ) == [[index("iphoneos-arm64e"), index("iphoneos-arm64")]])
+        ) == [[index("iphoneos-arm64e"), index("iphoneos-arm64")], [index("iphoneos-arm64e")], [index("iphoneos-arm64")]])
     }
 
     @Test func aReleaseWithoutTheDeviceLeavesTheAdaptableAlone() {
@@ -97,10 +102,10 @@ struct PackageIndexUrlTests {
             release: ["architectures": "iphoneos-arm64 iphoneos-arm64e"],
             architectures: Self.roothide,
             installable: Self.adapting
-        ) == [[
+        ).first == [
             index("iphoneos-arm64e"), index("iphoneos-arm64e", component: "extra"),
             index("iphoneos-arm64"), index("iphoneos-arm64", component: "extra"),
-        ]])
+        ])
     }
 
     @Test func oneIndexPerComponentInEveryCandidate() {
