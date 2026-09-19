@@ -82,6 +82,34 @@ extension UIViewController {
         present(alert, animated: true, completion: nil)
     }
 
+    /// A request with a better pick on offer: take it, go on as asked, or
+    /// leave. Three buttons stack in the order they are added. Returns once
+    /// the alert is gone, so whatever comes next can be presented. The
+    /// message and `anywayTitle` arrive in the user's language.
+    func askRecommendation(
+        title: String.LocalizationValue,
+        message: String,
+        anywayTitle: String
+    ) async -> RecommendationChoice {
+        // a second tap while the first alert is up, or a page on its way
+        // out: nothing would come up, and nothing would ever answer
+        guard presentedViewController == nil, view.window != nil else { return .cancel }
+        return await withCheckedContinuation { continuation in
+            let alert = AlertViewController(title: title, message: String.LocalizationValue(message)) { context in
+                context.addAction(title: "Select Recommended", attribute: .accent) {
+                    context.dispose { continuation.resume(returning: .recommended) }
+                }
+                context.addAction(title: anywayTitle) {
+                    context.dispose { continuation.resume(returning: .anyway) }
+                }
+                context.addAction(title: "Cancel") {
+                    context.dispose { continuation.resume(returning: .cancel) }
+                }
+            }
+            present(alert, animated: true)
+        }
+    }
+
     /// Returns once the dismissal has finished. The SDK marks
     /// `dismiss(animated:completion:)` `NS_SWIFT_DISABLE_ASYNC`, so an
     /// `await` on it returns at once, while the sheet is still leaving and
@@ -92,6 +120,11 @@ extension UIViewController {
             dismiss(animated: animated) { continuation.resume() }
         }
     }
+}
+
+/// The answer to `askRecommendation`.
+enum RecommendationChoice {
+    case recommended, anyway, cancel
 }
 
 /// A modal spinner for work the user has to wait through, built here rather

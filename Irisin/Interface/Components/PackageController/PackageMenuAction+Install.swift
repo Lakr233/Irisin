@@ -24,7 +24,7 @@ extension PackageMenuAction {
             return
         }
         guard let version = package.latestVersion,
-              let trimmedPackage = PackageCenter
+              let selected = PackageCenter
               .default
               .trim(package: package, toVersion: version)
         else {
@@ -36,16 +36,21 @@ extension PackageMenuAction {
             )
             return
         }
-        if package.localFileURL != nil {
+        // before a purchase is checked: nobody pays for the record the
+        // alert is about to talk them out of
+        guard let trimmedPackage = await recommended(inPlaceOf: selected, from: host) else { return }
+        // from here on the record going in, which may be a repository's
+        // where a file was opened
+        if trimmedPackage.localFileURL != nil {
             await enqueue([.install(trimmedPackage)], from: host)
             return
         }
 
-        guard package.isCommercial else {
+        guard trimmedPackage.isCommercial else {
             await enqueue([.install(trimmedPackage)], from: host)
             return
         }
-        guard let repoUrl = signedInStore(of: package, from: host) else { return }
+        guard let repoUrl = signedInStore(of: trimmedPackage, from: host) else { return }
         let alert = progressAlert(
             title: "Checking Purchase…",
             message: "Communicating with the vendor…"
@@ -64,6 +69,78 @@ extension PackageMenuAction {
         } else {
             await present(check, from: host)
         }
+    }
+
+    /// The record to queue for a request: the selected one, or the one the
+    /// user took in its place after a look at what else the repositories
+    /// offer under its identifier. One built for this system comes ahead of
+    /// one an adapter would rewrite, then a newer version of the same build;
+    /// taking a recommendation ends the questions, since it is the newest of
+    /// its kind. Nil when the user backed out.
+    static func recommended(inPlaceOf selected: Package, from host: UIViewController) async -> Package? {
+        let center = PackageCenter.default
+        let advice = PackageSelectionAdvice(
+            selected: selected,
+            offers: Array(center.obtainPackageSummary(with: selected.identity).values),
+            device: AptEnvironment.current.deviceArchitecture,
+            installable: AptEnvironment.current.installableArchitectures
+        )
+        let installed = center.obtainPackageInstallationInfo(with: selected.identity)?.version
+        let anyway = anywayTitle(for: selected, installedVersion: installed)
+
+        if let native = advice.nativeAlternative(installedVersion: installed) {
+            let choice = await host.askRecommendation(
+                title: "Better Package Available",
+                message: String(localized: "You selected version \(selected.latestVersion ?? ""), built for \(selected.architectures.joined(separator: ", ")), which would be installed in compatibility mode. \(repositoryName(of: native)) offers version \(native.latestVersion ?? "") built for this system."),
+                anywayTitle: anyway
+            )
+            switch choice {
+            case .recommended: return native
+            case .anyway: break
+            case .cancel: return nil
+            }
+        }
+        // blocked updates are news the user asked not to hear
+        if !center.blockedUpdateTable.contains(selected.identity),
+           let newer = advice.newerAlternative(
+               installedVersion: installed,
+               adaptedUpdates: center.offersAdaptedUpdates
+           )
+        {
+            let choice = await host.askRecommendation(
+                title: "Newer Version Available",
+                message: String(localized: "You selected version \(selected.latestVersion ?? ""). \(repositoryName(of: newer)) offers version \(newer.latestVersion ?? "")."),
+                anywayTitle: anyway
+            )
+            switch choice {
+            case .recommended: return newer
+            case .anyway: break
+            case .cancel: return nil
+            }
+        }
+        return selected
+    }
+
+    /// The button that goes on as asked, named after the menu item that asked.
+    private static func anywayTitle(for selected: Package, installedVersion: String?) -> String {
+        if TaskManager.shared.queuedPackage(of: selected.identity) != nil {
+            return String(localized: "Replace Anyway")
+        }
+        guard let installedVersion, let version = selected.latestVersion else {
+            return String(localized: "Install Anyway")
+        }
+        return switch Package.compareVersion(version, b: installedVersion) {
+        case .aIsBiggerThenB: String(localized: "Update Anyway")
+        case .aIsSmallerThenB: String(localized: "Downgrade Anyway")
+        default: String(localized: "Reinstall Anyway")
+        }
+    }
+
+    private static func repositoryName(of package: Package) -> String {
+        guard let url = package.repoRef else { return "" }
+        return RepositoryCenter.default.obtainImmutableRepository(withUrl: url)?.nickName
+            ?? url.host
+            ?? url.absoluteString
     }
 
     /// What the vendor said about a commercial package.
