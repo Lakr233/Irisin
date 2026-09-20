@@ -27,7 +27,7 @@ conflicts. Global conflicts remain visible even when individual dependencies
 all have matches.
 
 The queue previously kept its last successful plan when a subsequent request
-failed. `TaskManager.beginResolving` now revokes that plan before asynchronous
+failed. `PackageQueue.beginResolving` now revokes that plan before asynchronous
 work begins and retains the new user intent for editing. Failed queues cannot
 create an operation payload; tapping Install opens their diagnostic table.
 Clearing the queue also clears its report, and late failures cannot restore it.

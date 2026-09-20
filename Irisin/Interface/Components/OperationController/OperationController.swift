@@ -140,7 +140,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
             of: operation.plan,
             requested: operation.plan.recoveryMode
                 ? Set((operation.plan.install + operation.plan.remove).map(\.identity))
-                : Set(TaskManager.shared.actions.map(\.identity))
+                : Set(PackageQueue.shared.actions.map(\.identity))
         )
         ignoresScriptFailures = operation.transaction.ignoreScriptFailures
         super.init(nibName: nil, bundle: nil)
@@ -423,7 +423,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         retrying = true
         view.setNeedsLayout()
         Task { [weak self] in
-            let manager = TaskManager.shared
+            let manager = PackageQueue.shared
             await manager.settled()
             guard let self, view.window != nil else { return }
             let payload: TaskProcessor.OperationPayload? = if operation.plan.recoveryMode,

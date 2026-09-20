@@ -43,10 +43,10 @@ final class TaskProcessor {
         // payload's files. Each confirmed plan has a separate directory.
         inProcessingQueue = true
         defer { inProcessingQueue = false }
-        TaskManager.shared.operationBegan()
-        var sources: [(Package, URL, TaskManager.PatchedPackage?)] = []
+        PackageQueue.shared.operationBegan()
+        var sources: [(Package, URL, PackageQueue.PatchedPackage?)] = []
         do {
-            guard try await TaskManager.isCurrent(plan: plan, index: PackageCenter.default.index) else {
+            guard try await PackageQueue.isCurrent(plan: plan, index: PackageCenter.default.index) else {
                 // read again, so the queue is solved against what moved and
                 // Retry stages that plan, not this one again
                 await PackageCenter.default.reloadLocalPackages()
@@ -60,11 +60,11 @@ final class TaskProcessor {
                 guard let file else {
                     throw MissingDownload(identity: package.identity)
                 }
-                sources.append((package, file, TaskManager.shared.patched[package]))
+                sources.append((package, file, PackageQueue.shared.patched[package]))
             }
             let install = try await Self.stage(sources, at: workingLocation.appendingPathComponent(plan.id.uuidString))
             // checked again after the await: staging takes a while
-            guard try await TaskManager.isCurrent(plan: plan, index: PackageCenter.default.index) else {
+            guard try await PackageQueue.isCurrent(plan: plan, index: PackageCenter.default.index) else {
                 await PackageCenter.default.reloadLocalPackages()
                 throw ResolutionFailure(
                     message: String(localized: "Packages changed while preparing the installation. Try again.")
@@ -86,7 +86,7 @@ final class TaskProcessor {
                 statusDigest: plan.snapshot.statusDigest,
                 // read now, not when the plan was solved: a switch turned
                 // off since then has the helper refuse the removal
-                allowSystemRemoval: TaskManager.shared.allowSystemRemoval,
+                allowSystemRemoval: PackageQueue.shared.allowSystemRemoval,
                 ignoreScriptFailures: ignoreScriptFailures,
                 recoveryMode: plan.recoveryMode
             )
@@ -147,7 +147,7 @@ final class TaskProcessor {
             let plan = try await Self.recoveryRemovalPlan(
                 identity: identity,
                 index: PackageCenter.default.index,
-                allowSystemRemoval: TaskManager.shared.allowSystemRemoval
+                allowSystemRemoval: PackageQueue.shared.allowSystemRemoval
             )
             return await createOperationPayload(plan: plan)
         } catch {
@@ -177,7 +177,7 @@ final class TaskProcessor {
 
     @concurrent
     private nonisolated static func stage(
-        _ sources: [(Package, URL, TaskManager.PatchedPackage?)],
+        _ sources: [(Package, URL, PackageQueue.PatchedPackage?)],
         at location: URL
     ) async throws -> [InstallerJob.Transaction.Package] {
         try reset(location)
@@ -249,14 +249,14 @@ final class TaskProcessor {
             return monitor
         }
         inProcessingQueue = true
-        TaskManager.shared.operationBegan()
+        PackageQueue.shared.operationBegan()
         Task {
             let outcome = await perform(operation, monitor: monitor)
             // released before the outcome is published: whoever awaits the
             // outcome may begin the next operation straight away, and the
             // queue is settled before anyone looks at it
             inProcessingQueue = false
-            TaskManager.shared.operationFinished(
+            PackageQueue.shared.operationFinished(
                 plan: operation.plan,
                 succeeded: outcome.succeeded,
                 dryRun: operation.transaction.dryRun
@@ -267,7 +267,7 @@ final class TaskProcessor {
     }
 
     private func perform(_ operation: OperationPayload, monitor: OperationMonitor) async -> OperationMonitor.Outcome {
-        guard await (try? TaskManager.isCurrent(plan: operation.plan, index: PackageCenter.default.index)) == true
+        guard await (try? PackageQueue.isCurrent(plan: operation.plan, index: PackageCenter.default.index)) == true
         else {
             return .failed(String(localized: "Packages changed. Review the changes and try again."))
         }

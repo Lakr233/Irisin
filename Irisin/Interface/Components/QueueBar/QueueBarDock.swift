@@ -63,7 +63,7 @@ final class QueueBarDock {
         // the bar grows with the text size, and the room under it follows
         bar.heightChanged = { [weak self] in self?.makeRoom() }
 
-        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .map { _ in QueueController.queuedCount }
             .removeDuplicates()

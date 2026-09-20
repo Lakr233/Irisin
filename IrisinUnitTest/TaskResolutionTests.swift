@@ -14,7 +14,7 @@ final class TaskResolutionTests: XCTestCase {
         let center = PackageCenter.default
         let previous = center.index
         center.index = PackageIndex(db: db)
-        let manager = TaskManager.shared
+        let manager = PackageQueue.shared
         XCTAssertNil(manager.plan)
         defer {
             manager.clear()
@@ -62,13 +62,13 @@ final class TaskResolutionTests: XCTestCase {
             identity: "test.broken",
             payload: ["1": ["architecture": "all", "depends": "invalid (>=)"]]
         )
-        let result = await TaskManager.shared.propose([.install(broken)])
+        let result = await PackageQueue.shared.propose([.install(broken)])
         guard case let .failure(failure) = result else { return XCTFail("Malformed requirements must fail") }
 
         // the failure says why, the queue did not take it, and nothing is left running
         XCTAssertFalse(failure.message.isEmpty)
-        XCTAssertNil(TaskManager.shared.plan)
-        XCTAssertTrue(TaskManager.shared.actions.isEmpty)
+        XCTAssertNil(PackageQueue.shared.plan)
+        XCTAssertTrue(PackageQueue.shared.actions.isEmpty)
         XCTAssertFalse(TaskProcessor.shared.inProcessingQueue)
 
         // a plan the catalogue has moved out from under is not run

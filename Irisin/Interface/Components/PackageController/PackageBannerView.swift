@@ -111,7 +111,7 @@ class PackageBannerView: UIView {
 
         updateValues()
         // Open Queue follows the queue, whichever page changed it
-        queueSubscription = NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        queueSubscription = NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateButton() }
     }
@@ -190,7 +190,7 @@ class PackageBannerView: UIView {
         if !package.isSupportedOnDevice, package.localFileURL == nil {
             return String(localized: "Unsupported").uppercased()
         }
-        if TaskManager.shared.isQueued(package.identity) {
+        if PackageQueue.shared.isQueued(package.identity) {
             return (obtainQuickAction()?.descriptor.describe() ?? String(localized: "Open Queue")).uppercased()
         }
         if PackageCenter

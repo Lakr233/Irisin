@@ -125,7 +125,7 @@ extension PackageMenu {
 
     /// The button that goes on as asked, named after the menu item that asked.
     private static func anywayTitle(for selected: Package, installedVersion: String?) -> String {
-        if TaskManager.shared.queuedPackage(of: selected.identity) != nil {
+        if PackageQueue.shared.queuedPackage(of: selected.identity) != nil {
             return String(localized: "Replace Anyway")
         }
         guard let installedVersion, let version = selected.latestVersion else {

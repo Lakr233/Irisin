@@ -1,5 +1,5 @@
 //
-//  TaskManager.swift
+//  PackageQueue.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/19.
@@ -15,7 +15,7 @@ import IrisinAdapter
 
 nonisolated extension Notification.Name {
     /// The queue, its plan or its revision changed. Posted on the main actor.
-    static let TaskQueueChanged = Notification.Name("wiki.qaq.TaskQueueChanged")
+    static let PackageQueueChanged = Notification.Name("wiki.qaq.PackageQueueChanged")
 }
 
 /// The queue: what the user asked for, in order, and the one plan that does
@@ -25,8 +25,8 @@ nonisolated extension Notification.Name {
 /// index off the main actor. The revision tells a proposal made against an
 /// older queue, or older packages, from a current one; nothing changes the
 /// queue while an operation stages or runs.
-final class TaskManager {
-    static let shared = TaskManager()
+final class PackageQueue {
+    static let shared = PackageQueue()
 
     /// What the user asked for, one per identity, in the order asked.
     private(set) var actions: [ResolutionAction] = []
@@ -522,7 +522,7 @@ final class TaskManager {
 
     private func changed() {
         revision += 1
-        NotificationCenter.default.post(name: .TaskQueueChanged, object: nil)
+        NotificationCenter.default.post(name: .PackageQueueChanged, object: nil)
     }
 
     @concurrent

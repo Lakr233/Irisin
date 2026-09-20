@@ -493,7 +493,7 @@ class InstalledController: UICollectionViewController {
 
     @objc
     func blockUpdateAll() {
-        TaskManager.shared.blockUpdateEverything()
+        PackageQueue.shared.blockUpdateEverything()
         refreshUpdateSet()
     }
 

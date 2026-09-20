@@ -70,7 +70,7 @@ extension PackageMenu {
         if !removes.isEmpty {
             return (.actions(removes), leftOut)
         }
-        if rows.count == 1, let row = rows.first, TaskManager.shared.isQueued(row.identity) {
+        if rows.count == 1, let row = rows.first, PackageQueue.shared.isQueued(row.identity) {
             return (.withdraw(row.identity), [])
         }
         return (nil, leftOut)

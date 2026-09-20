@@ -50,7 +50,7 @@ extension PackageBannerView {
     /// The package is queued as it is: the tap goes to the queue, and the
     /// menu, with Remove from Queue, is a long press away.
     var opensQueue: Bool {
-        TaskManager.shared.isQueued(package.identity) && obtainQuickAction() == nil
+        PackageQueue.shared.isQueued(package.identity) && obtainQuickAction() == nil
     }
 
     /// What a tap does: the first eligible action for a file or a package
@@ -60,7 +60,7 @@ extension PackageBannerView {
     /// queued as it is (`opensQueue`).
     func obtainQuickAction() -> PackageMenu.Item? {
         let actions = PackageMenu.eligibleActions(for: package)
-        guard !TaskManager.shared.isQueued(package.identity) else {
+        guard !PackageQueue.shared.isQueued(package.identity) else {
             return actions.first { $0.descriptor == .replace }
         }
         guard package.localFileURL == nil,

@@ -56,10 +56,10 @@ extension SettingsController {
                 icon: "exclamationmark.shield",
                 title: String(localized: "Power Operations"),
                 kind: .toggle,
-                isOn: { TaskManager.shared.allowSystemRemoval },
+                isOn: { PackageQueue.shared.allowSystemRemoval },
                 setOn: { [weak self] isOn in
                     guard isOn else {
-                        TaskManager.shared.allowSystemRemoval = false
+                        PackageQueue.shared.allowSystemRemoval = false
                         return
                     }
                     self?.presentConfirmation(
@@ -68,7 +68,7 @@ extension SettingsController {
                         confirmTitle: "Allow",
                         destructive: true
                     ) { [weak self] in
-                        TaskManager.shared.allowSystemRemoval = true
+                        PackageQueue.shared.allowSystemRemoval = true
                         self?.dispatchValueUpdate()
                     }
                     // the switch follows the stored value: it goes back

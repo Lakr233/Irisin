@@ -85,7 +85,7 @@ class SidebarCards: UIView {
             x.trailing.equalTo(self.snp.trailing)
         }
 
-        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .map { _ in QueueController.badge }
             .prepend(QueueController.badge)

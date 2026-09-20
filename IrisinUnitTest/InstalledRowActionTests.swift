@@ -130,7 +130,7 @@ struct InstalledRowActionTests {
             "architecture": "all", "status": "install ok installed",
         ]])
         try withInstalledRow(offered: "2.0", alongside: [other]) { installed, _ in
-            let manager = TaskManager.shared
+            let manager = PackageQueue.shared
             try #require(manager.plan == nil && manager.actions.isEmpty)
             defer { manager.clear() }
             try #require(manager.commit(.init(
