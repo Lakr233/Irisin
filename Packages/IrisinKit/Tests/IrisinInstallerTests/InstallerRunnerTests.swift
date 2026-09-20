@@ -97,7 +97,7 @@ final class InstallerRunnerTests: XCTestCase {
 
         XCTAssertEqual(runner.run(.bootstrapIrisinDaemon), 0)
         XCTAssertEqual(runner.run(.bootoutIrisinDaemon), 0)
-        XCTAssertEqual(requests, [.bootstrap(plist: expected), .bootout(plist: expected)])
+        XCTAssertEqual(requests, [.bootstrap(plist: expected, executable: root + IrisinProtocol.daemonPath), .bootout(plist: expected)])
         XCTAssertEqual(events.filter { $0 == .phase(.completed) }.count, 2)
     }
 
@@ -120,6 +120,24 @@ final class InstallerRunnerTests: XCTestCase {
             return false
         })
         XCTAssertFalse(events.contains(.phase(.completed)))
+    }
+
+    func testDaemonPlistUsesKernelExecutablePathAndPreservesMachService() throws {
+        let root = try Scratch.installRoot()
+        let path = root + "/daemon.plist"
+        let original: [String: Any] = [
+            "ProgramArguments": ["/usr/libexec/irisind"],
+            "MachServices": ["wiki.qaq.irisin.service": true],
+            "AbandonProcessGroup": true,
+        ]
+        let data = try PropertyListSerialization.data(fromPropertyList: original, format: .xml, options: 0)
+        try data.write(to: URL(fileURLWithPath: path))
+        let executable = root + IrisinProtocol.daemonPath
+        try LaunchDaemonManager.preparePlist(at: path, executable: executable)
+        let result = try XCTUnwrap(NSDictionary(contentsOfFile: path))
+        XCTAssertEqual(result["ProgramArguments"] as? [String], [executable])
+        XCTAssertEqual(result["MachServices"] as? [String: Bool], ["wiki.qaq.irisin.service": true])
+        XCTAssertEqual(result["AbandonProcessGroup"] as? Bool, true)
     }
 
     func testMalformedJobIsRefused() throws {

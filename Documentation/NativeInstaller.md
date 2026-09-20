@@ -10,8 +10,10 @@ The package's own daemon lifecycle is native too. Its maintainer scripts feed
 closed, argument-free jobs to `irisin-install`; the helper derives Irisin's
 LaunchDaemon plist from its own installed path and uses IcliKit to boot out the
 old instance, bootstrap the plist and start the new instance. Removal uses
-the matching fixed bootout job. No `launchctl` executable or package dependency
-is involved.
+the matching fixed bootout job. Before loading, the helper writes its own
+daemon's kernel executable path into the installed plist: RootHide's rootful
+program path is not usable by launchd directly. No `launchctl` executable or
+package dependency is involved.
 
 ## Where to review
 

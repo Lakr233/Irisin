@@ -76,7 +76,7 @@ public final class InstallerRunner {
         case .respring:
             respring()
         case .bootstrapIrisinDaemon:
-            manageDaemon(.bootstrap(plist: daemonPlist))
+            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinProtocol.daemonPath))))
         case .bootoutIrisinDaemon:
             manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:
@@ -233,7 +233,7 @@ public final class InstallerRunner {
         do {
             try daemonManager.perform(request)
             switch request {
-            case let .bootstrap(plist):
+            case let .bootstrap(plist, _):
                 emit(.notice("Bootstrapped and started Irisin daemon from \(plist)"))
             case let .bootout(plist):
                 emit(.notice("Booted out Irisin daemon from \(plist)"))
