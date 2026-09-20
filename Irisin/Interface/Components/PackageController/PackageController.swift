@@ -60,6 +60,9 @@ class PackageController: UIViewController {
         $0.allowsSelection = false
         $0.rowHeight = UITableView.automaticDimension
         $0.estimatedRowHeight = 200
+        // a row follows the constraints inside it (the photo's height, a
+        // depiction that grew) without being told
+        $0.selfSizingInvalidation = .enabledIncludingConstraints
         $0.sectionHeaderTopPadding = 0
         for row in Row.allCases {
             $0.register(PackageRowCell.self, forCellReuseIdentifier: row.rawValue)
@@ -125,7 +128,9 @@ class PackageController: UIViewController {
     }
 
     private func fill(_ cell: PackageRowCell, with row: Row) {
-        cell.onHeightMismatch = { [weak self] in self?.setNeedsRowHeights() }
+        cell.onHeightMismatch = { [weak self] height in
+            self?.setNeedsRowHeights(for: row, wanting: height)
+        }
         switch row {
         case .artwork:
             // the content meets the photo with no gap between them
@@ -158,6 +163,8 @@ class PackageController: UIViewController {
             rows.append(.translationStatus)
         }
         rows += [.depiction, .footer]
+        // a row whose view or text changed may ask for any height again
+        changed.forEach { heightsAskedFor[$0] = nil }
         let before = Set(dataSource.snapshot().itemIdentifiers)
         var snapshot = NSDiffableDataSourceSnapshot<Int, Row>()
         snapshot.appendSections([0])
@@ -168,10 +175,18 @@ class PackageController: UIViewController {
 
     private var rowHeightsAreStale = false
 
+    /// The height each row last asked to be measured for. A row that asks
+    /// for the same height again was measured and did not get it, and
+    /// measuring once more would only have it ask again, for ever.
+    private var heightsAskedFor: [Row: CGFloat] = [:]
+
     /// A view outgrew its row or fell short of it: the rows are measured
     /// again, once for however many said so in this pass, and in place, as
     /// the scroll view this page used to be would have followed.
-    private func setNeedsRowHeights() {
+    private func setNeedsRowHeights(for row: Row, wanting height: CGFloat) {
+        let height = height.rounded()
+        guard heightsAskedFor[row] != height else { return }
+        heightsAskedFor[row] = height
         guard !rowHeightsAreStale else { return }
         rowHeightsAreStale = true
         Task { [weak self] in
@@ -183,12 +198,20 @@ class PackageController: UIViewController {
         }
     }
 
+    private var isMeasuringRows = false
+
     /// Has the table measure every row again, through a snapshot like every
-    /// other change to the list. iOS 16 throws from `performBatchUpdates`
-    /// on this table, whose rows are a diffable data source's, the first
-    /// time the page is laid out (issue 125).
+    /// other change to the list: iOS 16 throws from any of the table's own
+    /// mutation calls, an empty batch of updates included, while its data
+    /// source is a diffable one (issue 125). A row that says it is the
+    /// wrong height while this lays it out is not measured from inside
+    /// the measuring.
     private func measureRows(animated: Bool) {
+        guard isViewLoaded, !isMeasuringRows else { return }
         var snapshot = dataSource.snapshot()
+        guard snapshot.numberOfItems > 0 else { return }
+        isMeasuringRows = true
+        defer { isMeasuringRows = false }
         snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: animated)
     }
@@ -309,9 +332,17 @@ class PackageController: UIViewController {
         downloadDepictionIfAvailable()
     }
 
+    /// The width the rows were last laid out at.
+    private var laidOutWidth: CGFloat = 0
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         bannerBackdrop.frame = CGRect(x: 0, y: -1000, width: tableView.bounds.width, height: 1000)
+        if laidOutWidth != tableView.bounds.width {
+            // every height is another at another width
+            laidOutWidth = tableView.bounds.width
+            heightsAskedFor.removeAll()
+        }
         resizeBanner()
     }
 
@@ -372,6 +403,7 @@ class PackageController: UIViewController {
         }
         appliedBannerHeight = preferredBannerHeight
         artworkHeight?.update(offset: preferredBannerHeight)
+        heightsAskedFor[.artwork] = nil
         guard hasAppeared else {
             UIView.performWithoutAnimation {
                 measureRows(animated: false)
