@@ -20,11 +20,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = SetupViewController()
         self.window = window
-        window.makeKeyAndVisible()
 
-        guard PackagedArchitecture.incompatibilityMessage == nil else { return }
+        guard PackagedArchitecture.incompatibilityMessage == nil else {
+            window.rootViewController = UnsupportedArchitectureController()
+            window.makeKeyAndVisible()
+            return
+        }
+
+        // The interface is the root from the first frame: a tab bar that
+        // arrives later, over a loading screen, draws itself in as it comes.
+        // Laid out once the window has its size, which is what picks the
+        // layout, and before anything is drawn.
+        window.rootViewController = InterfaceHostController()
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
 
         // created from user activity
         if let userActivity = options.userActivities.first ?? session.stateRestorationActivity {
@@ -47,7 +57,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
               let package = Package.propertyListDecoded(with: data)
         else { return false }
         Task {
-            await interface().pageStack?.pushViewController(PackageController(package: package), animated: true)
+            await interface()?.pageStack?.pushViewController(PackageController(package: package), animated: true)
         }
         return true
     }
@@ -55,8 +65,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidBecomeActive(_: UIScene) {
         guard PackagedArchitecture.incompatibilityMessage == nil else { return }
         Dog.shared.join(self, "sceneDidBecomeActive", level: .info)
+        // at launch the first read is `load()`'s own, and a second one right
+        // behind it reads the same file
+        guard AppBootstrap.isFinished else { return }
         reloadThrottle.throttle {
-            Task { await PackageCenter.default.reloadLocalPackages() }
+            Task {
+                await PackageCenter.default.reloadLocalPackages()
+            }
         }
     }
 
@@ -80,21 +95,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /// The interface once setup has put it on screen, however long that takes.
-    private func interface() async -> InterfaceHostController {
-        while true {
-            if let interface = window?.rootViewController?.presentedViewController as? InterfaceHostController,
-               interface.current != nil
-            {
-                return interface
-            }
-            try? await Task.sleep(seconds: 0.2)
-        }
+    /// The interface once the engines are up, so what is opened in it finds
+    /// the repositories and packages it asks for. Nothing where the
+    /// interface never opens.
+    private func interface() async -> InterfaceHostController? {
+        guard await AppBootstrap.finished() else { return nil }
+        return window?.rootViewController as? InterfaceHostController
     }
 
     private func openQuickAddRepo(_ sources: [RepositorySource]) {
         Task {
-            let interface = await interface()
+            guard let interface = await interface() else { return }
             // a sheet the user has open stays, with this one over it
             (interface.presentedViewController ?? interface)
                 .present(RepositoryAddController.sheet(candidates: sources, origin: .link), animated: true)
@@ -106,7 +117,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// nothing: there is no page to show, and a blank one would be a lie.
     private func openPackage(_ identity: String) {
         Task {
-            let interface = await interface()
+            guard let interface = await interface() else { return }
             let center = PackageCenter.default
             let offered = center.newestPackage(
                 of: Array(center.obtainPackageSummary(with: identity).values),
@@ -153,14 +164,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             presentNotice(title: "Unable to Import", message: "This file could not be read. Choose another file.")
             return
         }
-        let registered = Set(RepositoryCenter.default.obtainRepositoryUrls())
-        let fresh = sources.filter { !registered.contains($0.url) }
-        guard !fresh.isEmpty else {
-            presentNotice(title: "Nothing to Import", message: "This file has no new repositories to add.")
-            return
-        }
         Task {
-            let interface = await interface()
+            // what is already added is known once the repositories are read
+            guard let interface = await interface() else { return }
+            let registered = Set(RepositoryCenter.default.obtainRepositoryUrls())
+            let fresh = sources.filter { !registered.contains($0.url) }
+            guard !fresh.isEmpty else {
+                presentNotice(title: "Nothing to Import", message: "This file has no new repositories to add.")
+                return
+            }
             (interface.presentedViewController ?? interface)
                 .present(RepositoryAddController.sheet(candidates: fresh, origin: .file), animated: true)
         }
@@ -171,7 +183,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let target = DebOpenController()
             target.patternLocation = url
             target.openedInPlace = inPlace
-            await interface().pageStack?.pushViewController(target, animated: true)
+            await interface()?.pageStack?.pushViewController(target, animated: true)
         }
     }
 
@@ -179,7 +191,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// interface the same way a page does.
     private func presentNotice(title: String.LocalizationValue, message: String.LocalizationValue) {
         Task {
-            let interface = await interface()
+            guard let interface = await interface() else { return }
             (interface.presentedViewController ?? interface).presentNotice(title: title, message: message)
         }
     }

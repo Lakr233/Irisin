@@ -29,14 +29,6 @@ class DetailNavigator: UINavigationController {
         navigationBar.prefersLargeTitles = false
     }
 
-    /// The dashboard is what the column opens on: see
-    /// `DashboardController.prepare(within:)`.
-    func prepare(within budget: Duration) async {
-        loadViewIfNeeded()
-        view.layoutIfNeeded()
-        await dashboard.prepare(within: budget)
-    }
-
     /// Puts `page` at the root of the column.
     func show(_ page: DetailPage) {
         let target: UIViewController = switch page {

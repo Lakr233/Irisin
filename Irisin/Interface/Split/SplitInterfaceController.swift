@@ -53,14 +53,6 @@ class SplitInterfaceController: UISplitViewController {
         navigator.delegate = self
     }
 
-    /// Loads and lays out both columns, then waits for the detail column's
-    /// first page, up to `budget`, so the two arrive in the same frame.
-    func prepare(within budget: Duration) async {
-        loadViewIfNeeded()
-        view.layoutIfNeeded()
-        await navigator.prepare(within: budget)
-    }
-
     /// The Queue card, as a tap on it.
     func showQueue() {
         sidebar.cards.open(.queue)

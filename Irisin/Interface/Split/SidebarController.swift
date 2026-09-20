@@ -157,9 +157,16 @@ class SidebarController: UIViewController {
 
     // MARK: - Rows
 
+    private var hasListedRepositories = false
+
     /// A collapsed section stays collapsed across a rebuild. The rows that
     /// stay repaint themselves: `RepositoryRow` listens for its own repository.
     private func rebuild(animated: Bool) {
+        // Before the repositories are read there is no list to show, and
+        // "No repositories" would be a guess; the first list arrives whole.
+        guard RepositoryCenter.default.isLoaded else { return }
+        let animated = animated && hasListedRepositories
+        hasListedRepositories = true
         let urls = RepositoryCenter.default.obtainRepositoryUrls(sortedByName: true).uniqued()
         let previous = dataSource.snapshot(for: .repositories)
         var outline = NSDiffableDataSourceSectionSnapshot<Item>()

@@ -13,8 +13,8 @@ import UIKit
 class DashboardController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     private var subscriptions = Set<AnyCancellable>()
 
-    /// The load viewDidLoad started, for whoever waits to show the page.
-    private var firstLoad: Task<Void, Never>?
+    /// Whether a first snapshot has landed: nothing animates in before it.
+    var hasShownSections = false
 
     var dataSource = [DashboardController.Section]()
     var reloadID = UUID()
@@ -104,16 +104,6 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         fatalError()
     }
 
-    /// Lays out at the width its container gave it, so the first snapshot
-    /// is cut and sized for that width, then waits for the first sections,
-    /// up to `budget`, so the page appears with its rows in place; a slower
-    /// load lands after it.
-    func prepare(within budget: Duration) async {
-        loadViewIfNeeded()
-        view.layoutIfNeeded()
-        await firstLoad?.wait(upTo: budget)
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -141,7 +131,12 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
         collectionView.addSubview(refreshControl)
 
-        firstLoad = Task { await reload(animated: false) }
+        // The page is on screen before the engines are: its first sections
+        // are the ones read after them, and they arrive without a move.
+        Task {
+            _ = await AppBootstrap.finished()
+            await reload(animated: false)
+        }
 
         // Repository download ticks share one rebuild per second.
         Publishers.MergeMany([
@@ -153,7 +148,12 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         })
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in
-            Task { await self?.reload(animated: true) }
+            Task {
+                // a center that announces itself mid-bootstrap is half of
+                // what the page shows; the first load above covers it
+                guard await AppBootstrap.finished() else { return }
+                await self?.reload(animated: self?.hasShownSections ?? false)
+            }
         }
         .store(in: &subscriptions)
     }

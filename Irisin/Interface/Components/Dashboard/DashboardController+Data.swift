@@ -39,6 +39,7 @@ extension DashboardController {
         applySnapshot(
             animatingDifferences: animated && collectionView.shouldAnimateDiff
         )
+        hasShownSections = true
     }
 
     func applySnapshot(animatingDifferences: Bool) {

@@ -29,7 +29,10 @@ public final class RepositoryCenter {
     /// off the main actor instead of calling back in.
     public internal(set) var repositories: [URL: Repository] = [:]
 
+    /// True once `repositories` is what the database holds, never while
+    /// `load()` is still reading: an empty list before that says nothing.
     public private(set) var isLoaded = false
+    private var isLoading = false
 
     /// Deleted repositories as source lines, offered again by the add sheet.
     @AptSetting(key: "\(kRepositoryCenterIdentity).historyRecords", defaultValue: [])
@@ -101,13 +104,16 @@ public final class RepositoryCenter {
     /// Reads the repositories and starts the update engine. Once per
     /// process, after `PackageCenter.load()`.
     public func load() async {
-        guard !isLoaded else { return }
-        isLoaded = true
+        guard !isLoading else { return }
+        isLoading = true
 
         aptLog(self, "initializing manager")
 
         repositories = await Self.readRepositories(from: AptDatabase.shared)
+        isLoaded = true
         aptLog(self, "database reported \(repositories.keys.count) repository", level: .info)
+        // a page built before this read has an empty list to replace
+        NotificationCenter.default.post(name: RepositoryCenter.registrationUpdate, object: nil)
 
         // Give the app a moment to finish booting, then keep draining the
         // update queue once a second.
