@@ -3,6 +3,7 @@
 //  Irisin
 //
 
+import SPIndicator
 import UIKit
 
 /// What a popover points at on the iPad: the view or the bar button the user
@@ -51,23 +52,45 @@ extension InterfaceBridge {
     /// then the page's own bar button, then the middle of the page. There is
     /// always an answer.
     ///
-    /// A bar button says nothing of whether it is on screen: one whose page
-    /// was popped while a download ran is neither hidden nor anywhere. So the
-    /// anchor's bar button counts only while it is one of the presenter's
-    /// own, and no bar button counts while the bar is hidden. The page's
-    /// items are its right ones, then its left: the iPad moves some there.
+    /// Being in a window is not being on screen. A view counts while it is
+    /// in the presenter's window (there may be several scenes), has a size
+    /// and is not hidden by itself or by anything above it: the custom view
+    /// of a hidden navigation bar is still in the window. A bar button says
+    /// nothing at all: one whose page was popped while a download ran is
+    /// neither hidden nor anywhere. So the anchor's bar button counts only
+    /// while it is one of the presenter's own, and no bar button counts
+    /// unless the presenter is the page its bar is showing. The page's items
+    /// are its right ones, then its left: the iPad moves some there.
     static func popoverTarget(for anchor: PopoverAnchor?, over presenter: UIViewController) -> PopoverTarget {
-        if let view = anchor?.view, view.window != nil {
+        if let view = anchor?.view, isOnScreen(view, in: presenter.viewIfLoaded?.window) {
             return .view(view)
         }
-        let barVisible = presenter.navigationController?.isNavigationBarHidden == false
         let item = presenter.navigationItem
-        let pageItems = barVisible ? (item.rightBarButtonItems ?? []) + (item.leftBarButtonItems ?? []) : []
+        let pageItems = showsBarButtons(of: presenter)
+            ? (item.rightBarButtonItems ?? []) + (item.leftBarButtonItems ?? [])
+            : []
         let anchorItems = pageItems.filter { $0 === anchor?.barButtonItem }
         if let item = (anchorItems + pageItems).first(where: { !$0.isHidden }) {
             return .barButtonItem(item)
         }
-        return .centre(of: presenter.view)
+        // A presenter with no view yet is never presented over
+        // (`canPresent`); the answer is still one a popover can take.
+        let ground = sequence(first: presenter, next: \.parent).lazy.compactMap(\.viewIfLoaded).first
+        return .centre(of: ground ?? presenter.view)
+    }
+
+    static func isOnScreen(_ view: UIView, in window: UIWindow?) -> Bool {
+        guard let window, view.window === window, !view.bounds.isEmpty else { return false }
+        return sequence(first: view, next: \.superview).allSatisfy { !$0.isHidden && $0.alpha > 0 }
+    }
+
+    /// Whether the navigation bar on screen is showing this page's items.
+    static func showsBarButtons(of presenter: UIViewController) -> Bool {
+        guard let navigator = presenter.navigationController,
+              navigator.topViewController === presenter,
+              !navigator.isNavigationBarHidden
+        else { return false }
+        return isOnScreen(navigator.navigationBar, in: presenter.viewIfLoaded?.window)
     }
 
     static func point(_ popover: UIPopoverPresentationController, at target: PopoverTarget) {
@@ -98,15 +121,49 @@ extension InterfaceBridge {
         return sheet
     }
 
-    /// Over a presenter that can take it. A share may come back from a
+    /// Over `presenter` while it can take it. A share may come back from a
     /// download or a copy to a page that has left or that shows something
-    /// else by then, and says nothing there: UIKit would only log a refusal.
+    /// else by then; the sheet then goes over whatever is on top in the same
+    /// window, pointing at that page and not at `anchor`. A cancelled task
+    /// shares nothing, and with nowhere at all to go the user is told.
     static func presentShareSheet(_ items: [Any], anchor: PopoverAnchor?, from presenter: UIViewController) {
-        guard canPresent(over: presenter) else { return }
-        presenter.present(shareSheet(items, anchor: anchor, over: presenter), animated: true)
+        guard !Task.isCancelled else { return }
+        guard let host = presentableController(for: presenter, anchor: anchor) else {
+            SPIndicator.present(title: String(localized: "Unable to Export"), preset: .error)
+            return
+        }
+        let anchor = host === presenter ? anchor : nil
+        host.present(shareSheet(items, anchor: anchor, over: host), animated: true)
     }
 
+    /// `presenter`, or the page on top of its window when it cannot present:
+    /// the last of the root's presented controllers, and the page that one
+    /// shows. The window of a presenter that left is the anchor's, and then
+    /// the one the user is looking at.
+    static func presentableController(
+        for presenter: UIViewController,
+        anchor: PopoverAnchor? = nil
+    ) -> UIViewController? {
+        if canPresent(over: presenter) { return presenter }
+        let window = presenter.viewIfLoaded?.window ?? anchor?.view?.window ?? UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }?
+            .keyWindow
+        guard var top = window?.rootViewController else { return nil }
+        while let next = top.presentedViewController, !next.isBeingDismissed {
+            top = next
+        }
+        while let page = (top as? UINavigationController)?.topViewController
+            ?? (top as? UITabBarController)?.selectedViewController
+        {
+            top = page
+        }
+        return canPresent(over: top) ? top : nil
+    }
+
+    /// In a window, and nothing presented by it or by anything it is in.
     static func canPresent(over presenter: UIViewController) -> Bool {
-        presenter.viewIfLoaded?.window != nil && presenter.presentedViewController == nil
+        guard presenter.viewIfLoaded?.window != nil else { return false }
+        return sequence(first: presenter, next: \.parent).allSatisfy { $0.presentedViewController == nil }
     }
 }

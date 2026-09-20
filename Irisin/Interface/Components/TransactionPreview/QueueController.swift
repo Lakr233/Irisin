@@ -298,7 +298,12 @@ final class QueueController: UIViewController, UITableViewDelegate {
             let copies = await Self.namedCopies(of: files)
             guard let self else { return }
             guard let copies else {
-                return presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
+                // the copies took a while; the queue may have left by now
+                InterfaceBridge.presentableController(for: self)?.presentNotice(
+                    title: "Unable to Export",
+                    message: "The file could not be written. Try again."
+                )
+                return
             }
             InterfaceBridge.presentShareSheet(copies, anchor: PopoverAnchor(menuItem), from: self)
         }

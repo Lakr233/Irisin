@@ -277,9 +277,9 @@ class LXSplitPanelController: UIViewController {
                 UIAction(
                     title: String(localized: "Share"),
                     image: UIImage(systemName: "square.and.arrow.up")
-                ) { _ in
+                ) { [weak self] _ in
                     guard let self else { return }
-                    ExportFile.shareRepository(url, from: self, anchor: self.cellAnchor(at: indexPath))
+                    ExportFile.shareRepository(url, from: self, anchor: cellAnchor(at: indexPath))
                 },
                 ExportFile.exportRepositoryAction(
                     url,
