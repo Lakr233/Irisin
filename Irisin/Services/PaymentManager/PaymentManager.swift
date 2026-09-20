@@ -28,10 +28,6 @@ final class PaymentManager {
         let secret: String
     }
 
-    nonisolated struct UserAccount: Sendable {
-        let item: [String]
-    }
-
     nonisolated struct PackageInfo: Sendable {
         let purchased: Bool?
         let available: Bool?
@@ -122,7 +118,7 @@ final class PaymentManager {
         // A failed Keychain write means the user looks signed in until the
         // next launch reads nothing back, so say so at the moment it happens.
         for (key, data) in [(keys.token, Data(token.utf8)), (keys.secret, Data(secret.utf8))] {
-            let status = KeyChain.save(key: key, data: data)
+            let status = Self.saveKeychainItem(account: key, data: data)
             if status != errSecSuccess {
                 Dog.shared.join(self, "keychain refused to store \(key): OSStatus \(status)", level: .error)
             }
@@ -132,9 +128,9 @@ final class PaymentManager {
 
     nonisolated func obtainStoredTokenInfomation(for repo: Repository) -> UserTokenInfo? {
         let keys = Self.keychainKeys(for: repo)
-        guard let tokenRaw = KeyChain.load(key: keys.token),
+        guard let tokenRaw = Self.loadKeychainItem(account: keys.token),
               let token = String(data: tokenRaw, encoding: .utf8),
-              let secretRaw = KeyChain.load(key: keys.secret),
+              let secretRaw = Self.loadKeychainItem(account: keys.secret),
               let secret = String(data: secretRaw, encoding: .utf8)
         else {
             return nil
@@ -151,8 +147,8 @@ final class PaymentManager {
         }
         guard let info = obtainStoredTokenInfomation(for: repo) else { return }
         let keys = Self.keychainKeys(for: repo)
-        KeyChain.delete(key: keys.token)
-        KeyChain.delete(key: keys.secret)
+        Self.deleteKeychainItem(account: keys.token)
+        Self.deleteKeychainItem(account: keys.secret)
         postNotification()
         guard let endpoint = repo.endpoint?.appendingPathComponent("sign_out") else {
             return
@@ -176,7 +172,9 @@ final class PaymentManager {
         }
     }
 
-    func obtainUserAccountInfo(for repo: URL) async -> UserAccount? {
+    /// The identities of the packages this account has bought, or nil when the
+    /// vendor did not answer.
+    func purchasedIdentities(for repo: URL) async -> [String]? {
         guard let repo = RepositoryCenter
             .default
             .obtainImmutableRepository(withUrl: repo),
@@ -188,7 +186,7 @@ final class PaymentManager {
 
         let request = Self.jsonRequest(endpoint.appendingPathComponent("user_info"), token: userInfo.token)
         guard let json = await Self.jsonReply(for: request) else { return nil }
-        return UserAccount(item: json["items"] as? [String] ?? [])
+        return json["items"] as? [String] ?? []
     }
 
     func obtainPackageInfo(for repo: URL, withPackageIdentity identity: String) async -> PackageInfo? {
@@ -337,6 +335,44 @@ final class PaymentManager {
         }
         return json
     }
+
+    // MARK: - KEYCHAIN
+
+    private nonisolated static func saveKeychainItem(account: String, data: Data) -> OSStatus {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword as String,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+        ] as [String: Any]
+
+        SecItemDelete(query as CFDictionary)
+
+        return SecItemAdd(query as CFDictionary, nil)
+    }
+
+    private nonisolated static func deleteKeychainItem(account: String) {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword as String,
+            kSecAttrAccount as String: account,
+        ] as [String: Any]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    private nonisolated static func loadKeychainItem(account: String) -> Data? {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: kCFBooleanTrue!,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ] as [String: Any]
+
+        var dataTypeRef: AnyObject?
+
+        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+
+        guard status == errSecSuccess else { return nil }
+        return dataTypeRef as? Data
+    }
 }
 
 // MARK: - HELPER
@@ -350,43 +386,5 @@ private class ASWebAuthenticationSessionWindowProvider: NSObject, ASWebAuthentic
 
     func presentationAnchor(for _: ASWebAuthenticationSession) -> ASPresentationAnchor {
         windowCache
-    }
-}
-
-private nonisolated enum KeyChain {
-    static func save(key: String, data: Data) -> OSStatus {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword as String,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data,
-        ] as [String: Any]
-
-        SecItemDelete(query as CFDictionary)
-
-        return SecItemAdd(query as CFDictionary, nil)
-    }
-
-    static func delete(key: String) {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword as String,
-            kSecAttrAccount as String: key,
-        ] as [String: Any]
-        SecItemDelete(query as CFDictionary)
-    }
-
-    static func load(key: String) -> Data? {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: kCFBooleanTrue!,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ] as [String: Any]
-
-        var dataTypeRef: AnyObject?
-
-        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-
-        guard status == errSecSuccess else { return nil }
-        return dataTypeRef as? Data
     }
 }

@@ -99,7 +99,10 @@ nonisolated enum Downloader {
             defer { try? writer?.close() }
             var completed: Int64 = 0
             var total: Int64 = 0
-            var meter = ProgressMeter()
+            // A rate on a fixed interval, so a download wakes its reader a
+            // couple of times a second instead of once per packet.
+            var sampledBytes: Int64 = 0
+            var sampledAt = Date()
 
             for try await chunk in DownloadTaskRelay.stream(for: request, in: session) {
                 switch chunk {
@@ -122,12 +125,16 @@ nonisolated enum Downloader {
                         throw DownloadError.overrun(expected: total, received: completed)
                     }
                     try writer.write(contentsOf: data)
-                    if let speed = meter.sample(completed) {
+                    let now = Date()
+                    let elapsed = now.timeIntervalSince(sampledAt)
+                    if elapsed >= progressInterval {
                         continuation.yield(.progress(
                             completedBytes: completed,
                             totalBytes: total,
-                            bytesPerSecond: speed
+                            bytesPerSecond: Int64(Double(completed - sampledBytes) / elapsed)
                         ))
+                        sampledBytes = completed
+                        sampledAt = now
                     }
                 }
             }
@@ -205,23 +212,5 @@ nonisolated enum Downloader {
               start >= 0, total >= 0
         else { return nil }
         return (start, total)
-    }
-}
-
-/// Turns a running byte count into a rate on a fixed interval, so a download
-/// wakes its reader a couple of times a second instead of once per packet.
-private nonisolated struct ProgressMeter {
-    private var lastBytes: Int64 = 0
-    private var lastTime = Date()
-
-    mutating func sample(_ completed: Int64) -> Int64? {
-        let now = Date()
-        let elapsed = now.timeIntervalSince(lastTime)
-        guard elapsed >= Downloader.progressInterval else { return nil }
-        defer {
-            lastBytes = completed
-            lastTime = now
-        }
-        return Int64(Double(completed - lastBytes) / elapsed)
     }
 }

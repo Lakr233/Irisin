@@ -41,7 +41,7 @@ extension PaymentManager {
                 host.present(alert, animated: true, completion: nil)
                 Task {
                     // the request times out on its own; nothing waits forever
-                    guard let account = await PaymentManager.shared.obtainUserAccountInfo(for: repo.url) else {
+                    guard let identities = await PaymentManager.shared.purchasedIdentities(for: repo.url) else {
                         // jsonReply said why; this says the user saw nothing at all.
                         Dog.shared.join(
                             "Payment",
@@ -58,10 +58,10 @@ extension PaymentManager {
                     }
                     Dog.shared.join(
                         "Payment",
-                        "\(repo.url.absoluteString) lists \(account.item.count) purchase(s)",
+                        "\(repo.url.absoluteString) lists \(identities.count) purchase(s)",
                         level: .info
                     )
-                    let purchased = account.item.compactMap {
+                    let purchased = identities.compactMap {
                         PackageCenter.default.obtainPackage(with: $0, in: repo.url)
                     }
                     let target = PackageCollectionController()

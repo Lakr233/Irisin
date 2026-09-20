@@ -7,21 +7,13 @@ extension PrivilegedBackend {
     /// failure it reported, for a screen that started it and owes the user
     /// an answer.
     static func runMaintenance(_ job: InstallerJob) async -> OperationMonitor.Outcome {
-        let box = FailureBox()
-        let status = await run(job) { event in
-            if case let .failure(problem) = event {
-                await box.record(problem)
+        var problem: InstallerEvent.Problem?
+        let status = await run(job) { @MainActor event in
+            if case let .failure(reported) = event {
+                problem = reported
             }
         }
-        return .init(status: status, failure: box.problem)
-    }
-
-    private final class FailureBox {
-        private(set) var problem: InstallerEvent.Problem?
-
-        func record(_ problem: InstallerEvent.Problem) {
-            self.problem = problem
-        }
+        return .init(status: status, failure: problem)
     }
 }
 
