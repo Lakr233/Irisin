@@ -57,6 +57,7 @@ public final class NativePackageInstaller {
             layout: layout,
             databaseDirectory: databaseDirectory,
             scriptRoot: scriptRoot,
+            ignoreScriptFailures: transaction.ignoreScriptFailures,
             emit: emit
         )
         if !transaction.dryRun {

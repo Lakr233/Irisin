@@ -17,6 +17,7 @@ final class NativePackageTransaction {
         layout: BootstrapLayout,
         databaseDirectory: URL,
         scriptRoot: String,
+        ignoreScriptFailures: Bool,
         emit: @escaping (InstallerEvent) -> Void
     ) throws {
         database = try NativePackageDatabase(directory: databaseDirectory)
@@ -26,6 +27,7 @@ final class NativePackageTransaction {
             database: database,
             scriptRoot: scriptRoot,
             emit: emit,
+            ignoreScriptFailures: ignoreScriptFailures,
             forgetPaths: { [filesystem] in filesystem.forgetPaths() }
         )
         triggers = NativeTriggers(database: database, scripts: scripts)
@@ -87,7 +89,10 @@ final class NativePackageTransaction {
             if entry.kind == .directory, filesystem.isScaffolding("/" + entry.path) {
                 continue
             }
-            _ = try filesystem.location(overrides.path("/" + entry.path, owner: item.identity))
+            _ = try filesystem.location(
+                overrides.path("/" + entry.path, owner: item.identity),
+                for: entry
+            )
         }
         return archive
     }

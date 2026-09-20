@@ -8,14 +8,29 @@ struct NativePackageFailure: Error, CustomStringConvertible {
     }
 }
 
-/// A maintainer script that exited with a status other than 0.
+/// A maintainer script that could not be started or exited unsuccessfully.
 struct ScriptFailure: Error, CustomStringConvertible {
     let identity: String
     let member: String
-    let status: Int32
+    let status: Int32?
+    let detail: String
+
+    init(identity: String, member: String, status: Int32) {
+        self.identity = identity
+        self.member = member
+        self.status = status
+        detail = "exited with status \(status)"
+    }
+
+    init(identity: String, member: String, underlying: any Error) {
+        self.identity = identity
+        self.member = member
+        status = nil
+        detail = String(describing: underlying)
+    }
 
     var description: String {
-        "\(identity).\(member) exited with status \(status)"
+        "\(identity).\(member) \(detail)"
     }
 }
 
@@ -34,8 +49,8 @@ struct PackageStepFailure: Error, CustomStringConvertible {
     /// package's own: another package's script can fail inside this step,
     /// a replaced package's `postrm disappear` for one.
     var problem: InstallerEvent.Problem {
-        if let script = underlying as? ScriptFailure, script.identity == identity {
-            return .scriptFailed(identity: identity, step: step, script: script.member, status: script.status)
+        if let script = underlying as? ScriptFailure, script.identity == identity, let status = script.status {
+            return .scriptFailed(identity: identity, step: step, script: script.member, status: status)
         }
         return .packageFailed(identity: identity, step: step, detail: description)
     }

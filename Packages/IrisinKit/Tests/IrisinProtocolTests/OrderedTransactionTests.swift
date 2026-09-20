@@ -22,6 +22,11 @@ struct OrderedTransactionTests {
         #expect(try InstallerJob.decode(job.encoded()) == job)
     }
 
+    @Test func scriptFailurePolicyRoundTrips() throws {
+        let transaction = InstallerJob.Transaction(install: [], remove: ["aa"], ignoreScriptFailures: true)
+        #expect(try InstallerJob.decode(InstallerJob.transaction(transaction).encoded()) == .transaction(transaction))
+    }
+
     @Test func undeclaredPackageAndOverlappingActionsAreRejected() {
         let missing = InstallerJob.transaction(.init(install: [], remove: ["aa"], stages: [.remove(["bb"])]))
         #expect(throws: (any Error).self) { try missing.validate() }

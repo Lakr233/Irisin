@@ -17,6 +17,11 @@ public extension InstallerJob {
         /// an Essential or Protected package in `remove` go. A held one
         /// still stays.
         public var allowSystemRemoval: Bool
+        /// The user explicitly accepted continuing after package-owned
+        /// maintainer scripts fail. Every script is still attempted and its
+        /// failure is reported as a warning; non-script failures still stop
+        /// the transaction.
+        public var ignoreScriptFailures: Bool
 
         public init(
             install: [Package],
@@ -25,8 +30,10 @@ public extension InstallerJob {
             stages: [InstallerStage]? = nil,
             configureExisting: [String] = [],
             autoInstalled: [String] = [],
+            // SHA-256 of an empty status file, as on a bootstrap with no dpkg database yet.
             statusDigest: String = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            allowSystemRemoval: Bool = false
+            allowSystemRemoval: Bool = false,
+            ignoreScriptFailures: Bool = false
         ) {
             self.install = install
             self.remove = remove
@@ -35,6 +42,7 @@ public extension InstallerJob {
             self.autoInstalled = autoInstalled
             self.statusDigest = statusDigest
             self.allowSystemRemoval = allowSystemRemoval
+            self.ignoreScriptFailures = ignoreScriptFailures
             self.stages = stages ?? ([remove.isEmpty ? nil : .remove(remove),
                                       install.isEmpty ? nil : .unpack(install.map(\.identity)),
                                       install.isEmpty ? nil : .configure(install.map(\.identity))].compactMap(\.self))

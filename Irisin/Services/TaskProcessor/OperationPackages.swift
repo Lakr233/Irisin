@@ -37,6 +37,9 @@ nonisolated struct OperationPackages: Equatable {
         /// The helper could not put the old record back: half-installed
         /// until it is installed again.
         fileprivate(set) var needsRepair = false
+        /// A package-owned script failed under the explicit continue policy.
+        /// The step completed, but the package may not work as intended.
+        fileprivate(set) var ignoredScriptFailure = false
 
         /// The whole package, 0 to 1. Placing files is most of an install
         /// and is the part that can be measured.
@@ -69,17 +72,23 @@ nonisolated struct OperationPackages: Equatable {
         }
 
         var hasProblem: Bool {
+            if ignoredScriptFailure {
+                return true
+            }
             switch status {
-            case .failed, .incomplete: true
-            default: needsRepair
+            case .failed, .incomplete:
+                return true
+            default:
+                return needsRepair
             }
         }
 
         /// The package's own maintainer script that stopped it, if one did.
         var failedScript: String? {
-            if case let .scriptFailed(_, _, script, _) = problem {
+            switch problem {
+            case let .scriptFailed(_, _, script, _), let .scriptFailureIgnored(_, script, _):
                 script
-            } else {
+            default:
                 nil
             }
         }
@@ -172,8 +181,16 @@ nonisolated struct OperationPackages: Equatable {
             states[identity] = state
             current = nil
             stepOwner = nil
-        case let .warning(.packageNeedsRepair(identity)):
-            states[identity]?.needsRepair = true
+        case let .warning(problem):
+            switch problem {
+            case let .packageNeedsRepair(identity):
+                states[identity]?.needsRepair = true
+            case let .scriptFailureIgnored(identity, _, _):
+                states[identity]?.ignoredScriptFailure = true
+                states[identity]?.problem = problem
+            default:
+                break
+            }
         case let .failure(problem):
             switch problem {
             case let .packageFailed(identity, step, _), let .scriptFailed(identity, step, _, _):

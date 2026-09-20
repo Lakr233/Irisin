@@ -31,7 +31,10 @@ final class TaskProcessor {
     /// Copies every download the plan installs into the staging directory.
     /// nil when a download is missing, the copy failed, or an operation is
     /// already running out of that directory.
-    func createOperationPayload(plan: ResolutionPlan) async -> OperationPayload? {
+    func createOperationPayload(
+        plan: ResolutionPlan,
+        ignoreScriptFailures: Bool = false
+    ) async -> OperationPayload? {
         guard !inProcessingQueue else {
             Dog.shared.join(self, "refusing to stage a payload while an operation runs", level: .warning)
             return nil
@@ -83,7 +86,8 @@ final class TaskProcessor {
                 statusDigest: plan.snapshot.statusDigest,
                 // read now, not when the plan was solved: a switch turned
                 // off since then has the helper refuse the removal
-                allowSystemRemoval: TaskManager.shared.allowSystemRemoval
+                allowSystemRemoval: TaskManager.shared.allowSystemRemoval,
+                ignoreScriptFailures: ignoreScriptFailures
             )
             try InstallerJob.transaction(transaction).validate()
             return OperationPayload(plan: plan, transaction: transaction)

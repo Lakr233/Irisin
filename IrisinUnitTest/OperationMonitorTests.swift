@@ -74,4 +74,14 @@ final class OperationMonitorTests: XCTestCase {
         XCTAssertEqual(monitor.lines, ["nope"])
         XCTAssertFalse(monitor.outcome?.succeeded ?? true)
     }
+
+    /// A retry that only repairs dpkg state has stages but no package diff;
+    /// its running and completed pages still carry a visible status row.
+    @MainActor
+    func testMaintenanceRowForRecoveryWithoutPackageChanges() {
+        XCTAssertTrue(OperationController.showsMaintenanceRow(changeCount: 0, outcome: nil))
+        XCTAssertTrue(OperationController.showsMaintenanceRow(changeCount: 0, outcome: .succeeded))
+        XCTAssertFalse(OperationController.showsMaintenanceRow(changeCount: 0, outcome: .failed("postrm failed")))
+        XCTAssertFalse(OperationController.showsMaintenanceRow(changeCount: 1, outcome: nil))
+    }
 }

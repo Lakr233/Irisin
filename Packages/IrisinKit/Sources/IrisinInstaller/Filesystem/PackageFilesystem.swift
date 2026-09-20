@@ -232,6 +232,36 @@ final class PackageFilesystem {
     }
 
     func location(_ path: String) throws -> URL {
+        let destination = try resolvedLocation(path)
+        guard !isInDatabase(destination) else {
+            throw NativePackageFailure("Package data cannot overwrite the package database")
+        }
+        return destination
+    }
+
+    /// Resolves an archive entry without letting package data become dpkg's
+    /// own records. dpkg packages the administrative directories themselves;
+    /// a directory there is shared scaffolding, while every other entry kind
+    /// remains forbidden.
+    func location(_ path: String, for entry: PreparedEntry) throws -> URL {
+        let destination = try resolvedLocation(path)
+        guard !isInDatabase(destination) || entry.kind == .directory else {
+            throw NativePackageFailure("Package data cannot overwrite the package database")
+        }
+        return destination
+    }
+
+    /// Package lists have no entry kinds. A database path they record is
+    /// protected scaffolding during removal, never payload to delete.
+    func isPackageDatabasePath(_ path: String) throws -> Bool {
+        isInDatabase(try resolvedLocation(path))
+    }
+
+    private func isInDatabase(_ url: URL) -> Bool {
+        url.path == database.path || url.path.hasPrefix(database.path + "/")
+    }
+
+    private func resolvedLocation(_ path: String) throws -> URL {
         // in bytes, as the kernel reads it: a combining mark after a `/` is
         // one character with it
         guard path.utf8.first == 0x2F else { throw NativePackageFailure("Package path must be absolute: \(path)") }
@@ -268,9 +298,6 @@ final class PackageFilesystem {
         let result = physical + "/" + (relative as NSString).lastPathComponent
         guard contains(physical) else {
             throw NativePackageFailure("Package path traverses a symlink outside the bootstrap: \(path)")
-        }
-        guard result != database.path, !result.hasPrefix(database.path + "/") else {
-            throw NativePackageFailure("Package data cannot overwrite the package database")
         }
         return URL(fileURLWithPath: result)
     }

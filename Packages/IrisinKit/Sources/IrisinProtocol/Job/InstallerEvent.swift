@@ -52,6 +52,10 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
         /// maintainer scripts, run in this step, exited with `status`: a
         /// preinst that fails stops an unpack, but nothing failed to unpack.
         case scriptFailed(identity: String, step: PackageStep, script: String, status: Int32)
+        /// A package-owned script failed, but the user explicitly chose to
+        /// continue. `detail` is for the log and support report; the app's
+        /// headline says only that the installation continued.
+        case scriptFailureIgnored(identity: String, script: String, detail: String)
         /// The package database committed, but LaunchServices or husk
         /// cleanup did not finish; a rebuild retries it.
         case homeScreenNeedsAttention
@@ -88,6 +92,8 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
                 "Installation stopped at \(identity) (\(step.rawValue)): \(detail)"
             case let .scriptFailed(identity, step, script, status):
                 "Installation stopped at \(identity) (\(step.rawValue)): \(identity).\(script) exited with status \(status)"
+            case let .scriptFailureIgnored(identity, script, detail):
+                "Installation continued after \(identity).\(script) failed: \(detail)"
             case .homeScreenNeedsAttention:
                 "Package changes completed, but the home screen needs attention. Rebuild icons to retry."
             case let .registrationFailed(bundle, detail):

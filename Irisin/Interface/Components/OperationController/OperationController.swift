@@ -26,6 +26,8 @@ final class OperationController: UIViewController, UITableViewDelegate {
         case status
         /// Runs the queue again in this sheet.
         case retry
+        /// Recovery work that has stages but no package diff to draw.
+        case maintenance
         case change(QueueChange)
         case notice(String)
     }
@@ -33,8 +35,10 @@ final class OperationController: UIViewController, UITableViewDelegate {
     private let operation: TaskProcessor.OperationPayload
     private let changes: [String: QueueChange]
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let configurationErrorBanner = ConfigurationErrorOverrideBanner()
     private lazy var icons = PackageIconCache { [weak self] in self?.reconfigure() }
     private(set) var monitor: OperationMonitor?
+    private(set) var ignoresScriptFailures: Bool
     private var subscriptions = Set<AnyCancellable>()
     /// The row the list last scrolled to, so it follows a package once.
     private var followed: String?
@@ -81,6 +85,24 @@ final class OperationController: UIViewController, UITableViewDelegate {
             cell.accessoryView = retrying ? UIActivityIndicatorView(style: .medium).then { $0.startAnimating() } : nil
             cell.accessibilityTraits = retrying ? [.button, .notEnabled] : .button
             return cell
+        case .maintenance:
+            let cell = table.dequeueReusableCell(withIdentifier: "maintenance", for: indexPath)
+            var content = cell.defaultContentConfiguration()
+            content.text = monitor?.outcome == .succeeded
+                ? String(localized: "Operation completed.")
+                : String(localized: "Maintaining the system environment…")
+            content.textProperties.font = .body
+            if monitor?.outcome == .succeeded {
+                content.image = UIImage(systemName: "checkmark.circle.fill")
+                content.imageProperties.tintColor = .operationSucceeded
+                cell.accessoryView = nil
+            } else {
+                cell.accessoryView = UIActivityIndicatorView(style: .medium).then { $0.startAnimating() }
+            }
+            cell.contentConfiguration = content
+            cell.selectionStyle = .none
+            cell.accessibilityTraits = .staticText
+            return cell
         case let .notice(text):
             let cell = table.dequeueReusableCell(withIdentifier: "plain", for: indexPath)
             var content = cell.defaultContentConfiguration()
@@ -101,6 +123,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
             of: operation.plan,
             requested: Set(TaskManager.shared.actions.map(\.identity))
         )
+        ignoresScriptFailures = operation.transaction.ignoreScriptFailures
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -128,6 +151,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         tableView.register(OperationPackageCell.self, forCellReuseIdentifier: "package")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "plain")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "retry")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "maintenance")
         tableView.delegate = self
         tableView.dataSource = dataSource
         dataSource.defaultRowAnimation = .fade
@@ -142,6 +166,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         tableView.snp.makeConstraints { x in
             x.edges.equalToSuperview()
         }
+        updateConfigurationErrorBanner()
         applySnapshot()
     }
 
@@ -150,6 +175,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         super.viewDidLayoutSubviews()
         let width = tableView.bounds.width
         guard width > 0 else { return }
+        updateConfigurationErrorBanner()
         let height = finishingFooter.label
             .sizeThatFits(CGSize(width: width - 40, height: .greatestFiniteMagnitude))
             .height + 32
@@ -180,6 +206,9 @@ final class OperationController: UIViewController, UITableViewDelegate {
         if case .failed = monitor?.outcome {
             snapshot.appendSections([.status])
             snapshot.appendItems([.status, .retry], toSection: .status)
+        } else if Self.showsMaintenanceRow(changeCount: changes.count, outcome: monitor?.outcome) {
+            snapshot.appendSections([.status])
+            snapshot.appendItems([.maintenance], toSection: .status)
         }
         for group in QueueChange.sections(of: changes.values) {
             let section = Section.changes(group.kind, dependencies: group.dependencies)
@@ -195,6 +224,13 @@ final class OperationController: UIViewController, UITableViewDelegate {
         dataSource.apply(snapshot, animatingDifferences: view.shouldAnimateDiff)
     }
 
+    /// A recovery plan may only finish maintainer scripts or triggers. It has
+    /// real stages but no install/remove diff, so give the running page one
+    /// stable row instead of presenting an empty list.
+    static func showsMaintenanceRow(changeCount: Int, outcome: OperationMonitor.Outcome?) -> Bool {
+        changeCount == 0 && outcome?.succeeded != false
+    }
+
     /// An icon arrived.
     private func reconfigure() {
         var snapshot = dataSource.snapshot()
@@ -207,8 +243,13 @@ final class OperationController: UIViewController, UITableViewDelegate {
     private func notices() -> [String] {
         (monitor?.transcript ?? []).compactMap { event -> String? in
             guard case let .warning(problem) = event else { return nil }
-            if case let .packageNeedsRepair(identity) = problem, changes[identity] != nil {
+            switch problem {
+            case let .packageNeedsRepair(identity) where changes[identity] != nil:
                 return nil
+            case let .scriptFailureIgnored(identity, _, _) where changes[identity] != nil:
+                return nil
+            default:
+                break
             }
             return problem.localizedDescription
         }.uniqued()
@@ -347,12 +388,16 @@ final class OperationController: UIViewController, UITableViewDelegate {
         Task { [weak self] in
             let manager = TaskManager.shared
             await manager.settled()
-            var payload: TaskProcessor.OperationPayload?
-            // a sheet closed meanwhile has nothing to run the queue in
-            if manager.blocked == nil, let plan = manager.plan, self?.view.window != nil {
-                payload = await TaskProcessor.shared.createOperationPayload(plan: plan)
-            }
             guard let self, view.window != nil else { return }
+            var payload: TaskProcessor.OperationPayload?
+            if manager.blocked == nil, let plan = manager.plan {
+                payload = await TaskProcessor.shared.createOperationPayload(
+                    plan: plan,
+                    ignoreScriptFailures: ignoresScriptFailures
+                )
+            }
+            // Staging took time; a sheet closed meanwhile has nothing to run.
+            guard view.window != nil else { return }
             retrying = false
             guard let payload, !payload.transaction.stages.isEmpty else {
                 reconfigure()
@@ -385,6 +430,47 @@ final class OperationController: UIViewController, UITableViewDelegate {
         })
         hide.accessibilityHint = String(localized: "The operation keeps running in the background.")
         navigationItem.leftBarButtonItems?.append(hide)
+    }
+
+    /// The menu owns the user's pending choice; a retry copies it into the
+    /// next closed transaction, which is the helper's authoritative policy.
+    func toggleIgnoredScriptFailures() {
+        if ignoresScriptFailures {
+            ignoresScriptFailures = false
+            updateConfigurationErrorBanner()
+            return
+        }
+        presentConfirmation(
+            title: "Ignore Configuration Errors?",
+            message: "Irisin will still run each package’s setup scripts, but installation will continue if one fails. This can damage installed packages or the system.",
+            confirmTitle: "Ignore Errors",
+            destructive: true
+        ) { [weak self] in
+            guard let self else { return }
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            ignoresScriptFailures = true
+            updateConfigurationErrorBanner()
+            tableView.scrollRectToVisible(configurationErrorBanner.frame, animated: true)
+        }
+    }
+
+    private func updateConfigurationErrorBanner() {
+        guard ignoresScriptFailures else {
+            tableView.tableHeaderView = nil
+            return
+        }
+        let width = tableView.bounds.width
+        guard width > 0 else { return }
+        let size = configurationErrorBanner.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        guard tableView.tableHeaderView !== configurationErrorBanner
+            || configurationErrorBanner.frame.size != CGSize(width: width, height: size.height)
+        else { return }
+        configurationErrorBanner.frame = CGRect(x: 0, y: 0, width: width, height: size.height)
+        tableView.tableHeaderView = configurationErrorBanner
     }
 
     // MARK: - Problems

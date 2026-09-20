@@ -126,6 +126,8 @@ final class OperationMonitor {
                 if let identity = packages.current {
                     packageOutput[identity, default: []].append(line)
                 }
+            case let .warning(.scriptFailureIgnored(identity, _, _)):
+                packageOutput[identity, default: []].append(line)
             default:
                 break
             }

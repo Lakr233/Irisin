@@ -114,6 +114,9 @@ final class OperationProblemController: UIViewController {
 
     /// What the state the package is left in asks of the user.
     private var advice: String {
+        if state.ignoredScriptFailure {
+            return String(localized: "Review the script output. If the package does not work, remove it or install a fixed version.")
+        }
         if state.needsRepair {
             return String(localized: "The package is half-installed. Install it again to repair it, or remove it.")
         }

@@ -11,6 +11,10 @@ struct MaintainerScripts {
     /// An isolated harness can supply a root for scripts that use DPKG_ROOT.
     let scriptRoot: String
     let emit: (InstallerEvent) -> Void
+    /// An explicit recovery policy carried by the closed transaction. It
+    /// never skips a script; it only decides whether a script's own failure
+    /// stops the package step after that attempt.
+    let ignoreScriptFailures: Bool
     /// Called once a script has been started, whatever it did: what the
     /// installer remembers of the tree's shape is that script's to change.
     /// ElleKit's postinst replacing `Library/MobileSubstrate/DynamicLibraries`
@@ -25,34 +29,48 @@ struct MaintainerScripts {
         arguments: [String],
         source: URL? = nil
     ) throws {
-        let script = source ?? database.info(identity, member)
-        guard FileManager.default.fileExists(atPath: script.path) else { return }
-        defer { forgetPaths() }
-        #if targetEnvironment(simulator)
-            // A simulator process is a Mac process: a package's script would
-            // run on the host, as the person at the keyboard, against the
-            // host's files. Announced, kept in the database, never started;
-            // an interpreter line a device would refuse is refused here too.
-            _ = try interpreter(in: script)
-            emit(.script(identity: identity, member: member, arguments: arguments))
-            emit(.notice("Simulator: \(identity).\(member) was not run"))
-        #else
-            let interpreter = try interpreter(in: script)
-            let executable = layout.interpreterPath(interpreter.path)
-            let argv = [executable] + interpreter.arguments + [layout.scriptPath(script.path)] + arguments
-            let environment = environment(member: member, identity: identity, architecture: architecture)
+        do {
+            let script = source ?? database.info(identity, member)
+            guard FileManager.default.fileExists(atPath: script.path) else { return }
+            defer { forgetPaths() }
+            #if targetEnvironment(simulator)
+                // A simulator process is a Mac process: a package's script would
+                // run on the host, as the person at the keyboard, against the
+                // host's files. Announced, kept in the database, never started;
+                // an interpreter line a device would refuse is refused here too.
+                _ = try interpreter(in: script)
+                emit(.script(identity: identity, member: member, arguments: arguments))
+                emit(.notice("Simulator: \(identity).\(member) was not run"))
+            #else
+                let interpreter = try interpreter(in: script)
+                let executable = layout.interpreterPath(interpreter.path)
+                let argv = [executable] + interpreter.arguments + [layout.scriptPath(script.path)] + arguments
+                let environment = environment(member: member, identity: identity, architecture: architecture)
 
-            emit(.script(identity: identity, member: member, arguments: arguments))
-            let status = try ToolSpawn.run(
-                executable: executable,
-                arguments: argv,
-                environment: environment,
-                workingDirectory: layout.tool("/")
-            ) { emit(.output($0)) }
-            guard status == 0 else {
-                throw ScriptFailure(identity: identity, member: member, status: status)
+                emit(.script(identity: identity, member: member, arguments: arguments))
+                let status = try ToolSpawn.run(
+                    executable: executable,
+                    arguments: argv,
+                    environment: environment,
+                    workingDirectory: layout.tool("/")
+                ) { emit(.output($0)) }
+                guard status == 0 else {
+                    throw ScriptFailure(identity: identity, member: member, status: status)
+                }
+            #endif
+        } catch {
+            let failure = error as? ScriptFailure
+                ?? ScriptFailure(identity: identity, member: member, underlying: error)
+            if ignoreScriptFailures {
+                emit(.warning(.scriptFailureIgnored(
+                    identity: identity,
+                    script: member,
+                    detail: failure.detail
+                )))
+                return
             }
-        #endif
+            throw failure
+        }
     }
 
     private func interpreter(in script: URL) throws -> (path: String, arguments: [String]) {

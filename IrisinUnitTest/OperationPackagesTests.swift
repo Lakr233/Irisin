@@ -99,4 +99,29 @@ final class OperationPackagesTests: XCTestCase {
         XCTAssertNil(packages.states["a"]?.problem)
         XCTAssertEqual(packages.states["a"]?.needsRepair, true)
     }
+
+    /// A script error accepted by the recovery policy remains attached to
+    /// its package after the step completes, without turning success into a
+    /// stopped operation.
+    func testIgnoredScriptFailureMarksCompletedPackage() {
+        var packages = OperationPackages(stages: [.unpack(["a"]), .configure(["a"])])
+        let problem = InstallerEvent.Problem.scriptFailureIgnored(
+            identity: "a",
+            script: "preinst",
+            detail: "exited with status 3"
+        )
+        packages.record(.progress(completed: 0, total: 2))
+        packages.record(.package(.unpacking, identity: "a", version: "1"))
+        packages.record(.warning(problem))
+        packages.record(.progress(completed: 1, total: 2))
+        packages.record(.package(.configuring, identity: "a", version: "1"))
+        packages.record(.progress(completed: 2, total: 2))
+        packages.finish(succeeded: true)
+
+        XCTAssertEqual(packages.states["a"]?.status, .done)
+        XCTAssertEqual(packages.states["a"]?.ignoredScriptFailure, true)
+        XCTAssertEqual(packages.states["a"]?.problem, problem)
+        XCTAssertEqual(packages.states["a"]?.failedScript, "preinst")
+        XCTAssertEqual(packages.states["a"]?.hasProblem, true)
+    }
 }

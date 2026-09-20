@@ -52,9 +52,9 @@ final class NativeInstallFixture {
         return .init(identity: identity, path: deb.path, preparedPath: staging.path, preparedSHA256: NativePackageArchive.sha256(data))
     }
 
-    func run(install: [InstallerJob.Transaction.Package] = [], remove: [String] = [], autoInstalled: [String] = [], dryRun: Bool = false, allowSystemRemoval: Bool = false, layout: BootstrapLayout = .init(kind: .none), emit: @escaping (InstallerEvent) -> Void = { _ in }) throws {
+    func run(install: [InstallerJob.Transaction.Package] = [], remove: [String] = [], autoInstalled: [String] = [], dryRun: Bool = false, allowSystemRemoval: Bool = false, ignoreScriptFailures: Bool = false, layout: BootstrapLayout = .init(kind: .none), emit: @escaping (InstallerEvent) -> Void = { _ in }) throws {
         let status = (try? Data(contentsOf: database.appendingPathComponent("status"))) ?? Data()
-        let transaction = InstallerJob.Transaction(install: install, remove: remove, dryRun: dryRun, autoInstalled: autoInstalled, statusDigest: NativePackageArchive.sha256(status), allowSystemRemoval: allowSystemRemoval)
+        let transaction = InstallerJob.Transaction(install: install, remove: remove, dryRun: dryRun, autoInstalled: autoInstalled, statusDigest: NativePackageArchive.sha256(status), allowSystemRemoval: allowSystemRemoval, ignoreScriptFailures: ignoreScriptFailures)
         let installer = NativePackageInstaller(installRoot: root.path, layout: layout, databaseDirectory: database, scriptRoot: root.path, emit: emit)
         try installer.run(transaction)
     }

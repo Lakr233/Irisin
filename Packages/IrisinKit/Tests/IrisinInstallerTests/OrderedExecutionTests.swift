@@ -119,6 +119,49 @@ struct OrderedExecutionTests {
         } == true)
     }
 
+    /// The explicit recovery policy still attempts every package script and
+    /// reports each failure, while the files and installed record reach their
+    /// normal completed state. A script that cannot start follows the same
+    /// recovery class as one that exits unsuccessfully.
+    @Test func ignoredScriptFailuresStillRunAndWarn() throws {
+        let fixture = try NativeInstallFixture()
+        let package = try fixture.package(
+            files: ["usr/share/example": "native"],
+            controls: [
+                "preinst": "#!/bin/sh\necho preinst\nexit 3\n",
+                "postinst": "#!/missing/interpreter\nexit 4\n",
+            ]
+        )
+        var events: [InstallerEvent] = []
+
+        try fixture.run(install: [package], ignoreScriptFailures: true) { events.append($0) }
+
+        #expect(try fixture.status(package.identity) == "install ok installed")
+        #expect(try fixture.text("usr/share/example") == "native")
+        let scripts = events.compactMap {
+            if case let .script(_, member, _) = $0 {
+                member
+            } else {
+                nil
+            }
+        }
+        #expect(scripts == ["preinst", "postinst"])
+        let warnings = events.compactMap {
+            if case let .warning(.scriptFailureIgnored(identity, script, detail)) = $0 {
+                (identity, script, detail)
+            } else {
+                nil
+            }
+        }
+        #expect(warnings.count == 2)
+        #expect(warnings[0].0 == package.identity)
+        #expect(warnings[0].1 == "preinst")
+        #expect(warnings[0].2.contains("status 3"))
+        #expect(warnings[1].0 == package.identity)
+        #expect(warnings[1].1 == "postinst")
+        #expect(!warnings[1].2.isEmpty)
+    }
+
     /// The phases arrive in order, the count runs to the total, and every
     /// package step is a typed event the app can spell for itself.
     @Test func nativeRunnerReportsPhasesAndProgress() throws {

@@ -64,6 +64,83 @@ struct DpkgParityTests {
         #expect(try fixture.text("Library/dpkg/info/shipper.package.md5sums") == "its own\n")
     }
 
+    /// dpkg's `tarobject` treats an archive directory that already exists as
+    /// shared and returns before changing its metadata. Its own package ships
+    /// the administrative directory and creates any missing subdirectories.
+    @Test func packageMayShipDatabaseDirectories() throws {
+        let fixture = try NativeInstallFixture()
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o751],
+            ofItemAtPath: fixture.database.path
+        )
+        let entries = [
+            PreparedEntry(path: "Library/dpkg", kind: .directory, mode: 0o700, uid: 0, gid: 0, modificationTime: 0),
+            PreparedEntry(path: "Library/dpkg/info", kind: .directory, mode: 0o700, uid: 0, gid: 0, modificationTime: 0),
+            PreparedEntry(path: "Library/dpkg/parts", kind: .directory, mode: 0o700, uid: 0, gid: 0, modificationTime: 0),
+        ]
+
+        try fixture.run(install: [fixture.package("dpkg", files: ["usr/bin/dpkg": "binary"], links: entries)])
+
+        let databaseAttributes = try FileManager.default.attributesOfItem(atPath: fixture.database.path)
+        let partsAttributes = try FileManager.default.attributesOfItem(
+            atPath: fixture.database.appendingPathComponent("parts").path
+        )
+        #expect(databaseAttributes[.posixPermissions] as? Int == 0o751)
+        #expect(partsAttributes[.posixPermissions] as? Int == 0o700)
+        #expect(try fixture.status("dpkg") == "install ok installed")
+    }
+
+    /// dpkg's package list includes its administrative directories. Removing
+    /// the package removes its tools, but the database holding that removal
+    /// must remain available for the next transaction.
+    @Test func removingPackageLeavesDatabaseDirectories() throws {
+        let fixture = try NativeInstallFixture()
+        let entries = [
+            PreparedEntry(path: "Library/dpkg", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0),
+            PreparedEntry(path: "Library/dpkg/info", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0),
+            PreparedEntry(path: "Library/dpkg/parts", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0),
+        ]
+        try fixture.run(install: [fixture.package("dpkg", files: ["usr/bin/dpkg": "binary"], links: entries)])
+
+        try fixture.run(remove: ["dpkg"], allowSystemRemoval: true)
+
+        #expect(try fixture.status("dpkg") == nil)
+        #expect(FileManager.default.fileExists(atPath: fixture.database.path))
+        #expect(FileManager.default.fileExists(atPath: fixture.database.appendingPathComponent("info").path))
+        #expect(FileManager.default.fileExists(atPath: fixture.database.appendingPathComponent("parts").path))
+        #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("usr/bin/dpkg").path))
+    }
+
+    @Test func packageMayNotShipDatabaseFiles() throws {
+        let fixture = try NativeInstallFixture()
+        let package = try fixture.package("hostile", files: ["Library/dpkg/status": "replacement"])
+
+        #expect(throws: PackageStepFailure.self) {
+            try fixture.run(install: [package])
+        }
+        #expect(try fixture.status("hostile") == nil)
+    }
+
+    @Test(arguments: [PreparedEntryKind.symbolicLink, .hardLink])
+    func packageMayNotShipDatabaseLinks(_ kind: PreparedEntryKind) throws {
+        let fixture = try NativeInstallFixture()
+        let entry = PreparedEntry(
+            path: "Library/dpkg/redirect",
+            kind: kind,
+            linkTarget: "status",
+            mode: 0o777,
+            uid: 0,
+            gid: 0,
+            modificationTime: 0
+        )
+        let package = try fixture.package("hostile", links: [entry])
+
+        #expect(throws: PackageStepFailure.self) {
+            try fixture.run(install: [package])
+        }
+        #expect(try fixture.status("hostile") == nil)
+    }
+
     private func seed(_ fixture: NativeInstallFixture, _ paragraphs: [[String: String]]) throws {
         let text = paragraphs.map { NativePackageDatabase.paragraph($0) }.joined(separator: "\n")
         try Data(text.utf8).write(to: fixture.database.appendingPathComponent("status"))

@@ -23,8 +23,19 @@ extension OperationController {
             guard let self, let monitor else { return }
             navigationController?.pushViewController(OperationLogController(monitor: monitor), animated: true)
         }
+        guard let monitor else { return [log] }
+        if monitor.outcome?.succeeded == false {
+            let ignore = UIAction(
+                title: String(localized: "Ignore Configuration Errors"),
+                image: UIImage(systemName: "exclamationmark.shield"),
+                state: ignoresScriptFailures ? .on : .off
+            ) { [weak self] _ in
+                self?.toggleIgnoredScriptFailures()
+            }
+            return [log, UIMenu(options: .displayInline, children: [ignore])]
+        }
         // home screen work follows an install that happened, not one that is running or did not
-        guard let monitor, monitor.outcome?.succeeded == true, !monitor.requiresExit else { return [log] }
+        guard monitor.outcome?.succeeded == true, !monitor.requiresExit else { return [log] }
         return [
             log,
             UIMenu(options: .displayInline, children: [

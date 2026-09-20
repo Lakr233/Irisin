@@ -57,12 +57,14 @@ extension InstallerEvent.Problem {
         case let .packageFailed(identity, step, detail):
             switch step {
             case .removing: String(localized: "Unable to remove \(identity): \(detail)")
-            case .unpacking: String(localized: "Unable to unpack \(identity): \(detail)")
+            case .unpacking: String(localized: "Unable to install \(identity): \(detail)")
             case .configuring, .triggering: String(localized: "Unable to set up \(identity): \(detail)")
             case .verifying: String(localized: "Unable to verify \(identity): \(detail)")
             }
         case let .scriptFailed(identity, _, script, status):
             String(localized: "The \(script) script of \(identity) failed with exit status \(Int(status)).")
+        case let .scriptFailureIgnored(identity, script, _):
+            String(localized: "The \(script) script of \(identity) failed, but installation continued.")
         case .homeScreenNeedsAttention:
             String(localized: "Packages were changed, but the home screen was not updated. Choose Rebuild Icons to try again.")
         case let .registrationFailed(bundle, detail):

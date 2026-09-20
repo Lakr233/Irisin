@@ -59,7 +59,12 @@ extension NativePackageTransaction {
                 if filesystem.isScaffolding(path) || otherFiles.contains(path) {
                     continue
                 }
-                if try filesystem.remove(filesystem.location(overrides.path(path, owner: identity))) {
+                let actual = overrides.path(path, owner: identity)
+                if try filesystem.isPackageDatabasePath(actual) {
+                    leftover.append(path)
+                    continue
+                }
+                if try filesystem.remove(filesystem.location(actual)) {
                     leftover.append(path)
                 } else {
                     removed.append(path)
@@ -123,7 +128,9 @@ extension NativePackageTransaction {
     private func purgeRecord(_ identity: String) throws {
         for path in try database.files(identity).sorted(by: { $0.count > $1.count }) {
             guard !filesystem.isScaffolding(path) else { continue }
-            let location = try filesystem.location(overrides.path(path, owner: identity))
+            let actual = overrides.path(path, owner: identity)
+            guard try !filesystem.isPackageDatabasePath(actual) else { continue }
+            let location = try filesystem.location(actual)
             if filesystem.isDirectory(location) {
                 try filesystem.remove(location)
             }

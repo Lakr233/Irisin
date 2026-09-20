@@ -32,7 +32,9 @@ final class OperationPackageCell: UITableViewCell {
             muted: status == .notStarted
         )
         if state.hasProblem {
-            content.secondaryTextProperties.color = status == .incomplete ? .operationWarning : .operationFailed
+            content.secondaryTextProperties.color = status == .incomplete || state.ignoredScriptFailure
+                ? .operationWarning
+                : .operationFailed
         }
         // one line whatever it says: a row never changes height under the eye
         content.secondaryTextProperties.numberOfLines = 1
@@ -46,6 +48,9 @@ final class OperationPackageCell: UITableViewCell {
             ring.tintColor = .operationFailed
             appearance = .glyph("info.circle.fill")
         case .incomplete:
+            ring.tintColor = .operationWarning
+            appearance = .glyph("info.circle.fill")
+        case .done where state.ignoredScriptFailure:
             ring.tintColor = .operationWarning
             appearance = .glyph("info.circle.fill")
         case .done where state.needsRepair:
@@ -84,6 +89,8 @@ final class OperationPackageCell: UITableViewCell {
             case .configuring: String(localized: "Setting up…")
             case .triggering: String(localized: "Processing triggers…")
             }
+        case .done where state.ignoredScriptFailure:
+            return String(localized: "Completed with warnings")
         case .done where state.needsRepair:
             return String(localized: "Needs repair")
         case .done:

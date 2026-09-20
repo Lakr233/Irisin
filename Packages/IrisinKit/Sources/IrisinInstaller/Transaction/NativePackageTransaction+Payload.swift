@@ -42,7 +42,7 @@ extension NativePackageTransaction {
             }
             let path = "/" + entry.path
             let actual = overrides.path(path, owner: identity)
-            var destination = try filesystem.location(actual)
+            var destination = try filesystem.location(actual, for: entry)
             if declarations.keep.contains(path), let file = entry.file {
                 // an old conffile that is this file hands its hash over, as
                 // `pkg_remove_old_files` does
@@ -145,7 +145,11 @@ extension NativePackageTransaction {
             if filesystem.isScaffolding(path) || declarations.remove.contains(path) {
                 continue
             }
-            let location = try filesystem.location(overrides.path(path, owner: identity))
+            let actual = overrides.path(path, owner: identity)
+            if try filesystem.isPackageDatabasePath(actual) {
+                continue
+            }
+            let location = try filesystem.location(actual)
             if let file = FileIdentity(location), installed.contains(file) {
                 // a conffile's hash went to the new path at install
                 conffiles.hashes.removeValue(forKey: path)
