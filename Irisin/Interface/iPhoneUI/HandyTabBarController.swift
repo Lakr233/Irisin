@@ -82,6 +82,9 @@ class HandyTabBarController: UITabBarController {
 
         let pages = [dashboard, repositories, installed, search]
         queueBar = QueueBarDock(host: self, centeredIn: view.safeAreaLayoutGuide) { pages }
+        // The Queue tab says when it is the one on screen, as it arrives:
+        // however it was selected, the bar is gone before its page shows.
+        queue.visibilityChanged = { [weak self] visible in self?.queueBar?.isQueueOpen = visible }
     }
 
     override func viewDidLayoutSubviews() {
@@ -97,7 +100,6 @@ class HandyTabBarController: UITabBarController {
     /// `UITab.isHidden` only hides a tab from the sidebar, so the tab
     /// leaves the list instead.
     private func updateQueueTab() {
-        queueBar?.isQueueOpen = selectedViewController === queue
         let shown = TaskManager.shared.plan != nil || selectedViewController === queue
         if #available(iOS 18.0, *) {
             let every = everyTab.compactMap { $0 as? UITab }
@@ -120,7 +122,6 @@ class HandyTabBarController: UITabBarController {
             guard viewControllers?.contains(queue) == true else { return }
             selectedViewController = queue
         }
-        queueBar?.isQueueOpen = selectedViewController === queue
         queue.popToRootViewController(animated: false)
     }
 
@@ -152,6 +153,19 @@ class HandyTabBarController: UITabBarController {
 
 class HDQueueNavigator: UINavigationController {
     private var subscriptions = Set<AnyCancellable>()
+
+    /// The tab comes on screen (true, before it shows) or has left it.
+    var visibilityChanged: ((Bool) -> Void)?
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        visibilityChanged?(true)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        visibilityChanged?(false)
+    }
 
     init() {
         super.init(rootViewController: QueueController())

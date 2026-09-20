@@ -11,11 +11,16 @@ import UIKit
 /// it touches, and a tap opens it. A capsule of the system's own material,
 /// glass from iOS 26, so it sits with the tab bar below it in either mode.
 final class QueueBarView: UIControl {
-    /// The capsule's height, and the gap `QueueBarDock` leaves around it.
-    static let height: CGFloat = 48
+    /// The capsule's height until the text size asks for more, and the gap
+    /// `QueueBarDock` leaves around it.
+    static let minimumHeight: CGFloat = 48
     static let spacing: CGFloat = 8
     /// As wide as the page lets it be, up to this.
     static let maximumWidth: CGFloat = 420
+
+    /// The bar's height is not what it was: `QueueBarDock` makes room again.
+    var heightChanged: (() -> Void)?
+    private var laidOutHeight: CGFloat = 0
 
     /// How many packages the queue touches.
     var count = 0 {
@@ -37,6 +42,7 @@ final class QueueBarView: UIControl {
     private let label = UILabel().then {
         $0.font = .rounded(.callout, emphasized: true)
         $0.textColor = .textTitle
+        $0.numberOfLines = 2 // the largest text sizes wrap, and the bar grows
         $0.adjustsFontSizeToFitWidth = true
         $0.minimumScaleFactor = 0.8
     }
@@ -59,10 +65,11 @@ final class QueueBarView: UIControl {
         $0.isUserInteractionEnabled = false
     }
 
+    private let material = QueueBarView.makeMaterial()
+
     init() {
         super.init(frame: .zero)
 
-        let material = Self.makeMaterial()
         material.isUserInteractionEnabled = false // the whole bar is the button
         addSubview(material)
         material.snp.makeConstraints { x in
@@ -72,13 +79,14 @@ final class QueueBarView: UIControl {
         content.addArrangedSubview(glyph)
         content.addArrangedSubview(label)
         content.addArrangedSubview(chevron)
-        addSubview(content)
+        // inside the material, so glass keeps what is on it legible
+        material.contentView.addSubview(content)
         content.snp.makeConstraints { x in
             x.leading.trailing.equalToSuperview().inset(18)
-            x.centerY.equalToSuperview()
+            x.top.bottom.equalToSuperview().inset(12)
         }
         snp.makeConstraints { x in
-            x.height.equalTo(Self.height)
+            x.height.greaterThanOrEqualTo(Self.minimumHeight)
         }
 
         if #unavailable(iOS 26.0) {
@@ -90,7 +98,7 @@ final class QueueBarView: UIControl {
 
         isAccessibilityElement = true
         accessibilityTraits = .button
-        accessibilityHint = String(localized: "Open Queue")
+        accessibilityHint = String(localized: "Opens the queue.")
     }
 
     @available(*, unavailable)
@@ -110,18 +118,24 @@ final class QueueBarView: UIControl {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard #unavailable(iOS 26.0) else { return } // glass casts its own
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: bounds.height / 2).cgPath
+        if #unavailable(iOS 26.0) { // glass is a capsule, and casts its own shadow
+            material.layer.cornerRadius = bounds.height / 2
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: bounds.height / 2).cgPath
+        }
+        if bounds.height != laidOutHeight {
+            laidOutHeight = bounds.height
+            heightChanged?()
+        }
     }
 
-    private static func makeMaterial() -> UIView {
+    private static func makeMaterial() -> UIVisualEffectView {
         if #available(iOS 26.0, *) {
             return UIVisualEffectView(effect: UIGlassEffect()).then {
                 $0.cornerConfiguration = .capsule()
             }
         }
         return UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial)).then {
-            $0.layer.cornerRadius = height / 2
+            $0.layer.cornerRadius = minimumHeight / 2
             $0.layer.cornerCurve = .continuous
             $0.clipsToBounds = true
         }

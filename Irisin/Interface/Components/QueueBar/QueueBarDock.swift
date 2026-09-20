@@ -40,7 +40,9 @@ final class QueueBarDock {
     /// - Parameters:
     ///   - host: the layout's controller; the bar goes on top of its view,
     ///     centered in `guide`.
-    ///   - pages: the controllers whose safe area makes room for the bar.
+    ///   - pages: the controllers whose safe area makes room for the bar. It
+    ///     is asked whenever the room changes, not before: a page it leaves
+    ///     out later keeps the room it was last given.
     init(host: UIViewController, centeredIn guide: UILayoutGuide, pages: @escaping () -> [UIViewController]) {
         self.host = host
         self.pages = pages
@@ -58,6 +60,8 @@ final class QueueBarDock {
             guard let host else { return }
             NavigatorEnterViewController.enclosing(host)?.openQueue()
         }, for: .touchUpInside)
+        // the bar grows with the text size, and the room under it follows
+        bar.heightChanged = { [weak self] in self?.makeRoom() }
 
         NotificationCenter.default.publisher(for: .TaskQueueChanged)
             .receive(on: DispatchQueue.main)
@@ -74,40 +78,41 @@ final class QueueBarDock {
         if count > 0 {
             bar.count = count // a bar on its way out keeps the number it had
         }
-        guard shown != isShown, let host else { return }
+        guard shown != isShown else { return }
         isShown = shown
 
-        let room = shown ? QueueBarView.height + QueueBarView.spacing * 2 : 0
-        let pages = pages()
-        let changes = { [bar] in
+        let wasHidden = bar.isHidden
+        let changes = { [self] in
             bar.alpha = shown ? 1 : 0
             bar.transform = shown ? .identity : Self.lowered
-            for page in pages {
-                page.additionalSafeAreaInsets.bottom = room
-            }
+            makeRoom()
         }
-        guard animated, host.view.window != nil else {
+        guard animated, host?.view.window != nil else {
             changes()
             bar.isHidden = !shown
             return
         }
-        if shown {
+        if shown, wasHidden {
+            // from below; one caught on its way out turns round where it is
             bar.isHidden = false
             bar.transform = Self.lowered
         }
-        UIView.animate(
-            withDuration: 0.4,
-            delay: 0,
-            usingSpringWithDamping: 0.85,
-            initialSpringVelocity: 0,
-            options: [.beginFromCurrentState, .allowUserInteraction],
-            animations: changes
-        ) { [weak self, bar] _ in
-            guard let self, !isShown else { return }
+        UIView.animateFloatingBar(changes) { [weak self, bar] finished in
+            // an interrupted animation says nothing about where the bar ends
+            guard finished, let self, !isShown else { return }
             bar.isHidden = true
         }
     }
 
+    /// The pages' safe area ends above the bar while it is shown.
+    private func makeRoom() {
+        let height = max(bar.bounds.height, QueueBarView.minimumHeight)
+        let room = isShown ? height + QueueBarView.spacing * 2 : 0
+        for page in pages() where page.additionalSafeAreaInsets.bottom != room {
+            page.additionalSafeAreaInsets.bottom = room
+        }
+    }
+
     /// Where the bar comes up from and goes back to.
-    private static let lowered = CGAffineTransform(translationX: 0, y: QueueBarView.height / 2)
+    private static let lowered = CGAffineTransform(translationX: 0, y: QueueBarView.minimumHeight / 2)
 }
