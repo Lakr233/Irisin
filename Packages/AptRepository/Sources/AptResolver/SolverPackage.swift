@@ -2,7 +2,7 @@ import AptRepository
 import Foundation
 
 struct SolverPackage {
-    typealias Group = PackageRequirement.PackageRequirementGroup
+    typealias Group = PackageRequirementGroup
     typealias Element = Group.Requirement.RequirementElement
 
     let package: Package

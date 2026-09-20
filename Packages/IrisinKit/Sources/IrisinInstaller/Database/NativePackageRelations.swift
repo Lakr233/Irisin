@@ -3,7 +3,7 @@ import IrisinProtocol
 /// Validation shared by installation preflight, ownership takeover and stage
 /// checks. The solver chooses packages; the installer verifies its inputs.
 enum NativePackageRelations {
-    typealias Group = PackageRequirement.PackageRequirementGroup
+    typealias Group = PackageRequirementGroup
 
     static func groups(_ fields: [String: String], _ kind: Group.RequirementType) throws -> [Group.Requirement] {
         guard let text = fields[kind.rawValue], !text.isEmpty else { return [] }

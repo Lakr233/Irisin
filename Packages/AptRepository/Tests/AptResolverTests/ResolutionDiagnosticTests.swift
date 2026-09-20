@@ -37,7 +37,7 @@ struct ResolutionDiagnosticTests {
         let package = pkg("com.example.theme", "4.1", ["replaces": "com.Example.Theme (3.3)"])
         let result = try solve([package], installed: [pkg("com.example.theme", "3.3", installed: true)], actions: [.install(package)])
         #expect(result.install.first?.latestVersion == "4.1")
-        let relation = try #require(PackageRequirement.PackageRequirementGroup(value: "com.Example.Theme (3.3)", type: .replaces))
+        let relation = try #require(PackageRequirementGroup(value: "com.Example.Theme (3.3)", type: .replaces))
         let element = try #require(relation.requirements.first?.elements.first)
         #expect(element.representPackage == "com.example.theme")
         #expect(element.doesThisVersionMatchesRequirement(version: "3.3"))

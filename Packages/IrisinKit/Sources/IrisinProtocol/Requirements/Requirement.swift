@@ -1,6 +1,6 @@
 import Foundation
 
-public extension PackageRequirement.PackageRequirementGroup {
+public extension PackageRequirementGroup {
     struct Requirement: Codable, Sendable {
         public let elements: [RequirementElement]
         public let original: String
