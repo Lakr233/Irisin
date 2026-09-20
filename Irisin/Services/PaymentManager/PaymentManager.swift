@@ -40,7 +40,7 @@ final class PaymentManager {
     // MARK: - FUNCTION
 
     private func postNotification() {
-        NotificationCenter.default.post(name: .RepositoryPaymenChanged, object: nil)
+        NotificationCenter.default.post(name: .RepositoryPaymentChanged, object: nil)
     }
 
     func startUserAuthenticate(

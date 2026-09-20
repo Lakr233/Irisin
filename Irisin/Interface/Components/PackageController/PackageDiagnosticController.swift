@@ -181,7 +181,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
 
     @objc private func shareReport() {
         let details = report.map { "\($0.package)\n\($0.requirement)\n\($0.detailText)" }.joined(separator: "\n\n")
-        InterfaceBridge.presentShareSheet(
+        ShareSheet.present(
             // the reason alone is already the summary
             [reasonOnly ? summary : summary + "\n\n" + details],
             anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) },

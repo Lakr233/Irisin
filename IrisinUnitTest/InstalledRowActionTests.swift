@@ -50,11 +50,11 @@ struct InstalledRowActionTests {
 
     @Test
     func swipeKeepsItsOwnOrderAndNothingElse() {
-        #expect(PackageMenuAction.swipeOrder(of: [.reinstall, .versionControl, .remove, .viewMeta])
+        #expect(PackageMenu.swipeOrder(of: [.reinstall, .versionControl, .remove, .viewMeta])
             == [.remove, .reinstall])
-        #expect(PackageMenuAction.swipeOrder(of: [.update, .remove, .blockUpdate]) == [.remove, .update])
-        #expect(PackageMenuAction.swipeOrder(of: [.dequeue, .replace, .versionControl]) == [.dequeue])
-        #expect(PackageMenuAction.swipeOrder(of: [.install, .download]).isEmpty)
+        #expect(PackageMenu.swipeOrder(of: [.update, .remove, .blockUpdate]) == [.remove, .update])
+        #expect(PackageMenu.swipeOrder(of: [.dequeue, .replace, .versionControl]) == [.dequeue])
+        #expect(PackageMenu.swipeOrder(of: [.install, .download]).isEmpty)
     }
 
     @Test(arguments: [
@@ -74,17 +74,17 @@ struct InstalledRowActionTests {
         updates: Bool
     ) throws {
         try withInstalledRow(offered: offered, installedFromRepository: installedFromRepository) { installed, remote in
-            let (package, actions) = PackageMenuAction.swipeActions(forInstalled: installed)
+            let (package, actions) = PackageMenu.swipeActions(forInstalled: installed)
             #expect(actions.map(\.descriptor.rawValue) == swipe)
-            #expect(package == PackageMenuAction.requestPackage(for: installed))
+            #expect(package == PackageMenu.requestPackage(for: installed))
 
-            let request = PackageMenuAction.updateRequest(forInstalled: installed)
+            let request = PackageMenu.updateRequest(forInstalled: installed)
             #expect((request != nil) == updates)
             if case let .install(requested) = request {
                 #expect(requested == remote)
             }
 
-            let removal = PackageMenuAction.removal(ofInstalled: [installed])
+            let removal = PackageMenu.removal(ofInstalled: [installed])
             #expect(removal.leftOut.isEmpty)
             guard case let .actions(asked) = removal.request, case let .remove(identity) = asked.first else {
                 Issue.record("a selection of one installed row asks for its removal")
@@ -100,13 +100,13 @@ struct InstalledRowActionTests {
     @Test
     func aBlockedUpdateIsNotTaken() throws {
         try withInstalledRow(offered: "2.0") { installed, _ in
-            try #require(PackageMenuAction.updateRequest(forInstalled: installed) != nil)
+            try #require(PackageMenu.updateRequest(forInstalled: installed) != nil)
             let center = PackageCenter.default
             let blocked = center.blockedUpdateTable
             defer { center.blockedUpdateTable = blocked }
             center.blockedUpdateTable.append(installed.identity)
-            #expect(PackageMenuAction.updateRequest(forInstalled: installed) == nil)
-            let swipe = PackageMenuAction.swipeActions(forInstalled: installed).actions
+            #expect(PackageMenu.updateRequest(forInstalled: installed) == nil)
+            let swipe = PackageMenu.swipeActions(forInstalled: installed).actions
             #expect(!swipe.contains { $0.descriptor == .update })
         }
     }
@@ -116,9 +116,9 @@ struct InstalledRowActionTests {
     @Test
     func aCommercialUpdateIsLeftToItsPage() throws {
         try withInstalledRow(offered: "2.0", tag: "cydia::commercial") { installed, _ in
-            let swipe = PackageMenuAction.swipeActions(forInstalled: installed).actions
+            let swipe = PackageMenu.swipeActions(forInstalled: installed).actions
             #expect(swipe.map(\.descriptor) == [.remove, .update])
-            #expect(PackageMenuAction.updateRequest(forInstalled: installed) == nil)
+            #expect(PackageMenu.updateRequest(forInstalled: installed) == nil)
         }
     }
 
@@ -141,11 +141,11 @@ struct InstalledRowActionTests {
                 revision: manager.revision
             )))
 
-            let swipe = PackageMenuAction.swipeActions(forInstalled: installed).actions
+            let swipe = PackageMenu.swipeActions(forInstalled: installed).actions
             #expect(swipe.map(\.descriptor) == [.dequeue])
-            #expect(PackageMenuAction.updateRequest(forInstalled: installed) == nil)
+            #expect(PackageMenu.updateRequest(forInstalled: installed) == nil)
 
-            let alone = PackageMenuAction.removal(ofInstalled: [installed])
+            let alone = PackageMenu.removal(ofInstalled: [installed])
             guard case let .withdraw(identity) = alone.request else {
                 Issue.record("a queued row selected alone leaves the queue")
                 return
@@ -153,7 +153,7 @@ struct InstalledRowActionTests {
             #expect(identity == installed.identity)
             #expect(alone.leftOut.isEmpty)
 
-            let both = PackageMenuAction.removal(ofInstalled: [installed, other])
+            let both = PackageMenu.removal(ofInstalled: [installed, other])
             guard case let .actions(asked) = both.request, case let .remove(removed) = asked.first else {
                 Issue.record("the row that is not queued is removed")
                 return

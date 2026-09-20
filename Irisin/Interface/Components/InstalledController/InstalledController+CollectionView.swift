@@ -38,7 +38,7 @@ extension InstalledController {
             cell.originalCell.clearOverrideIndicator()
         }
 
-        // PackageCell holds its icon 4 in from the edge; here, as on the
+        // PackageListRow holds its icon 4 in from the edge; here, as on the
         // dashboard, the icon starts at the inset
         cell.originalCell.horizontalPadding = -4
         return cell
@@ -83,7 +83,7 @@ extension InstalledController {
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard !isEditing, let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(
+        return PackageMenu.contextMenu(
             for: data,
             from: self,
             anchor: collectionView.cellForItem(at: indexPath)
@@ -99,31 +99,4 @@ extension InstalledController {
     }
 
     // MARK: COLLECTION VIEW -
-}
-
-/// The one centered line a list ends with: the installed packages, the
-/// repository page, the iPad sidebar's repositories and an operation that
-/// is finishing.
-final class FootnoteView: UICollectionReusableView {
-    static let height: CGFloat = 52
-
-    let label = UILabel().then {
-        $0.font = .footnote
-        $0.textColor = .secondaryLabel
-        $0.textAlignment = .center
-        $0.numberOfLines = 0
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        addSubview(label)
-        label.snp.makeConstraints { x in
-            x.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20))
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
 }

@@ -11,7 +11,7 @@ import Dog
 import Foundation
 
 nonisolated struct SearchResult: Hashable, Sendable {
-    enum RepresentTarget: Hashable, Sendable {
+    enum Target: Hashable, Sendable {
         case installed(package: Package)
         case repository(url: URL)
         case package(identity: String, repository: URL)
@@ -22,7 +22,7 @@ nonisolated struct SearchResult: Hashable, Sendable {
         case installed, package, repository, author
     }
 
-    let associatedValue: RepresentTarget
+    let associatedValue: Target
     let searchText: String
     let underKey: String
     let ratio: Double
@@ -50,7 +50,7 @@ nonisolated struct SearchResult: Hashable, Sendable {
 /// Walks a copy of the package index and the repositories for a key. Runs on
 /// the concurrent pool and stops as soon as the task that asked is cancelled,
 /// which a newer keystroke does.
-nonisolated enum SearchEngine {
+nonisolated extension SearchResult {
     @concurrent
     static func search(
         key: String,
@@ -99,7 +99,7 @@ nonisolated enum SearchEngine {
 
         private func lookupInside(
             packages: [Package],
-            compiler: (Package) -> (SearchResult.RepresentTarget)
+            compiler: (Package) -> (SearchResult.Target)
         ) -> [SearchResult] {
             var result = [(String, SearchResult)]()
             autoreleasepool {
@@ -145,7 +145,7 @@ nonisolated enum SearchEngine {
                         || key.hasPrefix("gsc")
                 }
             return lookupInside(packages: packages) { package in
-                SearchResult.RepresentTarget.installed(package: package)
+                SearchResult.Target.installed(package: package)
             }
         }
 

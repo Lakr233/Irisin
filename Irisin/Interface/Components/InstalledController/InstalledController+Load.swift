@@ -28,12 +28,12 @@ extension InstalledController {
         collectionView.allowsMultipleSelectionDuringEditing = true
         collectionView.register(InstalledPackageCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(
-            ReuseTimerHeaderView.self,
+            PackageSectionHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: headerId
         )
         collectionView.register(
-            FootnoteView.self,
+            ListFootnoteView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter,
             withReuseIdentifier: footerId
         )

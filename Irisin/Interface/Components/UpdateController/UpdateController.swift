@@ -167,7 +167,7 @@ class UpdateController: UIViewController, UITableViewDelegate {
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard let row = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(
+        return PackageMenu.contextMenu(
             for: row.candidate,
             from: self,
             anchor: tableView.cellForRow(at: indexPath)

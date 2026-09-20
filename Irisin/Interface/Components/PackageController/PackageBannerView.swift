@@ -52,7 +52,7 @@ class PackageBannerView: UIView {
     private var queueSubscription: AnyCancellable?
 
     init(package: Package) {
-        self.package = PackageMenuAction.requestPackage(for: package)
+        self.package = PackageMenu.requestPackage(for: package)
 
         super.init(frame: CGRect())
 

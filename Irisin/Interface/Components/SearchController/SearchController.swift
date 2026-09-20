@@ -206,7 +206,7 @@ class SearchController: UITableViewController {
             else {
                 return
             }
-            let target = RepoDetailController(withRepo: repo)
+            let target = RepositoryDetailController(withRepo: repo)
             (host ?? self).present(next: target)
         case let .author(name):
             let list = PackageCenter.default.obtainPackage(by: name)
@@ -227,14 +227,14 @@ class SearchController: UITableViewController {
         guard let object = result(at: indexPath) else { return nil }
         switch object.associatedValue {
         case let .installed(package):
-            return InterfaceBridge.packageContextMenuConfiguration(
+            return PackageMenu.contextMenu(
                 for: package,
                 from: self,
                 anchor: tableView.cellForRow(at: indexPath)
             )
         case let .package(identity, repository):
             if let lookup = PackageCenter.default.obtainPackage(with: identity, in: repository) {
-                return InterfaceBridge.packageContextMenuConfiguration(
+                return PackageMenu.contextMenu(
                     for: lookup,
                     from: self,
                     anchor: tableView.cellForRow(at: indexPath)
@@ -310,7 +310,7 @@ extension SearchController: UISearchControllerDelegate, UISearchResultsUpdating,
         let index = PackageCenter.default.index
         let repositories = RepositoryCenter.default.repositories
         searchTask = Task {
-            let results = await SearchEngine.search(
+            let results = await SearchResult.search(
                 key: text,
                 in: index,
                 repositories: repositories
@@ -351,7 +351,7 @@ extension SearchController: UISearchControllerDelegate, UISearchResultsUpdating,
                       page.navigationController?.topViewController === page
                 else { return }
                 searchController.present(
-                    RepoAddViewController.sheet(initialInput: source.line),
+                    RepositoryAddController.sheet(initialInput: source.line),
                     animated: true
                 )
             }

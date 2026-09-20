@@ -18,7 +18,7 @@ extension UIColor {
     /// Page background behind cards and lists, a step above
     /// `.panelBackground` in both modes: in the dark, black on a page of its
     /// own and `elevatedGround` in the iPad detail column
-    /// (`LXColumnHostController` elevates it) and in a sheet.
+    /// (`ColumnHostController` elevates it) and in a sheet.
     static let pageBackground = ground(light: UIColor(hex: 0xFAFAFA))
 
     /// A plain page, whose rows and text sit on the ground itself: white in

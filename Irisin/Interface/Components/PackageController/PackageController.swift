@@ -91,7 +91,7 @@ class PackageController: UIViewController {
     /// The header photo, at most a third of the page tall
     /// (`updatePreferredImageHeight`), over the package's name in
     /// handwriting that shows until it arrives.
-    let bannerArtwork = ArtworkView().then {
+    let bannerArtwork = PackageArtworkView().then {
         $0.layer.cornerRadius = 16
         $0.layer.cornerCurve = .continuous
         $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]

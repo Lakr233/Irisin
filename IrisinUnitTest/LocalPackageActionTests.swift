@@ -8,7 +8,7 @@ import UIKit
 @MainActor
 struct LocalPackageActionTests {
     @Test(arguments: [
-        ("4.0.8", PackageMenuAction.ActionDescriptor.update, QueueChange.Kind.update),
+        ("4.0.8", PackageMenu.Action.update, QueueChange.Kind.update),
         ("4.0.5", .update, .update),
         ("4.0.3", .reinstall, .reinstall),
         ("4.0.3-0", .reinstall, .reinstall),
@@ -16,7 +16,7 @@ struct LocalPackageActionTests {
     ])
     func localFileSurvivesAnAvailableRepositoryUpdate(
         version: String,
-        action: PackageMenuAction.ActionDescriptor,
+        action: PackageMenu.Action,
         change: QueueChange.Kind
     ) throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -94,7 +94,7 @@ struct LocalPackageActionTests {
         let banner = PackageBannerView(package: local)
         #expect(banner.obtainQuickAction()?.descriptor == .directInstall)
         #expect(banner.button.title(for: .normal) == String(localized: "Install").uppercased())
-        #expect(!PackageMenuAction.eligibleActions(for: local).contains { $0.descriptor == .remove })
+        #expect(!PackageMenu.eligibleActions(for: local).contains { $0.descriptor == .remove })
     }
 
     @Test

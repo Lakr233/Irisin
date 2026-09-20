@@ -262,7 +262,7 @@ end.
   (`.panelBackground`) is the lowest ground, the detail column
   (`.pageBackground`) a step brighter, a card (`.cardBackground`) a step
   above whatever it sits on, in both modes. In the dark that step is the
-  system's elevated level: `LXColumnHostController` marks the detail
+  system's elevated level: `ColumnHostController` marks the detail
   column elevated, so a page's ground there is `#111111`, not black, and
   its cards the elevated `#2C2C2E`. A page picks its ground from
   `.pageBackground`, `.plainBackground` (rows on the ground itself) or
@@ -270,10 +270,10 @@ end.
   `.systemBackground` or `.systemGroupedBackground`, whose elevated
   `#1C1C1E` is a shade too bright; `make check` greps for both. The
   package page's photo sits on `.panelBackground`, a step below its card.
-- **The share sheet is `InterfaceBridge.presentShareSheet(_:anchor:from:)`.**
+- **The share sheet is `ShareSheet.present(_:anchor:from:)`.**
   The iPad shows it as a popover and answers one with nowhere to point
   with an exception. A `PopoverAnchor` names the view or bar button that
-  was touched; the bridge points there while it is still on screen, then
+  was touched; the sheet points there while it is still on screen, then
   at the page's bar button, then at the middle of the page. Nothing else
   makes a `UIActivityViewController` or touches a popover presentation
   controller; `make check` greps for both.
@@ -464,7 +464,7 @@ is `/var/jb/var/log/irisin-install.log`.
   has no Xcode 27, so one thing is a workaround and comes out the day it
   does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and
   not in Xcode 26's, and `#available` guards the call, not the reference, so
-  `HandyTabBarController` sets it through KVC under its `iOS 27.0` check.
+  `TabInterfaceController` sets it through KVC under its `iOS 27.0` check.
   Same behaviour, any SDK.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller

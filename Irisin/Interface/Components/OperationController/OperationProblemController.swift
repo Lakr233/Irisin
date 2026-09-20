@@ -142,7 +142,7 @@ final class OperationProblemController: UIViewController {
             state.problem?.description ?? happened,
             "",
         ] + output).joined(separator: "\n")
-        InterfaceBridge.presentShareSheet(
+        ShareSheet.present(
             [report],
             anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) },
             from: self

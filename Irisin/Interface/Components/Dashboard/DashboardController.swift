@@ -16,7 +16,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The load viewDidLoad started, for whoever waits to show the page.
     private var firstLoad: Task<Void, Never>?
 
-    var dataSource = [InterfaceBridge.DashboardDataSection]()
+    var dataSource = [DashboardController.Section]()
     var reloadID = UUID()
     let refreshControl = UIRefreshControl()
 
@@ -28,7 +28,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The text size the cached cell size was measured at: a row is as tall
     /// as its lines, so a change of text size has to measure it again.
     var collectionViewTextSizeCache: UIContentSizeCategory?
-    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
+    var collectionViewCellSizeCache = PackageListRow.minimumSize
 
     var cellLimit = 16
 
@@ -56,7 +56,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
                 withReuseIdentifier: generalHeaderID,
                 for: indexPath
             )
-            if let view = view as? LXDashboardSupplementHeaderCell,
+            if let view = view as? DashboardSectionHeader,
                let section = section(at: indexPath.section)
             {
                 view.loadSection(data: section)
@@ -81,7 +81,11 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         case let .package(_, package):
             let cell = collectionView
                 .dequeueReusableCell(withReuseIdentifier: packageCellID, for: indexPath)
-                as! DashboardPackageCell
+                as! PackageCollectionCell
+            // no card behind a dashboard row, so its icon starts at the cell's
+            // edge, where the section title starts: PackageListRow holds it 4
+            // in, for rows on a card
+            cell.horizontalPadding = -4
             cell.loadValue(package: package)
             return cell
         }
@@ -120,7 +124,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         collectionView.alwaysBounceVertical = true
         collectionView.backgroundColor = .clear
         collectionView.register(
-            LXDashboardSupplementHeaderCell.self,
+            DashboardSectionHeader.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: generalHeaderID
         )
@@ -130,7 +134,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             withReuseIdentifier: footerID
         )
         collectionView.register(
-            DashboardPackageCell.self,
+            PackageCollectionCell.self,
             forCellWithReuseIdentifier: packageCellID
         )
 
@@ -152,20 +156,5 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             Task { await self?.reload(animated: true) }
         }
         .store(in: &subscriptions)
-    }
-}
-
-/// A package on the dashboard: no card behind it, so its icon starts at the
-/// cell's edge, where the section title above it starts.
-private final class DashboardPackageCell: PackageCollectionCell {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        // PackageCell holds its icon 4 in from the edge, for rows on a card
-        horizontalPadding = -4
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
     }
 }

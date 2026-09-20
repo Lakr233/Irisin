@@ -22,7 +22,7 @@ extension InstalledController {
             NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1),
-                    heightDimension: .absolute(FootnoteView.height)
+                    heightDimension: .absolute(ListFootnoteView.height)
                 ),
                 elementKind: UICollectionView.elementKindSectionFooter,
                 alignment: .bottom
@@ -41,7 +41,7 @@ extension InstalledController {
         in environment: NSCollectionLayoutEnvironment
     ) -> NSCollectionLayoutSection {
         let width = environment.container.effectiveContentSize.width - Self.horizontalInset * 2
-        let (cellSize, itemsPerRow) = InterfaceBridge.calculatesPackageCellSize(availableWidth: width)
+        let (cellSize, itemsPerRow) = PackageListRow.layout(inWidth: width)
         let rowHeight = InstalledPackageCell.rowHeight
 
         let section: NSCollectionLayoutSection
@@ -110,7 +110,7 @@ extension InstalledController {
     /// package leaves the queue instead, as its page would have it.
     private func swipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard !isEditing, let row = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        let (package, actions) = PackageMenuAction.swipeActions(forInstalled: row)
+        let (package, actions) = PackageMenu.swipeActions(forInstalled: row)
         guard !actions.isEmpty else { return nil }
         let configuration = UISwipeActionsConfiguration(actions: actions.map { action in
             let removes = action.descriptor == .remove || action.descriptor == .dequeue

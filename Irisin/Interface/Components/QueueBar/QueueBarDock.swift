@@ -58,7 +58,7 @@ final class QueueBarDock {
         bar.isHidden = true
         bar.addAction(UIAction { [weak host] _ in
             guard let host else { return }
-            NavigatorEnterViewController.enclosing(host)?.openQueue()
+            InterfaceHostController.enclosing(host)?.openQueue()
         }, for: .touchUpInside)
         // the bar grows with the text size, and the room under it follows
         bar.heightChanged = { [weak self] in self?.makeRoom() }

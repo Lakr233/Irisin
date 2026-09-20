@@ -30,7 +30,7 @@ struct NotificationBindingTests {
     func slowerDashboardRefreshCannotOverwriteNewerSections() async throws {
         let controller = DataOnlyDashboardController()
         controller.loadViewIfNeeded()
-        var olderResult: CheckedContinuation<[InterfaceBridge.DashboardDataSection], Never>?
+        var olderResult: CheckedContinuation<[DashboardController.Section], Never>?
         let older = Task {
             await controller.reload(animated: false) {
                 await withCheckedContinuation { olderResult = $0 }
@@ -39,16 +39,16 @@ struct NotificationBindingTests {
         try await waitUntil { olderResult != nil }
 
         await controller.reload(animated: false) {
-            [InterfaceBridge.DashboardDataSection(
+            [DashboardController.Section(
                 title: "New sections",
-                package: [],
+                packages: [],
                 shouldLimit: false,
                 action: nil
             )]
         }
-        olderResult?.resume(returning: [InterfaceBridge.DashboardDataSection(
+        olderResult?.resume(returning: [DashboardController.Section(
             title: "Old sections",
-            package: [],
+            packages: [],
             shouldLimit: false,
             action: nil
         )])

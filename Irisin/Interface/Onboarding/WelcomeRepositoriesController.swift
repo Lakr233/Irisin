@@ -68,7 +68,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
 
     private let onFinish: () -> Void
     private let lines = WelcomeRepositoriesController.recommendedSources
-    private var previews: [String: RepoAddCandidateCell.Preview] = [:]
+    private var previews: [String: RepositoryAddCandidateCell.Preview] = [:]
     private var registered = Set(RepositoryCenter.default.obtainRepositoryUrls())
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
 
@@ -78,7 +78,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         switch row {
         case let .source(line):
             let cell = tableView
-                .dequeueReusableCell(withIdentifier: "candidate", for: indexPath) as! RepoAddCandidateCell
+                .dequeueReusableCell(withIdentifier: "candidate", for: indexPath) as! RepositoryAddCandidateCell
             let added = RepositorySource(line: line).map { registered.contains($0.url) } ?? false
             cell.configure(line: line, preview: previews[line] ?? .loading, added: added)
             cell.onAdd = { [weak self] in self?.add(line) }
@@ -123,9 +123,9 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         }
 
         tableView.backgroundColor = .groupedBackground
-        tableView.register(RepoAddCandidateCell.self, forCellReuseIdentifier: "candidate")
+        tableView.register(RepositoryAddCandidateCell.self, forCellReuseIdentifier: "candidate")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "action")
-        tableView.register(RepoAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "recommended")
+        tableView.register(RepositoryAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "recommended")
         tableView.dataSource = dataSource
         tableView.delegate = self
 
@@ -176,7 +176,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
     /// Add All leaves with the last source it could add.
     private func updateRecommendedHeader() {
         guard let index = dataSource.snapshot().indexOfSection(.recommended),
-              let header = tableView.headerView(forSection: index) as? RepoAddSectionHeaderView
+              let header = tableView.headerView(forSection: index) as? RepositoryAddSectionHeaderView
         else { return }
         header.showsButton = offersAddAll
     }
@@ -192,7 +192,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard dataSource.itemIdentifier(for: indexPath) == .addMore else { return }
-        present(RepoAddViewController.sheet(), animated: true)
+        present(RepositoryAddController.sheet(), animated: true)
     }
 
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -201,7 +201,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
             return Self.text(.groupedHeader(), "A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and we cannot verify that its packages are safe.")
         case .recommended:
             let header = tableView
-                .dequeueReusableHeaderFooterView(withIdentifier: "recommended") as? RepoAddSectionHeaderView
+                .dequeueReusableHeaderFooterView(withIdentifier: "recommended") as? RepositoryAddSectionHeaderView
             header?.configure(title: String(localized: "Recommended Repositories"), showsButton: offersAddAll)
             header?.onAddAll = { [weak self] in self?.addAll() }
             return header

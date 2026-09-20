@@ -104,7 +104,7 @@ class SetupViewController: UIViewController {
     }
 
     func dispatchAllocInterface() async {
-        let controller = NavigatorEnterViewController()
+        let controller = InterfaceHostController()
         controller.modalPresentationStyle = .fullScreen
         // this screen is still the loading one while the first page fills in
         await controller.prepare(filling: view.bounds, within: .milliseconds(200))

@@ -56,7 +56,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard EnvironmentDetector.incompatibilityMessage == nil else { return }
         Dog.shared.join(self, "sceneDidBecomeActive", level: .info)
         reloadThrottle.throttle {
-            Task { await InterfaceBridge.reloadLocalPackages() }
+            Task { await PackageCenter.default.reloadLocalPackages() }
         }
     }
 
@@ -81,9 +81,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     /// The interface once setup has put it on screen, however long that takes.
-    private func interface() async -> NavigatorEnterViewController {
+    private func interface() async -> InterfaceHostController {
         while true {
-            if let interface = window?.rootViewController?.presentedViewController as? NavigatorEnterViewController,
+            if let interface = window?.rootViewController?.presentedViewController as? InterfaceHostController,
                interface.current != nil
             {
                 return interface
@@ -97,7 +97,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let interface = await interface()
             // a sheet the user has open stays, with this one over it
             (interface.presentedViewController ?? interface)
-                .present(RepoAddViewController.sheet(candidates: sources, origin: .link), animated: true)
+                .present(RepositoryAddController.sheet(candidates: sources, origin: .link), animated: true)
         }
     }
 
@@ -162,13 +162,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         Task {
             let interface = await interface()
             (interface.presentedViewController ?? interface)
-                .present(RepoAddViewController.sheet(candidates: fresh, origin: .file), animated: true)
+                .present(RepositoryAddController.sheet(candidates: fresh, origin: .file), animated: true)
         }
     }
 
     private func openQuickInstall(url: URL, inPlace: Bool) {
         Task {
-            let target = DirectInstallController()
+            let target = DebOpenController()
             target.patternLocation = url
             target.openedInPlace = inPlace
             await interface().pageStack?.pushViewController(target, animated: true)

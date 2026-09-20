@@ -43,7 +43,7 @@ extension UIViewController {
         ) { [weak self] in
             guard let repository else {
                 self?.present(
-                    RepoAddViewController.sheet(initialInput: Self.filaRepository.absoluteString),
+                    RepositoryAddController.sheet(initialInput: Self.filaRepository.absoluteString),
                     animated: true
                 )
                 return
@@ -52,7 +52,7 @@ extension UIViewController {
             if let package = PackageCenter.default.obtainPackage(with: Self.filaIdentity, in: repository.url) {
                 self?.present(next: PackageController(package: package))
             } else {
-                self?.present(next: RepoDetailController(withRepo: repository))
+                self?.present(next: RepositoryDetailController(withRepo: repository))
             }
         }
     }
