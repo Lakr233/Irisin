@@ -12,7 +12,7 @@ import IrisinProtocol
 // app, whose postinst restarts the daemon that started it and whose app is
 // the one reading the pipe. Neither ending interrupts the transaction, and
 // the transcript is also written, as timestamped plain text, to
-// `IrisinProtocol.installerLogPath` so the relaunched app can show it.
+// `IrisinWire.installerLogPath` so the relaunched app can show it.
 
 // A reader that went away turns every write into EPIPE, which is ignored
 // below; it must not become a signal that kills a half-finished job.
@@ -37,7 +37,7 @@ func writeEvent(_ event: InstallerEvent) {
     writeAll(STDOUT_FILENO, Data((InstallerOutput.encode(event) + "\n").utf8))
 }
 
-guard let installRoot = ProcessPath.installRoot(ofCurrentProcessAt: IrisinProtocol.helperPath) else {
+guard let installRoot = ProcessPath.installRoot(ofCurrentProcessAt: IrisinWire.helperPath) else {
     // No log yet: there is no install root to keep one under. The pipe
     // still gets a proper ending.
     for event in [InstallerEvent.failure(.helperMisplaced), .exit(EX_CONFIG)] {
@@ -52,7 +52,7 @@ let job = try? InstallerJob.decode(FileHandle.standardInput.readDataToEndOfFile(
 /// failure being investigated is usually the one before the retry. The
 /// maintenance jobs append to the current log: a respring after an install
 /// must not push that install's transcript out.
-let logPath = installRoot + IrisinProtocol.installerLogPath
+let logPath = installRoot + IrisinWire.installerLogPath
 try? FileManager.default.createDirectory(
     atPath: (logPath as NSString).deletingLastPathComponent,
     withIntermediateDirectories: true

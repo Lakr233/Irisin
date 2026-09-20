@@ -15,7 +15,7 @@ public enum PackageResolver {
             if reason == .noPlan || error is LibSolv.ResolutionFailure, !checks.isEmpty {
                 // Private SAT token names are implementation details. The
                 // evidence rows explain which real package requirement failed.
-                let unmatched: Set<ResolutionCheckOutcome> = [
+                let unmatched: Set<ResolutionCheck.Outcome> = [
                     .missing, .incompatibleArchitecture, .noMatchingVersion, .invalidMetadata,
                 ]
                 reason = checks.contains { unmatched.contains($0.outcome) }

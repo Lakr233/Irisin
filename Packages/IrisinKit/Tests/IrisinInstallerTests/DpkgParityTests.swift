@@ -121,8 +121,8 @@ struct DpkgParityTests {
         #expect(try fixture.status("hostile") == nil)
     }
 
-    @Test(arguments: [PreparedEntryKind.symbolicLink, .hardLink])
-    func packageMayNotShipDatabaseLinks(_ kind: PreparedEntryKind) throws {
+    @Test(arguments: [PreparedEntry.Kind.symbolicLink, .hardLink])
+    func packageMayNotShipDatabaseLinks(_ kind: PreparedEntry.Kind) throws {
         let fixture = try NativeInstallFixture()
         let entry = PreparedEntry(
             path: "Library/dpkg/redirect",

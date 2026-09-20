@@ -1,8 +1,12 @@
 import Foundation
 
 public struct PreparedEntry: Codable, Equatable, Sendable {
+    public enum Kind: String, Codable, Sendable {
+        case file, directory, symbolicLink, hardLink
+    }
+
     public let path: String
-    public let kind: PreparedEntryKind
+    public let kind: Kind
     public let file: PreparedFile?
     public let linkTarget: String?
     public let mode: UInt32
@@ -12,7 +16,7 @@ public struct PreparedEntry: Codable, Equatable, Sendable {
 
     public init(
         path: String,
-        kind: PreparedEntryKind,
+        kind: Kind,
         file: PreparedFile? = nil,
         linkTarget: String? = nil,
         mode: UInt32,

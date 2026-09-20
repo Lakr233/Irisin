@@ -97,7 +97,7 @@ final class InstallerRunnerTests: XCTestCase {
 
         XCTAssertEqual(runner.run(.bootstrapIrisinDaemon), 0)
         XCTAssertEqual(runner.run(.bootoutIrisinDaemon), 0)
-        XCTAssertEqual(requests, [.bootstrap(plist: expected, executable: root + IrisinProtocol.daemonPath), .bootout(plist: expected)])
+        XCTAssertEqual(requests, [.bootstrap(plist: expected, executable: root + IrisinWire.daemonPath), .bootout(plist: expected)])
         XCTAssertEqual(events.filter { $0 == .phase(.completed) }.count, 2)
     }
 
@@ -132,7 +132,7 @@ final class InstallerRunnerTests: XCTestCase {
         ]
         let data = try PropertyListSerialization.data(fromPropertyList: original, format: .xml, options: 0)
         try data.write(to: URL(fileURLWithPath: path))
-        let executable = root + IrisinProtocol.daemonPath
+        let executable = root + IrisinWire.daemonPath
         try LaunchDaemonManager.preparePlist(at: path, executable: executable)
         let result = try XCTUnwrap(NSDictionary(contentsOfFile: path))
         XCTAssertEqual(result["ProgramArguments"] as? [String], [executable])

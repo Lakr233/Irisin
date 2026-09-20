@@ -76,7 +76,7 @@ public final class InstallerRunner {
         case .respring:
             respring()
         case .bootstrapIrisinDaemon:
-            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinProtocol.daemonPath))))
+            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinWire.daemonPath))))
         case .bootoutIrisinDaemon:
             manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:

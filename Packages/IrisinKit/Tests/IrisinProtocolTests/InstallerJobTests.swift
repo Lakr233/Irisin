@@ -76,7 +76,7 @@ final class InstallerJobTests: XCTestCase {
         ))
         let decoded = try InstallerJob.decode(job.encoded())
         XCTAssertEqual(decoded, job)
-        XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinProtocol.maximumJobByteCount + 1)))
+        XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinWire.maximumJobByteCount + 1)))
         XCTAssertThrowsError(try InstallerJob.decode(Data("{}".utf8)))
 
         for maintenance in [InstallerJob.bootstrapIrisinDaemon, .bootoutIrisinDaemon] {

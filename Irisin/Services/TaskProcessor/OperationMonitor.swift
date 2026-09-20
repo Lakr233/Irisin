@@ -46,7 +46,7 @@ final class OperationMonitor {
 
     let operation: TaskProcessor.OperationPayload
 
-    @Published private(set) var phase: InstallerPhase?
+    @Published private(set) var phase: InstallerEvent.Phase?
     @Published private(set) var progress: Progress?
     /// What the console shows, one row each, in order. Not published
     /// itself: a published array is copied whole on every append, which a

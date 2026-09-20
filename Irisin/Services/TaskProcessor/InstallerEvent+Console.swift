@@ -89,7 +89,7 @@ extension InstallerEvent.Problem {
     }
 }
 
-extension InstallerPhase {
+extension InstallerEvent.Phase {
     /// The heading the console shows while this phase runs.
     var localizedTitle: String {
         switch self {

@@ -52,7 +52,7 @@ extension ArchiveStream {
                     archive_read_data_skip(inner); continue
                 }
                 guard seen.insert(path).inserted else { throw CocoaError(.fileReadCorruptFile) }
-                let kind: PreparedEntryKind
+                let kind: PreparedEntry.Kind
                 var file: PreparedFile?
                 var link: String?
                 if let target = archive_entry_hardlink(entry) {

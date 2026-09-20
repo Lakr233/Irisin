@@ -117,7 +117,7 @@ struct MachOBinary {
     }
 
     /// A load command that names a library or an rpath.
-    private struct Name {
+    private struct LoadCommandName {
         enum Kind { case rpath, dependency, id }
         let kind: Kind
         /// Where the command is among the commands, and its length.
@@ -127,9 +127,9 @@ struct MachOBinary {
         let bytes: [UInt8]
     }
 
-    private static func names(in slice: Slice, _ data: Data) throws -> [Name] {
+    private static func names(in slice: Slice, _ data: Data) throws -> [LoadCommandName] {
         try slice.file.loadCommands.compactMap { command in
-            let (kind, offset, size, start): (Name.Kind, Int, Int, UInt32)
+            let (kind, offset, size, start): (LoadCommandName.Kind, Int, Int, UInt32)
             switch command {
             case let .rpath(rpath):
                 (kind, offset, size, start) = (.rpath, rpath.offset, Int(rpath.layout.cmdsize), rpath.layout.path.offset)
@@ -144,7 +144,7 @@ struct MachOBinary {
             guard start >= 12, start < size else { throw MachOFailure.malformed }
             let command = slice.range.lowerBound + MemoryLayout<mach_header_64>.size + offset
             let bytes = data[command + Int(start) ..< command + size].prefix { $0 != 0 }
-            return Name(kind: kind, offset: offset, size: size, start: Int(start), bytes: Array(bytes))
+            return LoadCommandName(kind: kind, offset: offset, size: size, start: Int(start), bytes: Array(bytes))
         }
     }
 
@@ -154,7 +154,7 @@ struct MachOBinary {
     /// -f1` and `tr -d '[:blank:]'`, and asks when what comes out starts
     /// with `/var/jb/`. What comes out otherwise than it went in would
     /// change another name or none, and is refused.
-    private static func patcherChanges(_ name: Name) throws -> Bool {
+    private static func patcherChanges(_ name: LoadCommandName) throws -> Bool {
         // a control byte splits otool's line, or is a tab tr drops
         guard !name.bytes.contains(where: { $0 < 0x20 || $0 == 0x7F }) else { throw MachOFailure.unsupportedName }
         let read = name.bytes.drop { $0 == 0x20 }.filter { $0 != 0x5C }

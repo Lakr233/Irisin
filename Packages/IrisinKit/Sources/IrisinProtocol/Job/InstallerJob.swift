@@ -151,7 +151,7 @@ public extension InstallerJob {
     }
 
     static func decode(_ data: Data) throws -> InstallerJob {
-        guard data.count <= IrisinProtocol.maximumJobByteCount else {
+        guard data.count <= IrisinWire.maximumJobByteCount else {
             throw IrisinFailure(code: .invalidRequest)
         }
         do {

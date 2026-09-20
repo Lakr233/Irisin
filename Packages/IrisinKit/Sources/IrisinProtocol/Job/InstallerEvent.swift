@@ -13,7 +13,7 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
     /// The helper is up: which job, as whom, and under which install root.
     case started(Started)
     /// A named part of the job began. Phases arrive in order and never repeat.
-    case phase(InstallerPhase)
+    case phase(Phase)
     /// Package steps done so far, out of the total the transaction declared.
     case progress(completed: Int, total: Int)
     /// One package moves through the database.
@@ -184,22 +184,24 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
     }
 }
 
-/// The parts of a job, in the order they happen. A transaction visits all of
-/// them (`registeringApplications` only when an app bundle came or went); a
-/// rebuild is `registeringApplications` alone, and the other maintenance
-/// jobs are `applying` alone. `completed` is emitted exactly when the job
-/// is about to exit with status 0.
-public enum InstallerPhase: String, Codable, Equatable, Sendable, CaseIterable {
-    /// Locks taken, the database read, the archives captured.
-    case preparing
-    /// The archives and the final state checked before anything is written.
-    case verifying
-    /// The stages run: files move, scripts run, the database is committed.
-    case applying
-    /// Pending triggers processed after the last stage.
-    case processingTriggers
-    /// LaunchServices told about app bundles that came or went.
-    case registeringApplications
-    /// Nothing left to do; the exit status follows.
-    case completed
+public extension InstallerEvent {
+    /// The parts of a job, in the order they happen. A transaction visits all of
+    /// them (`registeringApplications` only when an app bundle came or went); a
+    /// rebuild is `registeringApplications` alone, and the other maintenance
+    /// jobs are `applying` alone. `completed` is emitted exactly when the job
+    /// is about to exit with status 0.
+    enum Phase: String, Codable, Equatable, Sendable, CaseIterable {
+        /// Locks taken, the database read, the archives captured.
+        case preparing
+        /// The archives and the final state checked before anything is written.
+        case verifying
+        /// The stages run: files move, scripts run, the database is committed.
+        case applying
+        /// Pending triggers processed after the last stage.
+        case processingTriggers
+        /// LaunchServices told about app bundles that came or went.
+        case registeringApplications
+        /// Nothing left to do; the exit status follows.
+        case completed
+    }
 }

@@ -6,7 +6,7 @@ import Foundation
 /// whole trust boundary: everything the app can ask for is one of the three
 /// operations below, and the one that does anything carries a closed
 /// `InstallerJob`, never a command line.
-public enum IrisinProtocol {
+public enum IrisinWire {
     public static let version: UInt64 = 3
     public static let serviceName = "wiki.qaq.irisin.service"
     public static let clientEntitlement = "wiki.qaq.irisin.client"
@@ -32,6 +32,20 @@ public enum IrisinProtocol {
 
     /// Hard ceiling on the encoded job in a `run` request.
     public static let maximumJobByteCount = 256 * 1024
+
+    /// The keys of the XPC dictionaries both sides read.
+    public enum Key {
+        public static let version = "v"
+        public static let operation = "op"
+        public static let code = "code"
+        public static let errno = "errno"
+        public static let path = "path"
+        public static let installRoot = "root"
+        /// The `InstallerJob`, JSON encoded.
+        public static let job = "job"
+        public static let descriptor = "fd"
+        public static let jobIdentifier = "jobid"
+    }
 }
 
 /// Every request the daemon serves.
@@ -92,17 +106,4 @@ public struct IrisinFailure: Error, Sendable, Hashable, Codable {
         guard systemError != 0 else { return nil }
         return String(cString: strerror(systemError))
     }
-}
-
-public enum IrisinWireKey {
-    public static let version = "v"
-    public static let operation = "op"
-    public static let code = "code"
-    public static let errno = "errno"
-    public static let path = "path"
-    public static let installRoot = "root"
-    /// The `InstallerJob`, JSON encoded.
-    public static let job = "job"
-    public static let descriptor = "fd"
-    public static let jobIdentifier = "jobid"
 }

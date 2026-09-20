@@ -91,7 +91,7 @@ public final class DaemonLink: @unchecked Sendable {
         guard applications.lastPathComponent == "Applications" else { return false }
         let daemon = applications
             .deletingLastPathComponent()
-            .appendingPathComponent(String(IrisinProtocol.daemonPath.dropFirst()))
+            .appendingPathComponent(String(IrisinWire.daemonPath.dropFirst()))
         guard access(daemon.path, F_OK) != 0 else { return true }
         // Only "it is not there" answers false. "I could not look" must not
         // demote a device that has a daemon.

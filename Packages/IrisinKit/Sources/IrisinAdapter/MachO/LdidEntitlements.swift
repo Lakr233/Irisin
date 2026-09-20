@@ -49,8 +49,7 @@ struct LdidEntitlements: Equatable {
             return
         }
         var reader = Reader(xml)
-        guard let entries = reader.read() else { throw MachOFailure.unsupportedEntitlements }
-        self.entries = entries
+        entries = try reader.read()
     }
 
     /// Each key set to true, as `plist_dict_set_item` sets it.
@@ -226,302 +225,303 @@ struct LdidEntitlements: Equatable {
     }
 }
 
-/// The XML read as libplist's `plist_from_xml` reads it, for what an
-/// entitlements file holds. What libplist reads its own way is refused
-/// rather than guessed at: an entity it matches by the first letters, text
-/// split by a comment or CDATA, a second key in a row, a key left without a
-/// value, a byte that ends its C strings early, and elements after an empty
-/// root, which it reads into that root. The rest it reads as written here:
-/// every byte of a string kept (a CR too), the document read up to the
-/// end of its root and no further.
-private struct Reader {
-    /// A container being read.
-    private struct Frame {
-        let isDictionary: Bool
-        /// The key read for the next value of a dictionary.
-        var key: String?
-        var entries: [LdidEntitlements.Entry] = []
-        /// Where each key of `entries` stands, by its bytes.
-        var index: [[UInt8]: Int] = [:]
-        var values: [LdidEntitlements.Value] = []
+extension LdidEntitlements {
+    /// The XML read as libplist's `plist_from_xml` reads it, for what an
+    /// entitlements file holds. What libplist reads its own way is refused
+    /// rather than guessed at: an entity it matches by the first letters, text
+    /// split by a comment or CDATA, a second key in a row, a key left without a
+    /// value, a byte that ends its C strings early, and elements after an empty
+    /// root, which it reads into that root. The rest it reads as written here:
+    /// every byte of a string kept (a CR too), the document read up to the
+    /// end of its root and no further.
+    private struct Reader {
+        /// A container being read.
+        private struct Frame {
+            let isDictionary: Bool
+            /// The key read for the next value of a dictionary.
+            var key: String?
+            var entries: [LdidEntitlements.Entry] = []
+            /// Where each key of `entries` stands, by its bytes.
+            var index: [[UInt8]: Int] = [:]
+            var values: [LdidEntitlements.Value] = []
 
-        /// As `plist_dict_set_item`: the value replaced where the key stands.
-        mutating func set(_ key: String, _ value: LdidEntitlements.Value) {
-            if let at = index[Array(key.utf8)] {
-                entries[at].value = value
-            } else {
-                index[Array(key.utf8)] = entries.count
-                entries.append(LdidEntitlements.Entry(key: key, value: value))
-            }
-        }
-    }
-
-    private struct Refused: Error {}
-
-    /// Deeper than any entitlements go, and shallow enough for the writers'
-    /// recursion on a small stack.
-    private static let depth = 64
-
-    private let bytes: [UInt8]
-    private var at = 0
-    private var stack: [Frame] = []
-    /// An empty root, which libplist reads past.
-    private var root: [LdidEntitlements.Entry]?
-
-    init(_ data: Data) {
-        bytes = Array(data)
-    }
-
-    /// The root dictionary's entries, nil for anything refused.
-    mutating func read() -> [LdidEntitlements.Entry]? {
-        guard let entries = try? document() else { return nil }
-        // libplist turns a lone CF$UID into a UID, which ldid refuses
-        if entries.count == 1, entries[0].key.utf8.elementsEqual("CF$UID".utf8), case .integer = entries[0].value {
-            return nil
-        }
-        return entries
-    }
-
-    private mutating func document() throws -> [LdidEntitlements.Entry] {
-        var inPlist = false
-        while true {
-            skipSpace()
-            guard at < bytes.count else { break }
-            try expect("<")
-            if try skipMarkup() {
-                continue
-            }
-            let (name, empty) = try tag()
-            switch name {
-            case "plist":
-                guard !empty, !inPlist, stack.isEmpty, root == nil else { throw Refused() }
-                inPlist = true
-            case "/plist":
-                // reached only past an empty root: libplist stops at the end
-                // of any other
-                guard !empty, inPlist, root != nil else { throw Refused() }
-                inPlist = false
-            case _ where root != nil:
-                throw Refused()
-            case "dict", "array":
-                if empty {
-                    try add(name == "dict" ? .dictionary([]) : .array([]))
+            /// As `plist_dict_set_item`: the value replaced where the key stands.
+            mutating func set(_ key: String, _ value: LdidEntitlements.Value) {
+                if let at = index[Array(key.utf8)] {
+                    entries[at].value = value
                 } else {
-                    try open(dictionary: name == "dict")
+                    index[Array(key.utf8)] = entries.count
+                    entries.append(LdidEntitlements.Entry(key: key, value: value))
                 }
-            case "/dict", "/array":
-                guard !empty, let frame = stack.popLast(), frame.isDictionary == (name == "/dict"), frame.key == nil else {
-                    throw Refused()
-                }
-                guard !stack.isEmpty else {
-                    // the root, a dictionary (`open`): libplist reads no further
-                    return frame.entries
-                }
-                try add(frame.isDictionary ? .dictionary(frame.entries) : .array(frame.values))
-            case "key":
-                guard !empty, let top = stack.indices.last, stack[top].isDictionary, stack[top].key == nil else {
-                    throw Refused()
-                }
-                let key = try Self.string(text(closing: name, skippingSpace: false))
-                stack[top].key = key
-            case "string":
-                let string = try empty ? "" : Self.string(text(closing: name, skippingSpace: false))
-                try add(.string(string))
-            case "integer":
-                // libplist reads it with strtoull in any base, and ldid's DER
-                // cannot spell zero or a negative one: plain decimal only
-                guard !empty else { throw Refused() }
-                let text = try text(closing: name, skippingSpace: true)
-                let digits = text.prefix { (0x30 ... 0x39).contains($0) }
-                guard digits.first.map({ $0 != 0x30 }) == true, text.dropFirst(digits.count).allSatisfy(Self.isSpace),
-                      let value = Int64(String(decoding: digits, as: UTF8.self))
-                else { throw Refused() }
-                try add(.integer(value))
-            case "data":
-                // libplist's decoder skips what it does not know; base64 that
-                // reads back the same is what the two agree on
-                let encoded = try empty ? "" : String(decoding: text(closing: name, skippingSpace: true).filter { !Self.isSpace($0) }, as: UTF8.self)
-                guard let value = Data(base64Encoded: encoded), value.base64EncodedString() == encoded else { throw Refused() }
-                try add(.data(value))
-            case "true", "false":
-                // libplist reads past any text in them; there is none here
-                guard try empty || text(closing: name, skippingSpace: true).isEmpty else { throw Refused() }
-                try add(.boolean(name == "true"))
-            default:
-                // a real, a date and anything that is no plist element
-                throw Refused()
             }
         }
-        // the end of the document, fine only after an empty root
-        guard stack.isEmpty, !inPlist, let root else { throw Refused() }
-        return root
-    }
 
-    private mutating func open(dictionary: Bool) throws {
-        // a value in a dictionary needs its key, and the root is a dictionary
-        guard stack.count < Self.depth, stack.last.map({ !$0.isDictionary || $0.key != nil }) ?? dictionary else {
-            throw Refused()
-        }
-        stack.append(Frame(isDictionary: dictionary))
-    }
+        /// Deeper than any entitlements go, and shallow enough for the writers'
+        /// recursion on a small stack.
+        private static let depth = 64
 
-    private mutating func add(_ value: LdidEntitlements.Value) throws {
-        guard let top = stack.indices.last else {
-            // a root that is not a container ends libplist's read, and one
-            // that is empty does not; only an empty dictionary is a dictionary
-            guard value == .dictionary([]) else { throw Refused() }
-            root = []
-            return
-        }
-        if stack[top].isDictionary {
-            guard let key = stack[top].key else { throw Refused() }
-            stack[top].key = nil
-            stack[top].set(key, value)
-        } else {
-            stack[top].values.append(value)
-        }
-    }
+        private let bytes: [UInt8]
+        private var at = 0
+        private var stack: [Frame] = []
+        /// An empty root, which libplist reads past.
+        private var root: [LdidEntitlements.Entry]?
 
-    /// A tag's name, read past its `<` as libplist reads it, and whether it
-    /// closes itself. Only `<plist>` may carry attributes, their
-    /// double-quoted values skipped whole as libplist skips them.
-    private mutating func tag() throws -> (name: String, empty: Bool) {
-        let start = at
-        while at < bytes.count, !" \t\r\n<>".utf8.contains(bytes[at]) {
-            at += 1
+        init(_ data: Data) {
+            bytes = Array(data)
         }
-        var name = bytes[start ..< at]
-        if at < bytes.count, bytes[at] != UInt8(ascii: ">") {
-            guard name.elementsEqual("plist".utf8) else { throw Refused() }
-            while at < bytes.count, bytes[at] != UInt8(ascii: "<"), bytes[at] != UInt8(ascii: ">") {
-                if bytes[at] == UInt8(ascii: "\"") {
-                    at = try closingQuote()
-                }
-                at += 1
+
+        /// The root dictionary's entries. Anything refused throws
+        /// `MachOFailure.unsupportedEntitlements`.
+        mutating func read() throws -> [LdidEntitlements.Entry] {
+            let entries = try document()
+            // libplist turns a lone CF$UID into a UID, which ldid refuses
+            if entries.count == 1, entries[0].key.utf8.elementsEqual("CF$UID".utf8), case .integer = entries[0].value {
+                throw MachOFailure.unsupportedEntitlements
             }
+            return entries
         }
-        try expect(">")
-        let empty = bytes[at - 2] == UInt8(ascii: "/")
-        if empty, name.last == UInt8(ascii: "/") {
-            name = name.dropLast()
-        }
-        return (String(decoding: name, as: UTF8.self), empty)
-    }
 
-    /// An element's text up to its closing tag, which must be what follows
-    /// it: libplist splits a text at a comment or CDATA and joins the parts
-    /// its own way.
-    private mutating func text(closing name: String, skippingSpace: Bool) throws -> ArraySlice<UInt8> {
-        if skippingSpace {
-            skipSpace()
-        }
-        guard let end = bytes[at...].firstIndex(of: UInt8(ascii: "<")) else { throw Refused() }
-        let text = bytes[at ..< end]
-        at = end + 1
-        try expect("/" + name)
-        skipSpace()
-        try expect(">")
-        return text
-    }
-
-    /// Skips what libplist skips between elements, past the `<`: `<?…?>`, a
-    /// comment, and a `<!DOCTYPE>` without an internal subset.
-    private mutating func skipMarkup() throws -> Bool {
-        if bytes[at...].starts(with: "?".utf8) {
-            try skip(past: "?>", quotes: true)
-        } else if bytes[at...].starts(with: "!--".utf8) {
-            at += 3
-            try skip(past: "-->", quotes: false)
-        } else if bytes[at...].starts(with: "!DOCTYPE".utf8) {
-            at += 8
+        private mutating func document() throws -> [LdidEntitlements.Entry] {
+            var inPlist = false
             while true {
-                guard at < bytes.count, bytes[at] != UInt8(ascii: "[") else { throw Refused() }
-                if bytes[at] == UInt8(ascii: "\"") {
-                    at = try closingQuote()
-                } else if bytes[at] == UInt8(ascii: ">") {
-                    at += 1
-                    break
+                skipSpace()
+                guard at < bytes.count else { break }
+                try expect("<")
+                if try skipMarkup() {
+                    continue
                 }
-                at += 1
+                let (name, empty) = try tag()
+                switch name {
+                case "plist":
+                    guard !empty, !inPlist, stack.isEmpty, root == nil else { throw MachOFailure.unsupportedEntitlements }
+                    inPlist = true
+                case "/plist":
+                    // reached only past an empty root: libplist stops at the end
+                    // of any other
+                    guard !empty, inPlist, root != nil else { throw MachOFailure.unsupportedEntitlements }
+                    inPlist = false
+                case _ where root != nil:
+                    throw MachOFailure.unsupportedEntitlements
+                case "dict", "array":
+                    if empty {
+                        try add(name == "dict" ? .dictionary([]) : .array([]))
+                    } else {
+                        try open(dictionary: name == "dict")
+                    }
+                case "/dict", "/array":
+                    guard !empty, let frame = stack.popLast(), frame.isDictionary == (name == "/dict"), frame.key == nil else {
+                        throw MachOFailure.unsupportedEntitlements
+                    }
+                    guard !stack.isEmpty else {
+                        // the root, a dictionary (`open`): libplist reads no further
+                        return frame.entries
+                    }
+                    try add(frame.isDictionary ? .dictionary(frame.entries) : .array(frame.values))
+                case "key":
+                    guard !empty, let top = stack.indices.last, stack[top].isDictionary, stack[top].key == nil else {
+                        throw MachOFailure.unsupportedEntitlements
+                    }
+                    let key = try Self.string(text(closing: name, skippingSpace: false))
+                    stack[top].key = key
+                case "string":
+                    let string = try empty ? "" : Self.string(text(closing: name, skippingSpace: false))
+                    try add(.string(string))
+                case "integer":
+                    // libplist reads it with strtoull in any base, and ldid's DER
+                    // cannot spell zero or a negative one: plain decimal only
+                    guard !empty else { throw MachOFailure.unsupportedEntitlements }
+                    let text = try text(closing: name, skippingSpace: true)
+                    let digits = text.prefix { (0x30 ... 0x39).contains($0) }
+                    guard digits.first.map({ $0 != 0x30 }) == true, text.dropFirst(digits.count).allSatisfy(Self.isSpace),
+                          let value = Int64(String(decoding: digits, as: UTF8.self))
+                    else { throw MachOFailure.unsupportedEntitlements }
+                    try add(.integer(value))
+                case "data":
+                    // libplist's decoder skips what it does not know; base64 that
+                    // reads back the same is what the two agree on
+                    let encoded = try empty ? "" : String(decoding: text(closing: name, skippingSpace: true).filter { !Self.isSpace($0) }, as: UTF8.self)
+                    guard let value = Data(base64Encoded: encoded), value.base64EncodedString() == encoded else { throw MachOFailure.unsupportedEntitlements }
+                    try add(.data(value))
+                case "true", "false":
+                    // libplist reads past any text in them; there is none here
+                    guard try empty || text(closing: name, skippingSpace: true).isEmpty else { throw MachOFailure.unsupportedEntitlements }
+                    try add(.boolean(name == "true"))
+                default:
+                    // a real, a date and anything that is no plist element
+                    throw MachOFailure.unsupportedEntitlements
+                }
             }
-        } else if bytes[at...].starts(with: "!".utf8) {
-            throw Refused()
-        } else {
-            return false
+            // the end of the document, fine only after an empty root
+            guard stack.isEmpty, !inPlist, let root else { throw MachOFailure.unsupportedEntitlements }
+            return root
         }
-        return true
-    }
 
-    private mutating func skip(past terminator: String, quotes: Bool) throws {
-        while at < bytes.count {
-            if bytes[at...].starts(with: terminator.utf8) {
-                at += terminator.utf8.count
+        private mutating func open(dictionary: Bool) throws {
+            // a value in a dictionary needs its key, and the root is a dictionary
+            guard stack.count < Self.depth, stack.last.map({ !$0.isDictionary || $0.key != nil }) ?? dictionary else {
+                throw MachOFailure.unsupportedEntitlements
+            }
+            stack.append(Frame(isDictionary: dictionary))
+        }
+
+        private mutating func add(_ value: LdidEntitlements.Value) throws {
+            guard let top = stack.indices.last else {
+                // a root that is not a container ends libplist's read, and one
+                // that is empty does not; only an empty dictionary is a dictionary
+                guard value == .dictionary([]) else { throw MachOFailure.unsupportedEntitlements }
+                root = []
                 return
             }
-            if quotes, bytes[at] == UInt8(ascii: "\"") {
-                at = try closingQuote()
+            if stack[top].isDictionary {
+                guard let key = stack[top].key else { throw MachOFailure.unsupportedEntitlements }
+                stack[top].key = nil
+                stack[top].set(key, value)
+            } else {
+                stack[top].values.append(value)
             }
-            at += 1
         }
-        throw Refused()
-    }
 
-    /// Where the double quote opened at `at` closes.
-    private func closingQuote() throws -> Int {
-        guard let close = bytes[(at + 1)...].firstIndex(of: UInt8(ascii: "\"")) else { throw Refused() }
-        return close
-    }
-
-    private mutating func expect(_ literal: String) throws {
-        guard bytes[at...].starts(with: literal.utf8) else { throw Refused() }
-        at += literal.utf8.count
-    }
-
-    private mutating func skipSpace() {
-        while at < bytes.count, Self.isSpace(bytes[at]) {
-            at += 1
-        }
-    }
-
-    /// What libplist skips as space: these four and nothing else.
-    private static func isSpace(_ byte: UInt8) -> Bool {
-        [0x20, 0x09, 0x0A, 0x0D].contains(byte)
-    }
-
-    /// A key's or a string's text: the five named entities and a numeric
-    /// reference of up to eight characters, as libplist takes them, and
-    /// UTF-8 with no NUL, which would end libplist's string.
-    private static func string(_ text: ArraySlice<UInt8>) throws -> String {
-        var bytes: [UInt8] = []
-        var at = text.startIndex
-        while at < text.endIndex {
-            guard text[at] == UInt8(ascii: "&") else {
-                bytes.append(text[at])
+        /// A tag's name, read past its `<` as libplist reads it, and whether it
+        /// closes itself. Only `<plist>` may carry attributes, their
+        /// double-quoted values skipped whole as libplist skips them.
+        private mutating func tag() throws -> (name: String, empty: Bool) {
+            let start = at
+            while at < bytes.count, !" \t\r\n<>".utf8.contains(bytes[at]) {
                 at += 1
-                continue
             }
-            guard let end = text[at...].firstIndex(of: UInt8(ascii: ";")) else { throw Refused() }
-            let name = text[(at + 1) ..< end]
-            switch String(decoding: name, as: UTF8.self) {
-            case "amp": bytes.append(UInt8(ascii: "&"))
-            case "lt": bytes.append(UInt8(ascii: "<"))
-            case "gt": bytes.append(UInt8(ascii: ">"))
-            case "quot": bytes.append(UInt8(ascii: "\""))
-            case "apos": bytes.append(UInt8(ascii: "'"))
-            default:
-                let hex = name.dropFirst().first.map { $0 | 0x20 == UInt8(ascii: "x") } == true
-                let digits = name.dropFirst(hex ? 2 : 1)
-                guard name.first == UInt8(ascii: "#"), name.count <= 8, !digits.isEmpty,
-                      digits.allSatisfy({ (0x30 ... 0x39).contains($0) || hex && (0x61 ... 0x66).contains($0 | 0x20) }),
-                      let value = UInt32(String(decoding: digits, as: UTF8.self), radix: hex ? 16 : 10), value != 0,
-                      let scalar = Unicode.Scalar(value)
-                else { throw Refused() }
-                bytes += Array(String(scalar).utf8)
+            var name = bytes[start ..< at]
+            if at < bytes.count, bytes[at] != UInt8(ascii: ">") {
+                guard name.elementsEqual("plist".utf8) else { throw MachOFailure.unsupportedEntitlements }
+                while at < bytes.count, bytes[at] != UInt8(ascii: "<"), bytes[at] != UInt8(ascii: ">") {
+                    if bytes[at] == UInt8(ascii: "\"") {
+                        at = try closingQuote()
+                    }
+                    at += 1
+                }
             }
-            at = end + 1
+            try expect(">")
+            let empty = bytes[at - 2] == UInt8(ascii: "/")
+            if empty, name.last == UInt8(ascii: "/") {
+                name = name.dropLast()
+            }
+            return (String(decoding: name, as: UTF8.self), empty)
         }
-        let string = String(decoding: bytes, as: UTF8.self)
-        guard !bytes.contains(0), string.utf8.elementsEqual(bytes) else { throw Refused() }
-        return string
+
+        /// An element's text up to its closing tag, which must be what follows
+        /// it: libplist splits a text at a comment or CDATA and joins the parts
+        /// its own way.
+        private mutating func text(closing name: String, skippingSpace: Bool) throws -> ArraySlice<UInt8> {
+            if skippingSpace {
+                skipSpace()
+            }
+            guard let end = bytes[at...].firstIndex(of: UInt8(ascii: "<")) else { throw MachOFailure.unsupportedEntitlements }
+            let text = bytes[at ..< end]
+            at = end + 1
+            try expect("/" + name)
+            skipSpace()
+            try expect(">")
+            return text
+        }
+
+        /// Skips what libplist skips between elements, past the `<`: `<?…?>`, a
+        /// comment, and a `<!DOCTYPE>` without an internal subset.
+        private mutating func skipMarkup() throws -> Bool {
+            if bytes[at...].starts(with: "?".utf8) {
+                try skip(past: "?>", quotes: true)
+            } else if bytes[at...].starts(with: "!--".utf8) {
+                at += 3
+                try skip(past: "-->", quotes: false)
+            } else if bytes[at...].starts(with: "!DOCTYPE".utf8) {
+                at += 8
+                while true {
+                    guard at < bytes.count, bytes[at] != UInt8(ascii: "[") else { throw MachOFailure.unsupportedEntitlements }
+                    if bytes[at] == UInt8(ascii: "\"") {
+                        at = try closingQuote()
+                    } else if bytes[at] == UInt8(ascii: ">") {
+                        at += 1
+                        break
+                    }
+                    at += 1
+                }
+            } else if bytes[at...].starts(with: "!".utf8) {
+                throw MachOFailure.unsupportedEntitlements
+            } else {
+                return false
+            }
+            return true
+        }
+
+        private mutating func skip(past terminator: String, quotes: Bool) throws {
+            while at < bytes.count {
+                if bytes[at...].starts(with: terminator.utf8) {
+                    at += terminator.utf8.count
+                    return
+                }
+                if quotes, bytes[at] == UInt8(ascii: "\"") {
+                    at = try closingQuote()
+                }
+                at += 1
+            }
+            throw MachOFailure.unsupportedEntitlements
+        }
+
+        /// Where the double quote opened at `at` closes.
+        private func closingQuote() throws -> Int {
+            guard let close = bytes[(at + 1)...].firstIndex(of: UInt8(ascii: "\"")) else { throw MachOFailure.unsupportedEntitlements }
+            return close
+        }
+
+        private mutating func expect(_ literal: String) throws {
+            guard bytes[at...].starts(with: literal.utf8) else { throw MachOFailure.unsupportedEntitlements }
+            at += literal.utf8.count
+        }
+
+        private mutating func skipSpace() {
+            while at < bytes.count, Self.isSpace(bytes[at]) {
+                at += 1
+            }
+        }
+
+        /// What libplist skips as space: these four and nothing else.
+        private static func isSpace(_ byte: UInt8) -> Bool {
+            [0x20, 0x09, 0x0A, 0x0D].contains(byte)
+        }
+
+        /// A key's or a string's text: the five named entities and a numeric
+        /// reference of up to eight characters, as libplist takes them, and
+        /// UTF-8 with no NUL, which would end libplist's string.
+        private static func string(_ text: ArraySlice<UInt8>) throws -> String {
+            var bytes: [UInt8] = []
+            var at = text.startIndex
+            while at < text.endIndex {
+                guard text[at] == UInt8(ascii: "&") else {
+                    bytes.append(text[at])
+                    at += 1
+                    continue
+                }
+                guard let end = text[at...].firstIndex(of: UInt8(ascii: ";")) else { throw MachOFailure.unsupportedEntitlements }
+                let name = text[(at + 1) ..< end]
+                switch String(decoding: name, as: UTF8.self) {
+                case "amp": bytes.append(UInt8(ascii: "&"))
+                case "lt": bytes.append(UInt8(ascii: "<"))
+                case "gt": bytes.append(UInt8(ascii: ">"))
+                case "quot": bytes.append(UInt8(ascii: "\""))
+                case "apos": bytes.append(UInt8(ascii: "'"))
+                default:
+                    let hex = name.dropFirst().first.map { $0 | 0x20 == UInt8(ascii: "x") } == true
+                    let digits = name.dropFirst(hex ? 2 : 1)
+                    guard name.first == UInt8(ascii: "#"), name.count <= 8, !digits.isEmpty,
+                          digits.allSatisfy({ (0x30 ... 0x39).contains($0) || hex && (0x61 ... 0x66).contains($0 | 0x20) }),
+                          let value = UInt32(String(decoding: digits, as: UTF8.self), radix: hex ? 16 : 10), value != 0,
+                          let scalar = Unicode.Scalar(value)
+                    else { throw MachOFailure.unsupportedEntitlements }
+                    bytes += Array(String(scalar).utf8)
+                }
+                at = end + 1
+            }
+            let string = String(decoding: bytes, as: UTF8.self)
+            guard !bytes.contains(0), string.utf8.elementsEqual(bytes) else { throw MachOFailure.unsupportedEntitlements }
+            return string
+        }
     }
 }
