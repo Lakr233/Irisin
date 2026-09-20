@@ -75,7 +75,7 @@ extension InstalledController {
             leading: Self.horizontalInset,
             // the next date stands off these rows as far as they stand off
             // each other; after the last of them comes the footer
-            bottom: showsHeaders && index < diffableDataSource.snapshot().numberOfSections - 1
+            bottom: showsHeaders && index < dataSource.count - 1
                 ? Self.rowSpacing : 0,
             trailing: Self.horizontalInset
         )

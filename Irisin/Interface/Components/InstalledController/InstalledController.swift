@@ -167,18 +167,17 @@ class InstalledController: UICollectionViewController {
         // the update indicator lives outside the package: repaint survivors
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
         // the date headers are the layout's: when they come or go the
-        // sections change shape, and that is no diff to animate. The flag is
-        // set before the rows move and the layout made again once they have.
+        // sections change shape, and that is no diff to animate. The flag
+        // changes once the rows have, and the layout is made again then.
         let headers = sortOption == .lastModification && !isEmpty
         let reshaped = headers != showsHeaders
-        showsHeaders = headers
         diffableDataSource.apply(
             snapshot,
             animatingDifferences: !reshaped && collectionView.shouldAnimateDiff
         ) { [weak self] in
-            if reshaped {
-                self?.collectionView.collectionViewLayout.invalidateLayout()
-            }
+            guard reshaped, let self else { return }
+            showsHeaders = headers
+            collectionView.collectionViewLayout.invalidateLayout()
         }
         // the footer is not a row: a diff never redraws it, so tell it
         // directly. Over an empty list it would sit on the empty state.

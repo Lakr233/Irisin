@@ -40,6 +40,9 @@ final class InstalledPackageCell: UICollectionViewListCell {
 
     private var leading: Constraint?
     private var showsMark = false
+    /// A row that comes on screen in an edited list is there already
+    /// indented; only a row that saw the editing begin slides.
+    private var hasConfigured = false
 
     override init(frame _: CGRect) {
         super.init(frame: CGRect())
@@ -72,6 +75,7 @@ final class InstalledPackageCell: UICollectionViewListCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         originalCell.prepareForReuse()
+        hasConfigured = false
     }
 
     /// The ground stays clear through every state: the page's own shows. The
@@ -81,11 +85,16 @@ final class InstalledPackageCell: UICollectionViewListCell {
         super.updateConfiguration(using: state)
         backgroundConfiguration = .clear()
         selectionMark.isOn = state.isEditing && state.isSelected
-        if state.isEditing, state.isSelected {
-            accessibilityTraits.insert(.selected)
-        } else {
-            accessibilityTraits.remove(.selected)
-        }
+        // edited, the row is one element that says whether it is selected;
+        // otherwise its labels are read as they are
+        isAccessibilityElement = state.isEditing
+        accessibilityLabel = [originalCell.title, originalCell.subtitle, originalCell.describe]
+            .compactMap(\.text)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+        accessibilityTraits = state.isEditing && state.isSelected ? [.button, .selected] : .button
+        let animates = hasConfigured && window != nil
+        hasConfigured = true
         guard state.isEditing != showsMark else { return }
         showsMark = state.isEditing
         leading?.update(offset: showsMark ? Self.editingIndent : 0)
@@ -93,10 +102,10 @@ final class InstalledPackageCell: UICollectionViewListCell {
             selectionMark.alpha = showsMark ? 1 : 0
             contentView.layoutIfNeeded()
         }
-        if window == nil {
-            change()
-        } else {
+        if animates {
             UIView.animate(withDuration: 0.25, delay: 0, options: .beginFromCurrentState, animations: change)
+        } else {
+            change()
         }
     }
 
@@ -116,7 +125,9 @@ private final class SelectionMarkView: UIView {
 
     private let tick = UIImageView(image: UIImage(
         systemName: "checkmark",
-        withConfiguration: UIImage.SymbolConfiguration(font: .captionEmphasized)
+        // as fixed as the circle around it: a tick that grew with the text
+        // size would leave it
+        withConfiguration: UIImage.SymbolConfiguration(pointSize: side * 0.55, weight: .semibold)
     )).then {
         $0.tintColor = .onAccent
         $0.contentMode = .center

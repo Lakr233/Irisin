@@ -54,12 +54,13 @@ extension InstalledController {
         }
     }
 
-    /// Remove takes any selection; Update one with a row the batch can
-    /// update, which is not every row with an arrow on it.
+    /// Each is live when the batch has something to send: Remove a row that
+    /// can be removed or withdrawn, Update a row the batch can update, which
+    /// is not every row with an arrow on it.
     func updateSelectionItems() {
         guard isEditing else { return }
         let selected = selectedPackages
-        removeSelectedItem.isEnabled = !selected.isEmpty
+        removeSelectedItem.isEnabled = PackageMenuAction.removal(ofInstalled: selected).request != nil
         updateSelectedItem.isEnabled = selected.contains {
             identitiesWithUpdate.contains($0.identity) && PackageMenuAction.updateRequest(forInstalled: $0) != nil
         }
