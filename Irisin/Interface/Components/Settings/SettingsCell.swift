@@ -1,5 +1,5 @@
 //
-//  SettingCell.swift
+//  SettingsCell.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2026/9/7.
@@ -13,7 +13,7 @@ import UIKit
 
 /// One row of Settings: what it shows and what it does. The closures read
 /// and write the live value; the row itself carries no state.
-struct SettingItem {
+struct SettingsItem {
     enum Kind {
         /// an arrow; tapping runs `action`, or opens `menu` when there is one
         case disclosure
@@ -36,7 +36,7 @@ struct SettingItem {
 
 /// The shape every row shares: an icon, a title, and a container on the
 /// trailing edge that the subclass fills. Alignment lives here once.
-class SettingCell: UITableViewCell {
+class SettingsCell: UITableViewCell {
     let iconView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.preferredSymbolConfiguration = UIImage.SymbolConfiguration(.body)
@@ -57,7 +57,7 @@ class SettingCell: UITableViewCell {
         $0.isHidden = true
     }
 
-    private(set) var item: SettingItem?
+    private(set) var item: SettingsItem?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -94,7 +94,7 @@ class SettingCell: UITableViewCell {
         fatalError()
     }
 
-    func configure(with item: SettingItem) {
+    func configure(with item: SettingsItem) {
         self.item = item
         iconView.image = UIImage(systemName: item.icon)
         titleLabel.text = item.title
@@ -110,12 +110,12 @@ class SettingCell: UITableViewCell {
         refresh()
     }
 
-    /// Reads the live value again. Called on configure and on `.SettingReload`.
+    /// Reads the live value again. Called on configure and on `.SettingsDidChange`.
     func refresh() {}
 }
 
 /// A row that leads somewhere.
-final class SettingDisclosureCell: SettingCell {
+final class SettingsDisclosureCell: SettingsCell {
     private let arrow = UIImageView(image: .fluent(.arrowRightCircle24Filled)).then {
         $0.contentMode = .scaleAspectFit
     }
@@ -136,7 +136,7 @@ final class SettingDisclosureCell: SettingCell {
 }
 
 /// A row showing a value; the row opens the menu that changes it.
-final class SettingValueCell: SettingCell {
+final class SettingsValueCell: SettingsCell {
     private let valueLabel = GlyphixTextLabel().then {
         $0.clipsToBounds = false
         $0.font = UIFont.rounded(.body, emphasized: true).monospacedDigitFont
@@ -166,7 +166,7 @@ final class SettingValueCell: SettingCell {
 
 /// A row with a switch. The switch shows the stored value: a change the
 /// item turns down is put back by the next refresh.
-final class SettingToggleCell: SettingCell {
+final class SettingsToggleCell: SettingsCell {
     private let toggle = UISwitch()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

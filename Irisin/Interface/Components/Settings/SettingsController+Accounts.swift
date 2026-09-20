@@ -1,5 +1,5 @@
 //
-//  SettingRepo.swift
+//  SettingsController+Accounts.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/28.
@@ -10,7 +10,7 @@ import AptRepository
 import SnapKit
 import UIKit
 
-extension SettingController {
+extension SettingsController {
     /// Every repository with a vendor to sign in to, by name.
     static func paidRepositories() -> [Repository] {
         RepositoryCenter.default.repositories.values
@@ -22,7 +22,7 @@ extension SettingController {
 /// A repository's vendor account as one row: the repository's icon and name,
 /// an arrow while there is no account (tapping signs in), a check once there
 /// is one (tapping opens the purchases and sign-out menu).
-final class SettingAccountCell: SettingCell {
+final class SettingsAccountCell: SettingsCell {
     private let indicator = UIImageView().then {
         $0.contentMode = .scaleAspectFit
     }

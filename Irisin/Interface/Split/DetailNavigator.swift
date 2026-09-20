@@ -18,7 +18,7 @@ enum DetailPage {
 /// and a page that pops itself stops there.
 class DetailNavigator: UINavigationController {
     private let dashboard = SplitDashboardController()
-    private let setting = SettingController()
+    private let settings = SettingsController()
     private let installed = SplitInstalledController()
     private let queue = QueueController()
 
@@ -41,7 +41,7 @@ class DetailNavigator: UINavigationController {
     func show(_ page: DetailPage) {
         let target: UIViewController = switch page {
         case .dashboard: dashboard
-        case .settings: setting
+        case .settings: settings
         case .installed: installed
         case .queue: queue
         }

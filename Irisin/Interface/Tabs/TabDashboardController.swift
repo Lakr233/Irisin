@@ -46,7 +46,7 @@ class TabDashboardController: DashboardController {
 
     @objc
     func rightButtonCall() {
-        let target = SettingController()
+        let target = SettingsController()
         present(next: target)
     }
 }

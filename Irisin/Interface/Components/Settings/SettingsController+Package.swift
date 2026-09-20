@@ -1,5 +1,5 @@
 //
-//  SettingController+Package.swift
+//  SettingsController+Package.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/28.
@@ -9,11 +9,11 @@
 import AptRepository
 import UIKit
 
-extension SettingController {
+extension SettingsController {
     /// How packages are shown and handled.
-    func packageItems() -> [SettingItem] {
-        let items: [SettingItem?] = [
-            SettingItem(
+    func packageItems() -> [SettingsItem] {
+        let items: [SettingsItem?] = [
+            SettingsItem(
                 id: "package.translate",
                 icon: "character.bubble",
                 title: String(localized: "Auto Translate"),
@@ -41,7 +41,7 @@ extension SettingController {
                     self?.dispatchValueUpdate()
                 }
             ),
-            SettingItem(
+            SettingsItem(
                 id: "package.blocked",
                 icon: "hand.raised.fill",
                 title: String(localized: "Blocked Updates"),
@@ -51,7 +51,7 @@ extension SettingController {
                 }
             ),
             compatibilityUpdatesItem(),
-            SettingItem(
+            SettingsItem(
                 id: "package.systemRemoval",
                 icon: "exclamationmark.shield",
                 title: String(localized: "Power Operations"),
@@ -83,9 +83,9 @@ extension SettingController {
     /// Whether a package installed in compatibility mode is offered its
     /// newer versions, each converted again. Off until the user allows it,
     /// and no row at all on a bootstrap nothing is converted for.
-    private func compatibilityUpdatesItem() -> SettingItem? {
+    private func compatibilityUpdatesItem() -> SettingsItem? {
         guard AptRepositoryBootstrap.installableArchitectures.count > 1 else { return nil }
-        return SettingItem(
+        return SettingsItem(
             id: "package.compatibilityUpdates",
             icon: "arrow.triangle.2.circlepath",
             title: String(localized: "Compatibility Updates"),
@@ -112,9 +112,9 @@ extension SettingController {
     }
 
     /// The files the app has fetched and keeps.
-    func downloadItems() -> [SettingItem] {
+    func downloadItems() -> [SettingsItem] {
         [
-            SettingItem(
+            SettingsItem(
                 id: "package.downloads",
                 icon: "tray.full",
                 title: String(localized: "Downloads Folder"),
@@ -123,7 +123,7 @@ extension SettingController {
                     self?.openInFila(path: DownloadCenter.shared.workingLocation.path)
                 }
             ),
-            SettingItem(
+            SettingsItem(
                 id: "package.clean",
                 icon: "trash",
                 title: String(localized: "Clear Downloads"),

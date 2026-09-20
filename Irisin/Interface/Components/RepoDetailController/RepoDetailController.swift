@@ -149,7 +149,7 @@ class RepoDetailController: UIViewController {
         navigationItem.rightBarButtonItems = [share]
         if paymentEndpoint != nil {
             updateAccountItem()
-            NotificationCenter.default.publisher(for: .RepositoryPaymenChanged)
+            NotificationCenter.default.publisher(for: .RepositoryPaymentChanged)
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in self?.updateAccountItem() }
                 .store(in: &subscriptions)

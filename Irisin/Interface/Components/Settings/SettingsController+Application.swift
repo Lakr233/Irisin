@@ -1,5 +1,5 @@
 //
-//  SettingController+Application.swift
+//  SettingsController+Application.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/28.
@@ -9,11 +9,11 @@
 import AlertController
 import UIKit
 
-extension SettingController {
+extension SettingsController {
     /// What is done to the system around the app.
-    func systemItems() -> [SettingItem] {
+    func systemItems() -> [SettingsItem] {
         [
-            SettingItem(
+            SettingsItem(
                 id: "app.uicache",
                 icon: "square.grid.2x2",
                 title: String(localized: "Rebuild Icons"),
@@ -33,7 +33,7 @@ extension SettingController {
                     }
                 }
             ),
-            SettingItem(
+            SettingsItem(
                 id: "app.respring",
                 icon: "rays",
                 title: String(localized: "Reload Home Screen"),
@@ -44,7 +44,7 @@ extension SettingController {
                         message: "The home screen restarts and every open app closes.",
                         confirmTitle: "Reload"
                     ) { [weak self] in
-                        SettingController.leaveApplication(with: .respring, from: self)
+                        SettingsController.leaveApplication(with: .respring, from: self)
                     }
                 }
             ),
@@ -52,9 +52,9 @@ extension SettingController {
     }
 
     /// Where to look, and whom to tell, when something went wrong.
-    func supportItems() -> [SettingItem] {
+    func supportItems() -> [SettingsItem] {
         [
-            SettingItem(
+            SettingsItem(
                 id: "app.logs",
                 icon: "doc.richtext",
                 title: String(localized: "View Logs"),
@@ -63,7 +63,7 @@ extension SettingController {
                     self?.presentLogViewer()
                 }
             ),
-            SettingItem(
+            SettingsItem(
                 id: "app.report",
                 icon: "exclamationmark.bubble",
                 title: String(localized: "Report Issue"),

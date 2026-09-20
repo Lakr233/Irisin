@@ -1,5 +1,5 @@
 //
-//  SettingController.swift
+//  SettingsController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/29.
@@ -15,9 +15,9 @@ import UIKit
 
 /// Settings: the vendor accounts of the paid repositories, two inset groups
 /// of rows, and a footer saying what this build is. Each row is a
-/// `SettingItem`; the cells read their values through it and are
+/// `SettingsItem`; the cells read their values through it and are
 /// reconfigured whenever a value changes.
-class SettingController: UITableViewController {
+class SettingsController: UITableViewController {
     private var subscriptions = Set<AnyCancellable>()
 
     nonisolated enum Section: Hashable {
@@ -33,14 +33,14 @@ class SettingController: UITableViewController {
         case account(URL)
     }
 
-    private var items: [String: SettingItem] = [:]
+    private var items: [String: SettingsItem] = [:]
 
     private lazy var dataSource = EditableTableDiffableDataSource<Section, Row>(
         tableView: tableView
     ) { [unowned self] tableView, indexPath, row in
         switch row {
         case let .account(url):
-            let cell = tableView.dequeueReusableCell(withIdentifier: "account", for: indexPath) as! SettingAccountCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: "account", for: indexPath) as! SettingsAccountCell
             if let repo = RepositoryCenter.default.repositories[url] {
                 cell.configure(repo: repo)
             }
@@ -52,13 +52,13 @@ class SettingController: UITableViewController {
             case .value: "value"
             case .toggle: "toggle"
             }
-            let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath) as! SettingCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath) as! SettingsCell
             cell.configure(with: item)
             return cell
         }
     }
 
-    private let footer = SettingFooterView()
+    private let footer = SettingsFooterView()
 
     init() {
         super.init(style: .insetGrouped)
@@ -101,10 +101,10 @@ class SettingController: UITableViewController {
         // inset grouped list in the app
         view.backgroundColor = .groupedBackground
 
-        tableView.register(SettingDisclosureCell.self, forCellReuseIdentifier: "disclosure")
-        tableView.register(SettingValueCell.self, forCellReuseIdentifier: "value")
-        tableView.register(SettingToggleCell.self, forCellReuseIdentifier: "toggle")
-        tableView.register(SettingAccountCell.self, forCellReuseIdentifier: "account")
+        tableView.register(SettingsDisclosureCell.self, forCellReuseIdentifier: "disclosure")
+        tableView.register(SettingsValueCell.self, forCellReuseIdentifier: "value")
+        tableView.register(SettingsToggleCell.self, forCellReuseIdentifier: "toggle")
+        tableView.register(SettingsAccountCell.self, forCellReuseIdentifier: "account")
         tableView.dataSource = dataSource
         tableView.separatorStyle = .none
         dataSource.headerTitle = { section in
@@ -125,7 +125,7 @@ class SettingController: UITableViewController {
         }
         applySnapshot(animatingDifferences: false)
 
-        NotificationCenter.default.publisher(for: .SettingReload)
+        NotificationCenter.default.publisher(for: .SettingsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.reloadValues() }
             .store(in: &subscriptions)
@@ -138,7 +138,7 @@ class SettingController: UITableViewController {
         Publishers.MergeMany([
             RepositoryCenter.registrationUpdate,
             RepositoryCenter.metadataUpdate,
-            .RepositoryPaymenChanged,
+            .RepositoryPaymentChanged,
         ].map {
             NotificationCenter.default.publisher(for: $0)
         })
@@ -192,7 +192,7 @@ class SettingController: UITableViewController {
 
     /// Every row reads its value again; a change anywhere is a change here.
     func dispatchValueUpdate() {
-        NotificationCenter.default.post(name: .SettingReload, object: nil)
+        NotificationCenter.default.post(name: .SettingsDidChange, object: nil)
     }
 
     private func reloadValues() {
@@ -262,7 +262,7 @@ class SettingController: UITableViewController {
 }
 
 /// License, then what this build is.
-final class SettingFooterView: UIView {
+final class SettingsFooterView: UIView {
     var onLicense: (() -> Void)?
 
     private let licenseButton = UIButton(type: .system).then {
