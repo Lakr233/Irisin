@@ -87,7 +87,7 @@ final class QueuePackageController: UIViewController, UITableViewDelegate {
         navigationItem.largeTitleDisplayMode = .never
 
         tableView.backgroundColor = .groupedBackground
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "row")
+        tableView.register(ListContentCell.self, forCellReuseIdentifier: "row")
         tableView.delegate = self
         tableView.dataSource = dataSource
         dataSource.defaultRowAnimation = .fade

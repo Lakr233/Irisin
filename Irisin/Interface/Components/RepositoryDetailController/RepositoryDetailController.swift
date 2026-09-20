@@ -400,6 +400,12 @@ extension RepositoryDetailController: UICollectionViewDelegate {
 
 /// A cell around a view that draws and handles itself: a featured banner.
 final class RepositoryDetailHostCell: UICollectionViewCell {
+    /// A banner that cannot be made hosts nothing, not the last one's view.
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        contentView.subviews.forEach { $0.removeFromSuperview() }
+    }
+
     func host(_ view: UIView) {
         contentView.subviews.forEach { $0.removeFromSuperview() }
         contentView.addSubview(view)
