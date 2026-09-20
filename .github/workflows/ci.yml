@@ -102,12 +102,22 @@ jobs:
       - name: Package and verify both flavours
         run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
 
+      # Both flavours package the one build, and neither strip nor ldid touches
+      # LC_UUID, so one set of dSYMs matches every shipped binary.
+      - name: Archive dSYMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          cd "$DERIVED_DATA/Build/Products/Release-iphoneos"
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/Irisin_${version}_dSYMs.zip" *.dSYM
+
       - name: Write checksums
         shell: bash
         run: |
           set -euo pipefail
           cd build/Packages
-          shasum -a 256 ./*.deb > SHA256SUMS
+          shasum -a 256 ./*.deb ./*_dSYMs.zip > SHA256SUMS
           cat SHA256SUMS
 
       - name: Upload Debian packages
@@ -116,6 +126,7 @@ jobs:
           name: irisin-${{ github.sha }}
           path: |
             build/Packages/*.deb
+            build/Packages/*_dSYMs.zip
             build/Packages/SHA256SUMS
           if-no-files-found: error
           retention-days: 30

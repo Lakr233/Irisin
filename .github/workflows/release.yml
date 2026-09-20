@@ -72,7 +72,7 @@ jobs:
           run-id: ${{ steps.ci.outputs.run }}
           github-token: ${{ github.token }}
       # CI's list proves the transfer. The release's own list is written for
-      # exactly the two files it carries, named for the tag, and a missing one
+      # exactly the files it carries, named for the tag, and a missing one
       # fails here.
       - name: Verify the packages and write the release checksums
         working-directory: build/Packages
@@ -82,7 +82,8 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           sha256sum \
             "wiki.qaq.irisin_${version}_iphoneos-arm64e.deb" \
-            "wiki.qaq.irisin_${version}_iphoneos-arm64.deb" > SHA256SUMS
+            "wiki.qaq.irisin_${version}_iphoneos-arm64.deb" \
+            "Irisin_${version}_dSYMs.zip" > SHA256SUMS
           cat SHA256SUMS
       - name: Publish release
         env:
@@ -102,6 +103,7 @@ jobs:
           fi
           files=("build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64e.deb"
                  "build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64.deb"
+                 "build/Packages/Irisin_${version}_dSYMs.zip"
                  "build/Packages/SHA256SUMS")
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" --clobber "${files[@]}"
