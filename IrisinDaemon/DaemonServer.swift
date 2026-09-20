@@ -133,7 +133,7 @@ final class DaemonServer: @unchecked Sendable {
         case .run:
             let job = try InstallerJob.decode(from: message)
             let resolved = try resolve(job)
-            let descriptor = try HelperLaunch.start(helper: helperPath, job: resolved)
+            let descriptor = try Self.startHelper(at: helperPath, job: resolved)
             let identifier = nextJobIdentifier
             nextJobIdentifier &+= 1
             defer { close(descriptor) }

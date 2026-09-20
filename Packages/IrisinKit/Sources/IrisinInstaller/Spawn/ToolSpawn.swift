@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import IrisinProtocol
 
 /// libSystem exports this on iOS; only the header marks it unavailable.
 @_silgen_name("posix_spawn_file_actions_addchdir_np")

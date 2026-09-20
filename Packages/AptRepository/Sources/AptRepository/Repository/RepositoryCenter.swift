@@ -49,7 +49,7 @@ public final class RepositoryCenter {
     /// used to control update engine
     lazy var updateDispatchThrottle = Throttler(minimumDelay: 1)
     /// used to present notification to user interface
-    lazy var notificationThrotte = Throttler(minimumDelay: 0.5)
+    lazy var notificationThrottle = Throttler(minimumDelay: 0.5)
 
     /// notification name
     public nonisolated static let registrationUpdate = Notification.Name(

@@ -2,10 +2,11 @@ import Darwin
 import Foundation
 import IrisinProtocol
 
-/// Starting `irisin-install`: argv of exactly itself, an empty environment,
-/// the job as JSON on standard input, and one pipe for everything it prints.
-enum HelperLaunch {
-    static func start(helper: String, job: InstallerJob) throws -> Int32 {
+extension DaemonServer {
+    /// Starts `irisin-install`: argv of exactly itself, an empty environment,
+    /// the job as JSON on standard input, and one pipe for everything it
+    /// prints. Returns the read end of that pipe.
+    static func startHelper(at helper: String, job: InstallerJob) throws -> Int32 {
         var info = stat()
         guard stat(helper, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == 0,
               info.st_mode & (S_IWGRP | S_IWOTH) == 0

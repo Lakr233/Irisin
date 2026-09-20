@@ -507,7 +507,7 @@ extension RepositoryCenter {
     // MARK: - Notification Emitter
 
     func issueNotification() {
-        notificationThrotte.throttle {
+        notificationThrottle.throttle {
             NotificationCenter.default.post(name: RepositoryCenter.registrationUpdate, object: nil)
         }
     }

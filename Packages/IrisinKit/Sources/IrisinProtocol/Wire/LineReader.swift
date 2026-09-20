@@ -1,8 +1,9 @@
 import Darwin
 
-/// Reads a descriptor to EOF and hands back each line as it completes.
-enum LineReader {
-    static func read(descriptor: Int32, line: (String) -> Void) {
+/// Reads a descriptor to EOF and hands back each line as it completes: the
+/// helper reading its tools and the app reading the helper are the same loop.
+public enum LineReader {
+    public static func read(descriptor: Int32, line: (String) -> Void) {
         var pending = [UInt8]()
         var buffer = [UInt8](repeating: 0, count: 16 * 1024)
         while true {

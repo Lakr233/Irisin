@@ -61,25 +61,25 @@ nonisolated enum PrivilegedBackend {
             var reportedMiss = false
             while true {
                 do {
-                    let hello = try await link.hello()
+                    let backend = try await link.hello()
                     Dog.shared.join(
                         "PrivilegedBackend",
-                        "backend \(hello.backend) root \(hello.installRoot)",
+                        "backend \(backend) root \(backend.installRoot)",
                         level: .info
                     )
                     // libroot spells the prefix as it was given it, the daemon
                     // resolves its own executable's path: `/var` and
                     // `/private/var` are the same jbroot, so compare resolved.
-                    if hello.isPrivileged,
-                       hello.installRoot != ProcessPath.canonical(JailbreakRoot.prefix)
+                    if backend.isPrivileged,
+                       backend.installRoot != ProcessPath.canonical(JailbreakRoot.prefix)
                     {
                         Dog.shared.join(
                             "PrivilegedBackend",
-                            "daemon root \(hello.installRoot) differs from libroot \(JailbreakRoot.prefix)",
+                            "daemon root \(backend.installRoot) differs from libroot \(JailbreakRoot.prefix)",
                             level: .warning
                         )
                     }
-                    await MainActor.run { backendUpdates.send(hello.backend) }
+                    await MainActor.run { backendUpdates.send(backend) }
                     return
                 } catch {
                     if !reportedMiss {
