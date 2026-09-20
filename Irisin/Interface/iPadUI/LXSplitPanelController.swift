@@ -229,7 +229,7 @@ class LXSplitPanelController: UIViewController {
                 confirmTitle: "Delete",
                 destructive: true
             ) { [weak self] in
-                InterfaceBridge.deleteRepository(url)
+                HDRepoController.remove(url)
                 self?.rebuild(animated: true)
                 SPIndicator.present(title: String(localized: "Deleted"), preset: .done)
             }

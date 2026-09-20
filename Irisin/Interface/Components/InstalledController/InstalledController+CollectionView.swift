@@ -83,7 +83,7 @@ extension InstalledController {
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard !isEditing, let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(
+        return PackageMenuAction.contextMenu(
             for: data,
             from: self,
             anchor: collectionView.cellForItem(at: indexPath)

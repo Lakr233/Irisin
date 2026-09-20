@@ -8,6 +8,7 @@
 
 import AptRepository
 import Combine
+import Dog
 import SPIndicator
 import Then
 import UIKit
@@ -262,9 +263,19 @@ class HDRepoController: UIViewController {
         Task {
             try? await Task.sleep(seconds: 0.5) // let the rows animate out
             for url in urls {
-                InterfaceBridge.deleteRepository(url)
+                Self.remove(url)
             }
         }
+    }
+
+    /// Drops a repository and everything cached for it. The sidebar removes
+    /// through here too.
+    static func remove(_ url: URL) {
+        // first: the sign-in record is found through the repository, which
+        // must still be registered
+        PaymentManager.shared.deleteSignInRecord(for: url)
+        Dog.shared.join("Repository", "user removed \(url.absoluteString)", level: .info)
+        RepositoryCenter.default.deleteRepository(withUrl: url)
     }
 
     func refreshRepository(_ url: URL) {

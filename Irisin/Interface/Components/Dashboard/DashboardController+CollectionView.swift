@@ -14,7 +14,7 @@ extension DashboardController {
     // MARK: - CELL SIZE
 
     /// Before the collection view lays out, never after it: a size that
-    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
+    /// arrives a turn late leaves a frame of `PackageCell.minimumSize` cells.
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         if collectionView.frame.size == collectionViewFrameCache,
@@ -29,7 +29,7 @@ extension DashboardController {
 
     func updateCellSize() {
         let inset = collectionView.contentInset.left + collectionView.contentInset.right
-        let layout = InterfaceBridge.calculatesPackageCellSize(availableWidth: view.frame.width - inset)
+        let layout = PackageCell.layout(inWidth: view.frame.width - inset)
         collectionViewCellSizeCache = layout.size
         collectionView.collectionViewLayout.invalidateLayout()
 
@@ -120,7 +120,7 @@ extension DashboardController {
         else {
             return nil
         }
-        return InterfaceBridge.packageContextMenuConfiguration(
+        return PackageMenuAction.contextMenu(
             for: data,
             from: self,
             anchor: collectionView.cellForItem(at: indexPath)

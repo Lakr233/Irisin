@@ -1,5 +1,5 @@
 //
-//  InterfaceBridge+Dashboard.swift
+//  DashboardController+Sections.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/9/15.
@@ -9,17 +9,17 @@
 import AptRepository
 import UIKit
 
-extension InterfaceBridge {
-    nonisolated struct DashboardDataSection: Sendable {
+extension DashboardController {
+    nonisolated struct Section: Sendable {
         let title: String
-        let package: [Package]
+        let packages: [Package]
         let shouldLimit: Bool
         let action: (@MainActor @Sendable (UIViewController?) -> Void)?
     }
 
     /// Takes a copy of what the centers know and builds the sections off the
     /// main actor.
-    static func dashbaordBuildDataSource() async -> [DashboardDataSection] {
+    static func sections() async -> [Section] {
         await build(
             index: PackageCenter.default.index,
             repositories: RepositoryCenter.default.repositories
@@ -30,22 +30,22 @@ extension InterfaceBridge {
     private nonisolated static func build(
         index: PackageIndex,
         repositories: [URL: Repository]
-    ) async -> [DashboardDataSection] {
-        var builder = [DashboardDataSection?]()
+    ) async -> [Section] {
+        var builder = [Section?]()
         builder.append(buildAvailableUpdate(index))
         builder.append(buildRecentUpdate(index))
         builder.append(buildRepoFeatured(index, repositories))
         builder.append(buildRecentInstall(index))
         return builder
             .compactMap(\.self)
-            .filter { $0.package.count > 0 }
+            .filter { $0.packages.count > 0 }
     }
 
-    private nonisolated static func buildAvailableUpdate(_ index: PackageIndex) -> DashboardDataSection? {
+    private nonisolated static func buildAvailableUpdate(_ index: PackageIndex) -> Section? {
         let candidates = index.updateCandidates().map(\.candidate)
-        return DashboardDataSection(
+        return Section(
             title: String(localized: "Updates"),
-            package: candidates.sorted { a, b in
+            packages: candidates.sorted { a, b in
                 PackageCenter.default.name(of: a)
                     < PackageCenter.default.name(of: b)
             },
@@ -59,7 +59,7 @@ extension InterfaceBridge {
     private nonisolated static func buildRepoFeatured(
         _ index: PackageIndex,
         _ repositories: [URL: Repository]
-    ) -> DashboardDataSection? {
+    ) -> Section? {
         var builder = [Package]()
         for repo in repositories.values {
             for banner in FeaturedBanner.entries(in: repo) {
@@ -71,9 +71,9 @@ extension InterfaceBridge {
                 builder.append(package)
             }
         }
-        return DashboardDataSection(
+        return Section(
             title: String(localized: "Featured"),
-            package: builder.sorted { a, b in
+            packages: builder.sorted { a, b in
                 PackageCenter.default.name(of: a)
                     < PackageCenter.default.name(of: b)
             },
@@ -82,7 +82,7 @@ extension InterfaceBridge {
         )
     }
 
-    private nonisolated static func buildRecentInstall(_ index: PackageIndex) -> DashboardDataSection? {
+    private nonisolated static func buildRecentInstall(_ index: PackageIndex) -> Section? {
         let everything = index
             .obtainInstalledPackageList()
             .filter { !($0.latestMetadata?["tag"]?.contains("role::cydia") ?? false) }
@@ -110,15 +110,15 @@ extension InterfaceBridge {
             result.append(none)
         }
 
-        return DashboardDataSection(
+        return Section(
             title: String(localized: "Recent Installs"),
-            package: result.flatMap(\.self),
+            packages: result.flatMap(\.self),
             shouldLimit: true,
             action: nil
         )
     }
 
-    private nonisolated static func buildRecentUpdate(_ index: PackageIndex) -> DashboardDataSection? {
+    private nonisolated static func buildRecentUpdate(_ index: PackageIndex) -> Section? {
         let list = index.obtainRecentUpdatedList()
         guard list.count > 0 else {
             return nil
@@ -144,9 +144,9 @@ extension InterfaceBridge {
                 }
             builder.append(contentsOf: compiler)
         }
-        return DashboardDataSection(
+        return Section(
             title: String(localized: "Recent Updates"),
-            package: builder,
+            packages: builder,
             shouldLimit: true
         ) { controller in
             var list = PackageCenter

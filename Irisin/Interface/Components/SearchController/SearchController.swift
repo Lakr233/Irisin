@@ -227,14 +227,14 @@ class SearchController: UITableViewController {
         guard let object = result(at: indexPath) else { return nil }
         switch object.associatedValue {
         case let .installed(package):
-            return InterfaceBridge.packageContextMenuConfiguration(
+            return PackageMenuAction.contextMenu(
                 for: package,
                 from: self,
                 anchor: tableView.cellForRow(at: indexPath)
             )
         case let .package(identity, repository):
             if let lookup = PackageCenter.default.obtainPackage(with: identity, in: repository) {
-                return InterfaceBridge.packageContextMenuConfiguration(
+                return PackageMenuAction.contextMenu(
                     for: lookup,
                     from: self,
                     anchor: tableView.cellForRow(at: indexPath)

@@ -30,7 +30,7 @@ final class InstalledPackageCell: UICollectionViewListCell {
         if let known = heights[category] {
             return known
         }
-        let height = max(PackageCell.rowHeight, InterfaceBridge.minimumPackageCellSize.height)
+        let height = max(PackageCell.rowHeight, PackageCell.minimumSize.height)
         heights[category] = height
         return height
     }

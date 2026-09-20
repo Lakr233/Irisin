@@ -94,13 +94,20 @@ extension InstalledController {
     func refreshUpdateSet() {
         updateSetTask?.cancel()
         updateSetTask = Task { [weak self] in
-            let identities = await InterfaceBridge.identitiesWithUpdate()
+            let identities = await Self.identitiesWithUpdate(in: PackageCenter.default.index)
             guard !Task.isCancelled, let self else { return }
             identitiesWithUpdate = identities
             setupBarItems()
             // the indicator lives outside the package: repaint the rows
             applySnapshot()
         }
+    }
+
+    /// Two index lookups per package and the list runs into the thousands,
+    /// so the page asks once and reads the answer per row.
+    @concurrent
+    private nonisolated static func identitiesWithUpdate(in index: PackageIndex) async -> Set<String> {
+        Set(index.updateCandidates().map(\.installed.identity))
     }
 
     func searchFiltering(key: String, result: inout [Package]) {

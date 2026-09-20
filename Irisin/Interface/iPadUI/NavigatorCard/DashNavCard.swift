@@ -141,9 +141,16 @@ class DashNavCard: UIView {
     private func updateAvailableUpdateBadge() {
         updateCountTask?.cancel()
         updateCountTask = Task { [weak self] in
-            let count = await InterfaceBridge.availableUpdateCount()
+            let count = await Self.updateCount(in: PackageCenter.default.index)
             guard !Task.isCancelled, let self else { return }
             instCard.badgeText = count > 0 ? String(count) : "" // empty for animation
         }
+    }
+
+    /// A walk of the whole installed list, so it runs off the main actor on
+    /// a copy of the index.
+    @concurrent
+    private nonisolated static func updateCount(in index: PackageIndex) async -> Int {
+        index.updateCandidates().count
     }
 }

@@ -16,7 +16,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The load viewDidLoad started, for whoever waits to show the page.
     private var firstLoad: Task<Void, Never>?
 
-    var dataSource = [InterfaceBridge.DashboardDataSection]()
+    var dataSource = [DashboardController.Section]()
     var reloadID = UUID()
     let refreshControl = UIRefreshControl()
 
@@ -28,7 +28,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The text size the cached cell size was measured at: a row is as tall
     /// as its lines, so a change of text size has to measure it again.
     var collectionViewTextSizeCache: UIContentSizeCategory?
-    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
+    var collectionViewCellSizeCache = PackageCell.minimumSize
 
     var cellLimit = 16
 

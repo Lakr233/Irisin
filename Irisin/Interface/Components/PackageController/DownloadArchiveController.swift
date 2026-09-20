@@ -116,7 +116,7 @@ final class DownloadArchiveController: UIViewController {
             return
         }
         guard let host else { return }
-        InterfaceBridge.presentShareSheet([copy], anchor: anchor, from: host)
+        ShareSheet.present([copy], anchor: anchor, from: host)
     }
 
     /// A copy under the name dpkg-name would give it, so what lands in

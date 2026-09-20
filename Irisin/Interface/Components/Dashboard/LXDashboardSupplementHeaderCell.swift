@@ -13,10 +13,10 @@ class LXDashboardSupplementHeaderCell: UICollectionReusableView {
     let button = UIButton()
     var overrideButtonAction: (@MainActor @Sendable (UIViewController?) -> Void)?
 
-    var representSection: InterfaceBridge.DashboardDataSection?
+    var representSection: DashboardController.Section?
     /// The section as it is now: a header on screen outlives many
     /// snapshots, and the full list must show what the rows under it show.
-    var currentSection: (() -> InterfaceBridge.DashboardDataSection?)?
+    var currentSection: (() -> DashboardController.Section?)?
     var horizontalPadding: CGFloat = 0 {
         didSet {
             updateLayout()
@@ -53,7 +53,7 @@ class LXDashboardSupplementHeaderCell: UICollectionReusableView {
         }
     }
 
-    func loadSection(data: InterfaceBridge.DashboardDataSection) {
+    func loadSection(data: DashboardController.Section) {
         representSection = data
         label.text = data.title
     }
@@ -67,7 +67,7 @@ class LXDashboardSupplementHeaderCell: UICollectionReusableView {
         let section = currentSection?() ?? representSection
         let target = PackageCollectionController()
         target.title = section?.title
-        target.dataSource = section?.package ?? []
+        target.dataSource = section?.packages ?? []
         parentViewController?.present(next: target)
     }
 }

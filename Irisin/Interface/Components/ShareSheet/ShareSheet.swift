@@ -1,5 +1,5 @@
 //
-//  InterfaceBridge+ShareSheet.swift
+//  ShareSheet.swift
 //  Irisin
 //
 
@@ -37,7 +37,7 @@ struct PopoverAnchor {
 /// (`presentationTransitionWillBegin`), so nothing else constructs a
 /// `UIActivityViewController` or touches a `popoverPresentationController`;
 /// `make check` greps for both.
-extension InterfaceBridge {
+enum ShareSheet {
     /// Where a popover ends up pointing.
     enum PopoverTarget {
         /// A view still on screen, and its bounds.
@@ -109,7 +109,7 @@ extension InterfaceBridge {
 
     /// The sheet as it is presented. On the iPhone it is no popover and
     /// there is nothing to point.
-    static func shareSheet(
+    static func controller(
         _ items: [Any],
         anchor: PopoverAnchor?,
         over presenter: UIViewController
@@ -126,14 +126,14 @@ extension InterfaceBridge {
     /// else by then; the sheet then goes over whatever is on top in the same
     /// window, pointing at that page and not at `anchor`. A cancelled task
     /// shares nothing, and with nowhere at all to go the user is told.
-    static func presentShareSheet(_ items: [Any], anchor: PopoverAnchor?, from presenter: UIViewController) {
+    static func present(_ items: [Any], anchor: PopoverAnchor?, from presenter: UIViewController) {
         guard !Task.isCancelled else { return }
         guard let host = presentableController(for: presenter, anchor: anchor) else {
             SPIndicator.present(title: String(localized: "Unable to Export"), preset: .error)
             return
         }
         let anchor = host === presenter ? anchor : nil
-        host.present(shareSheet(items, anchor: anchor, over: host), animated: true)
+        host.present(controller(items, anchor: anchor, over: host), animated: true)
     }
 
     /// `presenter`, or the page on top of its window when it cannot present:

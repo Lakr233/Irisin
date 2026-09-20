@@ -47,7 +47,7 @@ struct ShareSheetAnchorTests {
         let content = UIViewController()
         content.modalPresentationStyle = .popover
         let popover = try #require(content.popoverPresentationController)
-        InterfaceBridge.point(popover, at: InterfaceBridge.popoverTarget(for: anchor, over: presenter))
+        ShareSheet.point(popover, at: ShareSheet.popoverTarget(for: anchor, over: presenter))
         return popover
     }
 
@@ -238,7 +238,7 @@ struct ShareSheetAnchorTests {
             stage.navigator.pushViewController(UIViewController(), animated: false)
             stage.window.layoutIfNeeded()
 
-            let target = InterfaceBridge.popoverTarget(for: PopoverAnchor(item), over: stage.page)
+            let target = ShareSheet.popoverTarget(for: PopoverAnchor(item), over: stage.page)
             guard case .centre = target else {
                 Issue.record("pointed at \(target)")
                 return
@@ -358,7 +358,7 @@ struct ShareSheetAnchorTests {
             expectPointed(popover)
             expectCentred(popover, in: page.view)
             #expect(popover.sourceView?.window == nil)
-            #expect(!InterfaceBridge.canPresent(over: page))
+            #expect(!ShareSheet.canPresent(over: page))
         }
     }
 
@@ -369,7 +369,7 @@ struct ShareSheetAnchorTests {
             stage.page.addChild(child)
             child.didMove(toParent: stage.page)
 
-            let target = InterfaceBridge.popoverTarget(for: nil, over: child)
+            let target = ShareSheet.popoverTarget(for: nil, over: child)
             #expect(!child.isViewLoaded)
             guard case let .centre(view) = target else {
                 Issue.record("pointed at \(target)")
@@ -398,7 +398,7 @@ struct ShareSheetAnchorTests {
             for anchor in anchors {
                 try expectPointed(pointedPopover(for: anchor, over: stage.page), on: stage)
 
-                let sheet = InterfaceBridge.shareSheet(["text"], anchor: anchor, over: stage.page)
+                let sheet = ShareSheet.controller(["text"], anchor: anchor, over: stage.page)
                 if UIDevice.current.userInterfaceIdiom == .pad {
                     try expectPointed(#require(sheet.popoverPresentationController), on: stage)
                 }
@@ -410,13 +410,13 @@ struct ShareSheetAnchorTests {
 
     @Test func aSheetGoesOverAPageThatCanTakeIt() async throws {
         try await withStage { stage in
-            #expect(InterfaceBridge.canPresent(over: stage.page))
-            #expect(InterfaceBridge.presentableController(for: stage.page) === stage.page)
-            #expect(!InterfaceBridge.canPresent(over: UIViewController()))
+            #expect(ShareSheet.canPresent(over: stage.page))
+            #expect(ShareSheet.presentableController(for: stage.page) === stage.page)
+            #expect(!ShareSheet.canPresent(over: UIViewController()))
 
             let loaded = UIViewController()
             loaded.loadViewIfNeeded()
-            #expect(!InterfaceBridge.canPresent(over: loaded))
+            #expect(!ShareSheet.canPresent(over: loaded))
         }
     }
 
@@ -428,11 +428,11 @@ struct ShareSheetAnchorTests {
             stage.page.addChild(child)
             stage.page.view.addSubview(child.view)
             child.didMove(toParent: stage.page)
-            #expect(InterfaceBridge.canPresent(over: child))
+            #expect(ShareSheet.canPresent(over: child))
 
             stage.navigator.present(UIViewController(), animated: false)
-            #expect(!InterfaceBridge.canPresent(over: child))
-            #expect(!InterfaceBridge.canPresent(over: stage.page))
+            #expect(!ShareSheet.canPresent(over: child))
+            #expect(!ShareSheet.canPresent(over: stage.page))
         }
     }
 
@@ -450,10 +450,10 @@ struct ShareSheetAnchorTests {
                 try await Task.sleep(for: .milliseconds(20))
             }
 
-            #expect(InterfaceBridge.presentableController(for: stage.page) === shown)
+            #expect(ShareSheet.presentableController(for: stage.page) === shown)
             try expectPointed(pointedPopover(for: nil, over: shown))
 
-            InterfaceBridge.presentShareSheet(["text"], anchor: PopoverAnchor(button(on: stage)), from: stage.page)
+            ShareSheet.present(["text"], anchor: PopoverAnchor(button(on: stage)), from: stage.page)
             for _ in 0 ..< 50 where shown.presentedViewController == nil {
                 try await Task.sleep(for: .milliseconds(20))
             }
@@ -474,7 +474,7 @@ struct ShareSheetAnchorTests {
             left.loadViewIfNeeded()
             let anchor = PopoverAnchor(button(on: stage))
 
-            #expect(InterfaceBridge.presentableController(for: left, anchor: anchor) === stage.page)
+            #expect(ShareSheet.presentableController(for: left, anchor: anchor) === stage.page)
         }
     }
 
@@ -482,7 +482,7 @@ struct ShareSheetAnchorTests {
         try await withStage { stage in
             let task = Task { @MainActor in
                 withUnsafeCurrentTask { $0?.cancel() }
-                InterfaceBridge.presentShareSheet(["text"], anchor: nil, from: stage.page)
+                ShareSheet.present(["text"], anchor: nil, from: stage.page)
             }
             await task.value
             #expect(stage.page.presentedViewController == nil)

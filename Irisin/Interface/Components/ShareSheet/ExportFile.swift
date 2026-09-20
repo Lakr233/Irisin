@@ -78,7 +78,7 @@ enum ExportFile {
 
     /// Writes the bytes beside the app's other temporaries and puts the share
     /// sheet over `host`. On the iPad a popover needs somewhere to point:
-    /// `anchor` when the caller has one, and what `InterfaceBridge.popoverTarget`
+    /// `anchor` when the caller has one, and what `ShareSheet.popoverTarget`
     /// finds on the page when it does not.
     static func share(_ data: Data, named name: String, from host: UIViewController, anchor: PopoverAnchor? = nil) {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent(name)
@@ -88,7 +88,7 @@ enum ExportFile {
             host.presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             return
         }
-        InterfaceBridge.presentShareSheet([file], anchor: anchor, from: host)
+        ShareSheet.present([file], anchor: anchor, from: host)
     }
 
     // MARK: - WHOLE EXPORTS

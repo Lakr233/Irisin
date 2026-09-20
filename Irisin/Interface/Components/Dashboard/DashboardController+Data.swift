@@ -29,7 +29,7 @@ extension DashboardController {
 
     func reload(
         animated: Bool,
-        load: () async -> [InterfaceBridge.DashboardDataSection] = InterfaceBridge.dashbaordBuildDataSource
+        load: () async -> [DashboardController.Section] = DashboardController.sections
     ) async {
         let requestID = UUID()
         reloadID = requestID
@@ -45,7 +45,7 @@ extension DashboardController {
         var snapshot = NSDiffableDataSourceSnapshot<String, Item>()
         for section in dataSource where !snapshot.sectionIdentifiers.contains(section.title) {
             snapshot.appendSections([section.title])
-            var items = section.package.uniqued().map { Item.package(section: section.title, $0) }
+            var items = section.packages.uniqued().map { Item.package(section: section.title, $0) }
             if section.shouldLimit {
                 items = Array(items.prefix(cellLimit))
             }
@@ -63,7 +63,7 @@ extension DashboardController {
         }
     }
 
-    func section(at index: Int) -> InterfaceBridge.DashboardDataSection? {
+    func section(at index: Int) -> DashboardController.Section? {
         guard let title = diffableDataSource.sectionIdentifier(for: index) else { return nil }
         return dataSource.first { $0.title == title }
     }

@@ -206,3 +206,32 @@ class PackageMenuAction {
         await QueueChangeController.show(.actions(actions), from: host)
     }
 }
+
+extension PackageMenuAction {
+    /// A package row's long press: the package page as the preview, and the
+    /// page's own menu.
+    static func contextMenu(
+        for package: Package,
+        from host: UIViewController,
+        anchor cell: UIView?
+    ) -> UIContextMenuConfiguration {
+        // the pressed cell, for an action that ends in a popover on the iPad
+        let anchor = cell.map { PopoverAnchor($0) }
+        return UIContextMenuConfiguration(identifier: nil) {
+            let target = PackageController(package: package)
+            // the preview's own size; `show(preview:)` drops it on commit
+            target.preferredContentSize = CGSize(width: 780, height: 1000)
+            return target
+        } actionProvider: { [weak host] _ in
+            guard let host else { return nil }
+            // a dpkg row asks as its page would, with the repository's
+            // record. The preview above stays the row's: the package page
+            // finds that record itself, as it does when the row is tapped.
+            let requested = requestPackage(for: package)
+            return UIMenu(
+                title: "",
+                children: menuElements(for: requested, from: host, anchor: anchor)
+            )
+        }
+    }
+}

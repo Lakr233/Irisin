@@ -35,10 +35,17 @@ class HDInstalledNavigator: UINavigationController {
     func updateAvailableUpdateBadge() {
         updateCountTask?.cancel()
         updateCountTask = Task { [weak self] in
-            let count = await InterfaceBridge.availableUpdateCount()
+            let count = await Self.updateCount(in: PackageCenter.default.index)
             guard !Task.isCancelled, let self else { return }
             setTabBadge(count > 0 ? String(count) : nil)
         }
+    }
+
+    /// A walk of the whole installed list, so it runs off the main actor on
+    /// a copy of the index.
+    @concurrent
+    private nonisolated static func updateCount(in index: PackageIndex) async -> Int {
+        index.updateCandidates().count
     }
 
     @available(*, unavailable)

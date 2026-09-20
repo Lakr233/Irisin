@@ -132,7 +132,7 @@ extension LogViewerController {
             [logText()]
         }
         // the bar button is a custom view, and that view is the anchor
-        InterfaceBridge.presentShareSheet(
+        ShareSheet.present(
             items,
             anchor: navigationItem.rightBarButtonItem?.customView.map { PopoverAnchor($0) },
             from: self

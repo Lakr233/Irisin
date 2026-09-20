@@ -101,7 +101,7 @@ final class TextReaderController: UIViewController {
     }
 
     private func share() {
-        InterfaceBridge.presentShareSheet(
+        ShareSheet.present(
             [text],
             anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) },
             from: self

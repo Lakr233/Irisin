@@ -62,7 +62,7 @@ final class OperationLogController: UIViewController {
     }
 
     private func share() {
-        InterfaceBridge.presentShareSheet(
+        ShareSheet.present(
             [monitor.lines.joined(separator: "\n")],
             anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) },
             from: self

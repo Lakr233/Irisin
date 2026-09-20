@@ -41,7 +41,7 @@ extension InstalledController {
         in environment: NSCollectionLayoutEnvironment
     ) -> NSCollectionLayoutSection {
         let width = environment.container.effectiveContentSize.width - Self.horizontalInset * 2
-        let (cellSize, itemsPerRow) = InterfaceBridge.calculatesPackageCellSize(availableWidth: width)
+        let (cellSize, itemsPerRow) = PackageCell.layout(inWidth: width)
         let rowHeight = InstalledPackageCell.rowHeight
 
         let section: NSCollectionLayoutSection

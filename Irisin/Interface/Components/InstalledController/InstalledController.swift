@@ -251,7 +251,7 @@ class InstalledController: UICollectionViewController {
     @objc
     func refresh() {
         Task {
-            await InterfaceBridge.reloadLocalPackages()
+            await PackageCenter.default.reloadLocalPackages()
             refreshControl.endRefreshing()
             justReload()
             SPIndicator
@@ -477,7 +477,7 @@ class InstalledController: UICollectionViewController {
     }
 
     private func share(_ item: Any) {
-        InterfaceBridge.presentShareSheet([item], anchor: PopoverAnchor(moreButton), from: self)
+        ShareSheet.present([item], anchor: PopoverAnchor(moreButton), from: self)
     }
 
     @objc

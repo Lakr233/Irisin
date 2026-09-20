@@ -22,7 +22,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     let searchController = UISearchController()
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
-    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
+    var collectionViewCellSizeCache = PackageCell.minimumSize
 
     /// Sections are their header text; the plain list is one untitled section.
     private(set) lazy var diffableDataSource: UICollectionViewDiffableDataSource<String, Package> = {
@@ -165,7 +165,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     }
 
     /// Before the collection view lays out, never after it: a size that
-    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
+    /// arrives a turn late leaves a frame of `PackageCell.minimumSize` cells.
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         updateCellSize()
@@ -188,11 +188,11 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     func updateCellSize() {
         let inset: CGFloat = 15
         collectionView.contentInset = UIEdgeInsets(top: 10, left: inset, bottom: 10, right: inset)
-        let size = InterfaceBridge
+        let size = PackageCell
             // we are not inside UICollectionViewController
             // so don't use collectionView.contentSize
             // otherwise it will load all of the cells when boot
-            .calculatesPackageCellSize(availableWidth: view.frame.width - inset * 2).size
+            .layout(inWidth: view.frame.width - inset * 2).size
         // asked on every layout pass; only a new size is worth a new layout
         guard size != collectionViewCellSizeCache else { return }
         collectionViewCellSizeCache = size
@@ -227,7 +227,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(
+        return PackageMenuAction.contextMenu(
             for: data,
             from: self,
             anchor: collectionView.cellForItem(at: indexPath)

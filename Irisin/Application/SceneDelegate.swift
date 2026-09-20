@@ -56,7 +56,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard EnvironmentDetector.incompatibilityMessage == nil else { return }
         Dog.shared.join(self, "sceneDidBecomeActive", level: .info)
         reloadThrottle.throttle {
-            Task { await InterfaceBridge.reloadLocalPackages() }
+            Task { await PackageCenter.default.reloadLocalPackages() }
         }
     }
 
