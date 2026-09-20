@@ -121,6 +121,8 @@ class RepositoriesController: UIViewController {
         layoutFooter()
     }
 
+    private var hasListedRepositories = false
+
     private func applySnapshot(animatingDifferences: Bool) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, Row>()
         snapshot.appendSections([0])
@@ -130,6 +132,11 @@ class RepositoriesController: UIViewController {
     }
 
     private func reloadDataSource(animated: Bool = true) {
+        // Before the repositories are read there is no list to show, and
+        // "No repositories" would be a guess; the first list arrives whole.
+        guard RepositoryCenter.default.isLoaded else { return }
+        let animated = animated && hasListedRepositories
+        hasListedRepositories = true
         dataSourceCache = RepositoryCenter
             .default
             .obtainRepositoryUrls(sortedByName: true)
@@ -141,6 +148,8 @@ class RepositoriesController: UIViewController {
 
     /// The line under the list, here and under the iPad sidebar's.
     static var footnote: String {
+        // no count before there is one: zero would be a guess
+        guard RepositoryCenter.default.isLoaded else { return "" }
         let repositories = RepositoryCenter
             .default
             .obtainRepositoryUrls()

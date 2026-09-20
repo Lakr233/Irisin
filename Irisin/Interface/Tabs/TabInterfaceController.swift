@@ -78,7 +78,9 @@ class TabInterfaceController: UITabBarController {
             .store(in: &subscriptions)
 
         selectedIndex = 0
-        updateQueueTab()
+        // the bar opens without the Queue tab; taking it out is not a change
+        // for the user to watch
+        updateQueueTab(animated: false)
 
         let pages = [dashboard, repositories, installed, search]
         queueBar = QueueBarDock(host: self, centeredIn: view.safeAreaLayoutGuide) { pages }
@@ -99,16 +101,16 @@ class TabInterfaceController: UITabBarController {
     /// a queue that finishes does not pull the page from under the user.
     /// `UITab.isHidden` only hides a tab from the sidebar, so the tab
     /// leaves the list instead.
-    private func updateQueueTab() {
+    private func updateQueueTab(animated: Bool = true) {
         let shown = PackageQueue.shared.plan != nil || selectedViewController === queue
         if #available(iOS 18.0, *) {
             let every = everyTab.compactMap { $0 as? UITab }
             guard tabs.contains(where: { $0.identifier == "queue" }) != shown else { return }
-            setTabs(shown ? every : every.filter { $0.identifier != "queue" }, animated: true)
+            setTabs(shown ? every : every.filter { $0.identifier != "queue" }, animated: animated)
         } else {
             let every = everyTab.compactMap { $0 as? UIViewController }
             guard viewControllers?.contains(queue) != shown else { return }
-            setViewControllers(shown ? every : every.filter { $0 !== queue }, animated: true)
+            setViewControllers(shown ? every : every.filter { $0 !== queue }, animated: animated)
         }
     }
 

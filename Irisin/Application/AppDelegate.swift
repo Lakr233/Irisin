@@ -122,6 +122,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     ) -> Bool {
         observeRepositoryUpdates()
 
+        // before the first table, label or scene exists
+        #if !DEBUG
+            UserDefaults.standard.set(false, forKey: "_UIConstraintBasedLayoutLogUnsatisfiable")
+        #endif
+        UITableView.appearance().sectionHeaderTopPadding = 0.0
+        adoptDynamicTypeEverywhere()
+
+        AppBootstrap.start()
+
         // the promoted button is the app's accent; red is kept for the
         // confirmations that destroy something
         AlertControllerConfiguration.accentColor = .buttonNormal

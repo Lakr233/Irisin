@@ -57,27 +57,17 @@ class InterfaceHostController: UIViewController {
         view.backgroundColor = .plainBackground
     }
 
-    /// Takes the size it is about to be presented at and lays out, so the
-    /// layout is picked for that size and every page under it has its width
-    /// before its first snapshot: a page that fills in with no width draws
-    /// `PackageListRow.minimumSize` cells for a frame. Then waits for the split
-    /// layout's first page, up to `budget`, so the interface is presented
-    /// whole: the sidebar has its cards at once, and a detail column that
-    /// fills in a moment later reads as a blink.
-    func prepare(filling bounds: CGRect, within budget: Duration) async {
-        loadViewIfNeeded()
-        view.frame = bounds
-        installRootIfNeeded()
-        view.layoutIfNeeded()
-        await split?.prepare(within: budget)
-    }
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // a link that opened the app gets its sheet; onboarding waits for
-        // the next time the interface appears
-        if WelcomeController.shouldPresent, presentedViewController == nil {
-            present(WelcomeController.makeNavigator(), animated: true)
+        // The interface is on screen before the engines have loaded, and
+        // onboarding asks which repositories are already added.
+        Task {
+            guard await AppBootstrap.finished() else { return }
+            // a link that opened the app gets its sheet; onboarding waits for
+            // the next time the interface appears
+            if WelcomeController.shouldPresent, presentedViewController == nil {
+                present(WelcomeController.makeNavigator(), animated: true)
+            }
         }
     }
 

@@ -93,9 +93,16 @@ public final class PackageCenter {
 
         aptLog(self, "tracing package status with \(AptEnvironment.current.dpkgStatusLocation)", level: .info)
 
-        index.blockedUpdateTable = blockedUpdateStore.wrappedValue
-        index.offersAdaptedUpdates = offersAdaptedUpdatesStore.wrappedValue
+        restoreUpdatePreferences()
 
         await reloadLocalPackages()
+    }
+
+    /// What the user said about updates, read into `index`. `load()` does
+    /// this itself; an app whose pages count updates before `load()` has
+    /// run calls it first, so no count includes a blocked package.
+    public func restoreUpdatePreferences() {
+        index.blockedUpdateTable = blockedUpdateStore.wrappedValue
+        index.offersAdaptedUpdates = offersAdaptedUpdatesStore.wrappedValue
     }
 }

@@ -108,6 +108,8 @@ public final class RepositoryCenter {
 
         repositories = await Self.readRepositories(from: AptDatabase.shared)
         aptLog(self, "database reported \(repositories.keys.count) repository", level: .info)
+        // a page built before this read has an empty list to replace
+        NotificationCenter.default.post(name: RepositoryCenter.registrationUpdate, object: nil)
 
         // Give the app a moment to finish booting, then keep draining the
         // update queue once a second.
