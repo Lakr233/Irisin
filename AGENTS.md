@@ -115,7 +115,7 @@ end.
   final link; the registration-completion check closes the startup unlink race.
 - **A package built for another bootstrap is rewritten in the app, never
   by the helper.** `IrisinAdapter` runs as `mobile` inside
-  `PackageQueue.patch` (and inside `TaskProcessor.stage` for a package Patch
+  `PackageQueue.patch` (and inside `Installer.stage` for a package Patch
   never saw), after `prepareDebianPackage` and before the job is sent: it rewrites the prepared tree and hands back the new manifest
   digest, and the helper installs what it is given. `PackageAdapters.installed`
   is the switch: an adapter listed there makes its `source` architecture
@@ -283,7 +283,7 @@ end.
   target; concurrency diagnostics are errors, not warnings to be silenced.
   The app defaults to main-actor isolation (`SWIFT_DEFAULT_ACTOR_ISOLATION`).
 - **State lives on the main actor; work that takes time runs on a copy.**
-  `RepositoryCenter`, `PackageCenter`, `PackageQueue`, `TaskProcessor` and
+  `RepositoryCenter`, `PackageCenter`, `PackageQueue`, `Installer` and
   `Downloads` hold their state on the main actor, so a read or a commit
   is a dictionary operation and no lock guards anything. Parsing dpkg's
   status, resolving dependencies, hashing downloads and fetching a
@@ -310,7 +310,8 @@ end.
 ## Layout
 
 - `Irisin/` — the app: `Application/` (delegates, `AppPaths`),
-  `Services/` (repositories, tasks, downloads, `Privilege/PrivilegedBackend`),
+  `Services/` (`PackageQueue`, `Installer`, `Downloads`, `VendorAccount`,
+  `Privilege/PrivilegedBackend`, translation),
   `Interface/`, `Extension/`, `Resources/`.
 - `IrisinDaemon/` — the daemon, product `irisind`: listener, peer
   authentication, helper launch.
@@ -320,7 +321,7 @@ end.
   irisin`), for what only makes sense against the app's own types:
   `Services/Downloads/Downloader` against a `URLProtocol` stub, the
   operation page's reduction of the transcript (`OperationMonitor`,
-  `OperationPackages`), task resolution, notification bindings, the path
+  `OperationPackages`), queue resolution, notification bindings, the path
   list and the depiction's contact parsing.
 - `Packages/IrisinKit/` — `IrisinProtocol` (wire, `InstallerJob`),
   `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),

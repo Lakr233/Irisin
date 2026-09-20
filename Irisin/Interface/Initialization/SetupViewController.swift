@@ -97,7 +97,7 @@ class SetupViewController: UIViewController {
 
                 // MARK: - PROCESSOR
 
-                _ = TaskProcessor.shared
+                _ = Installer.shared
             }
         }
         await bootstrap?.value

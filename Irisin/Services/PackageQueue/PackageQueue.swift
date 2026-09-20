@@ -108,7 +108,7 @@ final class PackageQueue {
     /// packages moved since it was made; the sheet proposes again.
     @discardableResult
     func commit(_ proposal: Proposal) -> Bool {
-        guard proposal.revision == revision, !TaskProcessor.shared.inProcessingQueue else { return false }
+        guard proposal.revision == revision, !Installer.shared.inProcessingQueue else { return false }
         actions = proposal.actions
         cleanup = proposal.cleanup
         plan = proposal.plan
@@ -172,12 +172,12 @@ final class PackageQueue {
     /// plan still has unpatched is the next tap's.
     func patch() async -> Result<PatchOutcome, PatchFailure> {
         guard let before = plan else { return .success(PatchOutcome(left: [], joined: [])) }
-        guard !patching, !TaskProcessor.shared.inProcessingQueue else {
+        guard !patching, !Installer.shared.inProcessingQueue else {
             return .failure(PatchFailure(message: Self.busy.message))
         }
         patching = true
         defer { patching = false }
-        let location = TaskProcessor.shared.workingLocation.appendingPathComponent("Patched")
+        let location = Installer.shared.workingLocation.appendingPathComponent("Patched")
         var moved = false
         for package in unpatched {
             guard plan?.id == before.id else {
@@ -346,7 +346,7 @@ final class PackageQueue {
     }
 
     func clear() {
-        guard !TaskProcessor.shared.inProcessingQueue else { return }
+        guard !Installer.shared.inProcessingQueue else { return }
         actions = []
         cleanup = []
         plan = nil
@@ -425,7 +425,7 @@ final class PackageQueue {
     /// `force` solves again even when the packages did not move: the rules
     /// the plan was solved under did.
     private func refresh(force: Bool = false) async {
-        guard !TaskProcessor.shared.inProcessingQueue, let plan else { return }
+        guard !Installer.shared.inProcessingQueue, let plan else { return }
         let revision = revision
         // current means the packages did not move and nothing was learned
         // about them since (`patch`)
@@ -476,7 +476,7 @@ final class PackageQueue {
     }
 
     private func solve(_ request: ResolutionRequest) async -> Result<ResolutionPlan, ResolutionFailure> {
-        guard !TaskProcessor.shared.inProcessingQueue else { return .failure(Self.busy) }
+        guard !Installer.shared.inProcessingQueue else { return .failure(Self.busy) }
         let index = PackageCenter.default.index
         var request = request
         request.allowSystemRemoval = allowSystemRemoval
@@ -486,10 +486,10 @@ final class PackageQueue {
                 index: index,
                 adaptedManifests: patched.mapValues(\.control)
             )
-            guard !TaskProcessor.shared.inProcessingQueue,
+            guard !Installer.shared.inProcessingQueue,
                   try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
                   // Revalidate actor-owned facts after the asynchronous status check.
-                  !TaskProcessor.shared.inProcessingQueue,
+                  !Installer.shared.inProcessingQueue,
                   plan.snapshot.blockedUpdates == Set(PackageCenter.default.blockedUpdateTable),
                   plan.snapshot.architecture == AptEnvironment.current.deviceArchitecture,
                   plan.snapshot.installableArchitectures == AptEnvironment.current.installableArchitectures

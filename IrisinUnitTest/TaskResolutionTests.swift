@@ -52,7 +52,7 @@ final class TaskResolutionTests: XCTestCase {
         XCTAssertNotEqual(refreshed.id, proposal.plan?.id)
         XCTAssertEqual(Set(manager.actions.map(\.identity)), [local.identity, dependent.identity])
         XCTAssertEqual(Set(refreshed.install), [local, dependent])
-        let operation = await TaskProcessor.shared.createOperationPayload(plan: refreshed)
+        let operation = await Installer.shared.createOperationPayload(plan: refreshed)
         XCTAssertNil(operation, "A missing selected file must fail instead of installing a repository substitute")
     }
 
@@ -69,7 +69,7 @@ final class TaskResolutionTests: XCTestCase {
         XCTAssertFalse(failure.message.isEmpty)
         XCTAssertNil(PackageQueue.shared.plan)
         XCTAssertTrue(PackageQueue.shared.actions.isEmpty)
-        XCTAssertFalse(TaskProcessor.shared.inProcessingQueue)
+        XCTAssertFalse(Installer.shared.inProcessingQueue)
 
         // a plan the catalogue has moved out from under is not run
         let old = Package(identity: "test.previous", payload: ["1": ["architecture": "all"]])
@@ -77,12 +77,12 @@ final class TaskResolutionTests: XCTestCase {
             request: .init(actions: [.remove(old.identity)]),
             snapshot: .init(packages: [], installed: [old], architecture: "iphoneos-arm64")
         )
-        let staleOperation = TaskProcessor.OperationPayload(
+        let staleOperation = Installer.OperationPayload(
             plan: oldPlan,
             transaction: .init(install: [], remove: [old.identity])
         )
-        let outcome = await TaskProcessor.shared.beginOperation(operation: staleOperation).finished
+        let outcome = await Installer.shared.beginOperation(operation: staleOperation).finished
         XCTAssertFalse(outcome.succeeded, "A rejected operation must not display a success checkmark")
-        XCTAssertFalse(TaskProcessor.shared.inProcessingQueue)
+        XCTAssertFalse(Installer.shared.inProcessingQueue)
     }
 }

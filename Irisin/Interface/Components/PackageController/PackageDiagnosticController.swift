@@ -226,10 +226,10 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
             await withCheckedContinuation { ready in
                 present(progress, animated: true) { ready.resume() }
             }
-            let payload: TaskProcessor.OperationPayload? = if removing, let recoveryRemoval {
-                await TaskProcessor.shared.createRecoveryRemovalPayload(identity: recoveryRemoval)
+            let payload: Installer.OperationPayload? = if removing, let recoveryRemoval {
+                await Installer.shared.createRecoveryRemovalPayload(identity: recoveryRemoval)
             } else if let recoveryPackage {
-                await TaskProcessor.shared.createRecoveryOperationPayload(package: recoveryPackage)
+                await Installer.shared.createRecoveryOperationPayload(package: recoveryPackage)
             } else {
                 nil
             }

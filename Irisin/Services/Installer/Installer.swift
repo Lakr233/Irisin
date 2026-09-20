@@ -1,5 +1,5 @@
 //
-//  TaskProcessor.swift
+//  Installer.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/25.
@@ -17,8 +17,8 @@ import IrisinProtocol
 /// the privileged helper. One operation at a time; the plan is read on the
 /// main actor and the files are staged off it. A running operation is an
 /// `OperationMonitor`, which the console binds to.
-final class TaskProcessor {
-    static let shared = TaskProcessor()
+final class Installer {
+    static let shared = Installer()
 
     nonisolated let workingLocation: URL
     private(set) var inProcessingQueue = false
@@ -206,7 +206,7 @@ final class TaskProcessor {
                     on: PackagedArchitecture.architecture
                 ) {
                     Dog.shared.join(
-                        "TaskProcessor",
+                        "Installer",
                         "adapted \(package.identity) for \(PackagedArchitecture.architecture)",
                         level: .info
                     )

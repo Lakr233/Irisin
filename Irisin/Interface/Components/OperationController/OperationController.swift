@@ -29,7 +29,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         case notice(String)
     }
 
-    private let operation: TaskProcessor.OperationPayload
+    private let operation: Installer.OperationPayload
     var isRecoveryMode: Bool {
         operation.plan.recoveryMode
     }
@@ -133,7 +133,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         }
     }
 
-    init(operation: TaskProcessor.OperationPayload) {
+    init(operation: Installer.OperationPayload) {
         self.operation = operation
         // read now: a finished operation empties the queue
         changes = QueueChange.changes(
@@ -225,7 +225,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         guard monitor == nil else { return }
-        let monitor = TaskProcessor.shared.beginOperation(operation: operation)
+        let monitor = Installer.shared.beginOperation(operation: operation)
         self.monitor = monitor
         bind(monitor)
     }
@@ -426,18 +426,18 @@ final class OperationController: UIViewController, UITableViewDelegate {
             let manager = PackageQueue.shared
             await manager.settled()
             guard let self, view.window != nil else { return }
-            let payload: TaskProcessor.OperationPayload? = if operation.plan.recoveryMode,
+            let payload: Installer.OperationPayload? = if operation.plan.recoveryMode,
                                                               operation.plan.install.count == 1,
                                                               let package = operation.plan.install.first
             {
-                await TaskProcessor.shared.createRecoveryOperationPayload(package: package)
+                await Installer.shared.createRecoveryOperationPayload(package: package)
             } else if operation.plan.recoveryMode,
                       operation.plan.remove.count == 1,
                       let package = operation.plan.remove.first
             {
-                await TaskProcessor.shared.createRecoveryRemovalPayload(identity: package.identity)
+                await Installer.shared.createRecoveryRemovalPayload(identity: package.identity)
             } else if manager.blocked == nil, let plan = manager.plan {
-                await TaskProcessor.shared.createOperationPayload(
+                await Installer.shared.createOperationPayload(
                     plan: plan,
                     ignoreScriptFailures: ignoreScriptFailures ?? ignoresScriptFailures
                 )

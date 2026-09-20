@@ -1,7 +1,7 @@
 import AptResolver
 import IrisinProtocol
 
-extension TaskProcessor {
+extension Installer {
     nonisolated struct OperationPayload: Sendable {
         let plan: ResolutionPlan
         let transaction: InstallerJob.Transaction

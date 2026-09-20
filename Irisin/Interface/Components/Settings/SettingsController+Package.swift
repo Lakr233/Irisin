@@ -136,7 +136,7 @@ extension SettingsController {
                     if let download = try? Downloads.shared.workingLocation.directoryTotalAllocatedSize() {
                         compute += download
                     }
-                    if let staged = try? TaskProcessor.shared.workingLocation.directoryTotalAllocatedSize() {
+                    if let staged = try? Installer.shared.workingLocation.directoryTotalAllocatedSize() {
                         compute += staged
                     }
                     if let directInstallSize = try? documentsDirectory
@@ -157,9 +157,9 @@ extension SettingsController {
                         Downloads.shared.clear()
                         try? FileManager.default
                             .removeItem(at: documentsDirectory.appendingPathComponent("DirectInstallCache"))
-                        if !TaskProcessor.shared.inProcessingQueue {
+                        if !Installer.shared.inProcessingQueue {
                             // a running operation reads from here; its files go when it ends
-                            try? FileManager.default.removeItem(at: TaskProcessor.shared.workingLocation)
+                            try? FileManager.default.removeItem(at: Installer.shared.workingLocation)
                         }
                         self.dispatchValueUpdate()
                     }

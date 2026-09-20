@@ -369,7 +369,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
         guard case let .change(change) = dataSource.itemIdentifier(for: indexPath),
-              !TaskProcessor.shared.inProcessingQueue, stage != .patching
+              !Installer.shared.inProcessingQueue, stage != .patching
         else { return nil }
         let action = UIContextualAction(
             style: .normal,
@@ -503,14 +503,14 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     private func stageAndRun(_ plan: ResolutionPlan) {
         failure = nil
-        guard !TaskProcessor.shared.inProcessingQueue else {
+        guard !Installer.shared.inProcessingQueue else {
             return stagingFailed(
                 String(localized: "Another operation is already running. Wait for it to finish, then try again.")
             )
         }
         stage = .staging
         staging = Task { [weak self] in
-            let payload = await TaskProcessor.shared.createOperationPayload(plan: plan)
+            let payload = await Installer.shared.createOperationPayload(plan: plan)
             guard let self else { return }
             staging = nil
             // a page left while staging ran has nothing to present on
@@ -538,7 +538,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// its own: the iPad adds the navigation bar to a content size, the
     /// operation page has a large title and the log and the failed
     /// package's page have none, so the sheet would shrink on every push.
-    private func showConsole(_ payload: TaskProcessor.OperationPayload) {
+    private func showConsole(_ payload: Installer.OperationPayload) {
         let console = UINavigationController(rootViewController: OperationController(operation: payload))
         console.modalPresentationStyle = traitCollection.userInterfaceIdiom == .pad ? .formSheet : .fullScreen
         committed = false

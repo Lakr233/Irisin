@@ -4,7 +4,7 @@ import IrisinProtocol
 
 /// One running operation, as the screens see it.
 ///
-/// `TaskProcessor` feeds it the helper's events on the main actor and the
+/// `Installer` feeds it the helper's events on the main actor and the
 /// console binds to the published pieces: the phase heading, the progress
 /// bar, the log rows and, at the end, the outcome. Every event is also kept
 /// verbatim in `transcript`, so a support report can be written from what
@@ -44,7 +44,7 @@ final class OperationMonitor {
         }
     }
 
-    let operation: TaskProcessor.OperationPayload
+    let operation: Installer.OperationPayload
 
     @Published private(set) var phase: InstallerPhase?
     @Published private(set) var progress: Progress?
@@ -72,7 +72,7 @@ final class OperationMonitor {
     /// The last failure the helper reported, the reason the outcome names.
     private(set) var failure: InstallerEvent.Problem?
 
-    init(operation: TaskProcessor.OperationPayload) {
+    init(operation: Installer.OperationPayload) {
         self.operation = operation
         packages = OperationPackages(stages: operation.transaction.stages)
     }
