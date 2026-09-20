@@ -26,7 +26,7 @@ extension UIViewController {
     ) {
         switch outcome {
         case .succeeded:
-            SPIndicator.present(title: String(localized: succeeded), preset: .done)
+            SPIndicator.present(title: String(resolving: succeeded), preset: .done)
         case let .failed(reason):
             presentNotice(title: failed, message: reason)
         }

@@ -14,7 +14,7 @@ final class OperationWarningBanner: UIView {
         autoresizingMask = [.flexibleWidth]
         backgroundColor = .clear
         isAccessibilityElement = true
-        accessibilityLabel = String(localized: title)
+        accessibilityLabel = String(resolving: title)
         accessibilityTraits = .staticText
 
         banner.backgroundColor = .operationFailed
@@ -26,7 +26,7 @@ final class OperationWarningBanner: UIView {
         label.font = .bodyEmphasized
         label.textColor = .onAccent
         label.numberOfLines = 0
-        label.text = String(localized: title)
+        label.text = String(resolving: title)
 
         addSubview(banner)
         banner.addSubview(icon)

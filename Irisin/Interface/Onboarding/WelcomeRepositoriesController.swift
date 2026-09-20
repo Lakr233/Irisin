@@ -228,7 +228,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         _ text: String.LocalizationValue
     ) -> UIView {
         var configuration = configuration
-        configuration.text = String(localized: text)
+        configuration.text = String(resolving: text)
         return UITableViewHeaderFooterView().then { $0.contentConfiguration = configuration }
     }
 }

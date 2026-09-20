@@ -51,8 +51,8 @@ final class WelcomeFeatureRow: UIView {
         iconView.image = UIImage(systemName: feature.symbol)?
             .applyingSymbolConfiguration(WelcomeStyle.featureSymbol)
         iconView.tintColor = .buttonNormal
-        titleLabel.text = String(localized: feature.title)
-        detailLabel.text = String(localized: feature.detail)
+        titleLabel.text = String(resolving: feature.title)
+        detailLabel.text = String(resolving: feature.detail)
         accessibilityElements = [titleLabel, detailLabel]
     }
 

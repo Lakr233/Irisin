@@ -15,6 +15,12 @@
             "value" : "%@ · Binärdatei"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · Binary"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1731,6 +1737,12 @@
             "value" : "%lld abgeschlossen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld completed"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1805,6 +1817,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld failed"
           }
         },
         "es" : {
@@ -1883,6 +1901,12 @@
             "value" : "%lld nicht eingerichtet"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld not set up"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1957,6 +1981,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld nicht gestartet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld not started"
           }
         },
         "es" : {
@@ -2197,6 +2227,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Download-Link eines gekauften Pakets läuft ab. Entferne es aus der Warteschlange und füge es erneut hinzu."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A purchased package's download link expires. Remove it from the queue and add it again."
           }
         },
         "es" : {
@@ -3163,88 +3199,6 @@
         }
       }
     },
-    "Added" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تمت الإضافة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hinzugefügt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadido"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouté"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aggiunto"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "追加しました"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "추가됨"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionado"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавлено"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã thêm"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已添加"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已加入"
-          }
-        }
-      }
-    },
     "Added to Queue" : {
       "localizations" : {
         "ar" : {
@@ -3257,6 +3211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zur Warteschlange hinzugefügt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added to Queue"
           }
         },
         "es" : {
@@ -4319,6 +4279,12 @@
             "value" : "Bereits in der Warteschlange"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already in the queue"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4721,6 +4687,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Architektur: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Architecture: %@"
           }
         },
         "es" : {
@@ -5127,6 +5099,12 @@
             "value" : "Verfügbar, sobald die Downloads abgeschlossen sind."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available once the downloads finish."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5283,6 +5261,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Besseres Paket verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Better Package Available"
           }
         },
         "es" : {
@@ -6017,6 +6001,12 @@
             "value" : "%@ wird geprüft"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking %@"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6337,6 +6327,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird geprüft …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
           }
         },
         "es" : {
@@ -6823,6 +6819,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trotzdem herabstufen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downgrade Anyway"
           }
         },
         "es" : {
@@ -7967,6 +7969,12 @@
             "value" : "Warteschlange leeren"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Queue"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8290,6 +8298,12 @@
             "value" : "Kompatibilitätsmodus"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compatibility Mode"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8364,6 +8378,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abgeschlossen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
           }
         },
         "es" : {
@@ -9755,6 +9775,12 @@
             "value" : "Gelöschte Dateien"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted Files"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10323,6 +10349,12 @@
             "value" : "Herabgestuft"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downgraded"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10809,6 +10841,12 @@
             "value" : "Heruntergeladen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11212,6 +11250,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Pakete exportieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export All Packages"
           }
         },
         "es" : {
@@ -11782,6 +11826,12 @@
             "value" : "Fehlgeschlagen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11856,6 +11906,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überprüfung fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed verification"
           }
         },
         "es" : {
@@ -11934,6 +11990,12 @@
             "value" : "Fehler beim Entfernen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed while removing"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12008,6 +12070,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fehler beim Einrichten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed while setting up"
           }
         },
         "es" : {
@@ -12248,6 +12316,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dateien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files"
           }
         },
         "es" : {
@@ -13311,6 +13385,12 @@
             "value" : "Geh zurück und wähle „Erneut versuchen“, um die Einrichtung dieses Pakets abzuschließen."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go back and choose Try Again to finish setting up this package."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13797,6 +13877,12 @@
             "value" : "Neu"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14035,6 +14121,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trotzdem installieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Anyway"
           }
         },
         "es" : {
@@ -14427,88 +14519,6 @@
         }
       }
     },
-    "Installation Plan" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خطة التثبيت"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Installationsplan"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Installation Plan"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plan de instalación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plan d’installation"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Piano di installazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "インストール計画"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "설치 계획"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plano de instalação"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "План установки"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kế hoạch cài đặt"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "安装方案"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "安裝計畫"
-          }
-        }
-      }
-    },
     "Installation stopped: %@" : {
       "localizations" : {
         "ar" : {
@@ -14851,6 +14861,12 @@
             "value" : "Wird installiert"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14925,6 +14941,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird im Kompatibilitätsmodus installiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installs in compatibility mode."
           }
         },
         "es" : {
@@ -16152,6 +16174,12 @@
             "value" : "Reparatur nötig"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs repair"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16310,6 +16338,12 @@
             "value" : "Neue Dateien"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Files"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16384,6 +16418,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuere Version verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Newer Version Available"
           }
         },
         "es" : {
@@ -16872,6 +16912,12 @@
             "value" : "Keine Änderungen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No changes"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17358,6 +17404,12 @@
             "value" : "Nicht mehr benötigt"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No longer needed"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17434,6 +17486,12 @@
             "value" : "Nicht mehr benötigt"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Longer Needed"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17508,6 +17566,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht mehr in der Warteschlange"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Longer Queued"
           }
         },
         "es" : {
@@ -17748,6 +17812,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Pakete in der Warteschlange"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No packages in the queue"
           }
         },
         "es" : {
@@ -18236,6 +18306,12 @@
             "value" : "Keine Skripte"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No scripts"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18558,6 +18634,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht gestartet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not started"
           }
         },
         "es" : {
@@ -18964,6 +19046,12 @@
             "value" : "An diesem Paket wurde nichts geändert. Entferne es aus der Warteschlange und füge es erneut hinzu, um es neu herunterzuladen."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing was changed for this package. Remove it from the queue and add it again to download a fresh copy."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19202,6 +19290,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne stattdessen ihre Seiten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open their pages instead."
           }
         },
         "es" : {
@@ -21085,6 +21179,12 @@
             "value" : "Problem"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -21489,6 +21589,12 @@
             "value" : "Warteschlange"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -21563,6 +21669,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Änderungen an der Warteschlange"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue Changes"
           }
         },
         "es" : {
@@ -21967,6 +22079,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paket wird gelesen …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading the package…"
           }
         },
         "es" : {
@@ -23029,6 +23147,12 @@
             "value" : "Trotzdem neu installieren"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall Anyway"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23103,6 +23227,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neu installiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalled"
           }
         },
         "es" : {
@@ -23837,6 +23967,12 @@
             "value" : "Aus Warteschlange entfernen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Queue"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23993,6 +24129,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed"
           }
         },
         "es" : {
@@ -24317,6 +24459,12 @@
             "value" : "Wird entfernt …"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing…"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24391,6 +24539,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ersetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace"
           }
         },
         "es" : {
@@ -24469,6 +24623,12 @@
             "value" : "Trotzdem ersetzen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace Anyway"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24543,6 +24703,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ersetzte Dateien"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replaced Files"
           }
         },
         "es" : {
@@ -26016,6 +26182,12 @@
             "value" : "%@ wird ausgeführt …"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running %@…"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26338,6 +26510,12 @@
             "value" : "Skriptausgabe"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script Output"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -26412,6 +26590,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skripte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scripts"
           }
         },
         "es" : {
@@ -27146,6 +27330,12 @@
             "value" : "Wähle ein markiertes Paket aus, um den Fehler zu sehen."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a marked package to see what went wrong."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -27221,6 +27411,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Empfohlenes wählen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Recommended"
           }
         },
         "es" : {
@@ -27789,6 +27985,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeigt die Fehlerursache."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows what went wrong."
           }
         },
         "es" : {
@@ -28521,6 +28723,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einige Pakete ausgelassen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some Packages Left Out"
           }
         },
         "es" : {
@@ -29419,6 +29627,12 @@
             "value" : "Das Skript %@ ist fehlgeschlagen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %@ script failed"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -29739,6 +29953,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Download wurde unterbrochen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download was interrupted."
           }
         },
         "es" : {
@@ -30309,6 +30529,12 @@
             "value" : "Das Installationsprogramm wurde während der Arbeit an diesem Paket ohne Angabe von Gründen beendet."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The installer stopped while it was working on this package and did not say why."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30467,6 +30693,12 @@
             "value" : "Das Paket ist nur teilweise installiert. Installiere es erneut, um es zu reparieren, oder entferne es."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package is half-installed. Install it again to repair it, or remove it."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30541,6 +30773,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Paket ist weiterhin installiert. Geh zurück und wähle „Erneut versuchen“."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package is still installed. Go back and choose Try Again."
           }
         },
         "es" : {
@@ -30619,6 +30857,12 @@
             "value" : "Das Paket wurde auf den vorherigen Stand zurückgesetzt. Geh zurück und wähle „Erneut versuchen“."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package was put back as it was before. Go back and choose Try Again."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30693,6 +30937,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Dateien des Pakets sind vorhanden, aber es ist nicht eingerichtet und funktioniert möglicherweise nicht. Geh zurück und wähle „Erneut versuchen“ oder entferne das Paket."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package's files are in place, but it is not set up and may not work. Go back and choose Try Again, or remove the package."
           }
         },
         "es" : {
@@ -30771,6 +31021,12 @@
             "value" : "Die als abgeschlossen markierten Pakete wurden vor dem Abbruch geändert."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The packages marked as completed were changed before it stopped."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30845,6 +31101,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Warteschlange installiert nichts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The queue installs nothing."
           }
         },
         "es" : {
@@ -31003,6 +31265,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Skripte werden in dieser Reihenfolge als root ausgeführt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The scripts run as root, in this order."
           }
         },
         "es" : {
@@ -31489,6 +31757,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Pakete wurden als Abhängigkeiten installiert und werden nicht mehr benötigt. Markiere eines, um es mit der Warteschlange zu entfernen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These were installed as dependencies and nothing needs them now. Tick one to remove it with the queue."
           }
         },
         "es" : {
@@ -32962,6 +33236,12 @@
             "value" : "Dieses Paket wurde entpackt, aber der Vorgang wurde bei einem anderen Paket abgebrochen, bevor dieses eingerichtet war."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This package was unpacked, but the operation stopped at another package before this one was set up."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -33692,6 +33972,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
           }
         },
         "es" : {
@@ -34672,6 +34958,12 @@
             "value" : "Dieses Paket kann nicht gelesen werden."
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to read this package."
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -34828,6 +35120,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Es konnte nicht gespeichert werden, welche Pakete als Abhängigkeiten installiert wurden: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to record which packages were installed as dependencies: %@"
           }
         },
         "es" : {
@@ -35070,6 +35368,12 @@
             "value" : "%@ kann nicht entfernt werden: %@"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to remove %1$@: %2$@"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -35308,6 +35612,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ kann nicht eingerichtet werden: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to set up %1$@: %2$@"
           }
         },
         "es" : {
@@ -35550,6 +35860,12 @@
             "value" : "Erneuter Versuch nicht möglich"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Try Again"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -35706,6 +36022,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ kann nicht überprüft werden: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to verify %1$@: %2$@"
           }
         },
         "es" : {
@@ -36276,6 +36598,12 @@
             "value" : "Entpackt, nicht eingerichtet"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpacked, not set up"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -36844,6 +37172,12 @@
             "value" : "Trotzdem aktualisieren"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Anyway"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -36918,6 +37252,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktualisiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated"
           }
         },
         "es" : {
@@ -37816,6 +38156,12 @@
             "value" : "Vollständiges Protokoll anzeigen"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Full Log"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38056,6 +38402,12 @@
             "value" : "Wartet"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38132,6 +38484,12 @@
             "value" : "Wartet auf Einrichtung"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting to be set up"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38206,6 +38564,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warnungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnings"
           }
         },
         "es" : {
@@ -38530,6 +38894,12 @@
             "value" : "Was passiert ist"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What Happened"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -38604,6 +38974,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Was zu tun ist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What to Do"
           }
         },
         "es" : {
@@ -38762,6 +39138,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen umbrechen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap Lines"
           }
         },
         "es" : {
