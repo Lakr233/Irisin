@@ -159,6 +159,11 @@ done
 for entitlement in com.apple.private.coreservices.lsaw com.apple.lsapplicationworkspace.rebuildappdatabases com.apple.private.MobileContainerManager.allowed com.apple.frontboard.shutdown; do
     require_true "$helper_signed_entitlements" "$entitlement"
 done
+# IcliKit talks to launchd in-process; no launchctl executable is installed or
+# required. Listing verifies the load/unload result in both visible domains.
+for entitlement in com.apple.private.xpc.service-configure com.apple.private.xpc.launchd.per-user-lookup; do
+    require_true "$helper_signed_entitlements" "$entitlement"
+done
 
 # DEBIAN is still empty at this point, so this measures only the payload.
 installed_size="$(du -sk "$staging" | awk '{print $1}')"

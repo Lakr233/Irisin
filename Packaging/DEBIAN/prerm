@@ -2,19 +2,10 @@
 # Scripts/package-deb.sh substitutes the install prefix below: empty for
 # roothide, /var/jb for rootless.
 
-find_tool() {
-    for candidate in "@PREFIX@/usr/bin/$1" "/usr/bin/$1" "/bin/$1"; do
-        if [ -x "$candidate" ]; then
-            echo "$candidate"
-            return 0
-        fi
-    done
-    return 1
-}
-
 if [ "${1:-}" = remove ] || [ "${1:-}" = deconfigure ]; then
-    if launchctl="$(find_tool launchctl)"; then
-        "$launchctl" bootout system/wiki.qaq.irisind 2>/dev/null || true
+    helper=@PREFIX@/usr/libexec/irisin-install
+    if [ -x "$helper" ]; then
+        echo '{"bootoutIrisinDaemon":{}}' | "$helper" >/dev/null || true
     fi
     # The app's LaunchServices record is left to whoever is removing the
     # package: the helper unregisters the bundles its own transaction removed,

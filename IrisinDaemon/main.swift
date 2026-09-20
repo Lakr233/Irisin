@@ -17,7 +17,13 @@ autoreleasepool {
         log.error("irisind could not register \(IrisinProtocol.serviceName, privacy: .public)")
         exit(EXIT_FAILURE)
     }
-    withExtendedLifetime(server) {
+    let executableWatch = ProcessPath.executable(of: getpid()).flatMap { path in
+        ExecutableWatch(path: path, queue: .global(qos: .utility)) {
+            log.info("irisind executable was replaced or removed; exiting")
+            exit(EXIT_SUCCESS)
+        }
+    }
+    withExtendedLifetime((server, executableWatch)) {
         dispatchMain()
     }
 }

@@ -64,6 +64,8 @@ final class InstallerJobTests: XCTestCase {
         XCTAssertThrowsError(try markedRemoval.validate())
 
         XCTAssertNoThrow(try InstallerJob.respring.validate())
+        XCTAssertNoThrow(try InstallerJob.bootstrapIrisinDaemon.validate())
+        XCTAssertNoThrow(try InstallerJob.bootoutIrisinDaemon.validate())
     }
 
     func testRoundTrip() throws {
@@ -76,6 +78,10 @@ final class InstallerJobTests: XCTestCase {
         XCTAssertEqual(decoded, job)
         XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinProtocol.maximumJobByteCount + 1)))
         XCTAssertThrowsError(try InstallerJob.decode(Data("{}".utf8)))
+
+        for maintenance in [InstallerJob.bootstrapIrisinDaemon, .bootoutIrisinDaemon] {
+            XCTAssertEqual(try InstallerJob.decode(maintenance.encoded()), maintenance)
+        }
 
         // autoInstalled is a required key, as every other transaction field is
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: job.encoded()) as? [String: [String: [String: Any]]])

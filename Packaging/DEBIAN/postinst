@@ -3,20 +3,12 @@
 # roothide (whose dpkg relocates rootful paths into the randomized bootstrap
 # root) and /var/jb for rootless.
 
-find_tool() {
-    for candidate in "@PREFIX@/usr/bin/$1" "/usr/bin/$1" "/bin/$1"; do
-        if [ -x "$candidate" ]; then
-            echo "$candidate"
-            return 0
-        fi
-    done
-    return 1
-}
-
-launch_plist=@PREFIX@/Library/LaunchDaemons/wiki.qaq.irisind.plist
-if launchctl="$(find_tool launchctl)"; then
-    "$launchctl" bootout system/wiki.qaq.irisind 2>/dev/null || true
-    "$launchctl" bootstrap system "$launch_plist"
+helper=@PREFIX@/usr/libexec/irisin-install
+if [ -x "$helper" ]; then
+    echo '{"bootstrapIrisinDaemon":{}}' | "$helper" >/dev/null || {
+        echo "warning: Irisin's background service could not be loaded and started." >&2
+        echo "warning: reinstall Irisin before trying to install packages." >&2
+    }
 fi
 
 # The helper registers every new or moved bundle in the bootstrap's
@@ -24,7 +16,6 @@ fi
 # sends, handed over on standard input. It finds the bootstrap root from its
 # own path, so no rootful path is spelled here: on roothide that path must
 # stay unspoken. Its transcript is JSON for the app and is also in its log.
-helper=@PREFIX@/usr/libexec/irisin-install
 if [ -x "$helper" ]; then
     echo '{"rebuildIconCache":{}}' | "$helper" >/dev/null || {
         echo "warning: irisin.app was not registered with LaunchServices." >&2

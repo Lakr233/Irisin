@@ -16,6 +16,12 @@ public enum InstallerJob: Codable, Equatable, Sendable {
     case rebuildIconCache
     /// icli's graceful respring, and a signal to backboardd when it fails.
     case respring
+    /// Replace and start the installed Irisin LaunchDaemon with the plist
+    /// beside this helper's install root. No path or label crosses the wire.
+    case bootstrapIrisinDaemon
+    /// Remove Irisin's own LaunchDaemon before its package is removed. No
+    /// path or label crosses the wire.
+    case bootoutIrisinDaemon
     /// SIGKILL to sharingd, sent by the helper itself.
     case reloadAirDrop
     /// SIGSEGV to SpringBoard, sent by the helper itself: the jailbreak's
@@ -30,6 +36,8 @@ public enum InstallerJob: Codable, Equatable, Sendable {
         case .transaction: "transaction"
         case .rebuildIconCache: "rebuildIconCache"
         case .respring: "respring"
+        case .bootstrapIrisinDaemon: "bootstrapIrisinDaemon"
+        case .bootoutIrisinDaemon: "bootoutIrisinDaemon"
         case .reloadAirDrop: "reloadAirDrop"
         case .enterSafeMode: "enterSafeMode"
         }

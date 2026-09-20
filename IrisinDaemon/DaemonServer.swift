@@ -15,7 +15,8 @@ import IrisinProtocol
 /// no job state, reads no package and waits for nothing: the helper it starts
 /// is in its own session, writes into a pipe the app holds the other end of,
 /// and outlives this process on purpose, because the package being installed
-/// may be the one whose postinst restarts this daemon.
+/// may replace this daemon. `ExecutableWatch` then ends this old image; the
+/// package's helper bootstraps and starts the new one.
 ///
 /// Every mutable field is touched only on `controlQueue`: the listener and
 /// each peer connection deliver their events there, and the idle timer is

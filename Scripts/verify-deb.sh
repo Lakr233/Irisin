@@ -28,6 +28,11 @@ expect() {
 expect "Package" "$(dpkg-deb -f "$deb" Package)" "$package_id"
 expect "Version" "$(dpkg-deb -f "$deb" Version)" "$version"
 expect "Architecture" "$(dpkg-deb -f "$deb" Architecture)" "$architecture"
+depends="$(dpkg-deb -f "$deb" Depends)"
+if grep -Eq '(^|,)[[:space:]]*launchctl([[:space:](,]|$)' <<<"$depends"; then
+    echo "error: package still depends on launchctl" >&2
+    exit 65
+fi
 
 contents="$(dpkg-deb --contents "$deb")"
 for payload in \
@@ -109,14 +114,28 @@ for script in postinst prerm; do
     fi
 done
 
-grep -F "$install_prefix/Library/LaunchDaemons/wiki.qaq.irisind.plist" <<<"$postinst" >/dev/null || {
-    echo "error: postinst does not bootstrap the installed LaunchDaemon plist" >&2
+grep -F '{"bootstrapIrisinDaemon":{}}' <<<"$postinst" >/dev/null || {
+    echo "error: postinst does not ask the helper to bootstrap Irisin's daemon" >&2
     exit 65
 }
 grep -F "$install_prefix/usr/libexec/irisin-install" <<<"$postinst" >/dev/null || {
     echo "error: postinst does not register the app through the helper" >&2
     exit 65
 }
+grep -F '{"bootoutIrisinDaemon":{}}' <<<"$prerm" >/dev/null || {
+    echo "error: prerm does not ask the helper to boot out Irisin's daemon" >&2
+    exit 65
+}
+for script in postinst prerm; do
+    if grep -Eq '(^|[/[:space:]])launchctl([[:space:]]|$)' <<<"${!script}"; then
+        echo "error: $script still invokes launchctl" >&2
+        exit 65
+    fi
+done
+if ! otool -l "$installed/usr/libexec/irisin-install" | grep -F 'sectname __launchctl' >/dev/null; then
+    echo "error: irisin-install is missing IcliKit's launchctl client marker" >&2
+    exit 65
+fi
 # icli is linked into the helper; a copy of it on disk is a second tool for
 # the user to wonder about.
 if grep -E '/icli$' <<<"$contents" >/dev/null; then

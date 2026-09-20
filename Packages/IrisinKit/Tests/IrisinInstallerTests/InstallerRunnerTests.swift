@@ -80,6 +80,48 @@ final class InstallerRunnerTests: XCTestCase {
         XCTAssertEqual(events.last, .phase(.completed))
     }
 
+    func testDaemonJobsUseOnlyTheInstalledIrisinPlist() throws {
+        let root = try Scratch.installRoot()
+        let expected = root + "/Library/LaunchDaemons/wiki.qaq.irisind.plist"
+        var requests: [LaunchDaemonManager.Request] = []
+        var events: [InstallerEvent] = []
+        let runner = InstallerRunner(
+            installRoot: root,
+            layout: .init(kind: .roothide(jbroot: root)),
+            emit: { events.append($0) },
+            daemonManager: { request in
+                requests.append(request)
+            },
+            signalProcesses: { _, _ in 0 }
+        )
+
+        XCTAssertEqual(runner.run(.bootstrapIrisinDaemon), 0)
+        XCTAssertEqual(runner.run(.bootoutIrisinDaemon), 0)
+        XCTAssertEqual(requests, [.bootstrap(plist: expected), .bootout(plist: expected)])
+        XCTAssertEqual(events.filter { $0 == .phase(.completed) }.count, 2)
+    }
+
+    func testDaemonFailureStopsTheJob() throws {
+        let root = try Scratch.installRoot()
+        var events: [InstallerEvent] = []
+        let runner = InstallerRunner(
+            installRoot: root,
+            layout: .init(kind: .roothide(jbroot: root)),
+            emit: { events.append($0) },
+            daemonManager: { _ in throw CocoaError(.featureUnsupported) },
+            signalProcesses: { _, _ in 0 }
+        )
+
+        XCTAssertEqual(runner.run(.bootstrapIrisinDaemon), 1)
+        XCTAssertTrue(events.contains {
+            if case let .failure(.installationStopped(detail)) = $0 {
+                return !detail.isEmpty
+            }
+            return false
+        })
+        XCTAssertFalse(events.contains(.phase(.completed)))
+    }
+
     func testMalformedJobIsRefused() throws {
         let root = try Scratch.installRoot()
         var events: [InstallerEvent] = []

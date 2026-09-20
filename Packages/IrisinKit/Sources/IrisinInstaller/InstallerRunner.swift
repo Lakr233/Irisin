@@ -20,6 +20,7 @@ public final class InstallerRunner {
     private let layout: BootstrapLayout
     private let emit: (InstallerEvent) -> Void
     private let registrar: ApplicationRegistrar
+    private let daemonManager: LaunchDaemonManager
     /// `ProcessTable.signal`, except in the harness: a Mac running a
     /// simulator has a backboardd of its own that a test must not touch.
     private let signalProcesses: (String, Int32) -> Int
@@ -46,6 +47,7 @@ public final class InstallerRunner {
         layout: BootstrapLayout?,
         emit: @escaping (InstallerEvent) -> Void,
         registrar: ((ApplicationRegistrar.Request) throws -> [String: Any])? = nil,
+        daemonManager: ((LaunchDaemonManager.Request) throws -> Void)? = nil,
         signalProcesses: @escaping (String, Int32) -> Int
     ) {
         self.installRoot = installRoot
@@ -53,6 +55,7 @@ public final class InstallerRunner {
         self.emit = emit
         self.signalProcesses = signalProcesses
         self.registrar = ApplicationRegistrar(perform: registrar ?? ApplicationRegistrar.live(emit: emit))
+        self.daemonManager = LaunchDaemonManager(perform: daemonManager ?? LaunchDaemonManager.live(emit: emit))
     }
 
     /// The whole job, to completion. Returns the status the transcript ends
@@ -72,6 +75,10 @@ public final class InstallerRunner {
             rebuildIconCache()
         case .respring:
             respring()
+        case .bootstrapIrisinDaemon:
+            manageDaemon(.bootstrap(plist: daemonPlist))
+        case .bootoutIrisinDaemon:
+            manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:
             signal("sharingd", SIGKILL)
         case .enterSafeMode:
@@ -88,6 +95,12 @@ public final class InstallerRunner {
     /// The kernel path of the bootstrap's applications directory.
     private var applicationsDirectory: String {
         layout.resolve(layout.bootstrapPath("/Applications"))
+    }
+
+    /// The kernel path to the one plist these closed maintenance jobs may
+    /// touch. It follows the helper onto either supported bootstrap.
+    private var daemonPlist: String {
+        layout.resolve(layout.bootstrapPath("/Library/LaunchDaemons/wiki.qaq.irisind.plist"))
     }
 
     // MARK: - Transaction
@@ -214,6 +227,23 @@ public final class InstallerRunner {
     }
 
     // MARK: - Maintenance
+
+    private func manageDaemon(_ request: LaunchDaemonManager.Request) -> Int32 {
+        emit(.phase(.applying))
+        do {
+            try daemonManager.perform(request)
+            switch request {
+            case let .bootstrap(plist):
+                emit(.notice("Bootstrapped and started Irisin daemon from \(plist)"))
+            case let .bootout(plist):
+                emit(.notice("Booted out Irisin daemon from \(plist)"))
+            }
+            return 0
+        } catch {
+            emit(.failure(.installationStopped(detail: String(describing: error))))
+            return 1
+        }
+    }
 
     /// icli's refresh over the bootstrap's applications directory, after
     /// the husks left by older transactions are unregistered and removed.

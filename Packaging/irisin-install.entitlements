@@ -302,6 +302,10 @@
 	<true/>
 	<key>com.apple.private.security.container-manager</key>
 	<true/>
+	<key>com.apple.private.xpc.launchd.per-user-lookup</key>
+	<true/>
+	<key>com.apple.private.xpc.service-configure</key>
+	<true/>
 	<key>com.apple.backboardd.launchapplications</key>
 	<true/>
 	<key>com.apple.springboard.launchapplications</key>

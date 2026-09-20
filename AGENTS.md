@@ -49,7 +49,9 @@ end.
   Everything privileged is an `InstallerJob` sent through `PrivilegedBackend`.
 - **The wire carries jobs, never commands.** `InstallerJob` is a closed enum:
   an ordered package transaction (prepared files and identities), rebuild the
-  icon cache, respring, reload AirDrop, enter safe mode. The helper validates
+  icon cache, respring, bootstrap or boot out Irisin's own daemon, reload
+  AirDrop, enter safe mode. The daemon jobs carry no path or label: the helper
+  derives its own installed plist. The helper validates
   package inputs and composes script arguments itself from those fields.
   There is no `exec(path, argv)` and there will not be one: a root daemon
   that can be talked into running a command is a root shell for whoever can
@@ -82,13 +84,16 @@ end.
   iOS only), never copied into this tree and never packaged as an executable:
   a second icli on the device that the user did not install is a question
   they should not have to ask. `ApplicationRegistrar` makes one of four closed
-  requests (register, unregister, refresh a directory, respring) and
+  requests (register, unregister, refresh a directory, respring), while
+  `LaunchDaemonManager` can only boot out or bootstrap and start Irisin's
+  own daemon through IcliKit. The package has no `launchctl` dependency, and
   `verify-deb.sh` fails on a package that contains an `icli`. A refused
   respring falls back to signalling backboardd. Safe mode and the AirDrop
   reload are `kill(2)` from the helper itself (`ProcessTable`). What icli was
   signed with for this work is in `Packaging/irisin-install.entitlements`,
   the helper's alone; the daemon gets none of it. The package's own postinst
-  registers the app by piping a `rebuildIconCache` job into the helper. A fix
+  first pipes `bootstrapIrisinDaemon` into the helper, then registers the app
+  with a `rebuildIconCache` job. A fix
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.
 - **Peer authentication is the whole trust boundary.** Audit token, then the
@@ -105,7 +110,9 @@ end.
   `irisind` does not kill the transaction. The helper ignores `SIGPIPE`
   and mirrors its transcript to `<root>/var/log/irisin-install.log`, so a
   reader that went away (the app being replaced) loses nothing. The app exits
-  after the transcript ends when `Transaction.touchesSelf`.
+  after the transcript ends when `Transaction.touchesSelf`. `irisind` watches
+  its opened executable inode and exits when replacement or removal drops its
+  final link; the registration-completion check closes the startup unlink race.
 - **A package built for another bootstrap is rewritten in the app, never
   by the helper.** `IrisinAdapter` runs as `mobile` inside
   `TaskManager.patch` (and inside `TaskProcessor.stage` for a package Patch
@@ -455,9 +462,9 @@ is `/var/jb/var/log/irisin-install.log`.
 - **A stale dpkg files list breaks every install on the device.** A `.list`
   under `Library/dpkg/info` with a bare `/` or an empty line makes dpkg abort
   with "contains empty filename" for *any* package. Strip those lines.
-- **`launchctl` in the vphone bootstrap is the binpack one**, and prints the
-  daemon under `user/501` even though it is a system daemon. The Mach service
-  still registers; trust the app's journal.
+- **launchd may print the daemon under `user/501` even though it is a system
+  daemon.** IcliKit reads both the system proxy and foreground-user record;
+  trust the helper transcript and the app's journal.
 - **The vphone loses its `/var/jb` symlink** after some boots because the
   first-boot script exits early on its done marker. Recreate it:
   `ln -sf /private/preboot/<hash>/jb-vphone/procursus /private/var/jb`.

@@ -16,5 +16,5 @@ Maintainer: OwnGoal Studio <no-reply@owngoal.dev>
 Author: OwnGoal Studio <no-reply@owngoal.dev>
 Section: Applications
 Priority: optional
-Depends: firmware (>= @MINIMUM_IOS_VERSION@), launchctl
+Depends: firmware (>= @MINIMUM_IOS_VERSION@)
 Installed-Size: @INSTALLED_SIZE@
