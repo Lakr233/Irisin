@@ -315,7 +315,7 @@ final class SettingsFooterView: UIView {
         if !adapted.isEmpty {
             lines.append(String(localized: "Also installs packages for \(adapted.sorted().joined(separator: ", "))"))
         }
-        lines.append("iOS \(DeviceInfo.current.firmware) · \(DeviceInfo.current.machine)")
+        lines.append("iOS \(DeviceIdentity.firmware) · \(DeviceIdentity.machine)")
         lines.append(PrivilegedBackend.localizedStatus)
         label.text = lines.joined(separator: "\n")
     }

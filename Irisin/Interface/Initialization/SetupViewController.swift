@@ -75,7 +75,7 @@ class SetupViewController: UIViewController {
     private static func bootstrapApplication(progress: @escaping (String) -> Void) async {
         if bootstrap == nil {
             bootstrap = Task {
-                DeviceInfo.current.applyNetworkingHeaders()
+                DeviceIdentity.applyNetworkingHeaders()
 
                 // MARK: - CENTER
 

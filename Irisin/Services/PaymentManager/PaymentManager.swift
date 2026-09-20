@@ -61,8 +61,8 @@ final class PaymentManager {
         let authUrl = endpoint
             .appendingPathComponent("authenticate")
             // follow the order in a strict way
-            .appendingQueryParameters(["udid": DeviceInfo.current.udid])
-            .appendingQueryParameters(["model": DeviceInfo.current.machine])
+            .appendingQueryParameters(["udid": DeviceIdentity.udid])
+            .appendingQueryParameters(["model": DeviceIdentity.machine])
 
         let item = ASWebAuthenticationSessionWindowProvider(window: window)
         let session = ASWebAuthenticationSession(url: authUrl, callbackURLScheme: "sileo") { url, err in
@@ -157,8 +157,8 @@ final class PaymentManager {
         request.httpMethod = "POST"
         request.httpBody = Self.json([
             "token": info.token,
-            "udid": DeviceInfo.current.udid, // otherwise it will return remote failed
-            "device": DeviceInfo.current.machine,
+            "udid": DeviceIdentity.udid, // otherwise it will return remote failed
+            "device": DeviceIdentity.machine,
         ])
         let repoName = repo.url.absoluteString
         Task {
@@ -300,8 +300,8 @@ final class PaymentManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = json(payload.merging([
             "token": token,
-            "udid": DeviceInfo.current.udid, // otherwise it will return remote failed
-            "device": DeviceInfo.current.machine,
+            "udid": DeviceIdentity.udid, // otherwise it will return remote failed
+            "device": DeviceIdentity.machine,
         ]) { current, _ in current })
         return request
     }

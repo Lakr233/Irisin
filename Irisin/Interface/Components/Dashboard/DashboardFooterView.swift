@@ -21,13 +21,12 @@ final class DashboardFooterView: UICollectionReusableView {
         let name = info?["CFBundleDisplayName"] as? String ?? info?["CFBundleName"] as? String ?? "Irisin"
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        let device = DeviceInfo.current
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineHeightMultiple = 1.5
         $0.attributedText = NSAttributedString(
             string: """
-            \(device.machine) · iOS \(device.firmware) · \(name) \(version) (\(build))
+            \(DeviceIdentity.machine) · iOS \(DeviceIdentity.firmware) · \(name) \(version) (\(build))
             OwnGoal Studio × AI
             """,
             attributes: [
