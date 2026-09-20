@@ -20,8 +20,8 @@ import UIKit
 /// after the row was measured, is squeezed into the row and nobody hears.
 final class PackageRowCell: UITableViewCell {
     /// Called when the view inside is no longer the height the row was
-    /// measured for.
-    var onHeightMismatch: (() -> Void)?
+    /// measured for, with the height the row would have to be.
+    var onHeightMismatch: ((CGFloat) -> Void)?
 
     private let host = HostView()
 
@@ -31,7 +31,7 @@ final class PackageRowCell: UITableViewCell {
         backgroundColor = .plainBackground
         contentView.addSubview(host)
         host.snp.makeConstraints { x in x.edges.equalToSuperview() }
-        host.onHeightMismatch = { [weak self] in self?.onHeightMismatch?() }
+        host.onHeightMismatch = { [weak self] height in self?.onHeightMismatch?(height) }
     }
 
     @available(*, unavailable)
@@ -56,14 +56,15 @@ final class PackageRowCell: UITableViewCell {
     }
 
     private final class HostView: UIView {
-        var onHeightMismatch: (() -> Void)?
+        var onHeightMismatch: ((CGFloat) -> Void)?
         var bottomInset: CGFloat = 0
 
         override func layoutSubviews() {
             super.layoutSubviews()
             guard let hosted = subviews.first, bounds.height > 0 else { return }
-            if abs(hosted.frame.maxY + bottomInset - bounds.height) > 1 {
-                onHeightMismatch?()
+            let wanted = hosted.frame.maxY + bottomInset
+            if abs(wanted - bounds.height) > 1 {
+                onHeightMismatch?(wanted)
             }
         }
     }
