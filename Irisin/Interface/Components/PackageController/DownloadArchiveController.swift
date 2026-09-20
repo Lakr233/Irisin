@@ -85,18 +85,18 @@ final class DownloadArchiveController: UIViewController {
         }
         guard !Task.isCancelled else { return }
 
-        let center = DownloadCenter.shared
+        let downloads = Downloads.shared
         let url = target.obtainDownloadLink()
-        center.downloadArchive(target)
-        defer { center.release(target) }
+        downloads.downloadArchive(target)
+        defer { downloads.release(target) }
         // ponytail: polls four times a second like the queue page; a
         // publisher on the statuses if the tick ever shows
-        while center.isDownloading(url) {
-            show(center.status(for: url))
+        while downloads.isDownloading(url) {
+            show(downloads.status(for: url))
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
         }
-        let status = center.status(for: url)
+        let status = downloads.status(for: url)
         await close()
         // Cancel may land while the card leaves
         guard !Task.isCancelled else { return }
@@ -143,17 +143,17 @@ final class DownloadArchiveController: UIViewController {
 
     // MARK: - Card
 
-    private func show(_ status: DownloadCenter.Status?) {
+    private func show(_ status: Downloads.Status?) {
         guard let status, status.completedBytes > 0 else {
             return show(message: String(localized: "Preparing…"))
         }
-        let center = DownloadCenter.shared
+        let downloads = Downloads.shared
         // every byte is in: the file is being hashed, a cached one included
         let verifying = status.completedBytes >= status.totalBytes
         show(
             message: verifying ? String(localized: "Verifying…") : String(localized: "Downloading…"),
             fraction: status.fractionCompleted,
-            count: String(localized: "\(center.byteFormat(bytes: status.completedBytes)) of \(center.byteFormat(bytes: status.totalBytes))")
+            count: String(localized: "\(downloads.byteFormat(bytes: status.completedBytes)) of \(downloads.byteFormat(bytes: status.totalBytes))")
         )
     }
 

@@ -34,7 +34,7 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
     /// roothide brings its own injector. BigBoss is a suite and plain
     /// HTTP: a bare address has no Release, and its certificate expired.
     private static var recommendedSources: [String] {
-        if EnvironmentDetector.architecture == BootstrapArchitecture.roothide.rawValue {
+        if PackagedArchitecture.architecture == BootstrapArchitecture.roothide.rawValue {
             return [
                 "https://roothide.github.io",
                 // roothide's own Procursus build: 1800 is iOS 15, below the

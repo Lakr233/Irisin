@@ -1,5 +1,5 @@
 //
-//  DownloadCenter.swift
+//  Downloads.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/24.
@@ -22,7 +22,7 @@ import Then
 /// it is picked up: before a download is skipped, and before it is handed to
 /// the installer. A mismatch means the repository moved a new build under the
 /// same URL, so the file goes and the download runs again.
-final class DownloadCenter {
+final class Downloads {
     /// One download's state, read back through `status(for:)`.
     nonisolated struct Status: Equatable, Sendable {
         let package: Package
@@ -47,7 +47,7 @@ final class DownloadCenter {
         }
     }
 
-    nonisolated static let shared = DownloadCenter()
+    nonisolated static let shared = Downloads()
 
     /// Where a verified .deb waits for the installer.
     nonisolated let workingLocation: URL
@@ -70,7 +70,7 @@ final class DownloadCenter {
         $0.countStyle = .file
     }
 
-    private let completedStore = PropertiesWrapper(key: "download.completed", defaultValue: Data())
+    private let completedStore = Stored(key: "download.completed", defaultValue: Data())
 
     /// Download URL to the verified file it produced.
     var completedFiles: [URL: URL] {
@@ -277,7 +277,7 @@ final class DownloadCenter {
             if FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory), !isDirectory.boolValue {
                 return true
             }
-            Dog.shared.join("DownloadCenter", "removing invalid download file: \(file.path)")
+            Dog.shared.join("Downloads", "removing invalid download file: \(file.path)")
             return false
         }
     }
@@ -289,7 +289,7 @@ final class DownloadCenter {
     @concurrent
     nonisolated static func verify(_ package: Package, at file: URL) async -> Bool {
         guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else {
-            Dog.shared.join("DownloadCenter", "failed to read \(package.identity) from \(file.path)", level: .error)
+            Dog.shared.join("Downloads", "failed to read \(package.identity) from \(file.path)", level: .error)
             return false
         }
 
@@ -300,7 +300,7 @@ final class DownloadCenter {
         ]
         guard let hash = hashes.first(where: { $0.expected != nil }) else {
             Dog.shared.join(
-                "DownloadCenter",
+                "Downloads",
                 "\(package.identity) carries no hash to check, taking it on trust",
                 level: .warning
             )
@@ -310,7 +310,7 @@ final class DownloadCenter {
         let computed = hash.compute()
         guard computed == hash.expected else {
             Dog.shared.join(
-                "DownloadCenter",
+                "Downloads",
                 "\(package.identity) \(hash.kind) mismatch: expected \(hash.expected ?? "") got \(computed)",
                 level: .error
             )
@@ -332,7 +332,7 @@ final class DownloadCenter {
             try FileManager.default.moveItem(at: source, to: destination)
         } catch {
             Dog.shared.join(
-                "DownloadCenter",
+                "Downloads",
                 "checking out \(package.identity) failed: \(error.localizedDescription)",
                 level: .error
             )

@@ -56,10 +56,10 @@ extension SettingsController {
                 icon: "exclamationmark.shield",
                 title: String(localized: "Power Operations"),
                 kind: .toggle,
-                isOn: { TaskManager.shared.allowSystemRemoval },
+                isOn: { PackageQueue.shared.allowSystemRemoval },
                 setOn: { [weak self] isOn in
                     guard isOn else {
-                        TaskManager.shared.allowSystemRemoval = false
+                        PackageQueue.shared.allowSystemRemoval = false
                         return
                     }
                     self?.presentConfirmation(
@@ -68,7 +68,7 @@ extension SettingsController {
                         confirmTitle: "Allow",
                         destructive: true
                     ) { [weak self] in
-                        TaskManager.shared.allowSystemRemoval = true
+                        PackageQueue.shared.allowSystemRemoval = true
                         self?.dispatchValueUpdate()
                     }
                     // the switch follows the stored value: it goes back
@@ -120,7 +120,7 @@ extension SettingsController {
                 title: String(localized: "Downloads Folder"),
                 kind: .disclosure,
                 action: { [weak self] in
-                    self?.openInFila(path: DownloadCenter.shared.workingLocation.path)
+                    self?.openInFila(path: Downloads.shared.workingLocation.path)
                 }
             ),
             SettingsItem(
@@ -133,10 +133,10 @@ extension SettingsController {
                     if let cache = try? PartialDownloads.directory.directoryTotalAllocatedSize() {
                         compute += cache
                     }
-                    if let download = try? DownloadCenter.shared.workingLocation.directoryTotalAllocatedSize() {
+                    if let download = try? Downloads.shared.workingLocation.directoryTotalAllocatedSize() {
                         compute += download
                     }
-                    if let staged = try? TaskProcessor.shared.workingLocation.directoryTotalAllocatedSize() {
+                    if let staged = try? Installer.shared.workingLocation.directoryTotalAllocatedSize() {
                         compute += staged
                     }
                     if let directInstallSize = try? documentsDirectory
@@ -154,12 +154,12 @@ extension SettingsController {
                 menu: { [weak self] in
                     guard let self else { return [] }
                     return confirmMenu(String(localized: "Clear Downloads")) {
-                        DownloadCenter.shared.clear()
+                        Downloads.shared.clear()
                         try? FileManager.default
                             .removeItem(at: documentsDirectory.appendingPathComponent("DirectInstallCache"))
-                        if !TaskProcessor.shared.inProcessingQueue {
+                        if !Installer.shared.inProcessingQueue {
                             // a running operation reads from here; its files go when it ends
-                            try? FileManager.default.removeItem(at: TaskProcessor.shared.workingLocation)
+                            try? FileManager.default.removeItem(at: Installer.shared.workingLocation)
                         }
                         self.dispatchValueUpdate()
                     }

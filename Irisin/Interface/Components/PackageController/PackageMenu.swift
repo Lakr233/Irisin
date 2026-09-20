@@ -123,7 +123,7 @@ enum PackageMenu {
 
     /// What the package offers now, in menu order.
     static func eligibleActions(for package: Package) -> [Item] {
-        let queued = TaskManager.shared.isQueued(package.identity)
+        let queued = PackageQueue.shared.isQueued(package.identity)
         return allMenuActions.filter { action in
             !(queued && requestActions.contains(action.descriptor)) && action.eligibleForPerform(package)
         }

@@ -65,7 +65,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
                     title: String(localized: "Clear Queue"),
                     image: UIImage(systemName: "trash"),
                     attributes: .destructive
-                ) { _ in TaskManager.shared.clear() },
+                ) { _ in PackageQueue.shared.clear() },
             ]),
         ])
     )
@@ -78,7 +78,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private var patching: Task<Void, Never>?
     /// What Patch did to the queue, until the alert that says so is up: the
     /// page may be covered or off screen when Patch finishes.
-    private var patchOutcome: TaskManager.PatchOutcome?
+    private var patchOutcome: PackageQueue.PatchOutcome?
     /// A tapped row whose page is not pushed yet; a second tap waits for it.
     private var opening: Task<Void, Never>?
     /// Patch or Execute was tapped while files were still downloading: it
@@ -112,7 +112,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         switch row {
         case let .change(change):
             let cell = table.dequeueReusableCell(withIdentifier: "package", for: indexPath) as! QueuePackageCell
-            let manager = TaskManager.shared
+            let manager = PackageQueue.shared
             cell.apply(
                 change.content(
                     icon: icons.icon(of: change.package),
@@ -171,7 +171,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         navigationItem.rightBarButtonItems = [executeButton, busyItem, menuItem]
         updateBar()
 
-        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.reload() }
             .store(in: &subscriptions)
@@ -202,7 +202,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// The queue as it is now: the rows, then what the downloads are doing.
     private func reload() {
         guard isViewLoaded else { return }
-        let manager = TaskManager.shared
+        let manager = PackageQueue.shared
         let plan = manager.plan
         if plan?.id != shownPlan?.id {
             committed = false
@@ -254,13 +254,13 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// once none is, a spinner in its place while the page works on its own,
     /// and Retry after a failure.
     private func updateBar() {
-        let queued = TaskManager.shared.plan != nil
+        let queued = PackageQueue.shared.plan != nil
         let busy = stage == .patching || stage == .staging || (stage == .downloading && committed)
         // a failed patch keeps Patch: the tap is the same one again
         let retries = stage == .downloadFailed || stage == .stagingFailed
         executeButton.title = if retries {
             String(localized: "Retry")
-        } else if TaskManager.shared.unpatched.isEmpty {
+        } else if PackageQueue.shared.unpatched.isEmpty {
             String(localized: "Execute")
         } else {
             String(localized: "Patch")
@@ -277,7 +277,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// Every package file the queue installs, to the share sheet. Grey with
     /// the reason under it while a file is missing or nothing is installed.
     private func exportAction() -> UIAction {
-        let installs = TaskManager.shared.plan?.install ?? []
+        let installs = PackageQueue.shared.plan?.install ?? []
         let files = installs.compactMap { package in package.fileOnDisk.map { (package, $0) } }
         let action = UIAction(
             title: String(localized: "Export All Packages"),
@@ -316,7 +316,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     /// How many packages the queue touches.
     static var queuedCount: Int {
-        (TaskManager.shared.plan).map { $0.install.count + $0.remove.count } ?? 0
+        (PackageQueue.shared.plan).map { $0.install.count + $0.remove.count } ?? 0
     }
 
     /// `queuedCount` for a tab or a card; nil when none.
@@ -369,7 +369,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
         guard case let .change(change) = dataSource.itemIdentifier(for: indexPath),
-              !TaskProcessor.shared.inProcessingQueue, stage != .patching
+              !Installer.shared.inProcessingQueue, stage != .patching
         else { return nil }
         let action = UIContextualAction(
             style: .normal,
@@ -389,11 +389,11 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// commits the plan, now if every file is here and as soon as they are
     /// if not.
     private func primaryAction() {
-        guard let plan = TaskManager.shared.plan else { return }
+        guard let plan = PackageQueue.shared.plan else { return }
         switch stage {
         case .downloadFailed:
             failure = nil
-            DownloadCenter.shared.download(plan.install)
+            Downloads.shared.download(plan.install)
             reload()
         case .patchFailed, .stagingFailed, .ready:
             run(plan)
@@ -406,7 +406,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     /// What the button said when it was tapped, every file being here.
     private func run(_ plan: ResolutionPlan) {
-        if TaskManager.shared.unpatched.isEmpty {
+        if PackageQueue.shared.unpatched.isEmpty {
             stageAndRun(plan)
         } else {
             patch()
@@ -430,7 +430,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
                 self?.refreshVisibleProgress()
             }
             // a plan that replaced this one has a watch of its own
-            guard !Task.isCancelled, let self, TaskManager.shared.plan?.id == plan.id else { return }
+            guard !Task.isCancelled, let self, PackageQueue.shared.plan?.id == plan.id else { return }
             watch = nil
             refreshVisibleProgress()
             if let failure {
@@ -460,7 +460,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         committed = false
         stage = .patching
         patching = Task { [weak self] in
-            let result = await TaskManager.shared.patch()
+            let result = await PackageQueue.shared.patch()
             guard let self else { return }
             patching = nil
             switch result {
@@ -503,14 +503,14 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     private func stageAndRun(_ plan: ResolutionPlan) {
         failure = nil
-        guard !TaskProcessor.shared.inProcessingQueue else {
+        guard !Installer.shared.inProcessingQueue else {
             return stagingFailed(
                 String(localized: "Another operation is already running. Wait for it to finish, then try again.")
             )
         }
         stage = .staging
         staging = Task { [weak self] in
-            let payload = await TaskProcessor.shared.createOperationPayload(plan: plan)
+            let payload = await Installer.shared.createOperationPayload(plan: plan)
             guard let self else { return }
             staging = nil
             // a page left while staging ran has nothing to present on
@@ -538,7 +538,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// its own: the iPad adds the navigation bar to a content size, the
     /// operation page has a large title and the log and the failed
     /// package's page have none, so the sheet would shrink on every push.
-    private func showConsole(_ payload: TaskProcessor.OperationPayload) {
+    private func showConsole(_ payload: Installer.OperationPayload) {
         let console = UINavigationController(rootViewController: OperationController(operation: payload))
         console.modalPresentationStyle = traitCollection.userInterfaceIdiom == .pad ? .formSheet : .fullScreen
         committed = false
@@ -553,14 +553,14 @@ final class QueueController: UIViewController, UITableViewDelegate {
         in plan: UUID,
         progress: @MainActor () -> Void
     ) async -> String? {
-        let center = DownloadCenter.shared
+        let downloads = Downloads.shared
         // ponytail: polls the statuses four times a second; a publisher on
         // the statuses if the tick ever shows
-        while !Task.isCancelled, TaskManager.shared.plan?.id == plan {
-            let statuses = packages.map { (package: $0, status: center.status(for: $0.obtainDownloadLink())) }
+        while !Task.isCancelled, PackageQueue.shared.plan?.id == plan {
+            let statuses = packages.map { (package: $0, status: downloads.status(for: $0.obtainDownloadLink())) }
             // a retry's download keeps the old error until it first reports
             if let failed = statuses.first(where: {
-                $0.status?.errorDescription != nil && !center.isDownloading($0.package.obtainDownloadLink())
+                $0.status?.errorDescription != nil && !downloads.isDownloading($0.package.obtainDownloadLink())
             })?.status?.errorDescription {
                 return failed
             }
@@ -569,7 +569,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             }
             // the queue starts every download it needs; one that is neither
             // done nor running was stopped from outside
-            if statuses.contains(where: { $0.status?.file == nil && !center.isDownloading($0.package.obtainDownloadLink()) }) {
+            if statuses.contains(where: { $0.status?.file == nil && !downloads.isDownloading($0.package.obtainDownloadLink()) }) {
                 return String(localized: "The download was interrupted.")
             }
             progress()

@@ -32,11 +32,11 @@ class InstalledController: UICollectionViewController {
         }
     }
 
-    private let sortOptionStore = PropertiesWrapper(
+    private let sortOptionStore = Stored(
         key: "installed.sortOption",
         defaultValue: SortOption.lastModification.rawValue
     )
-    private let sortReversedStore = PropertiesWrapper(key: "installed.sortReversed", defaultValue: false)
+    private let sortReversedStore = Stored(key: "installed.sortReversed", defaultValue: false)
 
     var sortOption: SortOption {
         SortOption(rawValue: sortOptionStore.wrappedValue) ?? .name
@@ -53,7 +53,7 @@ class InstalledController: UICollectionViewController {
     // MARK: - FILTER
 
     /// The `Section:` fields the list is narrowed to; empty shows everything.
-    private let selectedSectionsStore = PropertiesWrapper(key: "installed.sections", defaultValue: [String]())
+    private let selectedSectionsStore = Stored(key: "installed.sections", defaultValue: [String]())
     var selectedSections: Set<String> {
         get { Set(selectedSectionsStore.wrappedValue) }
         set {
@@ -63,7 +63,7 @@ class InstalledController: UICollectionViewController {
     }
 
     /// The authors the list is narrowed to; empty shows everything.
-    private let selectedAuthorsStore = PropertiesWrapper(key: "installed.authors", defaultValue: [String]())
+    private let selectedAuthorsStore = Stored(key: "installed.authors", defaultValue: [String]())
     var selectedAuthors: Set<String> {
         get { Set(selectedAuthorsStore.wrappedValue) }
         set {
@@ -493,7 +493,7 @@ class InstalledController: UICollectionViewController {
 
     @objc
     func blockUpdateAll() {
-        TaskManager.shared.blockUpdateEverything()
+        PackageQueue.shared.blockUpdateEverything()
         refreshUpdateSet()
     }
 

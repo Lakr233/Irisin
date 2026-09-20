@@ -1,5 +1,5 @@
 //
-//  TaskManager.swift
+//  PackageQueue.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/19.
@@ -15,7 +15,7 @@ import IrisinAdapter
 
 nonisolated extension Notification.Name {
     /// The queue, its plan or its revision changed. Posted on the main actor.
-    static let TaskQueueChanged = Notification.Name("wiki.qaq.TaskQueueChanged")
+    static let PackageQueueChanged = Notification.Name("wiki.qaq.PackageQueueChanged")
 }
 
 /// The queue: what the user asked for, in order, and the one plan that does
@@ -25,8 +25,8 @@ nonisolated extension Notification.Name {
 /// index off the main actor. The revision tells a proposal made against an
 /// older queue, or older packages, from a current one; nothing changes the
 /// queue while an operation stages or runs.
-final class TaskManager {
-    static let shared = TaskManager()
+final class PackageQueue {
+    static let shared = PackageQueue()
 
     /// What the user asked for, one per identity, in the order asked.
     private(set) var actions: [ResolutionAction] = []
@@ -61,7 +61,7 @@ final class TaskManager {
         }
     }
 
-    private let allowSystemRemovalStore = PropertiesWrapper(key: "package.allowSystemRemoval", defaultValue: false)
+    private let allowSystemRemovalStore = Stored(key: "package.allowSystemRemoval", defaultValue: false)
 
     private var subscription: AnyCancellable?
     private var refreshTask: Task<Void, Never>?
@@ -108,7 +108,7 @@ final class TaskManager {
     /// packages moved since it was made; the sheet proposes again.
     @discardableResult
     func commit(_ proposal: Proposal) -> Bool {
-        guard proposal.revision == revision, !TaskProcessor.shared.inProcessingQueue else { return false }
+        guard proposal.revision == revision, !Installer.shared.inProcessingQueue else { return false }
         actions = proposal.actions
         cleanup = proposal.cleanup
         plan = proposal.plan
@@ -117,7 +117,7 @@ final class TaskManager {
         changed()
         // this starts what the plan needs and stops what it no longer does,
         // except a download Download Archive is waiting for
-        DownloadCenter.shared.download(proposal.plan?.install ?? [])
+        Downloads.shared.download(proposal.plan?.install ?? [])
         prunePatched()
         return true
     }
@@ -172,12 +172,12 @@ final class TaskManager {
     /// plan still has unpatched is the next tap's.
     func patch() async -> Result<PatchOutcome, PatchFailure> {
         guard let before = plan else { return .success(PatchOutcome(left: [], joined: [])) }
-        guard !patching, !TaskProcessor.shared.inProcessingQueue else {
+        guard !patching, !Installer.shared.inProcessingQueue else {
             return .failure(PatchFailure(message: Self.busy.message))
         }
         patching = true
         defer { patching = false }
-        let location = TaskProcessor.shared.workingLocation.appendingPathComponent("Patched")
+        let location = Installer.shared.workingLocation.appendingPathComponent("Patched")
         var moved = false
         for package in unpatched {
             guard plan?.id == before.id else {
@@ -186,7 +186,7 @@ final class TaskManager {
             }
             var file = package.localFileURL
             if file == nil {
-                file = await DownloadCenter.shared.downloadedFile(for: package)
+                file = await Downloads.shared.downloadedFile(for: package)
             }
             guard let file else {
                 return .failure(PatchFailure(
@@ -269,7 +269,7 @@ final class TaskManager {
             var digest = try ArchiveStream.prepareDebianPackage(at: file, in: directory)
             if let adapted = try PackageAdapters.installed.adapt(
                 preparedPackageAt: directory,
-                on: EnvironmentDetector.architecture
+                on: PackagedArchitecture.architecture
             ) {
                 digest = adapted
             }
@@ -346,7 +346,7 @@ final class TaskManager {
     }
 
     func clear() {
-        guard !TaskProcessor.shared.inProcessingQueue else { return }
+        guard !Installer.shared.inProcessingQueue else { return }
         actions = []
         cleanup = []
         plan = nil
@@ -354,7 +354,7 @@ final class TaskManager {
         blocked = nil
         prunePatched()
         changed()
-        DownloadCenter.shared.cancelAll()
+        Downloads.shared.cancelAll()
     }
 
     /// Every installed package with a newer version, as install requests,
@@ -425,7 +425,7 @@ final class TaskManager {
     /// `force` solves again even when the packages did not move: the rules
     /// the plan was solved under did.
     private func refresh(force: Bool = false) async {
-        guard !TaskProcessor.shared.inProcessingQueue, let plan else { return }
+        guard !Installer.shared.inProcessingQueue, let plan else { return }
         let revision = revision
         // current means the packages did not move and nothing was learned
         // about them since (`patch`)
@@ -476,7 +476,7 @@ final class TaskManager {
     }
 
     private func solve(_ request: ResolutionRequest) async -> Result<ResolutionPlan, ResolutionFailure> {
-        guard !TaskProcessor.shared.inProcessingQueue else { return .failure(Self.busy) }
+        guard !Installer.shared.inProcessingQueue else { return .failure(Self.busy) }
         let index = PackageCenter.default.index
         var request = request
         request.allowSystemRemoval = allowSystemRemoval
@@ -486,10 +486,10 @@ final class TaskManager {
                 index: index,
                 adaptedManifests: patched.mapValues(\.control)
             )
-            guard !TaskProcessor.shared.inProcessingQueue,
+            guard !Installer.shared.inProcessingQueue,
                   try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
                   // Revalidate actor-owned facts after the asynchronous status check.
-                  !TaskProcessor.shared.inProcessingQueue,
+                  !Installer.shared.inProcessingQueue,
                   plan.snapshot.blockedUpdates == Set(PackageCenter.default.blockedUpdateTable),
                   plan.snapshot.architecture == AptEnvironment.current.deviceArchitecture,
                   plan.snapshot.installableArchitectures == AptEnvironment.current.installableArchitectures
@@ -522,7 +522,7 @@ final class TaskManager {
 
     private func changed() {
         revision += 1
-        NotificationCenter.default.post(name: .TaskQueueChanged, object: nil)
+        NotificationCenter.default.post(name: .PackageQueueChanged, object: nil)
     }
 
     @concurrent

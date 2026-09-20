@@ -14,7 +14,7 @@ extension PackageMenu {
     static func presentUnsupportedArchitecture(of package: Package, from host: UIViewController) {
         host.presentNotice(
             title: "Unsupported Architecture",
-            message: String(localized: "This package is built for \(package.architectures.joined(separator: ", ")). This device uses \(EnvironmentDetector.architecture). Choose a compatible package.")
+            message: String(localized: "This package is built for \(package.architectures.joined(separator: ", ")). This device uses \(PackagedArchitecture.architecture). Choose a compatible package.")
         )
     }
 
@@ -125,7 +125,7 @@ extension PackageMenu {
 
     /// The button that goes on as asked, named after the menu item that asked.
     private static func anywayTitle(for selected: Package, installedVersion: String?) -> String {
-        if TaskManager.shared.queuedPackage(of: selected.identity) != nil {
+        if PackageQueue.shared.queuedPackage(of: selected.identity) != nil {
             return String(localized: "Replace Anyway")
         }
         guard let installedVersion, let version = selected.latestVersion else {
@@ -168,8 +168,8 @@ extension PackageMenu {
             )
             return nil
         }
-        guard PaymentManager.shared.obtainStoredTokenInfomation(for: repo) != nil else {
-            PaymentManager.shared.startUserAuthenticate(
+        guard VendorAccount.shared.storedToken(for: repo) != nil else {
+            VendorAccount.shared.startUserAuthenticate(
                 window: host.view.window ?? UIWindow(),
                 controller: host,
                 repoUrl: repoUrl
@@ -181,7 +181,7 @@ extension PackageMenu {
 
     /// `package` is trimmed to the version the user picked.
     static func checkPurchase(of package: Package, in repoUrl: URL) async -> PurchaseCheck {
-        guard let info = await PaymentManager.shared.obtainPackageInfo(
+        guard let info = await VendorAccount.shared.purchaseStatus(
             for: repoUrl,
             withPackageIdentity: package.identity
         ) else {
@@ -197,7 +197,7 @@ extension PackageMenu {
         guard info.purchased == true else {
             return info.available == true ? .forSale(identity: package.identity, repository: repoUrl) : .unavailable
         }
-        guard let download = await PaymentManager.shared.queryDownloadLink(withPackage: package),
+        guard let download = await VendorAccount.shared.queryDownloadLink(withPackage: package),
               let version = package.latestVersion,
               var meta = package.latestMetadata
         else {
@@ -214,7 +214,7 @@ extension PackageMenu {
         case .purchased:
             break
         case let .forSale(identity, repository):
-            _ = await PaymentManager.shared.initPurchase(
+            _ = await VendorAccount.shared.initPurchase(
                 for: repository,
                 withPackageIdentity: identity,
                 window: host.view.window ?? UIWindow()

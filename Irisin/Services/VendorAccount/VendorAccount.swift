@@ -1,5 +1,5 @@
 //
-//  PaymentManager.swift
+//  VendorAccount.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/25.
@@ -16,23 +16,19 @@ import UIKit
 /// vendor about accounts, purchases and download links. Lives on the main
 /// actor because every entry point ends in a sheet or a notification; the
 /// network calls suspend instead of blocking.
-final class PaymentManager {
-    static let shared = PaymentManager()
+final class VendorAccount {
+    static let shared = VendorAccount()
 
     private init() {}
 
     // MARK: - STRUCT
 
-    nonisolated struct UserTokenInfo: Sendable {
+    nonisolated struct UserToken: Sendable {
         let token: String
         let secret: String
     }
 
-    nonisolated struct UserAccount: Sendable {
-        let item: [String]
-    }
-
-    nonisolated struct PackageInfo: Sendable {
+    nonisolated struct PurchaseStatus: Sendable {
         let purchased: Bool?
         let available: Bool?
     }
@@ -57,7 +53,7 @@ final class PaymentManager {
             completionCallback()
             return
         }
-        if obtainStoredTokenInfomation(for: repo) != nil {
+        if storedToken(for: repo) != nil {
             Dog.shared.join(self, "user already signed in \(repo.url.absoluteString)")
             completionCallback()
             return
@@ -65,8 +61,8 @@ final class PaymentManager {
         let authUrl = endpoint
             .appendingPathComponent("authenticate")
             // follow the order in a strict way
-            .appendingQueryParameters(["udid": DeviceInfo.current.udid])
-            .appendingQueryParameters(["model": DeviceInfo.current.machine])
+            .appendingQueryParameters(["udid": DeviceIdentity.udid])
+            .appendingQueryParameters(["model": DeviceIdentity.machine])
 
         let item = ASWebAuthenticationSessionWindowProvider(window: window)
         let session = ASWebAuthenticationSession(url: authUrl, callbackURLScheme: "sileo") { url, err in
@@ -122,7 +118,7 @@ final class PaymentManager {
         // A failed Keychain write means the user looks signed in until the
         // next launch reads nothing back, so say so at the moment it happens.
         for (key, data) in [(keys.token, Data(token.utf8)), (keys.secret, Data(secret.utf8))] {
-            let status = KeyChain.save(key: key, data: data)
+            let status = Self.saveKeychainItem(account: key, data: data)
             if status != errSecSuccess {
                 Dog.shared.join(self, "keychain refused to store \(key): OSStatus \(status)", level: .error)
             }
@@ -130,11 +126,11 @@ final class PaymentManager {
         postNotification()
     }
 
-    nonisolated func obtainStoredTokenInfomation(for repo: Repository) -> UserTokenInfo? {
+    nonisolated func storedToken(for repo: Repository) -> UserToken? {
         let keys = Self.keychainKeys(for: repo)
-        guard let tokenRaw = KeyChain.load(key: keys.token),
+        guard let tokenRaw = Self.loadKeychainItem(account: keys.token),
               let token = String(data: tokenRaw, encoding: .utf8),
-              let secretRaw = KeyChain.load(key: keys.secret),
+              let secretRaw = Self.loadKeychainItem(account: keys.secret),
               let secret = String(data: secretRaw, encoding: .utf8)
         else {
             return nil
@@ -149,10 +145,10 @@ final class PaymentManager {
         else {
             return
         }
-        guard let info = obtainStoredTokenInfomation(for: repo) else { return }
+        guard let info = storedToken(for: repo) else { return }
         let keys = Self.keychainKeys(for: repo)
-        KeyChain.delete(key: keys.token)
-        KeyChain.delete(key: keys.secret)
+        Self.deleteKeychainItem(account: keys.token)
+        Self.deleteKeychainItem(account: keys.secret)
         postNotification()
         guard let endpoint = repo.endpoint?.appendingPathComponent("sign_out") else {
             return
@@ -161,37 +157,39 @@ final class PaymentManager {
         request.httpMethod = "POST"
         request.httpBody = Self.json([
             "token": info.token,
-            "udid": DeviceInfo.current.udid, // otherwise it will return remote failed
-            "device": DeviceInfo.current.machine,
+            "udid": DeviceIdentity.udid, // otherwise it will return remote failed
+            "device": DeviceIdentity.machine,
         ])
         let repoName = repo.url.absoluteString
         Task {
             guard let (data, _) = try? await URLSession.shared.data(for: request),
                   let str = String(data: data, encoding: .utf8)
             else {
-                Dog.shared.join("PaymentManager", "signing out on \(repoName) got no readable reply", level: .warning)
+                Dog.shared.join("VendorAccount", "signing out on \(repoName) got no readable reply", level: .warning)
                 return
             }
-            Dog.shared.join("PaymentManager", "signing out on \(repoName) replied with \(str)")
+            Dog.shared.join("VendorAccount", "signing out on \(repoName) replied with \(str)")
         }
     }
 
-    func obtainUserAccountInfo(for repo: URL) async -> UserAccount? {
+    /// The identities of the packages this account has bought, or nil when the
+    /// vendor did not answer.
+    func purchasedIdentities(for repo: URL) async -> [String]? {
         guard let repo = RepositoryCenter
             .default
             .obtainImmutableRepository(withUrl: repo),
             let endpoint = repo.endpoint,
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return nil
         }
 
         let request = Self.jsonRequest(endpoint.appendingPathComponent("user_info"), token: userInfo.token)
         guard let json = await Self.jsonReply(for: request) else { return nil }
-        return UserAccount(item: json["items"] as? [String] ?? [])
+        return json["items"] as? [String] ?? []
     }
 
-    func obtainPackageInfo(for repo: URL, withPackageIdentity identity: String) async -> PackageInfo? {
+    func purchaseStatus(for repo: URL, withPackageIdentity identity: String) async -> PurchaseStatus? {
         guard let repo = RepositoryCenter
             .default
             .obtainImmutableRepository(withUrl: repo),
@@ -200,14 +198,14 @@ final class PaymentManager {
             .appendingPathComponent("package")
             .appendingPathComponent(identity)
             .appendingPathComponent("info"),
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return nil
         }
 
         let request = Self.jsonRequest(endpoint, token: userInfo.token)
         guard let json = await Self.jsonReply(for: request) else { return nil }
-        return PackageInfo(
+        return PurchaseStatus(
             purchased: json["purchased"] as? Bool,
             available: json["available"] as? Bool
         )
@@ -226,14 +224,14 @@ final class PaymentManager {
             .appendingPathComponent("package")
             .appendingPathComponent(identity)
             .appendingPathComponent("purchase"),
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return
         }
 
         let request = Self.jsonRequest(endpoint, token: userInfo.token, payload: [
             "payment_secret": userInfo.secret,
-            "architecture": EnvironmentDetector.architecture,
+            "architecture": PackagedArchitecture.architecture,
         ])
         // status 0 is a purchase that already went through: no page to open
         guard let json = await Self.jsonReply(for: request),
@@ -267,7 +265,7 @@ final class PaymentManager {
               .appendingPathComponent("package")
               .appendingPathComponent(package.identity)
               .appendingPathComponent("authorize_download"),
-              let userInfo = obtainStoredTokenInfomation(for: repo)
+              let userInfo = storedToken(for: repo)
         else {
             return nil
         }
@@ -276,7 +274,7 @@ final class PaymentManager {
             "version": package.latestVersion,
             "repo": represent.absoluteString,
             "payment_secret": userInfo.secret,
-            "architecture": package.architectures.first { $0 != "all" } ?? EnvironmentDetector.architecture,
+            "architecture": package.architectures.first { $0 != "all" } ?? PackagedArchitecture.architecture,
         ])
         guard let json = await Self.jsonReply(for: request),
               let value = json["url"] as? String,
@@ -302,8 +300,8 @@ final class PaymentManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = json(payload.merging([
             "token": token,
-            "udid": DeviceInfo.current.udid, // otherwise it will return remote failed
-            "device": DeviceInfo.current.machine,
+            "udid": DeviceIdentity.udid, // otherwise it will return remote failed
+            "device": DeviceIdentity.machine,
         ]) { current, _ in current })
         return request
     }
@@ -318,24 +316,62 @@ final class PaymentManager {
         do {
             let (body, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, !(200 ..< 300).contains(http.statusCode) {
-                Dog.shared.join("PaymentManager", "\(endpoint) answered HTTP \(http.statusCode)", level: .error)
+                Dog.shared.join("VendorAccount", "\(endpoint) answered HTTP \(http.statusCode)", level: .error)
                 return nil
             }
             data = body
         } catch {
-            Dog.shared.join("PaymentManager", "\(endpoint) failed: \(error.localizedDescription)", level: .error)
+            Dog.shared.join("VendorAccount", "\(endpoint) failed: \(error.localizedDescription)", level: .error)
             return nil
         }
         guard let json = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
         else {
             Dog.shared.join(
-                "PaymentManager",
+                "VendorAccount",
                 "\(endpoint) did not answer with a JSON object, \(data.count) bytes",
                 level: .error
             )
             return nil
         }
         return json
+    }
+
+    // MARK: - KEYCHAIN
+
+    private nonisolated static func saveKeychainItem(account: String, data: Data) -> OSStatus {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword as String,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+        ] as [String: Any]
+
+        SecItemDelete(query as CFDictionary)
+
+        return SecItemAdd(query as CFDictionary, nil)
+    }
+
+    private nonisolated static func deleteKeychainItem(account: String) {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword as String,
+            kSecAttrAccount as String: account,
+        ] as [String: Any]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    private nonisolated static func loadKeychainItem(account: String) -> Data? {
+        let query = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: kCFBooleanTrue!,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ] as [String: Any]
+
+        var dataTypeRef: AnyObject?
+
+        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+
+        guard status == errSecSuccess else { return nil }
+        return dataTypeRef as? Data
     }
 }
 
@@ -350,43 +386,5 @@ private class ASWebAuthenticationSessionWindowProvider: NSObject, ASWebAuthentic
 
     func presentationAnchor(for _: ASWebAuthenticationSession) -> ASPresentationAnchor {
         windowCache
-    }
-}
-
-private nonisolated enum KeyChain {
-    static func save(key: String, data: Data) -> OSStatus {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword as String,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data,
-        ] as [String: Any]
-
-        SecItemDelete(query as CFDictionary)
-
-        return SecItemAdd(query as CFDictionary, nil)
-    }
-
-    static func delete(key: String) {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword as String,
-            kSecAttrAccount as String: key,
-        ] as [String: Any]
-        SecItemDelete(query as CFDictionary)
-    }
-
-    static func load(key: String) -> Data? {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: kCFBooleanTrue!,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ] as [String: Any]
-
-        var dataTypeRef: AnyObject?
-
-        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-
-        guard status == errSecSuccess else { return nil }
-        return dataTypeRef as? Data
     }
 }

@@ -10,7 +10,7 @@ import Foundation
 
 /// The bytes of downloads still under way, one file per URL, kept between
 /// attempts so a server that honours `Range` can pick up where it left off.
-/// A finished download is moved out by `DownloadCenter`; nothing stays here
+/// A finished download is moved out by `Downloads`; nothing stays here
 /// once it is either verified or given up on.
 nonisolated enum PartialDownloads {
     /// In a caches folder named after the app: it has no container, and

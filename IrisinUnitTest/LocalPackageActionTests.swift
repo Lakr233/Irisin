@@ -109,7 +109,7 @@ struct LocalPackageActionTests {
             request: .init(actions: [request]),
             snapshot: .init(packages: [], installed: [], architecture: "iphoneos-arm64")
         )
-        let manager = TaskManager.shared
+        let manager = PackageQueue.shared
         try #require(manager.plan == nil)
         defer { manager.clear() }
         try #require(manager.commit(.init(

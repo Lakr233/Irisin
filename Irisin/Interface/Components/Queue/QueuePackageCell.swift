@@ -139,14 +139,14 @@ final class QueuePackageCell: UITableViewCell {
         refreshProgress(animated: false)
     }
 
-    /// Reads the download center for the row's package: the spinner before
+    /// Reads `Downloads` for the row's package: the spinner before
     /// its download starts, the bar and the percentage while it runs, a
     /// fade and Downloaded once it is complete.
     func refreshProgress(animated: Bool) {
         guard let download else { return }
         label.disablesAnimations = !animated
         defer { label.disablesAnimations = false }
-        let status = DownloadCenter.shared.status(for: download.obtainDownloadLink())
+        let status = Downloads.shared.status(for: download.obtainDownloadLink())
         chevron.isHidden = !(status?.completed == true && status?.errorDescription == nil)
         guard let status else {
             spinner.startAnimating()

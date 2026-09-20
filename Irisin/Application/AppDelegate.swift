@@ -78,10 +78,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        // MARK: - Properties
+        // MARK: - SettingStore
 
-        Properties.setup(storeAt: documentsDirectory.appendingPathComponent("Settings")) { str in
-            Dog.shared.join("Properties", "error occurred \(str)")
+        SettingStore.setup(storeAt: documentsDirectory.appendingPathComponent("Settings")) { str in
+            Dog.shared.join("SettingStore", "error occurred \(str)")
         }
 
         // MARK: - Repository Engine
@@ -103,7 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             Location:
                 [*] \(Bundle.main.bundleURL.path)
                 [*] \(documentsDirectory.path)
-            Jailbreak: \(JailbreakRoot.prefix) roothide=\(JailbreakRoot.isRoothide) arch=\(AptRepositoryBootstrap.deviceArchitecture)
+            Jailbreak: \(JailbreakRoot.prefix) roothide=\(JailbreakRoot.isRoothide) arch=\(PackagedArchitecture.architecture)
             Environment: uid \(getuid()) gid \(getgid())
             """,
             level: .info

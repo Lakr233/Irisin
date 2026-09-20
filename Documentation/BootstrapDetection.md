@@ -53,7 +53,7 @@ interface, refresh packages, or process incoming links and imports.
 The stamp is a compatibility contract, not tamper-proof attestation:
 deliberately rewriting or removing it is outside this check's guarantee.
 
-`EnvironmentDetectorTests` covers relocated rootless paths, the rootfs API
+`PackagedArchitectureTests` covers relocated rootless paths, the rootfs API
 without a symlink, roothide with a compatibility alias, both directions of
 package mismatch, and matching/unpackaged builds. `PackageAdaptersTests`
 checks that refusing Irisin leaves the prepared manifest unchanged and

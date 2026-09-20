@@ -128,7 +128,7 @@ nonisolated struct QueueChange: Hashable, Sendable {
     /// disk, and why a package nobody asked for is in `plan`.
     @MainActor
     func details(in plan: ResolutionPlan?, cleanup: Set<String>) -> [String] {
-        let format = DownloadCenter.shared.byteFormat
+        let format = Downloads.shared.byteFormat
         var details: [String] = []
         if kind != .remove, let size = package.publishedSize, !package.isOnDisk {
             details.append(String(localized: "\(format(size)) to download"))
@@ -191,7 +191,7 @@ extension Package {
     }
 
     /// Has a file already, local or cached. The cache is only a hint here;
-    /// the download center hashes the file before trusting it.
+    /// `Downloads` hashes the file before trusting it.
     var isOnDisk: Bool {
         fileOnDisk != nil
     }
@@ -201,7 +201,7 @@ extension Package {
         if let localFileURL {
             return localFileURL
         }
-        guard let cached = DownloadCenter.shared.completedFiles[obtainDownloadLink()],
+        guard let cached = Downloads.shared.completedFiles[obtainDownloadLink()],
               FileManager.default.fileExists(atPath: cached.path)
         else { return nil }
         return cached

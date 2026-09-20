@@ -94,7 +94,7 @@ mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")
 # name, so the shipped bundle is told its name here.
 /usr/libexec/PlistBuddy -c 'Set :CFBundleName Irisin' "$installed_app/Info.plist"
 # One binary is packaged once per flavor; the plist tells the app which
-# bootstrap this copy is for (EnvironmentDetector.packagedArchitectureKey),
+# bootstrap this copy is for (PackagedArchitecture.infoKey),
 # and startup refuses a copy installed on a different bootstrap.
 /usr/libexec/PlistBuddy -c "Add :IrisinCurrentArchitecture string $architecture" "$installed_app/Info.plist" 2>/dev/null \
     || /usr/libexec/PlistBuddy -c "Set :IrisinCurrentArchitecture $architecture" "$installed_app/Info.plist"

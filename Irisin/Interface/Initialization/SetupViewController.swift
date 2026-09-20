@@ -46,7 +46,7 @@ class SetupViewController: UIViewController {
         UITableView.appearance().sectionHeaderTopPadding = 0.0
         adoptDynamicTypeEverywhere()
 
-        guard EnvironmentDetector.incompatibilityMessage == nil else {
+        guard PackagedArchitecture.incompatibilityMessage == nil else {
             indicator.stopAnimating()
             descriptionLabel.text = String(localized: "Unsupported Architecture")
             return
@@ -62,7 +62,7 @@ class SetupViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard let message = EnvironmentDetector.incompatibilityMessage,
+        guard let message = PackagedArchitecture.incompatibilityMessage,
               presentedViewController == nil
         else { return }
         presentNotice(title: "Unsupported Architecture", message: message, dismissTitle: "Close") {
@@ -75,7 +75,7 @@ class SetupViewController: UIViewController {
     private static func bootstrapApplication(progress: @escaping (String) -> Void) async {
         if bootstrap == nil {
             bootstrap = Task {
-                DeviceInfo.current.applyNetworkingHeaders()
+                DeviceIdentity.applyNetworkingHeaders()
 
                 // MARK: - CENTER
 
@@ -93,11 +93,11 @@ class SetupViewController: UIViewController {
 
                 CellularPolicy.allowForThisApplication()
 
-                await DownloadCenter.shared.load()
+                await Downloads.shared.load()
 
                 // MARK: - PROCESSOR
 
-                _ = TaskProcessor.shared
+                _ = Installer.shared
             }
         }
         await bootstrap?.value

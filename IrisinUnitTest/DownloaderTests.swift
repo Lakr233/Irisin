@@ -48,7 +48,7 @@ final class DownloaderTests: XCTestCase {
     /// the repository's guess until the server names one.
     func testProgressNeverReportsMoreThanEverything() {
         func fraction(_ completed: Int64, of total: Int64) -> Double {
-            DownloadCenter.Status(
+            Downloads.Status(
                 package: Package(identity: "wiki.qaq.test"),
                 url: url,
                 completedBytes: completed,

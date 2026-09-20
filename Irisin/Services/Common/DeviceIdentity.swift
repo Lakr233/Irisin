@@ -1,5 +1,5 @@
 //
-//  DeviceInfo.swift
+//  DeviceIdentity.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/25.
@@ -11,31 +11,10 @@ import Dog
 import Foundation
 
 /// The identity the app presents to repositories and vendors.
-final class DeviceInfo {
-    static let current = DeviceInfo()
-
-    let udid: String
-
-    var machine: String {
-        var systemInfo = utsname()
-        uname(&systemInfo)
-        let machineMirror = Mirror(reflecting: systemInfo.machine)
-        return machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8, value != 0 else { return identifier }
-            return identifier + String(UnicodeScalar(UInt8(value)))
-        }
-    }
-
-    var firmware: String {
-        let version = ProcessInfo.processInfo.operatingSystemVersion
-        var text = "\(version.majorVersion).\(version.minorVersion)"
-        if version.patchVersion > 0 {
-            text += ".\(version.patchVersion)"
-        }
-        return text
-    }
-
-    private init() {
+enum DeviceIdentity {
+    /// Asked of MobileGestalt once; a made-up one for the process when it
+    /// does not answer.
+    static let udid: String = {
         typealias MGCopyAnswerAddr = @convention(c) (CFString) -> CFString
         var udid = ""
         if let lookup = dlsym(dlopen("/usr/lib/libMobileGestalt.dylib", RTLD_GLOBAL | RTLD_LAZY), "MGCopyAnswer") {
@@ -52,10 +31,29 @@ final class DeviceInfo {
             )
             udid = build
         }
-        self.udid = udid
+        return udid
+    }()
+
+    static var machine: String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        return machineMirror.children.reduce("") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return identifier }
+            return identifier + String(UnicodeScalar(UInt8(value)))
+        }
     }
 
-    func applyNetworkingHeaders() {
+    static var firmware: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        var text = "\(version.majorVersion).\(version.minorVersion)"
+        if version.patchVersion > 0 {
+            text += ".\(version.patchVersion)"
+        }
+        return text
+    }
+
+    static func applyNetworkingHeaders() {
         RepositoryCenter.default.networkingHeaders = [
             "X-Machine": machine,
             "X-Unique-ID": udid,

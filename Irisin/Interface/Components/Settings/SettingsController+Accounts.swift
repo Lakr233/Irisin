@@ -51,7 +51,7 @@ final class SettingsAccountCell: SettingsCell {
         titleLabel.text = repo.nickName
         menuButton.menu = UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in
-                completion(PaymentManager.shared.accountMenu(for: repo) { self?.parentViewController })
+                completion(VendorAccount.shared.accountMenu(for: repo) { self?.parentViewController })
             },
         ])
         refresh()
@@ -59,7 +59,7 @@ final class SettingsAccountCell: SettingsCell {
 
     override func refresh() {
         guard let repo else { return }
-        let signedIn = PaymentManager.shared.obtainStoredTokenInfomation(for: repo) != nil
+        let signedIn = VendorAccount.shared.storedToken(for: repo) != nil
         menuButton.isHidden = !signedIn
         indicator.image = signedIn ? .fluent(.checkmarkCircle24Filled) : .fluent(.arrowRightCircle24Filled)
         indicator.tintColor = signedIn ? .signedIn : nil

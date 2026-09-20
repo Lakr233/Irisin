@@ -250,7 +250,7 @@ class SettingsController: UITableViewController {
         case let .account(url):
             // a signed-in row is covered by its menu button and never gets here
             guard let repo = RepositoryCenter.default.repositories[url] else { return }
-            PaymentManager.shared.startUserAuthenticate(
+            VendorAccount.shared.startUserAuthenticate(
                 window: view.window ?? UIWindow(),
                 controller: self,
                 repoUrl: repo.url
@@ -305,7 +305,7 @@ final class SettingsFooterView: UIView {
         let info = Bundle.main.infoDictionary
         let appVersion = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "0"
-        let architecture = EnvironmentDetector.architecture
+        let architecture = PackagedArchitecture.architecture
         let layout = JailbreakRoot.isRoothide ? "roothide" : "rootless"
         var lines = [
             "\(Bundle.main.bundleIdentifier ?? "wiki.qaq.irisin") \(appVersion) (\(build))",
@@ -315,7 +315,7 @@ final class SettingsFooterView: UIView {
         if !adapted.isEmpty {
             lines.append(String(localized: "Also installs packages for \(adapted.sorted().joined(separator: ", "))"))
         }
-        lines.append("iOS \(DeviceInfo.current.firmware) · \(DeviceInfo.current.machine)")
+        lines.append("iOS \(DeviceIdentity.firmware) · \(DeviceIdentity.machine)")
         lines.append(PrivilegedBackend.localizedStatus)
         label.text = lines.joined(separator: "\n")
     }

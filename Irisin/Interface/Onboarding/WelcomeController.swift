@@ -22,7 +22,7 @@ class WelcomeController: UIViewController {
 
     /// Raise it when onboarding changes enough to be shown again.
     private static let version = 1
-    private static let seenVersionStore = PropertiesWrapper(key: "onboarding.seenVersion", defaultValue: 0)
+    private static let seenVersionStore = Stored(key: "onboarding.seenVersion", defaultValue: 0)
 
     static var shouldPresent: Bool {
         seenVersionStore.wrappedValue < version

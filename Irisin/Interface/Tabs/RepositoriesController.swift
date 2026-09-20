@@ -273,7 +273,7 @@ class RepositoriesController: UIViewController {
     static func remove(_ url: URL) {
         // first: the sign-in record is found through the repository, which
         // must still be registered
-        PaymentManager.shared.deleteSignInRecord(for: url)
+        VendorAccount.shared.deleteSignInRecord(for: url)
         Dog.shared.join("Repository", "user removed \(url.absoluteString)", level: .info)
         RepositoryCenter.default.deleteRepository(withUrl: url)
     }

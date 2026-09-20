@@ -111,7 +111,7 @@ class PackageBannerView: UIView {
 
         updateValues()
         // Open Queue follows the queue, whichever page changed it
-        queueSubscription = NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        queueSubscription = NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateButton() }
     }
@@ -134,7 +134,7 @@ class PackageBannerView: UIView {
         // (what it takes on disk for a package only dpkg knows)
         version.text = [
             package.latestVersion ?? String(localized: "Unknown"),
-            (package.publishedSize ?? package.installedSize).map(DownloadCenter.shared.byteFormat),
+            (package.publishedSize ?? package.installedSize).map(Downloads.shared.byteFormat),
         ].compactMap(\.self).joined(separator: " · ")
         icon.showIcon(of: package)
         updateButton()
@@ -190,7 +190,7 @@ class PackageBannerView: UIView {
         if !package.isSupportedOnDevice, package.localFileURL == nil {
             return String(localized: "Unsupported").uppercased()
         }
-        if TaskManager.shared.isQueued(package.identity) {
+        if PackageQueue.shared.isQueued(package.identity) {
             return (obtainQuickAction()?.descriptor.describe() ?? String(localized: "Open Queue")).uppercased()
         }
         if PackageCenter

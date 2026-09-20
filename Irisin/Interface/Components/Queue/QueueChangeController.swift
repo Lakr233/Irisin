@@ -49,7 +49,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     }
 
     private let request: Request
-    private var proposal: TaskManager.Proposal?
+    private var proposal: PackageQueue.Proposal?
     private var failure: ResolutionFailure?
     /// The unneeded packages the user ticked; nil until the first answer,
     /// which starts from the queue's own.
@@ -141,7 +141,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         let protected = fields["essential"] == "yes" || fields["protected"] == "yes"
             || ["apt", "dpkg", "essential", "firmware", "bash", "coreutils",
                 "base", "base-files", "base-passwd", "libroot", "roothide"].contains(installed.identity)
-        guard TaskManager.shared.allowSystemRemoval || !protected else { return nil }
+        guard PackageQueue.shared.allowSystemRemoval || !protected else { return nil }
         return installed.identity
     }
 
@@ -204,7 +204,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         }
 
         // the queue or the packages moved: what the sheet shows is solved again
-        NotificationCenter.default.publisher(for: .TaskQueueChanged)
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.solve() }
             .store(in: &subscriptions)
@@ -219,13 +219,13 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         let request = request
         let ticked = ticked
         work = Task { [weak self] in
-            let result: Result<TaskManager.Proposal, ResolutionFailure> = switch request {
+            let result: Result<PackageQueue.Proposal, ResolutionFailure> = switch request {
             case let .actions(actions):
-                await TaskManager.shared.propose(actions, cleanup: ticked)
+                await PackageQueue.shared.propose(actions, cleanup: ticked)
             case .updateAll:
-                switch await TaskManager.shared.updateAllActions() {
+                switch await PackageQueue.shared.updateAllActions() {
                 case let .success(update):
-                    await TaskManager.shared.propose(
+                    await PackageQueue.shared.propose(
                         update.actions,
                         cleanup: ticked,
                         keepingQueued: true,
@@ -235,7 +235,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                     .failure(failure)
                 }
             case let .withdraw(identity):
-                await TaskManager.shared.proposeWithdrawal(of: identity, cleanup: ticked)
+                await PackageQueue.shared.proposeWithdrawal(of: identity, cleanup: ticked)
             }
             guard !Task.isCancelled, let self else { return }
             work = nil
@@ -309,7 +309,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         }
         guard let proposal else { return }
         // a package an adapter rewrites is asked about once, as it joins
-        let queued = Set(TaskManager.shared.plan?.install.map(\.identity) ?? [])
+        let queued = Set(PackageQueue.shared.plan?.install.map(\.identity) ?? [])
         let adapted = proposal.plan.map { plan in
             plan.install.filter {
                 plan.snapshot.adapts($0) && !queued.contains($0.identity) && !confirmed.contains($0.identity)
@@ -326,7 +326,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                 self?.commit(confirmed: confirmed.union(adapted.map(\.identity)))
             }
         }
-        guard TaskManager.shared.commit(proposal) else {
+        guard PackageQueue.shared.commit(proposal) else {
             // the queue moved under the sheet; its notification solves again
             return solve()
         }
@@ -353,7 +353,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// The queue's plan against the proposal's, entries that differ.
     private var diff: (changes: [QueueChange], dropped: [QueueChange]) {
         guard let proposal else { return ([], []) }
-        let manager = TaskManager.shared
+        let manager = PackageQueue.shared
         let before = QueueChange.changes(of: manager.plan, requested: Set(manager.actions.map(\.identity)))
         let after = QueueChange.changes(of: proposal.plan, requested: Set(proposal.actions.map(\.identity)))
         let order: (QueueChange, QueueChange) -> Bool = {
@@ -396,7 +396,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             // what Patch finds in the files may take packages out of the
             // queue or bring some in
             if !unchanged, let plan = proposal.plan,
-               plan.install.contains(where: { plan.snapshot.adapts($0) && TaskManager.shared.patched[$0] == nil })
+               plan.install.contains(where: { plan.snapshot.adapts($0) && PackageQueue.shared.patched[$0] == nil })
             {
                 lines.append(String(localized: "Packages in compatibility mode are patched before they install. If patching changes the queue, review it again before you execute."))
             }
@@ -419,7 +419,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         let unchanged = changes.isEmpty && dropped.isEmpty
         confirmButton.isEnabled = !unchanged
         // an answer that changes nothing, with a queue to open
-        let button = unchanged && proposal != nil && TaskManager.shared.plan != nil
+        let button = unchanged && proposal != nil && PackageQueue.shared.plan != nil
             ? openQueueButton
             : confirmButton
         if navigationItem.rightBarButtonItem !== button {
