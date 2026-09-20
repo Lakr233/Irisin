@@ -73,9 +73,6 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         summary = PackageActionReport.shared.allAvailable()
         report = PackageActionReport.shared.checks
         reasonOnly = report.isEmpty
-        if reasonOnly {
-            report = [.init(package: "", requirement: summary, outcome: .conflictingRequirements)]
-        }
         Dog.shared.join(self, "showing the diagnostic report:\n\(summary)", level: .error)
         configureTable()
         applyReport()
@@ -107,7 +104,8 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         ])
         dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, check in
             let cell = table.dequeueReusableCell(withIdentifier: "requirement", for: indexPath)
-            let detail = reasonOnly ? "" : check.detailText
+            let isSummary = check.package.isEmpty && check.requirement == summary
+            let detail = isSummary ? "" : check.detailText
             var content = cell.defaultContentConfiguration()
             content.text = check.requirement
             content.textProperties.font = .rounded(.body, emphasized: true)
@@ -147,7 +145,14 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
 
     private func applyReport() {
         var snapshot = NSDiffableDataSourceSnapshot<String, ResolutionCheck>()
-        var seen = Set<ResolutionCheck>()
+        let summaryCheck = ResolutionCheck(
+            package: "",
+            requirement: summary,
+            outcome: .conflictingRequirements
+        )
+        snapshot.appendSections([summaryCheck.package])
+        snapshot.appendItems([summaryCheck], toSection: summaryCheck.package)
+        var seen: Set<ResolutionCheck> = [summaryCheck]
         for check in report where seen.insert(check).inserted {
             if !snapshot.sectionIdentifiers.contains(check.package) {
                 snapshot.appendSections([check.package])
@@ -160,7 +165,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     func tableView(_: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let header = UITableViewHeaderFooterView(reuseIdentifier: nil)
         let identity = dataSource.snapshot().sectionIdentifiers[section]
-        header.textLabel?.text = identity.isEmpty ? String(localized: "Installation Plan") : identity
+        header.textLabel?.text = identity.isEmpty ? String(localized: "What Happened") : identity
         header.textLabel?.font = .rounded(.subheadline, emphasized: true)
         header.textLabel?.textColor = .textTitle
         header.textLabel?.numberOfLines = 0
