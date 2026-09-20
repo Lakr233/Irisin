@@ -13519,6 +13519,170 @@
         }
       }
     },
+    "Install Using Recovery Mode" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التثبيت باستخدام وضع الاسترداد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wiederherstellungsmodus installieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Using Recovery Mode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar en modo de recuperación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer en mode de récupération"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa in modalità di ripristino"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードでインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드로 설치"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar no Modo de Recuperação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить в режиме восстановления"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt bằng Chế độ khôi phục"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用恢复模式安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用復原模式安裝"
+          }
+        }
+      }
+    },
+    "Install in Recovery Mode?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد التثبيت في وضع الاسترداد؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wiederherstellungsmodus installieren?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install in Recovery Mode?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Instalar en modo de recuperación?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer en mode de récupération ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installare in modalità di ripristino?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードでインストールしますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드로 설치할까요?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar no Modo de Recuperação?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить в режиме восстановления?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt bằng Chế độ khôi phục?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用恢复模式安装？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用復原模式安裝？"
+          }
+        }
+      }
+    },
     "Install Fila" : {
       "localizations" : {
         "ar" : {
@@ -20803,6 +20967,170 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將多個外掛加入佇列，一併安裝。"
+          }
+        }
+      }
+    },
+    "Recovery Mode" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضع الاسترداد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellungsmodus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery Mode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de recuperación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode de récupération"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modalità di ripristino"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de Recuperação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим восстановления"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ khôi phục"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復原模式"
+          }
+        }
+      }
+    },
+    "Recovery Mode installs only this package without checking its dependencies or conflicts. Maintainer scripts such as postinst and postrm still run, but their failures are ignored so installation can continue on a best-effort basis. Use it only when the system can no longer complete a normal installation. The package may not work, and the system may become less stable." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يثبّت وضع الاسترداد هذه الحزمة فقط من دون التحقق من تبعياتها أو تعارضاتها. تستمر برامج الصيانة النصية مثل postinst وpostrm في العمل، لكن يتم تجاهل فشلها كي يتواصل التثبيت بأفضل جهد ممكن. استخدمه فقط عندما يتعذر على النظام إكمال تثبيت عادي. قد لا تعمل الحزمة وقد يصبح النظام أقل استقرارًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wiederherstellungsmodus wird nur dieses Paket installiert, ohne seine Abhängigkeiten oder Konflikte zu prüfen. Maintainer-Skripte wie postinst und postrm werden weiterhin ausgeführt; Fehler werden jedoch ignoriert, damit die Installation nach bestem Bemühen fortgesetzt werden kann. Verwende ihn nur, wenn das System eine normale Installation nicht mehr abschließen kann. Das Paket funktioniert möglicherweise nicht und das System kann instabiler werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery Mode installs only this package without checking its dependencies or conflicts. Maintainer scripts such as postinst and postrm still run, but their failures are ignored so installation can continue on a best-effort basis. Use it only when the system can no longer complete a normal installation. The package may not work, and the system may become less stable."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modo de recuperación instala solo este paquete sin comprobar sus dependencias ni conflictos. Los scripts de mantenimiento, como postinst y postrm, se siguen ejecutando, pero sus fallos se ignoran para que la instalación continúe en la medida de lo posible. Úsalo únicamente cuando el sistema ya no pueda completar una instalación normal. Es posible que el paquete no funcione y que el sistema se vuelva menos estable."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mode de récupération installe uniquement ce paquet sans vérifier ses dépendances ni ses conflits. Les scripts de maintenance tels que postinst et postrm sont toujours exécutés, mais leurs échecs sont ignorés afin que l’installation se poursuive au mieux. Utilisez-le seulement si le système ne peut plus terminer une installation normale. Le paquet risque de ne pas fonctionner et le système peut devenir moins stable."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La modalità di ripristino installa solo questo pacchetto senza verificarne le dipendenze o i conflitti. Gli script di manutenzione come postinst e postrm vengono comunque eseguiti, ma i loro errori vengono ignorati affinché l’installazione prosegua per quanto possibile. Usala solo quando il sistema non riesce più a completare un'installazione normale. Il pacchetto potrebbe non funzionare e il sistema potrebbe diventare meno stabile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードでは、依存関係や競合を確認せず、このパッケージだけをインストールします。postinst や postrm などのメンテナンススクリプトは実行されますが、失敗しても無視され、可能な範囲でインストールを続行します。通常のインストールを完了できない状態の修復にのみ使用してください。パッケージが動作しなかったり、システムがさらに不安定になったりする可能性があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드는 종속성이나 충돌을 확인하지 않고 이 패키지만 설치합니다. postinst 및 postrm 같은 유지 관리 스크립트는 계속 실행되지만 실패는 무시되며 가능한 범위에서 설치를 계속합니다. 시스템에서 정상적인 설치를 더 이상 완료할 수 없을 때만 사용하십시오. 패키지가 작동하지 않거나 시스템이 더 불안정해질 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Modo de Recuperação instala somente este pacote sem verificar dependências ou conflitos. Scripts de manutenção como postinst e postrm ainda são executados, mas suas falhas são ignoradas para que a instalação continue da melhor forma possível. Use-o apenas quando o sistema não conseguir mais concluir uma instalação normal. O pacote pode não funcionar e o sistema pode ficar menos estável."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В режиме восстановления устанавливается только этот пакет без проверки зависимостей и конфликтов. Сценарии сопровождения, такие как postinst и postrm, всё равно запускаются, но их ошибки игнорируются, чтобы установка продолжалась по мере возможности. Используйте его, только если система больше не может завершить обычную установку. Пакет может не работать, а система может стать менее стабильной."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ khôi phục chỉ cài đặt gói này mà không kiểm tra các phần phụ thuộc hoặc xung đột. Các tập lệnh bảo trì như postinst và postrm vẫn chạy, nhưng lỗi của chúng bị bỏ qua để quá trình cài đặt tiếp tục trong khả năng có thể. Chỉ sử dụng khi hệ thống không thể hoàn tất quá trình cài đặt thông thường. Gói có thể không hoạt động và hệ thống có thể trở nên kém ổn định hơn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复模式只会安装这个软件包，不会检查依赖关系或冲突。postinst、postrm 等维护脚本仍会运行，但即使返回错误也会被忽略，安装会尽力继续。请仅在系统已无法完成正常安装时使用。软件包可能无法正常工作，系统也可能变得更不稳定。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復原模式只會安裝這個套件，不會檢查相依關係或衝突。postinst、postrm 等維護指令碼仍會執行，但即使回報錯誤也會被忽略，安裝會盡力繼續。請只在系統已無法完成正常安裝時使用。套件可能無法正常運作，系統也可能變得更不穩定。"
           }
         }
       }
@@ -30904,6 +31232,88 @@
         }
       }
     },
+    "This package cannot be installed in Recovery Mode on this system." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن تثبيت هذه الحزمة باستخدام وضع الاسترداد على هذا النظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Paket kann auf diesem System nicht im Wiederherstellungsmodus installiert werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This package cannot be installed in Recovery Mode on this system."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este paquete no se puede instalar en modo de recuperación en este sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce paquet ne peut pas être installé en mode de récupération sur ce système."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo pacchetto non può essere installato in modalità di ripristino su questo sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このシステムでは、このパッケージを復旧モードでインストールできません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 시스템에서는 이 패키지를 복구 모드로 설치할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este pacote não pode ser instalado no Modo de Recuperação neste sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот пакет нельзя установить в режиме восстановления на этой системе."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể cài đặt gói này bằng Chế độ khôi phục trên hệ thống này."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法在此系统上使用恢复模式安装这个软件包。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法在此系統上使用復原模式安裝這個套件。"
+          }
+        }
+      }
+    },
     "This package could not be loaded. Try a different repository." : {
       "localizations" : {
         "ar" : {
@@ -33106,84 +33516,84 @@
         }
       }
     },
-    "Unable to Queue Packages" : {
+    "Unable to Prepare Installation" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تعذرت إضافة الحزم إلى قائمة الانتظار"
+            "value" : "تعذر تحضير التثبيت"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hinzufügen zur Warteschlange nicht möglich"
+            "value" : "Installation kann nicht vorbereitet werden"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unable to Queue Packages"
+            "value" : "Unable to Prepare Installation"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No se pueden añadir a la cola"
+            "value" : "No se puede preparar la instalación"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impossible d’ajouter les paquets à la file d’attente"
+            "value" : "Impossible de préparer l’installation"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impossibile aggiungere i pacchetti alla coda"
+            "value" : "Impossibile preparare l’installazione"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "パッケージをキューに追加できません"
+            "value" : "インストールを準備できません"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "패키지를 대기열에 추가할 수 없음"
+            "value" : "설치를 준비할 수 없음"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Não foi possível adicionar à fila"
+            "value" : "Não foi possível preparar a instalação"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не удалось добавить пакеты в очередь"
+            "value" : "Не удалось подготовить установку"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không thể thêm gói vào hàng đợi"
+            "value" : "Không thể chuẩn bị cài đặt"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法加入安装队列"
+            "value" : "无法准备安装"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法將套件加入佇列"
+            "value" : "無法準備安裝"
           }
         }
       }

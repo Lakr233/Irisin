@@ -24,7 +24,7 @@ extension OperationController {
             navigationController?.pushViewController(OperationLogController(monitor: monitor), animated: true)
         }
         guard let monitor else { return [log] }
-        if monitor.outcome?.succeeded == false {
+        if monitor.outcome?.succeeded == false, !isRecoveryMode {
             let ignore = UIAction(
                 title: String(localized: "Ignore Configuration Errors"),
                 image: UIImage(systemName: "exclamationmark.shield"),

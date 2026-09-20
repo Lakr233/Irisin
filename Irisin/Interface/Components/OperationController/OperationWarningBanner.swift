@@ -1,18 +1,18 @@
 import UIKit
 
-/// The persistent warning above an operation whose package-script failures
-/// will not stop installation. The symbol and text carry the meaning as well
-/// as the colour, and the table owns the banner's outer size.
-final class ConfigurationErrorOverrideBanner: UIView {
+/// A persistent warning above an operation running with relaxed safeguards.
+/// The symbol and text carry the meaning as well as the colour, and the table
+/// owns the banner's outer size.
+final class OperationWarningBanner: UIView {
     private let icon = UIImageView(image: UIImage(systemName: "exclamationmark.triangle.fill"))
     private let label = UILabel()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(title: String.LocalizationValue) {
+        super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .operationFailed
         isAccessibilityElement = true
-        accessibilityLabel = String(localized: "Ignoring Configuration Errors")
+        accessibilityLabel = String(localized: title)
         accessibilityTraits = .staticText
 
         icon.translatesAutoresizingMaskIntoConstraints = false
@@ -24,7 +24,7 @@ final class ConfigurationErrorOverrideBanner: UIView {
         label.font = .bodyEmphasized
         label.textColor = .onAccent
         label.numberOfLines = 0
-        label.text = String(localized: "Ignoring Configuration Errors")
+        label.text = String(localized: title)
 
         addSubview(icon)
         addSubview(label)

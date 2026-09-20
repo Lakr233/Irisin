@@ -8,6 +8,7 @@ final class NativePackageTransaction {
     let filesystem: PackageFilesystem
     let scripts: MaintainerScripts
     let triggers: NativeTriggers
+    let recoveryMode: Bool
     var overrides: NativePackageOverrides
     let emit: (InstallerEvent) -> Void
     private let preparedDirectory: URL
@@ -18,6 +19,7 @@ final class NativePackageTransaction {
         databaseDirectory: URL,
         scriptRoot: String,
         ignoreScriptFailures: Bool,
+        recoveryMode: Bool,
         emit: @escaping (InstallerEvent) -> Void
     ) throws {
         database = try NativePackageDatabase(directory: databaseDirectory)
@@ -31,6 +33,7 @@ final class NativePackageTransaction {
             forgetPaths: { [filesystem] in filesystem.forgetPaths() }
         )
         triggers = NativeTriggers(database: database, scripts: scripts)
+        self.recoveryMode = recoveryMode
         overrides = try NativePackageOverrides(directory: databaseDirectory)
         self.emit = emit
         preparedDirectory = databaseDirectory.appendingPathComponent("irisin-prepared-" + UUID().uuidString)

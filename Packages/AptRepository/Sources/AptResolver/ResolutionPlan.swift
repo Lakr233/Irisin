@@ -27,6 +27,34 @@ public struct ResolutionPlan: Sendable {
     /// set does. Each value names the other unneeded packages that depend
     /// on the key, sorted: the key can only go with them.
     public let unneeded: [String: [String]]
+    /// A single local package installed with the last-resort policy. The
+    /// helper bypasses package relationships and treats maintainer-script
+    /// failures as warnings; archive, architecture and filesystem safety
+    /// checks still apply.
+    public let recoveryMode: Bool
+
+    /// A last-resort plan for one local package. It never chooses another
+    /// package, removes anything, or claims that a dependency brought it in.
+    public static func recoveryInstallation(
+        of package: Package,
+        in snapshot: ResolutionSnapshot
+    ) -> ResolutionPlan {
+        let identity = package.identity
+        return ResolutionPlan(
+            id: UUID(),
+            snapshot: snapshot,
+            install: [package],
+            remove: [],
+            finalPackages: snapshot.installed.filter { $0.identity != identity } + [package],
+            stages: [.unpack([identity]), .configure([identity])],
+            heldBack: [],
+            diagnostics: [],
+            requiredBy: [:],
+            autoInstalled: [],
+            unneeded: [:],
+            recoveryMode: true
+        )
+    }
 
     /// The part of `chosen` that can go: a name is dropped while an
     /// unneeded package that depends on it is not chosen as well.

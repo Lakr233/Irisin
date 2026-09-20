@@ -162,6 +162,55 @@ struct OrderedExecutionTests {
         #expect(!warnings[1].2.isEmpty)
     }
 
+    /// Recovery Mode owns its complete relaxed policy: callers do not need a
+    /// second flag for package-owned script failures to become warnings.
+    @Test func recoveryModeIgnoresMaintainerScriptFailures() throws {
+        let fixture = try NativeInstallFixture()
+        let package = try fixture.package(
+            "recovery.scripts",
+            files: ["usr/share/recovery-script": "installed"],
+            controls: ["postinst": "#!/bin/sh\nexit 9\n"]
+        )
+        var ignoredScripts: [String] = []
+
+        try fixture.run(install: [package], recoveryMode: true) { event in
+            if case let .warning(.scriptFailureIgnored(_, script, _)) = event {
+                ignoredScripts.append(script)
+            }
+        }
+
+        #expect(try fixture.status(package.identity) == "install ok installed")
+        #expect(try fixture.text("usr/share/recovery-script") == "installed")
+        #expect(ignoredScripts == ["postinst"])
+    }
+
+    /// Recovery Mode bypasses package relationships. The same archive
+    /// is rejected normally for its missing dependencies and conflict, then
+    /// reaches the installed state under the explicit recovery policy.
+    @Test func recoveryModeBypassesPackageRelationships() throws {
+        let fixture = try NativeInstallFixture()
+        let resident = try fixture.package("resident.package")
+        try fixture.run(install: [resident])
+        let recovery = try fixture.package(
+            "recovery.package",
+            files: ["usr/share/recovered": "yes"],
+            fields: [
+                "depends": "missing-dependency",
+                "pre-depends": "missing-predependency",
+                "conflicts": resident.identity,
+            ]
+        )
+
+        #expect(throws: NativePackageFailure.self) {
+            try fixture.run(install: [recovery])
+        }
+        try fixture.run(install: [recovery], recoveryMode: true)
+
+        #expect(try fixture.status(recovery.identity) == "install ok installed")
+        #expect(try fixture.text("usr/share/recovered") == "yes")
+        #expect(try fixture.status(resident.identity) == "install ok installed")
+    }
+
     /// The phases arrive in order, the count runs to the total, and every
     /// package step is a typed event the app can spell for itself.
     @Test func nativeRunnerReportsPhasesAndProgress() throws {

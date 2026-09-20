@@ -57,7 +57,8 @@ public final class NativePackageInstaller {
             layout: layout,
             databaseDirectory: databaseDirectory,
             scriptRoot: scriptRoot,
-            ignoreScriptFailures: transaction.ignoreScriptFailures,
+            ignoreScriptFailures: transaction.ignoreScriptFailures || transaction.recoveryMode,
+            recoveryMode: transaction.recoveryMode,
             emit: emit
         )
         if !transaction.dryRun {
@@ -65,7 +66,9 @@ public final class NativePackageInstaller {
         }
         emit(.phase(.verifying))
         let archives = try work.prepare(transaction.install)
-        try work.validateFinalState(transaction, archives: archives)
+        if !transaction.recoveryMode {
+            try work.validateFinalState(transaction, archives: archives)
+        }
         if transaction.dryRun {
             for stage in transaction.stages {
                 emit(.notice("Dry run: \(Self.describe(stage))"))

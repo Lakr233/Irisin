@@ -33,9 +33,12 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     private let operation: TaskProcessor.OperationPayload
+    var isRecoveryMode: Bool { operation.plan.recoveryMode }
     private let changes: [String: QueueChange]
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    private let configurationErrorBanner = ConfigurationErrorOverrideBanner()
+    private lazy var operationWarningBanner = OperationWarningBanner(
+        title: operation.plan.recoveryMode ? "Recovery Mode" : "Ignoring Configuration Errors"
+    )
     private lazy var icons = PackageIconCache { [weak self] in self?.reconfigure() }
     private(set) var monitor: OperationMonitor?
     private(set) var ignoresScriptFailures: Bool
@@ -166,7 +169,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         tableView.snp.makeConstraints { x in
             x.edges.equalToSuperview()
         }
-        updateConfigurationErrorBanner()
+        updateOperationWarningBanner()
         applySnapshot()
     }
 
@@ -175,7 +178,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
         super.viewDidLayoutSubviews()
         let width = tableView.bounds.width
         guard width > 0 else { return }
-        updateConfigurationErrorBanner()
+        updateOperationWarningBanner()
         let height = finishingFooter.label
             .sizeThatFits(CGSize(width: width - 40, height: .greatestFiniteMagnitude))
             .height + 32
@@ -389,12 +392,19 @@ final class OperationController: UIViewController, UITableViewDelegate {
             let manager = TaskManager.shared
             await manager.settled()
             guard let self, view.window != nil else { return }
-            var payload: TaskProcessor.OperationPayload?
-            if manager.blocked == nil, let plan = manager.plan {
+            let payload: TaskProcessor.OperationPayload?
+            if operation.plan.recoveryMode,
+               operation.plan.install.count == 1,
+               let package = operation.plan.install.first
+            {
+                payload = await TaskProcessor.shared.createRecoveryOperationPayload(package: package)
+            } else if manager.blocked == nil, let plan = manager.plan {
                 payload = await TaskProcessor.shared.createOperationPayload(
                     plan: plan,
                     ignoreScriptFailures: ignoresScriptFailures
                 )
+            } else {
+                payload = nil
             }
             // Staging took time; a sheet closed meanwhile has nothing to run.
             guard view.window != nil else { return }
@@ -437,7 +447,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
     func toggleIgnoredScriptFailures() {
         if ignoresScriptFailures {
             ignoresScriptFailures = false
-            updateConfigurationErrorBanner()
+            updateOperationWarningBanner()
             return
         }
         presentConfirmation(
@@ -449,28 +459,28 @@ final class OperationController: UIViewController, UITableViewDelegate {
             guard let self else { return }
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
             ignoresScriptFailures = true
-            updateConfigurationErrorBanner()
-            tableView.scrollRectToVisible(configurationErrorBanner.frame, animated: true)
+            updateOperationWarningBanner()
+            tableView.scrollRectToVisible(operationWarningBanner.frame, animated: true)
         }
     }
 
-    private func updateConfigurationErrorBanner() {
-        guard ignoresScriptFailures else {
+    private func updateOperationWarningBanner() {
+        guard ignoresScriptFailures || operation.plan.recoveryMode else {
             tableView.tableHeaderView = nil
             return
         }
         let width = tableView.bounds.width
         guard width > 0 else { return }
-        let size = configurationErrorBanner.systemLayoutSizeFitting(
+        let size = operationWarningBanner.systemLayoutSizeFitting(
             CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         )
-        guard tableView.tableHeaderView !== configurationErrorBanner
-            || configurationErrorBanner.frame.size != CGSize(width: width, height: size.height)
+        guard tableView.tableHeaderView !== operationWarningBanner
+            || operationWarningBanner.frame.size != CGSize(width: width, height: size.height)
         else { return }
-        configurationErrorBanner.frame = CGRect(x: 0, y: 0, width: width, height: size.height)
-        tableView.tableHeaderView = configurationErrorBanner
+        operationWarningBanner.frame = CGRect(x: 0, y: 0, width: width, height: size.height)
+        tableView.tableHeaderView = operationWarningBanner
     }
 
     // MARK: - Problems

@@ -1,3 +1,4 @@
+import AptRepository
 import AptResolver
 import Dog
 import UIKit
@@ -15,9 +16,33 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     /// Whoever builds the sheet says so: the page cannot tell from its own
     /// place in the stack while that stack is still being replaced.
     private let closesSheet: Bool
+    /// One local archive that may repair a system whose relationships can no
+    /// longer be solved. Nil for every ordinary diagnostic report.
+    private let recoveryPackage: Package?
+    private let recoveryFooter = UIView()
+    private lazy var recoveryButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setAttributedTitle(
+            NSAttributedString(
+                string: String(localized: "Install Using Recovery Mode"),
+                attributes: [
+                    .font: UIFont.footnote,
+                    .foregroundColor: UIColor.buttonNormal,
+                    .underlineStyle: NSUnderlineStyle.single.rawValue,
+                ]
+            ),
+            for: .normal
+        )
+        button.titleLabel?.numberOfLines = 0
+        button.titleLabel?.textAlignment = .center
+        button.addAction(UIAction { [weak self] _ in self?.confirmRecoveryInstallation() }, for: .touchUpInside)
+        return button
+    }()
 
-    init(closesSheet: Bool) {
+    init(closesSheet: Bool, recoveryPackage: Package? = nil) {
         self.closesSheet = closesSheet
+        self.recoveryPackage = recoveryPackage
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -28,7 +53,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "Unable to Queue Packages")
+        title = String(localized: "Unable to Prepare Installation")
         navigationItem.largeTitleDisplayMode = .never
         // the sheet's ground, whether the page is its root or pushed in it
         view.backgroundColor = .groupedBackground
@@ -67,11 +92,18 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         tableView.allowsSelection = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "requirement")
         view.addSubview(tableView)
+        let tableBottom: NSLayoutYAxisAnchor
+        if recoveryPackage != nil {
+            configureRecoveryFooter()
+            tableBottom = recoveryFooter.topAnchor
+        } else {
+            tableBottom = view.bottomAnchor
+        }
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tableView.bottomAnchor.constraint(equalTo: tableBottom),
         ])
         dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, check in
             let cell = table.dequeueReusableCell(withIdentifier: "requirement", for: indexPath)
@@ -94,6 +126,23 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
             cell.accessibilityLabel = [check.requirement, detail].filter { !$0.isEmpty }.joined(separator: ". ")
             return cell
         }
+    }
+
+    private func configureRecoveryFooter() {
+        recoveryFooter.translatesAutoresizingMaskIntoConstraints = false
+        recoveryFooter.backgroundColor = .groupedBackground
+        view.addSubview(recoveryFooter)
+        recoveryFooter.addSubview(recoveryButton)
+        NSLayoutConstraint.activate([
+            recoveryFooter.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            recoveryFooter.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            recoveryFooter.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            recoveryButton.topAnchor.constraint(equalTo: recoveryFooter.topAnchor, constant: 8),
+            recoveryButton.leadingAnchor.constraint(equalTo: recoveryFooter.leadingAnchor, constant: 20),
+            recoveryButton.trailingAnchor.constraint(equalTo: recoveryFooter.trailingAnchor, constant: -20),
+            recoveryButton.bottomAnchor.constraint(equalTo: recoveryFooter.bottomAnchor, constant: -8),
+            recoveryButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
+        ])
     }
 
     private func applyReport() {
@@ -127,5 +176,51 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         )
         controller.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
         present(controller, animated: true)
+    }
+
+    private func confirmRecoveryInstallation() {
+        guard recoveryPackage != nil else { return }
+        presentConfirmation(
+            title: "Install in Recovery Mode?",
+            message: "Recovery Mode installs only this package without checking its dependencies or conflicts. Maintainer scripts such as postinst and postrm still run, but their failures are ignored so installation can continue on a best-effort basis. Use it only when the system can no longer complete a normal installation. The package may not work, and the system may become less stable.",
+            confirmTitle: "Install Anyway",
+            destructive: true
+        ) { [weak self] in
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            self?.prepareRecoveryInstallation()
+        }
+    }
+
+    private func prepareRecoveryInstallation() {
+        guard let recoveryPackage else { return }
+        let progress = progressAlert(
+            title: "Preparing…",
+            message: "Checking packages…"
+        )
+        Task { [weak self] in
+            guard let self else { return }
+            await withCheckedContinuation { ready in
+                present(progress, animated: true) { ready.resume() }
+            }
+            let payload = await TaskProcessor.shared.createRecoveryOperationPayload(package: recoveryPackage)
+            await progress.dismissFinishing(animated: true)
+            guard let payload else {
+                let report = PackageActionReport.shared.allAvailable()
+                presentNotice(
+                    title: "Unable to Prepare Installation",
+                    message: report.isEmpty
+                        ? String(localized: "Unable to prepare the installation. Try again.")
+                        : report
+                )
+                return
+            }
+            let sheet = navigationController ?? self
+            guard let host = sheet.presentingViewController else { return }
+            let console = UINavigationController(rootViewController: OperationController(operation: payload))
+            console.modalPresentationStyle = traitCollection.userInterfaceIdiom == .pad ? .formSheet : .fullScreen
+            await sheet.dismissFinishing(animated: true)
+            guard host.view.window != nil else { return }
+            host.present(console, animated: true)
+        }
     }
 }

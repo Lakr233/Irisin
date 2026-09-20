@@ -11,12 +11,14 @@ extension NativePackageTransaction {
         emit(.package(.unpacking, identity: identity, version: archive.version))
         let old = database.records[identity]
         var conffiles = try NativeConffiles(status: old?["conffiles"])
-        try NativePackageRelations.dependencies(
-            archive.fields,
-            kinds: [.preDepends],
-            available: database.predependencyWitnesses,
-            unconfigured: true
-        )
+        if !recoveryMode {
+            try NativePackageRelations.dependencies(
+                archive.fields,
+                kinds: [.preDepends],
+                available: database.predependencyWitnesses,
+                unconfigured: true
+            )
+        }
         let declarations = try NativeConffiles.declarations(archive.controlText("conffiles"))
         for entry in archive.package.entries where declarations.remove.contains("/" + entry.path) {
             throw NativePackageFailure("Obsolete conffile is still in data archive: /\(entry.path)")

@@ -54,4 +54,27 @@ struct ExplicitInstallTests {
             )
         }
     }
+
+    @Test
+    func recoveryInstallationContainsOnlyTheSelectedPackage() {
+        let installed = pkg("resident", installed: true)
+        let recovery = pkg("recovery", "2", [
+            "depends": "missing",
+            "conflicts": installed.identity,
+        ])
+        let snapshot = ResolutionSnapshot(
+            packages: [],
+            installed: [installed],
+            architecture: "arm64",
+            statusDigest: "status"
+        )
+
+        let plan = ResolutionPlan.recoveryInstallation(of: recovery, in: snapshot)
+
+        #expect(plan.install == [recovery])
+        #expect(plan.remove.isEmpty)
+        #expect(plan.stages == [.unpack([recovery.identity]), .configure([recovery.identity])])
+        #expect(plan.finalPackages == [installed, recovery])
+        #expect(plan.recoveryMode)
+    }
 }

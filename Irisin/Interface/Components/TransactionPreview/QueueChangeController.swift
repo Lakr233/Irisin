@@ -94,16 +94,37 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     static func show(_ request: Request, from host: UIViewController) async {
         let controller = QueueChangeController(request: request)
         await controller.prepare(within: .milliseconds(200))
-        let root = controller.failure.map { report(of: $0, alone: true) } ?? controller
+        let root = controller.failure.map {
+            report(of: $0, alone: true, recoveryPackage: controller.recoveryPackage)
+        } ?? controller
         host.present(UINavigationController.halfSheet(root: root), animated: true)
     }
 
     /// `alone` when the report is all the sheet holds, and so closes it.
-    private static func report(of failure: ResolutionFailure, alone: Bool) -> UIViewController {
+    private static func report(
+        of failure: ResolutionFailure,
+        alone: Bool,
+        recoveryPackage: Package? = nil
+    ) -> UIViewController {
         // the page reads the report as it opens: this failure, and only it
         PackageActionReport.shared.clear()
         PackageActionReport.shared.record(failure.message, checks: failure.checks)
-        return PackageDiagnosticController(closesSheet: alone)
+        return PackageDiagnosticController(
+            closesSheet: alone,
+            recoveryPackage: recoveryPackage
+        )
+    }
+
+    /// Recovery Mode is for one archive the user already has, never a
+    /// repository candidate or a mixed queue whose consequences are unclear.
+    private var recoveryPackage: Package? {
+        guard case let .actions(actions) = request,
+              actions.count == 1,
+              case let .install(package) = actions[0],
+              package.localFileURL != nil,
+              package.supports(anyOf: AptEnvironment.current.installableArchitectures)
+        else { return nil }
+        return package
     }
 
     init(request: Request) {
@@ -217,7 +238,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                     // no answer was ever shown: the report takes the sheet over
                     subscriptions.removeAll()
                     navigationController?.setViewControllers(
-                        [Self.report(of: failure, alone: true)],
+                        [Self.report(of: failure, alone: true, recoveryPackage: recoveryPackage)],
                         animated: true
                     )
                     return

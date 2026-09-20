@@ -87,7 +87,8 @@ final class TaskProcessor {
                 // read now, not when the plan was solved: a switch turned
                 // off since then has the helper refuse the removal
                 allowSystemRemoval: TaskManager.shared.allowSystemRemoval,
-                ignoreScriptFailures: ignoreScriptFailures
+                ignoreScriptFailures: ignoreScriptFailures,
+                recoveryMode: plan.recoveryMode
             )
             try InstallerJob.transaction(transaction).validate()
             return OperationPayload(plan: plan, transaction: transaction)
@@ -106,6 +107,37 @@ final class TaskProcessor {
                     ?? String(localized: "Unable to prepare the installation. Try again.")
             )
             Dog.shared.join(self, "Cannot prepare transaction: \(error)", level: .error)
+            return nil
+        }
+    }
+
+    /// Stages one local package without asking the resolver to choose or
+    /// reject anything around it. The installer still validates the archive,
+    /// adapts its architecture when supported and protects file ownership;
+    /// package relationships are bypassed and maintainer-script failures are
+    /// tolerated by the resulting transaction.
+    func createRecoveryOperationPayload(package: Package) async -> OperationPayload? {
+        guard package.localFileURL != nil,
+              package.supports(anyOf: AptEnvironment.current.installableArchitectures)
+        else {
+            PackageActionReport.shared.clear()
+            PackageActionReport.shared.record(
+                String(localized: "This package cannot be installed in Recovery Mode on this system.")
+            )
+            return nil
+        }
+        do {
+            let plan = try await Self.recoveryPlan(
+                for: package,
+                index: PackageCenter.default.index
+            )
+            return await createOperationPayload(plan: plan)
+        } catch {
+            PackageActionReport.shared.clear()
+            PackageActionReport.shared.record(
+                String(localized: "Unable to prepare the installation. Try again.")
+            )
+            Dog.shared.join(self, "Cannot prepare recovery transaction: \(error)", level: .error)
             return nil
         }
     }
@@ -162,6 +194,14 @@ final class TaskProcessor {
             ))
         }
         return result
+    }
+
+    @concurrent
+    private nonisolated static func recoveryPlan(
+        for package: Package,
+        index: PackageIndex
+    ) async throws -> ResolutionPlan {
+        .recoveryInstallation(of: package, in: try index.resolutionSnapshot())
     }
 
     /// Runs the whole transaction through `irisin-install` as root. The
