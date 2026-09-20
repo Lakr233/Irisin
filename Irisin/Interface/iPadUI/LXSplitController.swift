@@ -39,11 +39,8 @@ class LXSplitController: UISplitViewController {
     }
 
     func makeViewControllers() {
-        let notificationToken = UUID().uuidString
-        let split = panel
-        split.notificationToken = notificationToken
-        navigator.notificationToken = notificationToken
-        let sidebar = UINavigationController(rootViewController: split)
+        panel.dashNavCard.onSelect = { [navigator] page in navigator.show(page) }
+        let sidebar = UINavigationController(rootViewController: panel)
         sidebar.navigationBar.prefersLargeTitles = true
         setViewController(sidebar, for: .primary)
         // A column that is not a navigation controller gets one from UIKit,
@@ -66,7 +63,7 @@ class LXSplitController: UISplitViewController {
 
     /// The Queue card, as a tap on it.
     func showQueue() {
-        panel.dashNavCard.openQueue()
+        panel.dashNavCard.open(.queue)
     }
 
     private var isSidebarHidden = false

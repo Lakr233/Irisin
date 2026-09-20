@@ -32,10 +32,6 @@ class LXSplitPanelController: UIViewController {
 
     private var subscriptions = Set<AnyCancellable>()
 
-    var notificationToken: String = "" {
-        didSet { dashNavCard.notificationToken = notificationToken }
-    }
-
     let dashNavCard = DashNavCard()
 
     private let refreshControl = SettlingRefreshControl()

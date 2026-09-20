@@ -38,7 +38,8 @@ class DashNavCard: UIView {
         defaultSelected: false
     )
 
-    var notificationToken: String?
+    /// A card was tapped: the detail column shows its page.
+    var onSelect: ((DetailPage) -> Void)?
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
@@ -49,10 +50,7 @@ class DashNavCard: UIView {
         super.init(frame: CGRect())
 
         addSubview(dashCard)
-        dashCard.cardClosure = { [weak self] in
-            self?.selectDash()
-            NotificationCenter.default.post(name: .LXMainControllerSwitchDashboard, object: self?.notificationToken)
-        }
+        dashCard.cardClosure = { [weak self] in self?.open(.dashboard) }
         dashCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.top).offset(8)
             x.leading.equalTo(self.snp.leading)
@@ -61,10 +59,7 @@ class DashNavCard: UIView {
         }
 
         addSubview(settCard)
-        settCard.cardClosure = { [weak self] in
-            self?.selectSetting()
-            NotificationCenter.default.post(name: .LXMainControllerSwitchSettings, object: self?.notificationToken)
-        }
+        settCard.cardClosure = { [weak self] in self?.open(.settings) }
         settCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.top).offset(8)
             x.leading.equalTo(self.snp.centerX).offset(8)
@@ -73,7 +68,7 @@ class DashNavCard: UIView {
         }
 
         addSubview(queueCard)
-        queueCard.cardClosure = { [weak self] in self?.openQueue() }
+        queueCard.cardClosure = { [weak self] in self?.open(.queue) }
         queueCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.centerY).offset(8)
             x.leading.equalTo(self.snp.leading)
@@ -82,10 +77,7 @@ class DashNavCard: UIView {
         }
 
         addSubview(instCard)
-        instCard.cardClosure = { [weak self] in
-            self?.selectInstalled()
-            NotificationCenter.default.post(name: .LXMainControllerSwitchInstalled, object: self?.notificationToken)
-        }
+        instCard.cardClosure = { [weak self] in self?.open(.installed) }
         instCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.centerY).offset(8)
             x.leading.equalTo(self.snp.centerX).offset(8)
@@ -109,26 +101,15 @@ class DashNavCard: UIView {
         updateAvailableUpdateBadge()
     }
 
-    func selectDash() {
-        select(dashCard)
-    }
-
-    func selectSetting() {
-        select(settCard)
-    }
-
-    func selectQueue() {
-        select(queueCard)
-    }
-
-    /// What a tap on the Queue card does.
-    func openQueue() {
-        selectQueue()
-        NotificationCenter.default.post(name: .LXMainControllerSwitchQueue, object: notificationToken)
-    }
-
-    func selectInstalled() {
-        select(instCard)
+    /// What a tap on a card does.
+    func open(_ page: DetailPage) {
+        switch page {
+        case .dashboard: select(dashCard)
+        case .settings: select(settCard)
+        case .installed: select(instCard)
+        case .queue: select(queueCard)
+        }
+        onSelect?(page)
     }
 
     private func select(_ card: DashNavCardInstance) {
