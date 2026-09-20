@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finding and Installing Packages.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="Search for a package, read its page, pick a version, review the change in the queue, then run it with Execute. Removing and downgrading work the same way.">
+<meta property="og:title" content="Finding and Installing Packages.">
+<meta property="og:description" content="Search for a package, read its page, pick a version, review the change in the queue, then run it with Execute. Removing and downgrading work the same way.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/packages/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 3 of 8</span></p>
+	<h1 class="page-title" lang="en">Finding and Installing Packages</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>After this chapter you can find a package, install it or remove it, and know that <span class="editorial-mark">nothing on your device changes until you tap <span class="ui">Execute</span></span>. Every request you make, from any page, first becomes a change you review and then waits in the queue. Removing, updating, and downgrading a package follow the same path as installing one.</p>
+
+<section class="chapter" id="search"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="27" cy="26" r="16"/><path d="M38 38L55 56M41 36L57 52"/><path class="icon-detail" d="M17 24Q19 16 28 15"/></svg><span class="section-title-mark">Search</span></h2>
+<p>Open the <span class="ui">Search</span> tab. Before you type, the page is empty and says <span class="ui">Search packages, repositories and authors.</span></p>
+<p>Results arrive as you type, in up to four groups, always in this order: <span class="ui">Installed</span>, <span class="ui">Packages</span>, <span class="ui">Repositories</span>, and <span class="ui">Authors</span>. A group with no match is not shown. <span class="ui">Installed</span> holds what is already on your device, and <span class="ui">Packages</span> holds what your repositories offer.</p>
+<p>A package matches when your text appears anywhere in its <span class="editorial-mark">name, author, section, description, or identifier</span>. Packages whose name or identifier starts with your text come first, and among those the shorter names lead. The second line of a row is the package's description, preceded by its repository's name in brackets. The third line shows where your text matched, with the match highlighted. A paid package's name is tinted. A repository matches on its address, its name, or its description.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/packages-search-light.png" alt="The Search tab with open typed in the search field. Results are grouped under Installed and Packages, and each package row's third line highlights the matched text." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/packages-search-dark.png" alt="The Search tab with open typed in the search field. Results are grouped under Installed and Packages, and each package row's third line highlights the matched text." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Search results, grouped. The third line shows where your text matched.</figcaption></figure>
+<p>Tap a package to open its page, a repository to open that repository, and an author's row, marked <span class="ui">Packages by this author</span>, to list that author's packages by name. Touch and hold a package row to preview its page and open its menu, the same one described under <a href="#the-package-menu">The Package Menu</a>. Repository and author rows have no menu.</p>
+<p>When nothing matches, one row says <span class="ui">No results found</span> and <span class="ui">Try a different search or refresh your repositories.</span> A package marked <span class="ui">No longer available in this repository</span> is one Irisin remembers from before its repository stopped offering it.</p>
+<p>You can also add a repository from here. Type an address that begins with <code>http</code> and leave the search field, and Irisin offers to add it as a repository, unless you have added it already. See <a href="../repositories/#add-a-repository">Add a Repository</a>.</p>
+</section>
+
+<section class="chapter" id="a-packages-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 7L55 19L54 45L32 58L9 45L10 18Z"/><path d="M10 18L32 31L55 19M32 31L32 58"/><path class="icon-detail" d="M21 12L43 25L43 34"/></svg><span class="section-title-mark">A Package's Page</span></h2>
+<p>A package's page opens with its artwork. Below that is a banner with the package's icon, its name, its version and download size, and one button. The description the repository publishes follows. The last line of the page names what the package was built for, such as <span class="ui" data-key="Architecture: %@">Architecture: iphoneos-arm64</span>.</p>
+<p>The button names the next thing you can do with this package. Most of its labels are shown in capitals.</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">Button</th><th scope="col">When You See It</th><th scope="col">What a Tap Does</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><span class="ui">Install</span> or <span class="ui">Buy</span></th><td data-label="When You See It">The package is not installed. A paid package reads <span class="ui">Buy</span>.</td><td data-label="What a Tap Does">Asks to install it.</td></tr>
+		<tr><th scope="row"><span class="ui">Update</span></th><td data-label="When You See It">The package is installed and this page shows a newer version.</td><td data-label="What a Tap Does">Asks to update it.</td></tr>
+		<tr><th scope="row"><span class="ui">Actions</span></th><td data-label="When You See It">The package is installed and there is nothing quick to do.</td><td data-label="What a Tap Does">Opens the menu.</td></tr>
+		<tr><th scope="row"><span class="ui">Open Queue</span></th><td data-label="When You See It">The package is already in the queue.</td><td data-label="What a Tap Does">Opens the queue.</td></tr>
+		<tr><th scope="row"><span class="ui">Replace</span></th><td data-label="When You See It">The package is in the queue as a different version from the one on this page.</td><td data-label="What a Tap Does">Asks to queue this version in its place.</td></tr>
+		<tr><th scope="row"><span class="ui">Unsupported</span></th><td data-label="When You See It">The package is not built for this device.</td><td data-label="What a Tap Does">Queues nothing, and explains why.</td></tr>
+	</tbody>
+</table></div>
+<p>The explanation behind <span class="ui">Unsupported</span> is titled <span class="ui">Unsupported Architecture</span> and reads, for example, <span class="ui" data-key="This package is built for %@. This device uses %@. Choose a compatible package.">This package is built for iphoneos-arm64. This device uses iphoneos-arm64e. Choose a compatible package.</span> On roothide, a rootless package is not unsupported: see <a href="../compatibility-mode/">Compatibility Mode</a>.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/packages-page-light.png" alt="A package's page: artwork, then a banner with the icon, name, version and size and an INSTALL button, then the description." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/packages-page-dark.png" alt="A package's page: artwork, then a banner with the icon, name, version and size and an INSTALL button, then the description." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>A package's page. The button names the next thing you can do.</figcaption></figure>
+<p><span class="editorial-mark">A tap never installs.</span> It opens the <span class="ui">Queue Changes</span> sheet, which shows what the request would do and waits for you to confirm. See <a href="#the-queue">The Queue</a>.</p>
+<p>When you open a page from <span class="ui">Installed</span>, Irisin shows the repository's record for that package where there is one: the newest update on offer, or else the repository it was installed from. That is why the page can offer <span class="ui">Update</span> or <span class="ui">Reinstall</span> for something already on your device.</p>
+<h3>Open a .deb File</h3>
+<ol>
+	<li>In Files, open a <code>.deb</code> with Irisin. Irisin works on a copy. Your file stays where it is.</li>
+	<li>Wait while Irisin shows <span class="ui">Unpacking Package…</span></li>
+	<li>The package's page opens. Its button reads <span class="ui">Install</span> and its menu offers <span class="ui">Direct Install</span>. Either goes through the same <span class="ui">Queue Changes</span> sheet as any other request.</li>
+</ol>
+<p>If the file cannot be read as a package, Irisin says <span class="ui">This package could not be verified. Choose a different file and try again.</span></p>
+</section>
+
+<section class="chapter" id="the-package-menu"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M9 25L43 26Q47 26 47 30L46 53Q46 57 42 57L10 56Q6 56 7 52L7 29Q7 25 9 25Z"/><path d="M14 34L39 35M14 42L35 42M14 49L38 50"/><circle cx="47" cy="14" r="10"/><path class="icon-detail" d="M42 14L43 14M47 14L48 14M52 14L53 14"/></svg><span class="section-title-mark">The Package Menu</span></h2>
+<p>One menu holds everything you can do with a package. It opens from three places: touch and hold the button on the package's page, tap the … button in that page's bar, or touch and hold a package row in any list.</p>
+<p>The menu shows only what applies right now. If the item you want is missing, this list says why.</p>
+<ul>
+	<li><span class="ui">Install</span>: the package is not installed, is built for this device, and has a download.</li>
+	<li><span class="ui">Update</span>: the version on the page is newer than the installed one, and you have not blocked this package's updates.</li>
+	<li><span class="ui">Downgrade</span>, in red: the version on the page is older than the installed one.</li>
+	<li><span class="ui">Remove</span>, in red: the package is installed.</li>
+	<li><span class="ui">Remove from Queue</span>: the package is in the queue.</li>
+	<li><span class="ui">Replace</span>: the package is in the queue as a different version, and the version on the page can be installed.</li>
+	<li><span class="ui">Direct Install</span>: the page came from a <code>.deb</code> you opened, and that package is not installed.</li>
+	<li><span class="ui">Choose Version</span>: always.</li>
+	<li><span class="ui">Translate</span>: on a package's page only, not in the menu of a row. See <a href="../translation/#the-translate-menu">The Translate Menu</a>.</li>
+	<li><span class="ui">Advanced</span>: a submenu at the end, with these items.
+		<ul>
+			<li><span class="ui">Reinstall</span>: the version on the page is the installed one.</li>
+			<li><span class="ui">Block Update</span> or <span class="ui">Unblock Update</span>: one or the other. Either takes effect at once. See <a href="../updates/#block-an-update">Block an Update</a>.</li>
+			<li><span class="ui">Download Archive</span>: the package comes from a repository and has a download.</li>
+			<li><span class="ui">View Package Info</span>: opens <span class="ui">Package Info</span>, a read-only list of every field the repository published for this package.</li>
+			<li><span class="ui">Reveal Files</span>: installed packages only. It lists the files the package placed on your device.</li>
+		</ul>
+	</li>
+</ul>
+<p><span class="editorial-mark">While a package is in the queue, none of <span class="ui">Install</span>, <span class="ui">Update</span>, <span class="ui">Reinstall</span>, <span class="ui">Downgrade</span>, <span class="ui">Remove</span>, or <span class="ui">Direct Install</span> is offered.</span> Choose <span class="ui">Remove from Queue</span> first, then ask again.</p>
+<h3>When Irisin Recommends Another</h3>
+<p>Before the sheet opens for an install request, Irisin compares what your other repositories offer for the same package, and may stop you with one of two alerts.</p>
+<ul>
+	<li><span class="ui">Newer Version Available</span>: another repository has a newer version. The alert reads, for example, <span class="ui" data-key="You selected version %@. %@ offers version %@.">You selected version 1.0. Procursus offers version 1.1.</span> It never appears for a package whose updates you blocked.</li>
+	<li><span class="ui">Better Package Available</span>: on roothide, the version you chose would install in compatibility mode, and another repository has one built for this system.</li>
+</ul>
+<p>Both alerts have three buttons. <span class="ui">Select Recommended</span> opens the recommended package's page and <span class="editorial-mark">queues nothing; ask again there</span>. The second button goes ahead with what you chose, and is named after your request: <span class="ui">Install Anyway</span>, <span class="ui">Update Anyway</span>, <span class="ui">Downgrade Anyway</span>, <span class="ui">Reinstall Anyway</span>, or <span class="ui">Replace Anyway</span>. <span class="ui">Cancel</span> drops the request.</p>
+<p>When a request names a package with no version that can be installed, Irisin stops with <span class="ui">Unable to Load Package</span> and the message <span class="ui">This package could not be loaded. Try a different repository.</span></p>
+</section>
+
+<section class="chapter" id="choose-version"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M8 31L30 8L54 9L55 32L32 56Z"/><circle cx="45" cy="18" r="3"/><path class="icon-detail" d="M21 33L28 40L40 27"/></svg><span class="section-title-mark">Choose Version</span></h2>
+<ol>
+	<li>Open the package's menu and choose <span class="ui">Choose Version</span>.</li>
+	<li>A sheet lists every version on offer, one group per repository. The version the page is showing has a checkmark. <span class="ui">Cancel</span> closes the sheet with nothing changed.</li>
+	<li>Tap a version. The sheet closes and the page shows that version. If you opened the menu from a row in a list, the version opens on a page of its own.</li>
+	<li>Now use the page's button or menu to ask for it.</li>
+</ol>
+<p><span class="editorial-mark">Choosing a version queues nothing.</span> It only changes which version the page, its button, and its menu refer to.</p>
+<p>A version older than the installed one shows <span class="ui">Downgrade</span> in the menu, in red. The sheet lists only versions a repository still offers, so an older version that every repository has dropped cannot be chosen here.</p>
+<p>When the page is showing a <code>.deb</code> you opened, or a package that only your device has a record of, the sheet adds the header <span class="ui">Current Selection: Local Version</span> above the repositories, and no version has a checkmark.</p>
+<p>After a downgrade, the newer version is an update again. To keep the older one, see <a href="../updates/#block-an-update">Block an Update</a>.</p>
+</section>
+
+<section class="chapter" id="download-archive"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 7L33 38M20 27L33 40L45 26"/><path d="M8 38L9 52Q9 56 14 56L51 55Q56 55 56 50L55 37"/><path class="icon-detail" d="M20 48L45 48"/></svg><span class="section-title-mark">Download Archive</span></h2>
+<p>This saves a package's <code>.deb</code> file without installing it.</p>
+<ol>
+	<li>Open the package's menu, then <span class="ui">Advanced</span>, then <span class="ui">Download Archive</span>.</li>
+	<li>A card appears over the page with the package's name, a progress bar, and a status line that reads <span class="ui">Preparing…</span>, then <span class="ui">Downloading…</span>, then <span class="ui">Verifying…</span> Under the bar, a count such as <span class="ui" data-key="%@ of %@">1.2 MB of 3.4 MB</span> shows how much has arrived. A file Irisin has already downloaded finishes at once.</li>
+	<li>The share sheet opens with the file, named <code>&lt;identifier&gt;_&lt;version&gt;_&lt;architecture&gt;.deb</code>. Save it or send it from there.</li>
+</ol>
+<p>For a paid package, Irisin checks your purchase first, and the card opens on <span class="ui">Checking Purchase…</span> If you are not signed in to the repository that sells it, sign-in starts instead and nothing is downloaded. <span class="ui">Cancel</span> on the card stops the download and closes it. If the download fails, the card closes and Irisin reports <span class="ui">Download Failed</span> with <span class="ui">The download was interrupted.</span></p>
+<p><span class="ui">Download Archive</span> is offered only for a repository's package that has a download. A <code>.deb</code> you opened is already a file, so its menu does not have the item.</p>
+</section>
+
+<section class="chapter" id="the-queue"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M7 36L20 36L24 44L41 44L45 35L57 36L56 54L8 55Z"/><path d="M7 36L16 13L49 12L57 36"/><path class="icon-detail" d="M22 21L43 21M20 28L45 28"/></svg><span class="section-title-mark">The Queue</span></h2>
+<p>Every request you make, whether to install, update, downgrade, reinstall, or remove, goes through one sheet. What you confirm there <span class="editorial-mark">waits in the queue until you run it</span>.</p>
+<figure class="sk" id="figure-ch3"><div class="sk-paper"><ol class="sk-steps">
+	<li><strong><span class="ui">Install</span></strong><span>on the package's page</span></li>
+	<li><strong><span class="ui">Confirm</span></strong><span>the <span class="ui">Queue Changes</span> sheet</span></li>
+	<li><strong><span class="ui">Queue</span></strong><span>the tab or floating bar</span></li>
+	<li><strong><span class="ui">Execute</span></strong><span>the queue's one button</span><span class="sk-if">or <span class="ui">Patch</span> first</span></li>
+	<li class="sk-goal"><strong><span class="ui">Installing</span></strong><span>the operation page</span><em class="sk-ok"><span class="ui">Completed</span></em></li>
+</ol><p class="sk-foot">The downloads start at <span class="ui">Confirm</span> and run while the queue waits.</p></div><figcaption>From a package's page to a finished install. On roothide, the queue's one button reads <span class="ui">Patch</span> instead of <span class="ui">Execute</span> while a package in it still has to be converted.</figcaption></figure>
+<h3>The Queue Changes Sheet</h3>
+<p>The sheet is titled <span class="ui">Queue Changes</span>. It lists what your request would do, in groups, in this order: <span class="ui">Install</span>, <span class="ui">Update</span>, <span class="ui">Downgrade</span>, <span class="ui">Remove</span>, <span class="ui">Reinstall</span>. Within each kind, what you asked for comes first. What the plan brings along follows in a group of its own, such as <span class="ui" data-key="%@ (Dependencies)">Install (Dependencies)</span>.</p>
+<p>A row shows the package's name and, at its right edge, the version: <code>1.1</code> for an install or a reinstall, <code>1.0 → 1.1</code> for an update or a downgrade, and the installed version for a removal. Under the name it says how much is left to download (<span class="ui" data-key="%@ to download">2.1 MB to download</span>, left out when the file is already on your device), how much room it takes (<span class="ui" data-key="%@ on disk">6.4 MB on disk</span>), and, for a package you did not ask for, why it is there: <span class="ui" data-key="Required by %@">Required by OpenSSH</span>. A removal's name is red and struck through. A new install's name is green.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/packages-queue-changes-light.png" alt="The Queue Changes sheet with an Install group, an Install (Dependencies) group, each row's version and sizes, a footer, and the Confirm button." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/packages-queue-changes-dark.png" alt="The Queue Changes sheet with an Install group, an Install (Dependencies) group, each row's version and sizes, a footer, and the Confirm button." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Queue Changes shows what you asked for, then what it brings along.</figcaption></figure>
+<p><span class="ui">No Longer Needed</span> appears when the plan removes something and leaves behind dependencies that nothing else needs. Each has a checkbox, and <span class="editorial-mark">none is checked</span>, so they stay installed unless you say otherwise. Check one to remove it too, and the sheet works out the plan again. A grayed row cannot be checked yet: something you left unchecked still needs it, and the row names it.</p>
+<p><span class="ui">No Longer Queued</span> lists, grayed, what this change takes back out of the queue.</p>
+<p>When the change adds anything, the sheet's footer says <span class="ui">After you confirm, the queue prepares everything the install needs. Finish installing from the Queue page.</span> Tap <span class="ui">Confirm</span> to add exactly what the sheet shows. The sheet closes, a banner reports <span class="ui">Added to Queue</span>, and you stay on the page you were on. <span class="ui">Confirm</span> does not open the queue and <span class="editorial-mark">installs nothing</span>. To leave without changing anything, pull the sheet down. It has no cancel button.</p>
+<p><span class="ui">Open Queue</span> takes the place of <span class="ui">Confirm</span> when the change alters nothing. The sheet then holds one row, <span class="ui">Already in the queue</span> or <span class="ui">No changes</span>.</p>
+<p>If the change cannot be planned, there is no list. The sheet is a report titled <span class="ui">Unable to Prepare Installation</span>. See <a href="../troubleshooting/#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a>.</p>
+<p>On roothide, when the change installs a rootless package, <span class="ui">Confirm</span> first asks under the title <span class="ui">Compatibility Mode</span>, with <span class="ui">Install Anyway</span> and <span class="ui">Cancel</span>. The sheet's footer warns that the queue may change when the package is patched. See <a href="../compatibility-mode/#the-warning">The Warning</a>.</p>
+<h3>The Floating Bar</h3>
+<p>While there is a queue, a bar reading <span class="ui" data-key="Packages in Queue: %lld">Packages in Queue: 3</span> floats at the bottom of every page except the queue's own, clear of the tab bar. The number counts the packages the queue installs plus the ones it removes. Tap the bar to open the queue. The <span class="ui">Queue</span> tab is there while there is a queue, and carries the same number as its badge.</p>
+<h3>The Queue Page</h3>
+<p>Open the queue from the <span class="ui">Queue</span> tab or the floating bar. The page reads like the sheet: the same groups, requests ahead of their dependencies, versions and sizes on each row. Downloads start the moment you confirm, whether or not this page is open. Each row fills with tint from its leading edge as its file arrives. Its right edge shows a spinner, then a percentage, then <span class="ui">Downloaded</span>, or <span class="ui">Failed</span> in red. Removals and <code>.deb</code> files you opened have nothing to download and show nothing there.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/packages-queue-light.png" alt="The Queue page with rows partly downloaded, a percentage or Downloaded at each row's right edge, and the Execute button in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/packages-queue-dark.png" alt="The Queue page with rows partly downloaded, a percentage or Downloaded at each row's right edge, and the Execute button in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The queue downloads while you decide. Execute runs it.</figcaption></figure>
+<p>Notices appear at the end of the list. <span class="ui" data-key="%@: kept at the current version by another package or a blocked update.">OpenSSH: kept at the current version by another package or a blocked update.</span> names an update the plan could not take. <span class="ui">Irisin will restart when this finishes.</span> appears when the queue updates Irisin itself.</p>
+<p>To take one package out, swipe its row left and tap <span class="ui">Remove from Queue</span>. This goes through the same sheet, and removing a dependency also takes out the packages that need it. The … menu has two items. <span class="ui">Export All Packages</span> shares the downloaded files. It is grayed with <span class="ui">Available once the downloads finish.</span> while a file is missing, or <span class="ui">The queue installs nothing.</span> when there is nothing to export. <span class="ui">Clear Queue</span> empties the queue and cancels its downloads.</p>
+<p>A red row at the top of the list means the packages on your device changed, so the queue can no longer be planned as it stands. The row gives the reason. The action button is disabled until you change the queue, by taking a package out of it or clearing it.</p>
+</section>
+
+<section class="chapter" id="patch-and-execute"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="31" cy="33" r="23"/><path d="M25 21L45 33L24 45Z"/><path class="icon-detail" d="M53 9L57 5M57 17L62 16"/></svg><span class="section-title-mark">Patch and Execute</span></h2>
+<p>The Queue page has one action button in its bar, and <span class="editorial-mark">its label tells you what is next</span>.</p>
+<ul>
+	<li><span class="ui">Execute</span> runs the queue.</li>
+	<li><span class="ui">Patch</span> appears in its place, on roothide, while a rootless package in the queue still has to be converted.</li>
+	<li><span class="ui">Retry</span> appears after a download failed or the queue could not be prepared.</li>
+</ul>
+<p>You do not have to wait for the downloads. Tap the button before they finish and it runs when the last file arrives. A spinner takes the button's place while Irisin works.</p>
+<p><span class="ui">Patch</span> converts the packages and may change the queue. When it does, an alert titled <span class="ui">Queue Changed</span> says what left and what joined, and the button reads <span class="ui">Execute</span> from then on. See <a href="../compatibility-mode/#patch-before-execute">Patch Before Execute</a>.</p>
+<p><span class="ui">Execute</span> opens the operation page, titled <span class="ui">Installing</span>, full screen on iPhone. When the title becomes <span class="ui">Completed</span>, the queue is cleared. The floating bar goes away, and so does the <span class="ui">Queue</span> tab once you leave it. After a failure the queue stays, planned again against what the run left on your device, so you can run what remains. For a run that ends on <span class="ui">Failed</span>, see <a href="../troubleshooting/#read-the-operation-page">Read the Operation Page</a>.</p>
+<p>Three messages can stop the button before anything runs.</p>
+<ul>
+	<li><span class="ui">Another operation is already running. Wait for it to finish, then try again.</span> Only one operation runs at a time.</li>
+	<li><span class="ui">Unable to prepare this operation. Try again.</span> The button becomes <span class="ui">Retry</span>, which prepares the queue again.</li>
+	<li><span class="ui">The download was interrupted.</span> A failed download shows its reason as a red row, and <span class="ui">Retry</span> downloads again. For a purchased package the row adds <span class="ui">A purchased package's download link expires. Remove it from the queue and add it again.</span></li>
+</ul>
+</section>
+
+<section class="chapter" id="a-queued-packages-details"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M14 7L39 8L52 21L51 57L13 56Z"/><path d="M39 8L38 21L52 21"/><path d="M21 31L44 31M21 39L43 40M21 47L34 47"/><path class="icon-detail" d="M21 20L30 20"/></svg><span class="section-title-mark">A Queued Package's Details</span></h2>
+<p>Before you run the queue, you can read what each package will do to your device. A row on the Queue page opens once there is something to read: a removal at any time, anything else once its file is downloaded. A chevron at the row's right edge tells you it opens.</p>
+<p>The page is titled with the package's name and has two sections. <span class="ui">Files</span> has three rows, each with a count: <span class="ui">New Files</span>, <span class="ui">Replaced Files</span>, and <span class="ui">Deleted Files</span>. Tap a count above zero to read the paths. <span class="ui">Replaced Files</span> is tinted when it is above zero: <span class="editorial-mark">look there first</span>, because those are files already on your device that this package overwrites. When some of them belong to other installed packages, a line under the section names them: <span class="ui" data-key="%lld of the replaced files belong to %@.">2 of the replaced files belong to OpenSSH.</span></p>
+<p><span class="ui">Scripts</span> lists the package's scripts in the order they will run. Each is marked <span class="ui">Installed</span>, for a script of the version on your device, or <span class="ui">Incoming</span>, for one the new file brings. Tap a script to read it. One that is not text is marked as binary and does not open. The section's footer reads <span class="editorial-mark"><span class="ui">The scripts run as root, in this order.</span></span> A package with none says <span class="ui">No scripts</span>.</p>
+<p>This page is read-only. Nothing on it changes the queue, and you can run the queue without opening it. While Irisin reads the file, one row says <span class="ui">Reading the package…</span> If it cannot, a red row says <span class="ui">Unable to read this package.</span></p>
+</section>
+
+<section class="chapter" id="the-installed-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M22 30L28 37L39 24"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">The Installed Page</span></h2>
+<p>The <span class="ui">Installed</span> tab lists what is on your device. Under the list, a line such as <span class="ui" data-key="Packages: %lld · Sections: %lld">Packages: 212 · Sections: 14</span> counts what is shown after your search and filter.</p>
+<p>Swipe a row left for buttons that show a symbol and no name. They stand for whichever of <span class="ui">Remove from Queue</span>, <span class="ui">Remove</span>, <span class="ui">Update</span>, and <span class="ui">Reinstall</span> apply to that package, in that order from the edge. Each asks for the same thing as the matching menu item, and a long swipe alone asks for nothing. A window wide enough to show the packages in columns has no swipe buttons. Touch and hold a row for the full menu, in that layout and in every list. Tap it for the package's page.</p>
+<p>The … menu holds the rest.</p>
+<ul>
+	<li><span class="ui">Refresh</span> reads again what is installed, not your repositories, and confirms with <span class="ui">Installed packages refreshed</span>. Pulling the list down does the same.</li>
+	<li><span class="ui">Select</span> starts a selection, described below.</li>
+	<li><span class="ui">Block All Updates</span>, in red, is there only while an update is found. See <a href="../updates/#block-an-update">Block an Update</a>.</li>
+	<li><span class="ui">Export Package List</span> and <span class="ui">Export dpkg Status</span> share a record of what is installed. See <a href="../settings/#the-menu-and-exports">The Menu and Exports</a>.</li>
+	<li><span class="ui">Filter</span> narrows the list by <span class="ui">Section</span> or by <span class="ui">Author</span>.</li>
+	<li><span class="ui">Sort By</span> orders it by <span class="ui">Name</span> or by <span class="ui">Last Modified</span>, <span class="ui">Ascending</span> or <span class="ui">Descending</span>.</li>
+</ul>
+<p>To act on several packages at once:</p>
+<ol>
+	<li>Open the … menu and choose <span class="ui">Select</span>.</li>
+	<li>Check the rows you want.</li>
+	<li>Tap <span class="ui">Remove</span> or <span class="ui">Update</span> in the bar. One <span class="ui">Queue Changes</span> sheet covers the whole selection.</li>
+</ol>
+<p>Among several selected rows, one that is already in the queue is left out of a removal. Take it out of the queue first. A paid package is left out of an update, because its purchase is checked from its own page. When a batch leaves something out, Irisin says <span class="ui">Some Packages Left Out</span> and <span class="ui">Open their pages instead.</span></p>
+<p>When an update is found, the bar shows an up arrow, which opens <span class="ui">Updates</span>. Otherwise it shows a green checkmark, and a tap on it reports <span class="ui">All packages are up to date</span>. See <a href="../updates/">Updates</a>.</p>
+<p>If the wrong package is installed, <span class="ui">Remove</span> it here. If it is the right package in the wrong version, open its page, use <span class="ui">Choose Version</span>, pick the one you want, and then choose <span class="ui">Downgrade</span>. A package the system requires cannot be removed unless <span class="ui">Power Operations</span> is on. See <a href="../troubleshooting/#power-operations">Power Operations</a>.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../repositories/"><small>Previous · Chapter 2</small><strong>Repositories</strong></a>
+	<a class="pager-next" rel="next" href="../updates/"><small>Next · Chapter 4</small><strong>Updates</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="./" aria-current="page">Finding and Installing Packages</a><ol class="manual-nav-tasks">
+			<li><a href="#search" data-chapter-link="search">Search</a></li>
+			<li><a href="#a-packages-page" data-chapter-link="a-packages-page">A Package's Page</a></li>
+			<li><a href="#the-package-menu" data-chapter-link="the-package-menu">The Package Menu</a></li>
+			<li><a href="#choose-version" data-chapter-link="choose-version">Choose Version</a></li>
+			<li><a href="#download-archive" data-chapter-link="download-archive">Download Archive</a></li>
+			<li><a href="#the-queue" data-chapter-link="the-queue">The Queue</a></li>
+			<li><a href="#patch-and-execute" data-chapter-link="patch-and-execute">Patch and Execute</a></li>
+			<li><a href="#a-queued-packages-details" data-chapter-link="a-queued-packages-details">A Queued Package's Details</a></li>
+			<li><a href="#the-installed-page" data-chapter-link="the-installed-page">The Installed Page</a></li>
+		</ol></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

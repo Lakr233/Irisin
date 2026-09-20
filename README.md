@@ -15,7 +15,7 @@ Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 16 
 - Package pages that follow light and dark mode
 - Install any version a repository offers, and block updates for packages you want to keep as they are
 - Buy paid packages and sign in to your vendor accounts
-- On roothide, install simple rootless tweaks in Compatibility Mode
+- On roothide, install rootless packages in Compatibility Mode, which refuses a package it cannot convert safely
 - Rebuild icons and reload the Home Screen from Settings
 - Update Irisin from inside Irisin
 - Available in 13 languages
@@ -30,11 +30,11 @@ Download the package for your jailbreak from [Releases](https://github.com/Lakr2
 | roothide | `iphoneos-arm64e` |
 | rootless (`/var/jb`) | `iphoneos-arm64` |
 
-Irisin checks your jailbreak when it opens. If you installed the wrong package, Irisin tells you which one to install instead.
+Irisin checks your jailbreak when it opens. If you installed the wrong package, Irisin names the architecture it was built for and the one your device uses, asks you to install the matching package, and does not open.
 
 ## Report a Problem
 
-Choose Report an Issue in Settings, or [open an issue on GitHub](https://github.com/Lakr233/Irisin/issues/new). Search the existing issues first to avoid duplicates.
+Choose Report Issue in Settings, or [open an issue on GitHub](https://github.com/Lakr233/Irisin/issues/new). Search the existing issues first to avoid duplicates.
 
 If Irisin crashes or an installation fails, include the log from View Logs in Settings. The log may contain your searches and repository addresses, so review it before you share it.
 

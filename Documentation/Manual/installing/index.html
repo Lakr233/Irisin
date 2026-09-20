@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing Irisin.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="Pick the Irisin package that matches your bootstrap, walk through the Welcome page, and fix the Unsupported Architecture alert if you see it.">
+<meta property="og:title" content="Installing Irisin.">
+<meta property="og:description" content="Pick the Irisin package that matches your bootstrap, walk through the Welcome page, and fix the Unsupported Architecture alert if you see it.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/installing/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 1 of 8</span></p>
+	<h1 class="page-title" lang="en">Installing Irisin</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>This chapter gets Irisin onto your device and ready to use. You install it from <span class="editorial-mark">the right package</span> for your bootstrap, add your first repositories on the Welcome page, and learn how Irisin updates itself. If Irisin already stops at an alert when it opens, go straight to <a href="#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a>.</p>
+
+<section class="chapter" id="choose-your-package"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M9 22L32 12L55 21L54 46L32 56L10 47Z"/><path d="M9 22L32 32L55 21M32 32L32 56"/><path class="icon-detail" d="M20 17L43 27L43 36"/></svg><span class="section-title-mark">Choose Your Package</span></h2>
+<p>Irisin comes as two packages. They hold the same app and differ only in the bootstrap they are built for. The bootstrap is the layout your custom firmware uses for its files, and Irisin supports two: roothide and rootless. You pick <span class="editorial-mark">by bootstrap, not by device</span>. The model of your iPhone or iPad does not matter.</p>
+<ul>
+	<li>On roothide, install the package whose architecture is <code>iphoneos-arm64e</code>.</li>
+	<li>On rootless, install the package whose architecture is <code>iphoneos-arm64</code>. A rootless bootstrap keeps its files under <code>/var/jb</code> (Dopamine and palera1n in rootless mode are examples).</li>
+</ul>
+<p>The two architecture names look like processor names. Here they name the bootstrap, and they are the same two names that <span class="ui">Settings</span> and Irisin's alerts show.</p>
+<figure class="sk" id="figure-ch1"><div class="sk-paper"><div class="sk-choice">
+	<div class="sk-card">
+		<small>Your bootstrap</small>
+		<strong>roothide</strong>
+		<span>Install the file ending in</span>
+		<code>_iphoneos-arm64e.deb</code>
+	</div>
+	<div class="sk-card">
+		<small>Your bootstrap</small>
+		<strong>rootless</strong>
+		<span>Install the file ending in</span>
+		<code>_iphoneos-arm64.deb</code>
+	</div>
+</div><p class="sk-foot">The other file installs without error, and Irisin stops at <span class="ui">Unsupported Architecture</span> when it opens.</p></div><figcaption>Each bootstrap takes one of the two files, and the architecture at the end of the file name says which one.</figcaption></figure>
+<p>Both packages carry the same identifier, <code>wiki.qaq.irisin</code>, so only one of them can be installed at a time, and <span class="editorial-mark">installing the wrong one replaces the right one</span>. If you install Irisin from another package manager, read the description before you confirm. It says either "Modern package manager for roothide custom firmware" or "Modern package manager for rootless custom firmware".</p>
+<p>Irisin requires iOS or iPadOS 16.0 or later. On an older system the package does not install.</p>
+<p>You get both packages from the Releases page of Irisin's GitHub repository, <code>https://github.com/Lakr233/Irisin/releases</code>. Each file is named <code>wiki.qaq.irisin_&lt;version&gt;_&lt;architecture&gt;.deb</code>, so <span class="editorial-mark">the architecture is in the file's name</span>. Download the file with the ending shown for your bootstrap in the figure above.</p>
+<p>Install the package, not the app alone. A copy of Irisin that reached your device without its package, for example by sideloading, <span class="editorial-mark">opens and browses, but installs nothing</span>. In that state the last line at the bottom of Settings reads <span class="ui">You can browse, but not install. Install the Irisin package.</span> For the fix, see <a href="../troubleshooting/#browsing-only">Browsing Only</a>.</p>
+<p>Do not convert Irisin with a patcher to make one package fit the other bootstrap. That includes Irisin's own compatibility mode, which refuses Irisin by name. A converted copy of Irisin still expects the bootstrap it was built for, so it stops at <span class="ui">Unsupported Architecture</span>. See <a href="../compatibility-mode/#what-is-refused">What Is Refused</a>.</p>
+</section>
+
+<section class="chapter" id="the-welcome-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">The Welcome Page</span></h2>
+<p>The Welcome page appears the first time Irisin opens, as a sheet over the main interface. It has three pages. You cannot swipe it away; <span class="editorial-mark">use its buttons to move through it</span>. If you opened Irisin from a link or a file, the Welcome page is skipped and appears the next time you open Irisin instead.</p>
+
+<h3>Page One</h3>
+<p>The first page shows Irisin's icon, the title <span class="ui">Welcome to Irisin</span>, and the line <span class="ui">Find, install and manage tweaks.</span> Below them are eight features, each with a symbol, a name, and a sentence about what it does. The Welcome page says "tweaks"; the rest of Irisin and this manual say "packages" for the same thing. Tap <span class="ui">Next</span> at the bottom to go on.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/installing-welcome-light.png" alt="The first Welcome page: Irisin's icon, the title Welcome to Irisin, a list of eight features, and the Next button at the bottom." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/installing-welcome-dark.png" alt="The first Welcome page: Irisin's icon, the title Welcome to Irisin, a list of eight features, and the Next button at the bottom." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The first Welcome page lists what Irisin does.</figcaption></figure>
+
+<h3>Add Repositories</h3>
+<p>A repository is an address that offers packages. The second page, <span class="ui">Add Repositories</span>, opens with a note you should read once: <span class="ui">A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and <span class="editorial-mark">we cannot verify that its packages are safe</span>.</span></p>
+<p>The list under <span class="ui">Recommended Repositories</span> depends on your bootstrap. Each bootstrap gets six repositories, and the two lists are never mixed.</p>
+<ul>
+	<li>On both: Havoc (<code>https://havoc.app</code>), Chariz (<code>https://repo.chariz.com</code>), BigBoss, and OwnGoal Studio's own repository, <code>https://apt.owngoal.dev</code>.</li>
+	<li>On roothide only: <code>https://roothide.github.io</code> and roothide's build of Procursus.</li>
+	<li>On rootless only: Procursus (<code>https://apt.procurs.us</code>) and ElleKit (<code>https://ellekit.space</code>).</li>
+</ul>
+<p>To add from the list:</p>
+<ol>
+	<li>Wait a moment. Each row starts with a spinner and the repository's host name, then shows the repository's own name and icon once Irisin reaches it.</li>
+	<li>Tap <span class="ui">Add</span> on a row to add that repository, or tap <span class="ui">Add All</span> in the list's header to add every repository you do not have yet.</li>
+	<li>Check the row. Its button becomes a checkmark, which means the repository is added. When every row has a checkmark, <span class="ui">Add All</span> disappears from the header.</li>
+	<li>Tap <span class="ui">Next</span>.</li>
+</ol>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/installing-add-repositories-light.png" alt="The Add Repositories page: the safety note at the top, six recommended repositories with their names and icons, one row with a checkmark, the others with an Add button, and Add All in the header." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/installing-add-repositories-dark.png" alt="The Add Repositories page: the safety note at the top, six recommended repositories with their names and icons, one row with a checkmark, the others with an Add button, and Add All in the header." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Recommended repositories for a rootless bootstrap. A checkmark means the repository is already added.</figcaption></figure>
+<p>A row that reads <span class="ui">Repository Unreachable</span> in place of a name means the repository did not answer. You can still add it and refresh it later.</p>
+<p>The last row, <span class="ui">Add More…</span>, opens the normal add sheet for a repository that is not on the list, without leaving the Welcome page. See <a href="../repositories/#add-a-repository">Add a Repository</a>. <span class="ui">Next</span> does not wait for you to add anything; you can add repositories later in the app.</p>
+
+<h3>Proceed with Caution</h3>
+<p>The last page, <span class="ui">Proceed with Caution</span>, carries one warning under a triangle: <span class="ui">We have safeguards to keep your system safe, but <span class="editorial-mark">a wrong action can still damage it</span>.</span> Below it is the warranty text of the MIT License, which stays in English in every language. Tap <span class="ui">Get Started</span> to close the Welcome page and begin.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/installing-caution-light.png" alt="The last Welcome page: a warning triangle, the title Proceed with Caution, the warning and the warranty text, and the Get Started button." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/installing-caution-dark.png" alt="The last Welcome page: a warning triangle, the title Proceed with Caution, the warning and the warranty text, and the Get Started button." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The last Welcome page, before Get Started.</figcaption></figure>
+
+<h3>See It Again</h3>
+<p>Once you tap <span class="ui">Get Started</span>, the Welcome page does not come back by itself. You can open it whenever you want to add a recommended repository you skipped.</p>
+<ol>
+	<li>On <span class="ui">Dashboard</span>, tap the gear to open <span class="ui">Settings</span>.</li>
+	<li>Tap the … button at the top right, then <span class="ui">Welcome Page</span>.</li>
+</ol>
+<p>It starts at page one again. On the second page, the repositories you already have show a checkmark in place of <span class="ui">Add</span>.</p>
+</section>
+
+<section class="chapter" id="if-it-says-unsupported-architecture"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 9Q34 8 36 11L57 47Q59 52 54 52L11 53Q5 53 8 48L29 11Q30 9 32 9Z"/><path d="M32 24L32 38"/><circle cx="32" cy="45" r="1.6"/><path class="icon-detail" d="M50 10L54 6M57 20L62 19"/></svg><span class="section-title-mark">If It Says Unsupported Architecture</span></h2>
+<p>You open Irisin and, in place of its pages, you get a blank screen. One small, muted line just below the middle reads <span class="ui">Unsupported Architecture</span>, and an alert with the same title appears over it. <span class="editorial-mark">The interface never opens</span>, and Irisin does not run in a limited mode.</p>
+<p>It means this copy of Irisin was built for one bootstrap and your device uses the other. The message names both: <span class="ui" data-key="This copy of Irisin is built for %@, but your bootstrap uses %@. Install the matching official Irisin package. Do not install Irisin using a patcher.">This copy of Irisin is built for iphoneos-arm64e, but your bootstrap uses iphoneos-arm64. Install the matching official Irisin package. Do not install Irisin using a patcher.</span> On the opposite mistake the two names swap places. Both are architecture names, not files to download: the first is the architecture you installed, and the second is the one you need. Match the second name against the list in <a href="#choose-your-package">Choose Your Package</a>.</p>
+<p><span class="ui">Close</span> is the only button, and it closes Irisin. Until you install the matching package, nothing else works: an <code>irisin://</code> link or a file you open in Irisin does nothing.</p>
+<p>To fix it:</p>
+<ol>
+	<li>Read <span class="editorial-mark">the second architecture in the message</span>, the one after "your bootstrap uses".</li>
+	<li>Get the Irisin package with that architecture in its file's name.</li>
+	<li>Install it over the wrong one, from whichever package manager or file manager you used the first time. Both packages share one identifier, so the right one replaces the wrong one.</li>
+	<li>Open Irisin again.</li>
+</ol>
+<p>Converting the wrong package with a patcher does not make it work. Irisin checks the bootstrap it was built for every time it opens, and a converted copy still fails that check.</p>
+</section>
+
+<section class="chapter" id="updating-irisin"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M13 28Q16 13 31 12Q45 12 50 25"/><path d="M41 24L51 27L54 17"/><path d="M51 37Q47 52 33 53Q19 53 14 40"/><path d="M23 41L13 38L10 48"/><path class="icon-detail" d="M26 28L38 27L38 38L27 38Z"/></svg><span class="section-title-mark">Updating Irisin</span></h2>
+<p>Irisin updates like any other package, from the repository you installed it from. OwnGoal Studio's repository, <code>https://apt.owngoal.dev</code>, is on the Welcome page's list for both bootstraps. A new version appears on the <span class="ui">Updates</span> page with everything else, and <span class="ui">Update All</span> includes it. There is no separate update row in Settings. For the page itself, see <a href="../updates/">Updates</a>.</p>
+<p>When Irisin is among the changes in the queue, the Queue page tells you so before you start: <span class="ui"><span class="editorial-mark">Irisin will restart when this finishes.</span></span></p>
+<ol>
+	<li>Tap <span class="ui">Execute</span>. The operation page runs as it does for any package, and its title ends on <span class="ui">Completed</span>.</li>
+	<li>Tap the checkmark at the top right.</li>
+	<li>An alert titled <span class="ui">Updating App…</span> appears, with the message <span class="ui">Preparing the app update. The app will exit when it finishes.</span></li>
+	<li>Irisin closes. Open it again from the Home Screen.</li>
+</ol>
+<p>After an update of Irisin itself, the … menu on the operation page offers <span class="ui">View Full Log</span> only. <span class="ui">Rebuild Icons</span> and <span class="ui">Reload Home Screen</span>, which follow other installs, are not there, because Irisin is about to close.</p>
+<p>Update only with the package for your bootstrap. The other one installs without error, and the next time Irisin opens it stops at <span class="ui">Unsupported Architecture</span>. If that happens, follow <a href="#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a>.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../"><small>Previous</small><strong>Contents</strong></a>
+	<a class="pager-next" rel="next" href="../repositories/"><small>Next · Chapter 2</small><strong>Repositories</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="./" aria-current="page">Installing Irisin</a><ol class="manual-nav-tasks">
+			<li><a href="#choose-your-package" data-chapter-link="choose-your-package">Choose Your Package</a></li>
+			<li><a href="#the-welcome-page" data-chapter-link="the-welcome-page">The Welcome Page</a></li>
+			<li><a href="#if-it-says-unsupported-architecture" data-chapter-link="if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a></li>
+			<li><a href="#updating-irisin" data-chapter-link="updating-irisin">Updating Irisin</a></li>
+		</ol></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

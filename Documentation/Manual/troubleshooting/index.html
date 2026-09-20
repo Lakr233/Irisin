@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When Something Fails.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="Read the operation page, open a package's Problem page, try again, use Recovery Mode as a last resort, and send the right log with your report.">
+<meta property="og:title" content="When Something Fails.">
+<meta property="og:description" content="Read the operation page, open a package's Problem page, try again, use Recovery Mode as a last resort, and send the right log with your report.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/troubleshooting/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 8 of 8</span></p>
+	<h1 class="page-title" lang="en">When Something Fails</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>Irisin does not roll back a failed install. It tells you <span class="editorial-mark">what is true of each package</span> and what to do next. This chapter shows where it says so.</p>
+
+<section class="chapter" id="find-your-problem"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M31 6L31 13M32 26L32 31M32 44L31 57M23 57L40 56"/><path d="M16 13L43 14L51 20L43 26L16 25Z"/><path d="M48 31L22 32L14 38L22 44L48 43Z"/><path class="icon-detail" d="M23 19L38 20M27 38L42 37"/></svg><span class="section-title-mark">Find Your Problem</span></h2>
+<p>Start from what you see.</p>
+<figure class="sk" id="figure-ch8"><div class="sk-paper"><ol class="sk-steps">
+	<li><strong>Marked row</strong><span>the step that failed</span></li>
+	<li><strong><span class="ui">Problem</span></strong><span>the reason and the fix</span></li>
+	<li><strong><span class="ui">View Full Log</span></strong><span>every line the installer said</span></li>
+	<li><strong><span class="ui">Export Installer Log</span></strong><span>a file to attach</span></li>
+	<li class="sk-goal"><strong><span class="ui">Report Issue</span></strong><span>in <span class="ui">Settings</span>, under <span class="ui">Support</span></span></li>
+</ol><p class="sk-foot">Read a log before you attach it: the app log holds your searches and repository addresses.</p></div><figcaption>After a failure, start at the marked row on the operation page: it is the only row you can tap.</figcaption></figure>
+<p>Each row below names something you see, says what it means, and points to where it is covered.</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">What You See</th><th scope="col">What It Means</th><th scope="col">Where to Go</th></tr></thead>
+	<tbody>
+		<tr><th scope="row">The operation page's title changes to <span class="ui">Failed</span></th><td data-label="What It Means">The run stopped at one package, and the packages before it stay changed.</td><td data-label="Where to Go"><a href="#read-the-operation-page">Read the Operation Page</a>, then <a href="#try-again">Try Again</a></td></tr>
+		<tr><th scope="row">A sheet is titled <span class="ui">Unable to Prepare Installation</span></th><td data-label="What It Means">Irisin could not plan the change, and nothing ran.</td><td data-label="Where to Go"><a href="#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a></td></tr>
+		<tr><th scope="row"><span class="ui">Unsupported Architecture</span> appears when Irisin opens, and the interface never loads</th><td data-label="What It Means">The Irisin package you installed is built for the other bootstrap.</td><td data-label="Where to Go"><a href="../installing/#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a></td></tr>
+		<tr><th scope="row">A package's button reads <span class="ui">Unsupported</span></th><td data-label="What It Means">The package is not built for this device.</td><td data-label="Where to Go"><a href="../packages/#a-packages-page">A Package's Page</a>, and <a href="../compatibility-mode/#what-it-is">Compatibility Mode</a> for rootless packages on roothide</td></tr>
+		<tr><th scope="row">A message mentions compatibility mode, or <span class="ui">Patch</span> fails</th><td data-label="What It Means">The package was refused before anything reached the installer, so nothing on the device changed.</td><td data-label="Where to Go"><a href="../compatibility-mode/#what-is-refused">What Is Refused</a></td></tr>
+		<tr><th scope="row">A package's menu has no <span class="ui">Install</span>, <span class="ui">Update</span>, or <span class="ui">Remove</span></th><td data-label="What It Means">The menu offers only what fits the package's state, and none of the three while the package is in the queue.</td><td data-label="Where to Go"><a href="../packages/#the-package-menu">The Package Menu</a></td></tr>
+		<tr><th scope="row">An update does not show up</th><td data-label="What It Means">It comes from another repository, it is blocked, or it would have to be converted.</td><td data-label="Where to Go"><a href="../updates/#when-an-update-is-missing">When an Update Is Missing</a></td></tr>
+		<tr><th scope="row">The wrong package or version got installed</th><td data-label="What It Means">A package you did not want is a removal; a version you did not want is a downgrade.</td><td data-label="Where to Go"><a href="../packages/#the-installed-page">The Installed Page</a>, then <a href="../packages/#choose-version">Choose Version</a></td></tr>
+		<tr><th scope="row">A package cannot be removed</th><td data-label="What It Means">The system requires it, and Irisin refuses until you allow it.</td><td data-label="Where to Go"><a href="#power-operations">Power Operations</a></td></tr>
+		<tr><th scope="row">An installed app's icon is missing from the Home Screen</th><td data-label="What It Means">The packages changed, and the Home Screen was not updated with them; <span class="ui">Rebuild Icons</span> updates it.</td><td data-label="Where to Go"><a href="../settings/#system">System</a></td></tr>
+		<tr><th scope="row">You read <span class="ui">You can browse, but not install. Install the Irisin package.</span></th><td data-label="What It Means">The app is on the device without the package that brings its installer.</td><td data-label="Where to Go"><a href="#browsing-only">Browsing Only</a></td></tr>
+		<tr><th scope="row">A repository has a red dot, or is empty</th><td data-label="What It Means">It sent no packages, gave no information about itself, or has not been fetched for 24 hours.</td><td data-label="Where to Go"><a href="../repositories/#refresh-and-status">Refresh and Status</a></td></tr>
+		<tr><th scope="row">Irisin itself will not open, or does not work properly</th><td data-label="What It Means">A reset clears Irisin's own repositories, downloads, logs, and settings. Your installed packages stay.</td><td data-label="Where to Go"><a href="../settings/#irisin-in-the-settings-app">Irisin in the Settings App</a></td></tr>
+	</tbody>
+</table></div>
+</section>
+
+<section class="chapter" id="read-the-operation-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 9Q54 10 54 32Q53 54 31 54Q10 53 10 31Q11 16 23 11"/><path d="M22 32L29 40L43 24"/><path class="icon-detail" d="M56 11L60 8M58 52L61 55M4 30L7 30"/></svg><span class="section-title-mark">Read the Operation Page</span></h2>
+<p>When you run the queue, the operation page opens. Its title is <span class="ui">Installing</span> while work runs, whatever the changes are, and then <span class="ui">Completed</span> or <span class="ui">Failed</span>. You cannot pull the page down to close it. The list is the queue you reviewed, grouped the same way, with one ring per package.</p>
+<p>While the operation runs, each row's second line is the step it is on:</p>
+<ul>
+	<li><span class="ui">Waiting</span>, or <span class="ui">Waiting to be set up</span> when setting up is the only step the package has left.</li>
+	<li><span class="ui">Checking…</span>, <span class="ui">Removing…</span>, <span class="ui">Installing…</span>, <span class="ui">Setting up…</span>, or <span class="ui">Processing triggers…</span></li>
+	<li><span class="ui" data-key="Running %@…">Running postinst…</span> while one of the package's scripts runs.</li>
+	<li>A finished row shows a green check and <span class="ui">Installed</span>, <span class="ui">Removed</span>, <span class="ui">Updated</span>, <span class="ui">Downgraded</span>, or <span class="ui">Reinstalled</span>.</li>
+</ul>
+<p>When every row is done and the installer is still working, <span class="ui">Finishing installation…</span> appears under the list. It goes away as soon as the result is known.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/troubleshooting-operation-light.png" alt="The operation page titled Installing, with a ring beside each package and the running step under one package's name" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/troubleshooting-operation-dark.png" alt="The operation page titled Installing, with a ring beside each package and the running step under one package's name" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The operation page. Each row shows the step it is on.</figcaption></figure>
+<p>After a failure, <span class="editorial-mark">each row says what is true</span> of its package:</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">The Row Says</th><th scope="col">Its Mark</th><th scope="col">What It Means</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><span class="ui">Failed while removing</span>, <span class="ui">Failed while installing</span>, <span class="ui">Failed while setting up</span>, or <span class="ui">Failed verification</span></th><td data-label="Its Mark">A red mark in place of the ring</td><td data-label="What It Means">This is the package that stopped the run. When one of its own scripts stopped it, the line names the script instead: <span class="ui" data-key="The %@ script failed">The postinst script failed</span>.</td></tr>
+		<tr><th scope="row"><span class="ui">Needs repair</span></th><td data-label="Its Mark">A red mark</td><td data-label="What It Means">The package was left half-installed.</td></tr>
+		<tr><th scope="row"><span class="ui">Unpacked, not set up</span></th><td data-label="Its Mark">An amber mark</td><td data-label="What It Means">The package's files are in place, and the run stopped before its turn to be set up.</td></tr>
+		<tr><th scope="row"><span class="ui">Completed with warnings</span></th><td data-label="Its Mark">An amber mark</td><td data-label="What It Means">The package finished although one of its scripts failed.</td></tr>
+		<tr><th scope="row"><span class="ui">Not started</span></th><td data-label="Its Mark">A dashed, empty ring</td><td data-label="What It Means">The run never reached this package.</td></tr>
+		<tr><th scope="row"><span class="ui">Installed</span>, <span class="ui">Removed</span>, <span class="ui">Updated</span>, <span class="ui">Downgraded</span>, or <span class="ui">Reinstalled</span></th><td data-label="Its Mark">A green check</td><td data-label="What It Means">The package was changed before the run stopped, and it stays changed.</td></tr>
+	</tbody>
+</table></div>
+<p>Only a row with a red or amber mark can be tapped. It opens that package's own page: see <a href="#a-packages-problem-page">A Package's Problem Page</a>.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/troubleshooting-failed-light.png" alt="The operation page titled Failed: one package with a red mark and Failed verification, other rows reading Not started, and a Try Again link under the list" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/troubleshooting-failed-dark.png" alt="The operation page titled Failed: one package with a red mark and Failed verification, other rows reading Not started, and a Try Again link under the list" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>A failed run, with the red mark on the package that stopped it.</figcaption></figure>
+<p>When the operation has ended, a <span class="ui">Warnings</span> section may appear at the end of the list. It holds what belongs to no single package. When the operation failed and no row carries the failure, the reason is the first line there.</p>
+<p>A red banner above the list applies to the whole run, not to one package. It reads <span class="ui">Recovery Mode</span> or <span class="ui">Ignoring Configuration Errors</span>. See <a href="#recovery-mode">Recovery Mode</a> and <a href="#try-again">Try Again</a>.</p>
+<p>When the operation ends, a checkmark appears at the top right, and tapping it closes the page. After a success, the … menu at the top left adds <span class="ui">Rebuild Icons</span> and <span class="ui">Reload Home Screen</span>. Use the first if you read <span class="ui">Packages were changed, but the home screen was not updated. Choose Rebuild Icons to try again.</span> <a href="../settings/#system">System</a> describes both.</p>
+<h3>If It Looks Stuck</h3>
+<p>After two minutes without a word from the installer, a <span class="ui">Hide</span> button appears beside the … menu. It closes the page only: <span class="editorial-mark">the operation keeps running</span> and keeps writing its log. Any new line from the installer takes <span class="ui">Hide</span> away again.</p>
+</section>
+
+<section class="chapter" id="a-packages-problem-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M8 28L27 19L46 28L46 47L27 57L8 47Z"/><path d="M8 28L27 37L46 28M27 37L27 57"/><circle cx="50" cy="14" r="9"/><path d="M50 9L50 15M50 19L50 19.5"/></svg><span class="section-title-mark">A Package's Problem Page</span></h2>
+<p>Tap a marked row on the operation page. A page titled <span class="ui">Problem</span> opens with the package at the top, then <span class="ui">What Happened</span>, then <span class="ui">What to Do</span>. A fourth section, <span class="ui">Script Output</span>, appears only when the package's scripts printed anything.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/troubleshooting-problem-light.png" alt="The Problem page: the package at the top, then the What Happened and What to Do sections" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/troubleshooting-problem-dark.png" alt="The Problem page: the package at the top, then the What Happened and What to Do sections" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>A package's Problem page: what happened, then what to do.</figcaption></figure>
+<p><span class="ui">What Happened</span> is the installer's own reason, in your language. For a script it reads, for example, <span class="ui" data-key="The %@ script of %@ failed with exit status %lld.">The postinst script of Example failed with exit status 1.</span> For a package that another package's failure left behind, it reads <span class="ui">This package was unpacked, but the operation stopped at another package before this one was set up.</span> If the installer stopped at this package and gave no reason, the page says so: <span class="ui">The installer stopped while it was working on this package and did not say why.</span></p>
+<p><span class="ui">What to Do</span> depends on the step that failed. Each row below says what <span class="editorial-mark">the package is now</span> and quotes the page's advice.</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">The Package</th><th scope="col">What It Is Now</th><th scope="col">The Page's Advice</th></tr></thead>
+	<tbody>
+		<tr><th scope="row">It failed verification</th><td data-label="What It Is Now">The package is untouched.</td><td data-label="The Page's Advice"><span class="ui">Nothing was changed for this package. Remove it from the queue and add it again to download a fresh copy.</span></td></tr>
+		<tr><th scope="row">It failed while installing</th><td data-label="What It Is Now">The package is back as it was before.</td><td data-label="The Page's Advice"><span class="ui">The package was put back as it was before. Go back and choose Try Again.</span></td></tr>
+		<tr><th scope="row">It failed while removing</th><td data-label="What It Is Now">The package is still installed.</td><td data-label="The Page's Advice"><span class="ui">The package is still installed. Go back and choose Try Again.</span></td></tr>
+		<tr><th scope="row">It failed while setting up</th><td data-label="What It Is Now">Its files are in place, and it is not set up.</td><td data-label="The Page's Advice"><span class="ui">The package's files are in place, but it is not set up and may not work. Go back and choose Try Again, or remove the package.</span></td></tr>
+		<tr><th scope="row">Another package's failure left it unpacked</th><td data-label="What It Is Now">Its files are in place, and it is not set up.</td><td data-label="The Page's Advice"><span class="ui">Go back and choose Try Again to finish setting up this package.</span></td></tr>
+		<tr><th scope="row">It needs repair</th><td data-label="What It Is Now">The package was left half-installed.</td><td data-label="The Page's Advice"><span class="ui">The package is half-installed. Install it again to repair it, or remove it.</span></td></tr>
+		<tr><th scope="row">It finished, and a script failure was ignored</th><td data-label="What It Is Now">The change was made, although one of the package's scripts failed.</td><td data-label="The Page's Advice"><span class="ui">Review the script output. If the package does not work, remove it or install a fixed version.</span></td></tr>
+	</tbody>
+</table></div>
+<p>The share button gives a plain-text report: the package, its versions, the installer's reason, and the script output. The reason in the report is in English, whatever your language, because the report is <span class="editorial-mark">for the package's maintainer</span>.</p>
+</section>
+
+<section class="chapter" id="try-again"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M50 30Q49 12 31 12Q13 13 13 32Q14 51 32 51Q44 50 50 40"/><path d="M41 26L51 31L57 21"/><path class="icon-detail" d="M26 31L38 32"/></svg><span class="section-title-mark">Try Again</span></h2>
+<p>After a failure, a small <span class="ui">Try Again</span> link appears under the list. It does not repeat the old plan. It plans again <span class="editorial-mark">from what the failed run left</span> on the device, then runs that plan on a new page in the same sheet.</p>
+<p>If it cannot, an alert titled <span class="ui">Unable to Try Again</span> gives the reason, which is one of those listed in <a href="#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a> or one of the two below. Tap <span class="ui">Dismiss</span> to close it.</p>
+<ul>
+	<li><span class="ui">Packages changed. Review the changes and try again.</span> Something else changed your packages since the plan was made. Close the page, look at the queue, and tap <span class="ui">Execute</span> again.</li>
+	<li><span class="ui">Packages changed while preparing the installation. Try again.</span> The same happened while Irisin was preparing. Tap <span class="ui">Try Again</span> once more.</li>
+</ul>
+<h3><span class="ui">Ignore Script Errors and Retry</span></h3>
+<p>After a failure, the … menu, labeled <span class="ui">More</span>, adds <span class="ui">Ignore Script Errors and Retry</span>. It is not offered while an operation runs, after a success, or in Recovery Mode.</p>
+<ol>
+	<li>Open the package's Problem page and read <span class="ui">Script Output</span>.</li>
+	<li>Go back, open the … menu, and choose <span class="ui">Ignore Script Errors and Retry</span>.</li>
+	<li>Read the alert. Its title is <span class="ui">Ignore Script Errors and Retry?</span> and its message is <span class="ui">Irisin will retry the operation and continue if a package script fails. This can damage installed packages or the system.</span></li>
+	<li>Tap <span class="ui">Retry</span>, in red, or <span class="ui">Cancel</span>.</li>
+</ol>
+<p>The retry runs under the red <span class="ui">Ignoring Configuration Errors</span> banner. A package whose script fails then finishes anyway and ends as <span class="ui">Completed with warnings</span>. Use it only when the Problem page shows a script failure <span class="editorial-mark">you have read and judged harmless</span>.</p>
+</section>
+
+<section class="chapter" id="when-a-plan-cannot-be-made"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M17 13L16 54Q16 57 20 57L45 56Q48 56 48 53L47 13Q47 10 44 10L20 10Q17 10 17 13Z"/><path d="M25 6L39 7L38 14L26 14Z"/><path d="M25 27L39 41M39 27L25 42"/><path class="icon-detail" d="M24 49L40 49"/></svg><span class="section-title-mark">When a Plan Cannot Be Made</span></h2>
+<p>Irisin checks that a change is possible <span class="editorial-mark">before anything runs</span>. When it is not, the sheet is titled <span class="ui">Unable to Prepare Installation</span>, and the reason is under <span class="ui">What Happened</span>. Below it is one group per package that failed a check, and every check in the group carries a green check or a red mark with a verdict under it. Some reasons come with no checks, and then the reason is the whole page.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/troubleshooting-unable-to-prepare-light.png" alt="The Unable to Prepare Installation sheet: the reason under What Happened, a group of checks with a red mark, and the Install Using Recovery Mode row" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/troubleshooting-unable-to-prepare-dark.png" alt="The Unable to Prepare Installation sheet: the reason under What Happened, a group of checks with a red mark, and the Install Using Recovery Mode row" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>A change that cannot be planned, with Recovery Mode offered for a single package.</figcaption></figure>
+<p>A check ends in one of seven verdicts:</p>
+<ul>
+	<li><span class="ui">Matching Package Found</span></li>
+	<li><span class="ui">Not Found in Installed Packages or Repositories</span></li>
+	<li><span class="ui">Found for a Different Architecture</span>, followed by <span class="ui" data-key="This device supports %@.">This device supports iphoneos-arm64.</span></li>
+	<li><span class="ui">No Version Meets This Requirement</span></li>
+	<li><span class="ui">Package Metadata Could Not Be Read</span></li>
+	<li><span class="ui">Requirements Conflict</span></li>
+	<li><span class="ui">Required by the System</span></li>
+</ul>
+<p>Most reasons carry their own advice. They are grouped below by what you do about them, with Example standing for a package's name. A reason that is not listed says what could not be matched and has no single fix: read it on the page, and the checks under it show which package to look at.</p>
+<ul>
+	<li><em>A requirement is missing.</em> <span class="ui" data-key="%@ requires %@, which is not available. Add a repository that provides it and try again.">Example requires libexample, which is not available. Add a repository that provides it and try again.</span></li>
+	<li><em>Two packages conflict.</em> <span class="ui" data-key="%@ conflicts with %@. Remove one of them and try again.">Example conflicts with Other. Remove one of them and try again.</span></li>
+	<li><em>The repository's data is unreadable or out of date.</em> Refresh the repository (see <a href="../repositories/#refresh-and-status">Refresh and Status</a>) and try again. Four reasons end this way:
+		<ul>
+			<li><span class="ui" data-key="%@: the repository sent an unreadable version. Refresh the repository and try again.">Example: the repository sent an unreadable version. Refresh the repository and try again.</span></li>
+			<li><span class="ui" data-key="%@ %@: the repository sent unreadable package information. Refresh the repository and try again.">Example 1.0: the repository sent unreadable package information. Refresh the repository and try again.</span></li>
+			<li><span class="ui" data-key="%@: no version is available from its repository. Refresh the repository and try again.">Example: no version is available from its repository. Refresh the repository and try again.</span></li>
+			<li><span class="ui" data-key="%@: this version is not available from its repository. Refresh the repository and try again.">Example: this version is not available from its repository. Refresh the repository and try again.</span></li>
+		</ul>
+	</li>
+	<li><em>A half-installed package is in the way.</em> <span class="ui" data-key="%@ did not finish installing. Install it again before making other changes.">Example did not finish installing. Install it again before making other changes.</span></li>
+	<li><em>The system requires the package.</em> <span class="ui" data-key="%@ is required by the system and cannot be removed.">Example is required by the system and cannot be removed.</span> or <span class="ui" data-key="%@ is needed by %@, which the system requires, so it cannot be removed.">Example is needed by Other, which the system requires, so it cannot be removed.</span> See <a href="#power-operations">Power Operations</a>.</li>
+	<li><em>The package is on hold.</em> <span class="ui" data-key="%@ is on hold and cannot be changed. Remove the hold and try again.">Example is on hold and cannot be changed. Remove the hold and try again.</span></li>
+	<li><em>The queue asks for too much at once.</em> <span class="ui" data-key="These packages could not be installed in a valid order: %@. Remove some of them from the queue and try again.">These packages could not be installed in a valid order: Example, Other. Remove some of them from the queue and try again.</span> Or <span class="ui">The installation order could not be planned. Try again with fewer changes.</span> Or <span class="ui" data-key="%@ could not be resolved to a single version. Clear the queue and try again.">Example could not be resolved to a single version. Clear the queue and try again.</span></li>
+	<li><em>You chose <span class="ui">Update All</span>.</em> <span class="ui">Updating everything would remove installed packages. Update packages one at a time.</span></li>
+	<li><em>Irisin is busy.</em> <span class="ui">Another operation is already running. Wait for it to finish, then try again.</span> or <span class="ui">Packages changed while checking dependencies. Try again.</span></li>
+</ul>
+<p>The share button gives the reason and every check as text. Send that when you ask someone for help.</p>
+</section>
+
+<section class="chapter" id="recovery-mode"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 9Q55 10 54 33Q53 55 31 54Q9 53 10 31Q11 9 32 9Z"/><path d="M32 22Q42 22 42 32Q41 42 32 42Q22 41 22 32Q23 22 32 22Z"/><path class="icon-detail" d="M25 25L17 16M39 25L48 16M39 39L47 48M25 39L16 47"/></svg><span class="section-title-mark">Recovery Mode</span></h2>
+<p>Recovery Mode is a last resort for one package. It is offered only on the <span class="ui">Unable to Prepare Installation</span> sheet, and only when you asked for a single change. It installs or removes that package <span class="editorial-mark">without checking what it needs or what needs it</span>, and it carries on when the package's scripts fail.</p>
+<ul>
+	<li><span class="ui">Install Using Recovery Mode</span> appears for a package whose file is already on the device, either a <code>.deb</code> you opened or one already downloaded, and that this device can install.</li>
+	<li><span class="ui">Remove Using Recovery Mode</span> appears for an installed package that is not on hold. For a package the system requires, it appears only while <span class="ui">Power Operations</span> is on.</li>
+</ul>
+<ol>
+	<li>Tap the row. An alert asks <span class="ui">Install in Recovery Mode?</span> or <span class="ui">Remove in Recovery Mode?</span></li>
+	<li>Read the message. It states the risk: the package may not work, and other packages or the system may stop working.</li>
+	<li>Tap <span class="ui">Install Anyway</span> or <span class="ui">Remove</span>, both in red, or <span class="ui">Cancel</span>.</li>
+	<li>Wait while <span class="ui">Preparing…</span> is shown. The operation page then opens under the red <span class="ui">Recovery Mode</span> banner, which stays for the whole run.</li>
+</ol>
+<p>The package's file is still verified and, on roothide, still converted. Only the dependency checks are skipped. <span class="ui">Try Again</span> on a failed recovery run retries the same package in Recovery Mode, not the queue. <span class="ui">Ignore Script Errors and Retry</span> is not offered there, since a recovery run already ignores them.</p>
+<p>Two refusals are possible. <span class="ui">This package cannot be installed in Recovery Mode on this system.</span> means the package has no file on the device, or is built for an architecture this device cannot install. <span class="ui">Unable to prepare the installation. Try again.</span> means the preparation failed and left no reason.</p>
+</section>
+
+<section class="chapter" id="power-operations"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M21 33L44 34Q55 35 54 45Q53 55 43 55L20 54Q10 53 10 44Q11 33 21 33Z"/><circle cx="43" cy="44" r="6"/><path d="M37 3L25 17L35 18L27 29"/></svg><span class="section-title-mark">Power Operations</span></h2>
+<p><span class="ui">Power Operations</span> is a switch, off by default. While it is off, Irisin will not plan the removal of a package the system requires, and says so: <span class="ui" data-key="%@ is required by the system and cannot be removed.">Example is required by the system and cannot be removed.</span></p>
+<ol>
+	<li>Open <span class="ui">Settings</span> from the gear on <span class="ui">Dashboard</span> and find <span class="ui">Packages → Power Operations</span>.</li>
+	<li>Turn the switch on. It stays off until you answer the alert titled <span class="ui">Allow Power Operations?</span></li>
+	<li>Read the message: <span class="ui"><span class="editorial-mark">Removing a package the system requires can stop the custom firmware or this app from working.</span></span></li>
+	<li>Tap <span class="ui">Allow</span>, in red, or <span class="ui">Cancel</span>.</li>
+</ol>
+<p>The packages that count are <code>apt</code>, <code>dpkg</code>, <code>firmware</code>, <code>bash</code>, <code>coreutils</code>, <code>base</code>, <code>base-files</code>, <code>base-passwd</code>, <code>libroot</code>, <code>roothide</code>, and any package its maker marked essential or protected. A package on hold is never removed, whatever the switch says.</p>
+<p>Turning the switch off asks nothing and takes effect at once. The switch is read when you run, not when you plan: turn it off again and a removal that was waiting is refused. <span class="editorial-mark">Turn it off when you are done.</span></p>
+</section>
+
+<section class="chapter" id="browsing-only"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M6 33Q19 16 32 16Q46 17 58 34Q45 51 32 51Q18 50 6 33Z"/><circle cx="32" cy="33" r="8"/><path class="icon-detail" d="M32 6L32 10M17 10L19 14M47 10L45 14"/></svg><span class="section-title-mark">Browsing Only</span></h2>
+<p>The Irisin app cannot install anything by itself: <span class="editorial-mark">the Irisin package brings the installer</span> that does. Without that package, you can browse repositories and packages, and nothing else.</p>
+<p>You see it in three places:</p>
+<ul>
+	<li>The last line of the Settings footer reads <span class="ui">You can browse, but not install. Install the Irisin package.</span></li>
+	<li>An operation fails, with the same sentence as its reason.</li>
+	<li><span class="ui">Reload Home Screen</span> in Settings answers with an alert titled <span class="ui">Browsing Only</span> and the message <span class="ui">Install the Irisin package to use this action.</span></li>
+</ul>
+<p><span class="ui">Connecting…</span> in the footer for a moment after launch is normal. On a device that has the package, that line never turns into the browsing sentence. It waits until the installer answers.</p>
+<p>Install the Irisin package for your bootstrap: see <a href="../installing/#choose-your-package">Choose Your Package</a>. Two related messages mean the package is there and something else is wrong. <span class="ui">The installer could not be started. Try again.</span> means the installer did not start, so try the operation again. <span class="ui">Irisin is not installed correctly. Reinstall it and try again.</span> means Irisin's own files are not where they belong. Install the Irisin package again.</p>
+</section>
+
+<section class="chapter" id="the-logs"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M16 8L40 9L49 18L48 56L15 55Z"/><path d="M40 9L40 18L49 18"/><path d="M22 28L41 28M22 36L42 37M22 44L34 44"/></svg><span class="section-title-mark">The Logs</span></h2>
+<p>There are three places to read what happened.</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">Log</th><th scope="col">Where to Read It</th><th scope="col">What It Holds</th></tr></thead>
+	<tbody>
+		<tr><th scope="row">This operation's lines</th><td data-label="Where to Read It">On the operation page, open the … menu and choose <span class="ui">View Full Log</span>. The page is titled <span class="ui">Operation Log</span>, and its share button gives the lines as text.</td><td data-label="What It Holds">Everything the installer said during one operation, numbered, in order.</td></tr>
+		<tr><th scope="row">The installer log</th><td data-label="Where to Read It">In <span class="ui">Settings</span>, open the … menu at the top right and choose <span class="ui">Export… → Export Installer Log</span>.</td><td data-label="What It Holds">The same lines as a file, named <code>irisin-install-&lt;date&gt;.log</code>.</td></tr>
+		<tr><th scope="row">The app log</th><td data-label="Where to Read It">Read it at <span class="ui">Settings → Support → View Logs</span>, or take it as a file named <code>irisin-&lt;date&gt;.log</code> with <span class="ui">Export… → Export App Log</span> in the same menu.</td><td data-label="What It Holds">What Irisin itself did, the installer's lines included.</td></tr>
+	</tbody>
+</table></div>
+<p>After a failed install, <span class="editorial-mark">export the installer log before you try again</span>. Each new install starts a fresh log. The run before it is kept on the device as <code>irisin-install.log.previous</code> beside <code>irisin-install.log</code>, but only the current one can be exported. When a log is empty, the export answers <span class="ui">Nothing to Export</span>.</p>
+<p>In the installer's lines, a warning starts with <code>[!]</code> and a failure with <code>[!!]</code>. A successful run ends with <span class="ui">Operation completed.</span> If the installer itself crashed, the log adds <span class="ui" data-key="The installer stopped (error code %d).">The installer stopped (error code 9).</span></p>
+<h3>The Logs Page</h3>
+<p><span class="ui">View Logs</span> opens a page titled <span class="ui">Logs</span> that keeps following the app log while it is open. Lines at the error and critical levels are tinted so you can spot them. Its … menu has five items:</p>
+<ul>
+	<li><span class="ui">Errors Only</span> switches between every level and the two worst, <code>error</code> and <code>critical</code>.</li>
+	<li><span class="ui">Filter by Level</span> lists the five levels as the app spells them, <code>verbose</code>, <code>info</code>, <code>warning</code>, <code>error</code>, and <code>critical</code>, and you turn each on or off by itself.</li>
+	<li><span class="ui">Filter by Category</span> lists every category found in the log, with <span class="ui">All Categories</span> at the top.</li>
+	<li><span class="ui">Share</span> gives what the page has loaded as a file.</li>
+	<li><span class="ui">Clear</span> <span class="editorial-mark">only hides what is on the page</span>. Later lines keep arriving, and the file and <span class="ui">Export App Log</span> keep everything.</li>
+</ul>
+<p>Touch and hold a line for <span class="ui">Copy</span>, which takes the whole line, or <span class="ui">Copy Message</span>, which takes the message alone.</p>
+<p>Review a log before you share it. The app log records <span class="editorial-mark">what you typed into search</span> and the addresses of the repositories you added or removed. The installer log names the packages you changed and holds what their scripts printed.</p>
+</section>
+
+<section class="chapter" id="report-issue"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M8 30L56 9L43 54L30 38Z"/><path d="M56 9L30 38L29 52L36 45"/><path class="icon-detail" d="M8 47L15 44M12 56L21 51"/></svg><span class="section-title-mark">Report Issue</span></h2>
+<ol>
+	<li>Make the problem happen again, so the logs hold it.</li>
+	<li>Export the app log, and the installer log if an install failed, as <a href="#the-logs">The Logs</a> describes. Do it before you try again.</li>
+	<li>Read both files. The app log holds your searches and the addresses of your repositories, and the installer log names the packages you changed. Remove what you do not want public.</li>
+	<li>Tap <span class="ui">Settings → Support → Report Issue</span>. It opens the project's new-issue page on GitHub in your browser, and <span class="editorial-mark">it attaches nothing</span>.</li>
+	<li>Attach the logs. If one package failed, paste the report from its Problem page's share button.</li>
+	<li>Quote the lines at the bottom of Settings, under <span class="ui">License</span>: the identifier with its version and build, the architecture and bootstrap, the iOS version and device model, and the installer's line. <a href="../settings/#the-footer">The Footer</a> explains each.</li>
+</ol>
+<p>A package that fails in its own script is usually the package's problem, not Irisin's. Send the Problem page's report to the package's maintainer.</p>
+<p>Search the existing issues before you open a new one.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../settings/"><small>Previous · Chapter 7</small><strong>Settings and Exports</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="./" aria-current="page">When Something Fails</a><ol class="manual-nav-tasks">
+			<li><a href="#find-your-problem" data-chapter-link="find-your-problem">Find Your Problem</a></li>
+			<li><a href="#read-the-operation-page" data-chapter-link="read-the-operation-page">Read the Operation Page</a></li>
+			<li><a href="#a-packages-problem-page" data-chapter-link="a-packages-problem-page">A Package's Problem Page</a></li>
+			<li><a href="#try-again" data-chapter-link="try-again">Try Again</a></li>
+			<li><a href="#when-a-plan-cannot-be-made" data-chapter-link="when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a></li>
+			<li><a href="#recovery-mode" data-chapter-link="recovery-mode">Recovery Mode</a></li>
+			<li><a href="#power-operations" data-chapter-link="power-operations">Power Operations</a></li>
+			<li><a href="#browsing-only" data-chapter-link="browsing-only">Browsing Only</a></li>
+			<li><a href="#the-logs" data-chapter-link="the-logs">The Logs</a></li>
+			<li><a href="#report-issue" data-chapter-link="report-issue">Report Issue</a></li>
+		</ol></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

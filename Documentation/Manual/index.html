@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Irisin Manual.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="How to install Irisin, add repositories, install and update packages, use Compatibility Mode, and find out what happened when an install fails.">
+<meta property="og:title" content="The Irisin Manual.">
+<meta property="og:description" content="How to install Irisin, add repositories, install and update packages, use Compatibility Mode, and find out what happened when an install fails.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/">
+<link rel="stylesheet" href="assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="./"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover cover-title-page">
+	<h1 class="page-title" lang="en">The <span class="editorial-mark title-mark">Irisin&nbsp;Manual</span>.</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>Irisin is a package manager for an iPhone or iPad that runs custom firmware, on iOS or iPadOS 16 or later, with a roothide or a rootless bootstrap. You add repositories, find packages in them, <span class="editorial-mark">review every change in a queue before it runs</span>, and see what happened when one fails. This manual covers each of those in the order you meet them.</p>
+<p>If you are deciding whether to install Irisin, or which of its two packages is yours, begin with <a href="installing/">Installing Irisin</a>. If you are stuck, <span class="editorial-mark">start at chapter 8</span>, <a href="troubleshooting/">When Something Fails</a>. It opens with a list of symptoms and covers a failed install, the wrong package, compatibility mode, and the logs you attach to a report. A name styled like <span class="ui">Execute</span> is quoted from the app, spelled exactly as it appears on screen.</p>
+
+<section class="chapter" id="installing-irisin"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">1. Installing Irisin</span></h2>
+<p>Irisin comes as two packages, one for each bootstrap. This chapter tells you which one is yours, walks through the Welcome page where you add your first repositories, and explains the <span class="ui">Unsupported Architecture</span> alert that Irisin stops at after you install the other one.</p>
+<ul>
+	<li><a href="installing/#choose-your-package">Choose Your Package</a></li>
+	<li><a href="installing/#the-welcome-page">The Welcome Page</a></li>
+	<li><a href="installing/#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a></li>
+	<li><a href="installing/#updating-irisin">Updating Irisin</a></li>
+</ul>
+<p><a href="installing/">Read chapter 1, Installing Irisin</a></p>
+</section>
+
+<section class="chapter" id="repositories"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="19" cy="39" r="9"/><circle cx="45" cy="19" r="8"/><path d="M26 34L38 24M17 48L16 55M10 55L23 55M42 10Q25 2 13 17M13 10L12 18L20 17"/><path class="icon-detail" d="M35 43Q47 44 53 34M49 33L54 33L55 39"/></svg><span class="section-title-mark">2. Repositories</span></h2>
+<p>A repository is an address that offers packages. Here you add one by address, link, or file. You also refresh it, tell a healthy repository from a broken one, move your list to another device, and sign in to a vendor to buy packages.</p>
+<ul>
+	<li><a href="repositories/#add-a-repository">Add a Repository</a></li>
+	<li><a href="repositories/#a-repositorys-page">A Repository's Page</a></li>
+	<li><a href="repositories/#refresh-and-status">Refresh and Status</a></li>
+	<li><a href="repositories/#advanced-source">Advanced Source</a></li>
+	<li><a href="repositories/#links">Links</a></li>
+	<li><a href="repositories/#import-and-export">Import and Export</a></li>
+	<li><a href="repositories/#remove-a-repository">Remove a Repository</a></li>
+	<li><a href="repositories/#vendor-accounts-and-purchases">Vendor Accounts and Purchases</a></li>
+</ul>
+<p><a href="repositories/">Read chapter 2, Repositories</a></p>
+</section>
+
+<section class="chapter" id="finding-and-installing-packages"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M27 9Q42 8 44 24Q45 40 28 42Q12 42 11 26Q11 11 27 9Z"/><path d="M40 38L54 53Q56 56 53 57Q51 58 49 55L36 41"/><path class="icon-detail" d="M19 23Q21 16 28 15"/></svg><span class="section-title-mark">3. Finding and Installing Packages</span></h2>
+<p>Search for a package, read its page, pick a version, and review the change in the queue. Nothing on your device changes until you tap <span class="ui">Execute</span>. Removing and downgrading a package work the same way.</p>
+<ul>
+	<li><a href="packages/#search">Search</a></li>
+	<li><a href="packages/#a-packages-page">A Package's Page</a></li>
+	<li><a href="packages/#the-package-menu">The Package Menu</a></li>
+	<li><a href="packages/#choose-version">Choose Version</a></li>
+	<li><a href="packages/#download-archive">Download Archive</a></li>
+	<li><a href="packages/#the-queue">The Queue</a></li>
+	<li><a href="packages/#patch-and-execute">Patch and Execute</a></li>
+	<li><a href="packages/#a-queued-packages-details">A Queued Package's Details</a></li>
+	<li><a href="packages/#the-installed-page">The Installed Page</a></li>
+</ul>
+<p><a href="packages/">Read chapter 3, Finding and Installing Packages</a></p>
+</section>
+
+<section class="chapter" id="updates"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M50 27Q46 11 30 11Q13 12 11 30Q11 49 30 52Q43 53 50 42"/><path d="M41 27L51 28L53 17"/><path class="icon-detail" d="M31 41L31 23M24 30L31 22L38 30"/></svg><span class="section-title-mark">4. Updates</span></h2>
+<p>Update one package or all of them at once, and block an update you do not want. When an update you expect is missing, this chapter explains why.</p>
+<ul>
+	<li><a href="updates/#where-updates-appear">Where Updates Appear</a></li>
+	<li><a href="updates/#update-all">Update All</a></li>
+	<li><a href="updates/#block-an-update">Block an Update</a></li>
+	<li><a href="updates/#when-an-update-is-missing">When an Update Is Missing</a></li>
+	<li><a href="updates/#compatibility-updates">Compatibility Updates</a></li>
+</ul>
+<p><a href="updates/">Read chapter 4, Updates</a></p>
+</section>
+
+<section class="chapter" id="compatibility-mode"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M5 15L24 14L25 49L6 50Z"/><path d="M40 13L59 14L58 50L39 49Z"/><path d="M28 32L36 32M32 27L37 32L32 37"/><path class="icon-detail" d="M10 23L19 23M10 31L19 31M10 39L15 39M45 22L54 23M45 31L54 31M45 39L54 40"/></svg><span class="section-title-mark">5. Compatibility Mode</span></h2>
+<p>On roothide, Irisin can convert a package built for rootless before it installs. This chapter says when that happens, what each warning means, what <span class="ui">Patch</span> does, what is converted, and what to do when a package is refused.</p>
+<ul>
+	<li><a href="compatibility-mode/#what-it-is">What It Is</a></li>
+	<li><a href="compatibility-mode/#before-you-install">Before You Install</a></li>
+	<li><a href="compatibility-mode/#the-warning">The Warning</a></li>
+	<li><a href="compatibility-mode/#patch-before-execute">Patch Before Execute</a></li>
+	<li><a href="compatibility-mode/#what-is-converted">What Is Converted</a></li>
+	<li><a href="compatibility-mode/#what-is-refused">What Is Refused</a></li>
+</ul>
+<p><a href="compatibility-mode/">Read chapter 5, Compatibility Mode</a></p>
+</section>
+
+<section class="chapter" id="translation"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M8 11L37 10Q40 10 40 14L39 31Q39 34 35 34L20 34L12 41L13 34L9 33Q6 33 6 29L7 14Q7 11 8 11Z"/><path d="M17 28L23 15L29 28M19 24L27 24"/><path d="M45 25L55 26Q58 26 58 30L57 46Q57 49 53 49L52 56L45 49L30 48Q27 48 27 44L27 39"/><path class="icon-detail" d="M36 41L50 42M43 38L43 42M48 42Q45 47 38 47"/></svg><span class="section-title-mark">6. Translation</span></h2>
+<p>Read a package's page in your language. Turn on <span class="ui">Auto Translate</span> so that pages open translated, or switch any one page between the original and the translation from its menu.</p>
+<ul>
+	<li><a href="translation/#auto-translate">Auto Translate</a></li>
+	<li><a href="translation/#the-translate-menu">The Translate Menu</a></li>
+	<li><a href="translation/#source-and-target-language">Source and Target Language</a></li>
+	<li><a href="translation/#what-is-translated">What Is Translated</a></li>
+	<li><a href="translation/#when-it-cannot-translate">When It Cannot Translate</a></li>
+</ul>
+<p><a href="translation/">Read chapter 6, Translation</a></p>
+</section>
+
+<section class="chapter" id="settings-and-exports"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M8 17L18 17M30 17L56 18M8 32L36 32M48 33L56 33M8 47L14 47M26 47L56 48"/><circle cx="24" cy="17" r="6"/><circle cx="42" cy="32" r="6"/><circle cx="20" cy="47" r="6"/><path class="icon-detail" d="M3 8L6 11M59 6L56 10"/></svg><span class="section-title-mark">7. Settings and Exports</span></h2>
+<p>This chapter walks the <span class="ui">Settings</span> page from top to bottom: what each row does, and which chapter covers it in full. It also says what each export contains, from your package list to the two logs.</p>
+<ul>
+	<li><a href="settings/#vendor-accounts">Vendor Accounts</a></li>
+	<li><a href="settings/#packages">Packages</a></li>
+	<li><a href="settings/#downloads">Downloads</a></li>
+	<li><a href="settings/#system">System</a></li>
+	<li><a href="settings/#support">Support</a></li>
+	<li><a href="settings/#the-menu-and-exports">The Menu and Exports</a></li>
+	<li><a href="settings/#irisin-in-the-settings-app">Irisin in the Settings App</a></li>
+	<li><a href="settings/#the-footer">The Footer</a></li>
+</ul>
+<p><a href="settings/">Read chapter 7, Settings and Exports</a></p>
+</section>
+
+<section class="chapter" id="when-something-fails"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M29 10Q32 6 35 11L56 47Q58 52 53 52L10 51Q5 51 8 46Z"/><path d="M32 22L32 37"/><circle cx="32" cy="44" r="1.6"/><path class="icon-detail" d="M6 22L10 25M58 21L54 25M30 59L36 59"/></svg><span class="section-title-mark">8. When Something Fails</span></h2>
+<p>Irisin does not roll a failed install back. It tells you the state of each package and what to do next. This chapter opens with a list of symptoms, then shows where Irisin says so: the operation page, a package's <span class="ui">Problem</span> page, <span class="ui">Try Again</span>, <span class="ui">Recovery Mode</span> as a last resort, and the log to send with a report.</p>
+<ul>
+	<li><a href="troubleshooting/#find-your-problem">Find Your Problem</a></li>
+	<li><a href="troubleshooting/#read-the-operation-page">Read the Operation Page</a></li>
+	<li><a href="troubleshooting/#a-packages-problem-page">A Package's Problem Page</a></li>
+	<li><a href="troubleshooting/#try-again">Try Again</a></li>
+	<li><a href="troubleshooting/#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a></li>
+	<li><a href="troubleshooting/#recovery-mode">Recovery Mode</a></li>
+	<li><a href="troubleshooting/#power-operations">Power Operations</a></li>
+	<li><a href="troubleshooting/#browsing-only">Browsing Only</a></li>
+	<li><a href="troubleshooting/#the-logs">The Logs</a></li>
+	<li><a href="troubleshooting/#report-issue">Report Issue</a></li>
+</ul>
+<p><a href="troubleshooting/">Read chapter 8, When Something Fails</a></p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-next" rel="next" href="installing/"><small>Next · Chapter 1</small><strong>Installing Irisin</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading">Irisin Manual</p><ol>
+		<li><a href="installing/">Installing Irisin</a></li>
+		<li><a href="repositories/">Repositories</a></li>
+		<li><a href="packages/">Finding and Installing Packages</a></li>
+		<li><a href="updates/">Updates</a></li>
+		<li><a href="compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="translation/">Translation</a></li>
+		<li><a href="settings/">Settings and Exports</a></li>
+		<li><a href="troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

@@ -4,7 +4,10 @@
 The app calls what it runs on custom firmware. Every value of every locale in
 the string catalogs is read, with Irisin's page in the Settings app and the
 package's control file: a translation is where the word comes back, since a
-translator reaches for it on their own.
+translator reaches for it on their own. The pages a user reads on the web are
+read too: the manual in Documentation/Manual, both languages, and the site's
+pages in Documentation/Site. A file whose name starts with `_` is a template,
+not a page, and a tree that has no manual yet has nothing to read.
 
 usage: check-wording.py <repository root>
 """
@@ -38,6 +41,15 @@ def unit_values(locale, node):
                 yield from unit_values(locale, child)
 
 
+def web_pages(directory: Path):
+    """Every page under a directory; `rglob` finds none where there is none."""
+    return [
+        page
+        for page in sorted(directory.rglob("*.html"))
+        if not page.name.startswith("_")
+    ]
+
+
 def main() -> int:
     root = Path(sys.argv[1])
     resources = root / "Irisin" / "Resources"
@@ -51,6 +63,8 @@ def main() -> int:
     texts = sorted((resources / "Settings.bundle").rglob("*.strings"))
     texts += sorted((resources / "Settings.bundle").rglob("*.plist"))
     texts.append(root / "Packaging" / "DEBIAN" / "control")
+    for pages in ("Manual", "Site"):
+        texts += web_pages(root / "Documentation" / pages)
     for text in texts:
         content = text.read_bytes().decode("utf-16" if text.read_bytes()[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8", "replace")
         hits += [

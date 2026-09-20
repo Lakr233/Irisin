@@ -1,0 +1,182 @@
+<!doctype html>
+<!--
+  NOT A PUBLISHED PAGE. The reference skeleton every manual page is copied from.
+  Copy it, fill each SLOT, and delete every comment, this one included.
+
+  PATHS. A chapter page sits at Documentation/Manual/<slug>/index.html and is served
+  at /manual/<slug>/, so its assets are one level up at ../assets/… and the contents
+  page, Documentation/Manual/index.html, is ../. Another chapter is ../<slug>/, and
+  this page itself is ./.
+
+  The CSS and the scripts are shared and fixed: ../assets/manual.css and ../assets/manual.js.
+  A page carries no <style> and no script of its own except the one inline theme snippet below.
+
+  The manual is English. It carried a Simplified Chinese twin for a while, which is why
+  check-manual.py still knows how to pair two languages; nothing here needs to.
+-->
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- SLOT title: the same words as the h1 and og:title. -->
+<title>SLOT Page Title</title>
+<!-- SLOT favicon: PLACEHOLDER until the brand's icon is chosen. -->
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<!-- SLOT description: under 160 characters, identical in both tags. -->
+<meta name="description" content="SLOT description">
+<meta property="og:title" content="SLOT Page Title">
+<meta property="og:description" content="SLOT description">
+<meta property="og:type" content="article">
+<!-- SLOT canonical: this page's absolute URL. One language needs no hreflang alternates. -->
+<link rel="canonical" href="SLOT https://…/manual/<slug>/">
+<link rel="stylesheet" href="../assets/manual.css">
+<!-- The inline theme snippet. Paste it verbatim, in <head>, never deferred and never moved to a file:
+     it sets the theme before first paint, so a reader who chose dark never sees a white flash.
+     The key is the literal 'irisin-manual-theme', the same one manual.js writes. -->
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<!-- SITE HEADER: brand, "Manual" back to the contents page, the theme toggle. -->
+<header class="site-header">
+	<a class="brand" href="../" aria-label="Irisin manual">
+		<!-- SLOT brand logo: PLACEHOLDER. Replace this whole svg with Irisin's logo, 16×16 viewBox, currentColor. -->
+		<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="6"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<!-- The toggle. manual.js writes its label. -->
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<!-- COVER of a chapter page: the trail back to the contents, this chapter's place in the eight,
+     the h1 as plain text, the divider. No dateline (the footer keeps the date), no title mark,
+     no summary: eight hand-drawn underlines on eight chapter titles would read as eight blog posts.
+     The sparkle and the arrow belong to .cover-title-page alone, the manual's own title page
+     (index.html), which is the one page that keeps the style's cover with its cover-category,
+     its title mark and its date. No other page carries that class. -->
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter SLOT-N of 8</span></p>
+	<h1 class="page-title" lang="en">SLOT Chapter Title</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<!-- INTRO: two paragraphs. One underlined phrase carries the point. -->
+<p>SLOT intro one, with <span class="editorial-mark">one underlined phrase</span>.</p>
+<!-- A CONTROL'S NAME is quoted from the app inside span.ui, exactly as the app spells it in this page's
+     language (check-manual.py compares the span's text with the string catalog). No quotation marks,
+     no 「」, no <strong>, no <code>. It may sit inside an underline or hold one:
+       <span class="editorial-mark">tap <span class="ui">Patch</span> first</span>
+       <span class="ui"><span class="editorial-mark">Reload Home Screen</span></span>
+     On Chinese pages put a space between Han and Latin text by hand; nothing inserts it. -->
+<p>SLOT intro two. Open <span class="ui">Settings</span> and choose <span class="ui">Reload Home Screen</span>.</p>
+
+<!-- CHAPTER: id is the anchor; the rail's link repeats it twice (href and data-chapter-link).
+     h2: tabindex="-1", one chapter-icon svg (figures.md has six), the title in span.section-title-mark. -->
+<section class="chapter" id="SLOT-chapter-id"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">SLOT Chapter Title</span></h2>
+<p>SLOT paragraph.</p>
+<h3>SLOT Subsection Title</h3>
+<ol>
+	<li>SLOT step, naming a control: tap <span class="ui">Execute</span>.</li>
+	<li>SLOT step.</li>
+</ol>
+<ul>
+	<li>SLOT point.</li>
+</ul>
+
+<!-- TABLE: reference data in two or three columns. Always inside div.manual-table, which is what restacks it.
+     thead th carry scope="col". The cell that names the row is <th scope="row"> (semibold, UI face);
+     if no cell names the row, make every cell a td. EVERY td carries data-label="…" with the exact text
+     of its column head: below 520px of wrapper width the head is hidden and each td is labelled from it.
+     The row th takes no data-label; it becomes the block's title. Cells may hold span.ui, code and links.
+     Four columns or more do not restack well; split the table or use a list. -->
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">SLOT Column One</th><th scope="col">SLOT Column Two</th><th scope="col">SLOT Column Three</th></tr></thead>
+	<tbody>
+		<tr><th scope="row">SLOT row name</th><td data-label="SLOT Column Two">SLOT cell, perhaps <code>file.txt</code></td><td data-label="SLOT Column Three">SLOT cell, perhaps <span class="ui">Export</span></td></tr>
+		<tr><th scope="row">SLOT row name</th><td data-label="SLOT Column Two">SLOT cell</td><td data-label="SLOT Column Three">SLOT cell</td></tr>
+	</tbody>
+</table></div>
+
+<!-- FIGURE SLOT, one of three kinds. A figure follows the paragraph it illustrates; two are never adjacent.
+
+  1. A catalog figure from figures.md (Steps, Before and after, Bars, Loop, Code card), unchanged.
+
+  2. ONE SCREENSHOT. Both themes' images are in the markup and the CSS shows one, following the toggle
+     as well as the system; <picture media> cannot see the toggle, so it is not used.
+     BOTH imgs carry the SAME full alt text, width="1206" height="2622" (the file's real pixels),
+     loading="lazy" and decoding="async". The one not shown is display:none, which takes it out of the
+     accessibility tree and, being lazy, off the network: the text is read once, and whichever image
+     is on screen always has it. Never alt="" and never aria-hidden on either. -->
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/SLOT-name-light.png" alt="SLOT what the screen shows" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/SLOT-name-dark.png" alt="SLOT what the screen shows" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>SLOT one or two sentences that state what the screenshot shows.</figcaption></figure>
+
+<p>SLOT paragraph between two figures.</p>
+
+<!-- 3. TWO SCREENSHOTS side by side; they stack below 600px of paper width. Each cell is a div holding
+     its light and dark img and an optional span label. -->
+<figure class="sk sk-shot sk-shot-pair"><div class="sk-paper"><div class="sk-shots">
+	<div>
+		<img class="shot-light" src="../assets/shots/SLOT-first-light.png" alt="SLOT first screen" width="1206" height="2622" loading="lazy" decoding="async">
+		<img class="shot-dark" src="../assets/shots/SLOT-first-dark.png" alt="SLOT first screen" width="1206" height="2622" loading="lazy" decoding="async">
+		<span>SLOT Before</span>
+	</div>
+	<div>
+		<img class="shot-light" src="../assets/shots/SLOT-second-light.png" alt="SLOT second screen" width="1206" height="2622" loading="lazy" decoding="async">
+		<img class="shot-dark" src="../assets/shots/SLOT-second-dark.png" alt="SLOT second screen" width="1206" height="2622" loading="lazy" decoding="async">
+		<span>SLOT After</span>
+	</div>
+</div></div><figcaption>SLOT what changes between the two screens.</figcaption></figure>
+</section>
+
+<!-- More section.chapter blocks, one per step. -->
+
+<!-- PAGER: above the footer. The label names the chapter it goes to, the title is below it. The
+     contents page has only .pager-next and the last chapter only .pager-prev; a lone next still
+     sits in the right cell. The contents page is not a chapter, so the link to it carries the
+     label alone, <small>Previous</small>, with <strong>Contents</strong> under it. -->
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../SLOT-previous/"><small>Previous · Chapter SLOT-N</small><strong>SLOT Previous Chapter Title</strong></a>
+	<a class="pager-next" rel="next" href="../SLOT-next/"><small>Next · Chapter SLOT-N</small><strong>SLOT Next Chapter Title</strong></a>
+</nav>
+
+<!-- FOOTER: repository link on the left; signature and dateline on the right, the cover's day. -->
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>SLOT signature<time datetime="SLOT-YYYY-MM-DD">SLOT dateline</time></p></footer>
+
+</div>
+
+<!-- RAIL: the manual's contents, one list, identical on every page except which entry is current.
+     The eight chapters are numbered by CSS, so no number is written here. The page you are on
+     carries aria-current="page" and holds its own tasks in the nested ol.manual-nav-tasks, one
+     link per section.chapter, in the page's order, with the text of its span.section-title-mark
+     and its id in both href and data-chapter-link, so the script still follows your place.
+     The heading is a link back to the contents page; on the contents page itself it is plain text,
+     no entry is current and none carries tasks. There is no progress bar: a manual is not read end
+     to end, so one would measure nothing (manual.js tolerates its absence).
+     The rail is hidden at 950px and below; there the pager and the header's Manual link navigate. -->
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="./" aria-current="page">SLOT Chapter One (this page)</a><ol class="manual-nav-tasks">
+			<li><a href="#SLOT-chapter-id" data-chapter-link="SLOT-chapter-id">SLOT Chapter Title</a></li>
+		</ol></li>
+		<li><a href="../SLOT-2/">SLOT Chapter Two</a></li>
+		<li><a href="../SLOT-3/">SLOT Chapter Three</a></li>
+		<li><a href="../SLOT-4/">SLOT Chapter Four</a></li>
+		<li><a href="../SLOT-5/">SLOT Chapter Five</a></li>
+		<li><a href="../SLOT-6/">SLOT Chapter Six</a></li>
+		<li><a href="../SLOT-7/">SLOT Chapter Seven</a></li>
+		<li><a href="../SLOT-8/">SLOT Chapter Eight</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

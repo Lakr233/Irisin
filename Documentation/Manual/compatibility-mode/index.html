@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibility Mode.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="On roothide, Irisin can convert a rootless package before it installs. What the warning means, what Patch does, and which packages are refused.">
+<meta property="og:title" content="Compatibility Mode.">
+<meta property="og:description" content="On roothide, Irisin can convert a rootless package before it installs. What the warning means, what Patch does, and which packages are refused.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/compatibility-mode/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 5 of 8</span></p>
+	<h1 class="page-title" lang="en">Compatibility Mode</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>Compatibility mode is for one case: your bootstrap is roothide, and the package you want was built for rootless. Irisin can convert that package on your device so that it installs. If your bootstrap is rootless, Irisin converts nothing and you never see any of the screens described here.</p>
+<p>After this chapter you know when Irisin converts a package, what each warning means, and <span class="editorial-mark">what to do when a package is refused</span>. Each alert is quoted here word for word.</p>
+
+<section class="chapter" id="what-it-is"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M6 20L23 19L24 44L7 45Z"/><path d="M41 21L58 20L59 45L42 46Z"/><path d="M27 33Q32 31 37 32M33 28L38 32L33 37"/><path d="M46 33L49 37L54 28"/><path class="icon-detail" d="M11 27L19 27M11 34L17 34"/></svg><span class="section-title-mark">What It Is</span></h2>
+<p>Every package is built for one bootstrap, and its architecture says which one: <code>iphoneos-arm64</code> is rootless, and <code>iphoneos-arm64e</code> is roothide. On roothide, Irisin can <span class="editorial-mark">convert a package built for rootless</span> so that it installs on roothide. It does this on your device, after the package has downloaded and before anything is installed. That is compatibility mode.</p>
+<p>It works in <span class="editorial-mark">one direction only</span>. On rootless, nothing is converted. Packages built for the old rootful layout (<code>iphoneos-arm</code>) are not converted on either bootstrap.</p>
+<p>There is no switch for it. Irisin converts a package only when its architecture is neither your own nor <code>all</code>.</p>
+<p>A conversion can fail, and a package that was converted can misbehave once it is installed. Irisin says so each time, in the alert described under <a href="#the-warning">The Warning</a>.</p>
+</section>
+
+<section class="chapter" id="before-you-install"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">Before You Install</span></h2>
+<p>You can tell that a package will be converted before you queue it. Open the package's page and read the footer under its description (see <a href="../packages/#a-packages-page">A Package's Page</a>). The first line names what the package was built for, for example <span class="ui" data-key="Architecture: %@">Architecture: iphoneos-arm64</span>. When Irisin would convert the package, a second line reads <span class="ui"><span class="editorial-mark">Installs in compatibility mode.</span></span> The line appears only when the package does not fit your architecture and Irisin can convert the one it was built for.</p>
+<p>If another of your repositories offers the same package built for roothide, Irisin tells you when you ask to install the rootless one. The alert is titled <span class="ui">Better Package Available</span>, and its message reads like this: <span class="ui" data-key="You selected version %@, built for %@, which would be installed in compatibility mode. %@ offers version %@ built for this system.">You selected version 1.4, built for iphoneos-arm64, which would be installed in compatibility mode. Example Repo offers version 1.4 built for this system.</span> It has three buttons:</p>
+<ul>
+	<li><span class="ui">Select Recommended</span> opens the page of the package built for your system. Nothing is queued; you install it from that page. <span class="editorial-mark">Prefer <span class="ui">Select Recommended</span></span>: a package built for this system installs without being converted.</li>
+	<li>The second button goes on with the package you chose. It reads <span class="ui">Install Anyway</span>, or <span class="ui">Update Anyway</span>, <span class="ui">Downgrade Anyway</span>, or <span class="ui">Reinstall Anyway</span> when the package is already installed, or <span class="ui">Replace Anyway</span> when it is already in the queue.</li>
+	<li><span class="ui">Cancel</span> closes the alert and changes nothing.</li>
+</ul>
+<p>A package built for an architecture that Irisin cannot convert on your device has no install button. The button on its page reads <span class="ui">Unsupported</span>, in capital letters. Tap it and an alert titled <span class="ui">Unsupported Architecture</span> names both architectures: <span class="ui" data-key="This package is built for %@. This device uses %@. Choose a compatible package.">This package is built for iphoneos-arm. This device uses iphoneos-arm64e. Choose a compatible package.</span> On rootless, this is what a roothide package shows.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/compatibility-unsupported-light.png" alt="A package's page on a rootless system. The button beside the package's name reads UNSUPPORTED, and the footer under the description reads Architecture: iphoneos-arm64e." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/compatibility-unsupported-dark.png" alt="A package's page on a rootless system. The button beside the package's name reads UNSUPPORTED, and the footer under the description reads Architecture: iphoneos-arm64e." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>A package that Irisin cannot convert on this system, because it was built for another bootstrap.</figcaption></figure>
+<p>To see what your copy of Irisin converts, scroll to the bottom of <span class="ui">Settings</span> (see <a href="../settings/#the-footer">The Footer</a>). Under the line that names your architecture and your bootstrap, a roothide system shows <span class="ui" data-key="Also installs packages for %@">Also installs packages for iphoneos-arm64</span>. On rootless the line is missing, because nothing is converted there.</p>
+</section>
+
+<section class="chapter" id="the-warning"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 9Q34 8 36 11L56 47Q58 52 52 52L12 53Q6 53 9 48L29 11Q30 9 32 9Z"/><path d="M32 23L32 38"/><circle cx="32" cy="45" r="1.5"/><path class="icon-detail" d="M7 14L11 17M53 12L57 9M58 22L62 22"/></svg><span class="section-title-mark">The Warning</span></h2>
+<p>When you tap <span class="ui">Confirm</span> on a change that installs a converted package, Irisin asks once more before the change joins the queue. The alert is titled <span class="ui">Compatibility Mode</span> and reads: <span class="ui" data-key="You are about to install software in compatibility mode (%@). These packages are converted automatically during installation to a format this system supports. This may cause problems and damage the system.">You are about to install software in compatibility mode (Example Tweak and Example Theme). These packages are converted automatically during installation to a format this system supports. This may cause problems and damage the system.</span> <span class="editorial-mark">The parentheses name the packages</span> that would be converted, dependencies included. The buttons are <span class="ui">Cancel</span> and <span class="ui">Install Anyway</span>, which is drawn in red.</p>
+<p>Irisin asks about each package once, as it joins the queue, so a later alert names only the packages that are new. <span class="ui">Install Anyway</span> adds the change to the queue and closes the sheet. Nothing is installed yet: you still run the queue yourself, and you can still take the package out of it.</p>
+<p>The change sheet names the next step before you confirm. Under the list, its footer ends with <span class="ui">Packages in compatibility mode are patched before they install. If patching changes the queue, review it again before you execute.</span></p>
+</section>
+
+<section class="chapter" id="patch-before-execute"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M41 8Q33 9 31 17Q30 21 32 25L10 47Q7 51 11 54Q15 57 18 53L40 32Q45 34 50 32Q56 28 56 20L49 27L43 25L41 19L48 12Q45 8 41 8Z"/><circle cx="14" cy="50" r="1.5"/><path class="icon-detail" d="M50 42L56 44M46 49L49 55"/></svg><span class="section-title-mark">Patch Before Execute</span></h2>
+<p>While the queue holds a package that still has to be converted, the button on the Queue page reads <span class="ui">Patch</span> in place of <span class="ui">Execute</span>. <span class="ui">Patch</span> converts; it installs nothing.</p>
+<ol>
+	<li>Open the queue, from the <span class="ui">Queue</span> tab or the floating bar.</li>
+	<li>Tap <span class="ui">Patch</span>. A spinner takes the button's place, and the queue's menu is hidden until patching ends. Irisin downloads any file that is not on the device yet, then converts each package once.</li>
+	<li>If an alert titled <span class="ui">Queue Changed</span> appears, read it, tap <span class="ui">Dismiss</span>, and look through the queue again.</li>
+	<li>The button now reads <span class="ui">Execute</span>. Tap it to install, as described in <a href="../packages/#patch-and-execute">Patch and Execute</a>.</li>
+</ol>
+<p><span class="editorial-mark"><span class="ui">Patch</span> can change the queue.</span> Before it runs, Irisin has only the repository's description of the package, so it plans as if every converted package needs <code>rootless-compat</code>. After it runs, Irisin has read the files and knows which packages need it. A theme with no program code needs neither <code>rootless-compat</code> nor <code>com.roothide.patchloader</code>, so both leave the queue when nothing else asks for them.</p>
+<p>When that happens you see <span class="ui">Queue Changed</span>. The alert has up to three lines:</p>
+<ul>
+	<li><span class="ui" data-key="Removed from the queue: %@.">Removed from the queue: rootless-compat.</span> This line names what left.</li>
+	<li><span class="ui" data-key="Added to the queue: %@.">Added to the queue: Example Library.</span> This line names what joined.</li>
+	<li><span class="ui">Review the queue before you execute.</span> This line is always there.</li>
+</ul>
+<p>Its one button is <span class="ui">Dismiss</span>. If you left the Queue page while patching ran, the alert waits until you are back on it. No alert means patching changed nothing.</p>
+<h3>If Patch Fails</h3>
+<p>The reason appears in red at the top of the queue, beside a warning triangle, and nothing is installed. What happens next depends on the reason:</p>
+<ul>
+	<li>A package was refused. The row carries one of the messages listed under <a href="#what-is-refused">What Is Refused</a>, and the button still reads <span class="ui">Patch</span>. Tapping it again refuses the same package, so remove that package from the queue first.</li>
+	<li>Something else went wrong in the conversion. The row reads <span class="ui" data-key="Unable to patch %@. Try again.">Unable to patch com.example.tweak. Try again.</span> and the button still reads <span class="ui">Patch</span>. Tap it again.</li>
+	<li>A file could not be downloaded. The row reads <span class="ui">The download was interrupted.</span> and the button reads <span class="ui">Retry</span>, which downloads the file again.</li>
+</ul>
+<p>Packages that were converted before the failure stay converted, so the next tap starts from where the last one stopped.</p>
+</section>
+
+<section class="chapter" id="what-is-converted"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M14 10L49 9Q52 9 52 13L51 52Q51 55 47 55L15 54Q12 54 12 50L12 13Q12 10 14 10Z"/><path d="M18 20L21 23L26 17M18 32L21 35L26 29M18 44L21 47L26 41"/><path class="icon-detail" d="M31 21L45 21M31 33L43 33M31 45L45 45"/></svg><span class="section-title-mark">What Is Converted</span></h2>
+<p>Compatibility mode converts:</p>
+<ul>
+	<li>tweaks,</li>
+	<li>apps,</li>
+	<li>command-line programs,</li>
+	<li>daemons, and</li>
+	<li>themes.</li>
+</ul>
+<p>Three things change. Files the package keeps under <code>/var/jb/</code> move to where roothide keeps them. Programs and libraries are adjusted to find each other there and are signed again. The package's scripts and its architecture name are rewritten from <code>iphoneos-arm64</code> to <code>iphoneos-arm64e</code>. Images, strings files, and other plain resources are left unchanged.</p>
+<figure class="sk" id="figure-ch5"><div class="sk-paper"><div class="sk-ledger">
+	<div>
+		<p>Converted</p>
+		<ul>
+			<li><strong>Files under <code>/var/jb</code></strong><span>keep their path without it</span></li>
+			<li><strong>Tweaks, apps, programs, daemons</strong><span>converted and signed again</span></li>
+			<li><strong>A package with program code</strong><span>gains <code>rootless-compat</code></span></li>
+			<li><strong>A theme</strong><span>gains nothing</span></li>
+		</ul>
+	</div>
+	<div>
+		<p>Refused</p>
+		<ul>
+			<li><strong>A file outside <code>/var/jb</code></strong></li>
+			<li><strong>A <code>conffiles</code> list</strong></li>
+			<li><strong>A set-user-id or set-group-id file</strong></li>
+			<li><strong>Packages known not to work</strong><span>such as <code>ellekit</code></span></li>
+			<li><strong>Anything the Procursus Team maintains</strong></li>
+			<li><strong>Irisin itself</strong><span><code>wiki.qaq.irisin</code></span></li>
+		</ul>
+	</div>
+</div><p class="sk-foot">Any cross stops the package at <span class="ui">Patch</span>, before anything is installed.</p></div><figcaption>The left column is what Irisin rewrites in a package; anything on the right refuses the package whole.</figcaption></figure>
+<p>A converted package leaves two traces you may find on disk. Beside each converted program or library sits a link with the same name plus <code>.roothidepatch</code>. The package as it was shipped is also kept on the device, in a folder named <code>pkgmirror</code> under <code>var/mobile/Library</code>, where <code>rootless-compat</code> looks it up. Both belong to the package; leave them alone.</p>
+<p>A package with program code gains a dependency on <code>rootless-compat</code>, version 0.9 or later, which is installed before it. A package without program code, such as a theme, gains nothing. Irisin never adds a repository for you, so <code>rootless-compat</code> <span class="editorial-mark">must be available from one you have added</span>. If none of your repositories offers it, the queue cannot make a plan. You see the sheet titled <span class="ui">Unable to Prepare Installation</span>, and its reason reads <span class="ui">Some package requirements could not be matched.</span> The check that names <code>rootless-compat</code> ends in <span class="ui">Not Found in Installed Packages or Repositories</span>. Add a repository that offers it and try again; see <a href="../troubleshooting/#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a>.</p>
+</section>
+
+<section class="chapter" id="what-is-refused"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 8Q54 8 55 31Q56 54 32 55Q9 55 8 32Q8 9 32 8Z"/><path d="M22 22L42 43M43 21L21 43"/><path class="icon-detail" d="M56 9L60 6M58 16L62 16"/></svg><span class="section-title-mark">What Is Refused</span></h2>
+<p>A refused package is <span class="editorial-mark">never installed half converted</span>: the refusal comes before anything reaches the installer, so nothing on your device has changed. The reason appears in red at the top of the queue, in one of the three messages below. Each names the package by its identifier.</p>
+<h3>Refused by Name</h3>
+<p><span class="ui" data-key="%@ is known not to work in compatibility mode.">ellekit is known not to work in compatibility mode.</span> Some packages are known not to work once converted, and Irisin refuses them as soon as it opens the file, before it converts anything. A package is refused when:</p>
+<ul>
+	<li>its identifier is exactly <code>ellekit</code>, <code>oldabi</code>, or <code>wiki.qaq.irisin</code>;</li>
+	<li>its identifier contains any of <code>xinam1ne</code>, <code>xinamine</code>, <code>legizmo</code>, <code>vnodebypass</code>, <code>voicechangerx-rootless</code>, <code>appsyncunified</code>, <code>choicy</code>, <code>com.tigisoftware.filza</code>, <code>sileo</code>, <code>zebra</code>, <code>com.opa334.ccsupport</code>, <code>ws.hbang.common</code>, <code>libsandy</code>, <code>preferenceloader</code>, <code>newterm3</code>, or <code>altlist</code>;</li>
+	<li>its maintainer is the Procursus Team.</li>
+</ul>
+<p>No setting overrides the list. <span class="editorial-mark">Look for a roothide build</span> of the package instead.</p>
+<h3>Refused by Content</h3>
+<p>Other packages are refused for what is inside them. There are two messages.</p>
+<ul>
+	<li><span class="ui" data-key="%@ cannot be installed in compatibility mode, which does not convert %@.">com.example.tweak cannot be installed in compatibility mode, which does not convert DEBIAN/conffiles.</span> The second name is what stopped the conversion, spelled as it appears in the package. The most common are a file outside <code>/var/jb/</code>, a <code>conffiles</code> list, and a set-user-id or set-group-id file.</li>
+	<li><span class="ui" data-key="%@ cannot be installed in compatibility mode. %@ could not be converted.">com.example.tweak cannot be installed in compatibility mode. var/jb/usr/bin/example could not be converted.</span> The second name is a program or library inside the package that Irisin could not rewrite: it is damaged, it is not 64-bit, it has no room for the change, or it carries entitlements that cannot be preserved.</li>
+</ul>
+<p>Neither is something you can fix on the device, and trying again fails the same way. <span class="editorial-mark">Send the message to the package's maintainer</span>, or look for a roothide build.</p>
+<p>One more case never reaches <span class="ui">Patch</span>. A rootless package that declares a conflict with your bootstrap gets no plan at all. Irisin does not offer a plan that would remove the bootstrap to make room for it. See <a href="../troubleshooting/#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a>.</p>
+<h3>Irisin Itself</h3>
+<p><code>wiki.qaq.irisin</code> is on the list above, so Irisin never installs itself through compatibility mode. Irisin has a package for each bootstrap. Install the one for yours; see <a href="../installing/#choose-your-package">Choose Your Package</a>. Do not convert Irisin with another patcher either: a copy built for the other bootstrap stops at <span class="ui">Unsupported Architecture</span> when it opens, as <a href="../installing/#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a> explains.</p>
+<p>A newer version of a package you installed in compatibility mode would have to be converted again, so Irisin does not offer it as an update until you allow it. See <a href="../updates/#compatibility-updates">Compatibility Updates</a>.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../updates/"><small>Previous · Chapter 4</small><strong>Updates</strong></a>
+	<a class="pager-next" rel="next" href="../translation/"><small>Next · Chapter 6</small><strong>Translation</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="./" aria-current="page">Compatibility Mode</a><ol class="manual-nav-tasks">
+			<li><a href="#what-it-is" data-chapter-link="what-it-is">What It Is</a></li>
+			<li><a href="#before-you-install" data-chapter-link="before-you-install">Before You Install</a></li>
+			<li><a href="#the-warning" data-chapter-link="the-warning">The Warning</a></li>
+			<li><a href="#patch-before-execute" data-chapter-link="patch-before-execute">Patch Before Execute</a></li>
+			<li><a href="#what-is-converted" data-chapter-link="what-is-converted">What Is Converted</a></li>
+			<li><a href="#what-is-refused" data-chapter-link="what-is-refused">What Is Refused</a></li>
+		</ol></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

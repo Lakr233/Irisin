@@ -5,6 +5,7 @@ on:
     branches: [main-4.0]
     paths:
       - Documentation/Site/**
+      - Documentation/Manual/**
       - .github/workflows/pages.yml
   release:
     types: [published, edited]
@@ -59,6 +60,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .depiction-tools/scripts/update-depiction-changelogs.py --repository "$GITHUB_REPOSITORY" --depiction Documentation/Site/depiction.json
+      # The manual is edited as a folder of its own; the site is assembled here, in the runner's workspace only, like the depiction's release notes.
+      - name: Copy the manual into the site
+        run: |
+          cp -R Documentation/Manual Documentation/Site/manual
+          rm -f Documentation/Site/manual/assets/_skeleton.html Documentation/Site/manual/assets/shots/README.md
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

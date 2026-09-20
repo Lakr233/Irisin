@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repositories.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="Add a repository by address, link, or file, keep it fresh, share your list, remove what is broken, and sign in to a vendor to buy packages.">
+<meta property="og:title" content="Repositories.">
+<meta property="og:description" content="Add a repository by address, link, or file, keep it fresh, share your list, remove what is broken, and sign in to a vendor to buy packages.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/repositories/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 2 of 8</span></p>
+	<h1 class="page-title" lang="en">Repositories</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>A repository is an address that offers packages. After this chapter you can add any repository, <span class="editorial-mark">tell a healthy one from a broken one</span>, move your list to another device, and buy from a vendor.</p>
+
+<section class="chapter" id="add-a-repository"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 9Q54 10 54 32Q53 55 31 54Q9 53 10 31Q11 9 32 9Z"/><path d="M32 21L31 43M21 32L43 33"/><path class="icon-detail" d="M53 8L57 4M58 14L62 13M6 52L3 56"/></svg><span class="section-title-mark">Add a Repository</span></h2>
+<ol>
+	<li>Open the <span class="ui">Repositories</span> tab and tap the add button. The <span class="ui">Add Repository</span> sheet opens.</li>
+	<li>Tap the field under <span class="ui">Repository URL</span>. Irisin fills in <code>https://</code>, so you type only the host, for example <code>repo.chariz.com</code>.</li>
+	<li>Stop typing and <span class="editorial-mark">wait. The row under the field shows the host with a spinner, then the repository's own name and icon</span>.</li>
+	<li>Tap <span class="ui">Add</span> in the bar. The repository joins your list, the sheet closes, and the first refresh starts.</li>
+</ol>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/repositories-add-light.png" alt="The Add Repository sheet with repo.chariz.com typed in the Repository URL field. The row below shows the repository's name and icon, Add is enabled, and the Clipboard section holds Read from Clipboard." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/repositories-add-dark.png" alt="The Add Repository sheet with repo.chariz.com typed in the Repository URL field. The row below shows the repository's name and icon, Add is enabled, and the Clipboard section holds Read from Clipboard." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The add sheet after the lookup: the row names the repository, and Add is enabled.</figcaption></figure>
+<p><span class="ui">Add</span> stays dimmed until the lookup has come back, whether the address answered or not. Return on the keyboard does the same as <span class="ui">Add</span>. The lookup only reads the repository's name and icon. It adds nothing to your list.</p>
+<p>You may leave out <code>https://</code>. Irisin adds it and drops any slashes at the end of the address.</p>
+<h3>If It Says Repository Unreachable</h3>
+<p>When the row reads <span class="ui">Repository Unreachable</span>, the address did not answer with a repository. Check the spelling first. If you tap <span class="ui">Add</span> anyway, Irisin asks <span class="ui">Add Unreachable Repository?</span> with the message <span class="ui">This address did not respond. You can add the repository anyway and refresh it later.</span> Choose <span class="ui">Cancel</span> to go back to the field, or <span class="ui">Add</span> to keep the address in your list for a later refresh.</p>
+<h3>If It Says Already Added</h3>
+<p><span class="ui">Already Added</span> with <span class="ui">This repository is already in the list.</span> means nothing changes: the repository you have stays as it is.</p>
+<h3>From the Clipboard</h3>
+<p>Under <span class="ui">Clipboard</span>, tap <span class="ui">Read from Clipboard</span>. Irisin reads the clipboard <span class="editorial-mark">only when you tap that row</span>, never on its own. The addresses it finds replace the row, each with its own <span class="ui">Add</span>, and the header gains <span class="ui">Add All</span>. A short notice counts them, for example <span class="ui" data-key="Repositories found: %lld">Repositories found: 2</span>. When the clipboard holds no address, you see <span class="ui">No Repositories Found</span> with <span class="ui">The clipboard has no repository address.</span> and the sheet stays as it was.</p>
+<p>The two kinds of <span class="ui">Add</span> behave differently. A row's <span class="ui">Add</span> adds that repository on the spot, turns into a checkmark, and keeps the sheet open so you can add the next one. <span class="ui">Add</span> in the bar adds what you typed in the field and closes the sheet.</p>
+<h3>History</h3>
+<p><span class="ui">History</span> lists repositories you added before and later deleted. Tap one to add it again. To drop one from the list for good, swipe it and tap <span class="ui">Forget</span>. The footer says the same: <span class="ui">You added these repositories before. Swipe one to forget it.</span> The section is absent when you have never deleted a repository.</p>
+<p>The footer under the address field repeats the safety note from <a href="../installing/#the-welcome-page">The Welcome Page</a>: <span class="ui">A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and we cannot verify that its packages are safe.</span></p>
+</section>
+
+<section class="chapter" id="a-repositorys-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M11 10L51 11Q55 11 54 16L53 49Q53 53 48 53L12 52Q8 52 9 47L9 15Q9 10 11 10ZM10 21L53 22"/><path d="M16 16L17 16M23 16L24 16M30 16L31 16M20 33L32 33M20 40L27 40"/><path class="icon-detail" d="M38 32L45 38L37 44Z"/></svg><span class="section-title-mark">A Repository's Page</span></h2>
+<p>Tap a repository in the list to open its page. At the top are the repository's featured banners, if it has any. Below them, <span class="ui">Packages</span> holds one row, <span class="ui">All</span>, with the number of packages the repository offers. <span class="ui">Sections</span> follows, with one row for each section the repository sorts its packages into.</p>
+<p>The footers tell you about the repository itself. Under <span class="ui">All</span> is the repository's own description, or <span class="ui">No description.</span> when it gives none. Under the sections are the counts, for example <span class="ui" data-key="Packages: %lld · Sections: %lld">Packages: 412 · Sections: 9</span>, and the date and time of the last refresh, for example <span class="ui" data-key="Last updated: %@">Last updated: Sep 20, 2026 at 9:41:07 AM</span>. Before the first refresh it reads <span class="ui">Never</span> in place of the date.</p>
+<p>A repository you have just added may look empty, because its first refresh has not finished yet. Tapping a section then says <span class="ui">No Packages</span> with <span class="ui">Refresh the repository and try again.</span> You do not need to leave the page: it <span class="editorial-mark">fills in by itself</span> when the refresh finishes.</p>
+<p>The share button in the bar opens a menu:</p>
+<ul>
+	<li><span class="ui">Copy Address</span> copies the repository's address.</li>
+	<li><span class="ui">Copy APT Source</span> copies the address too, or the whole <code>deb …</code> line when the repository has a suite and components.</li>
+	<li><span class="ui">Share</span> opens the share sheet for this one repository.</li>
+	<li><span class="ui">Export Packages</span> and <span class="ui">Export All Repository Information…</span> write files. See <a href="#import-and-export">Import and Export</a>.</li>
+</ul>
+<p>After either copy, a notice says <span class="ui">Copied</span>.</p>
+</section>
+
+<section class="chapter" id="refresh-and-status"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M51 28Q46 13 31 13Q17 14 13 28M12 16L13 29L25 27"/><path d="M13 37Q18 51 33 51Q47 50 51 37M52 49L51 36L39 38"/><circle class="icon-detail" cx="32" cy="32" r="3"/></svg><span class="section-title-mark">Refresh and Status</span></h2>
+<p>A refresh asks a repository what it offers now. There are three ways to start one:</p>
+<ul>
+	<li><span class="editorial-mark">Pull the list down</span> to refresh every repository, no matter how recently it was fetched.</li>
+	<li>Tap the … button and choose <span class="ui">Refresh</span> to refresh only the repositories that have not been fetched in the last 24 hours. If none is due, you see <span class="ui">No update required</span> with <span class="ui">Tap again to refresh all.</span> Choose <span class="ui">Refresh</span> again right away and every repository refreshes.</li>
+	<li>Swipe one row to the left and tap <span class="ui">Refresh</span> to refresh that repository alone.</li>
+</ul>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/repositories-menu-light.png" alt="The Repositories list with its menu open: Refresh, then Select, Import Repository List… and Export Repository List, then Remove Broken Repositories in red. Behind it, repository rows with green dots and the count line." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/repositories-menu-dark.png" alt="The Repositories list with its menu open: Refresh, then Select, Import Repository List… and Export Repository List, then Remove Broken Repositories in red. Behind it, repository rows with green dots and the count line." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The Repositories menu, with Remove Broken Repositories in red at the end.</figcaption></figure>
+<p>Irisin also starts its own refresh shortly after it opens, for every repository last fetched more than 24 hours ago.</p>
+<p>The small dot at the corner of each repository's icon shows its state:</p>
+<ul>
+	<li>Cyan: the repository is waiting to refresh or is downloading.</li>
+	<li>Green: the repository is healthy and fresh.</li>
+	<li>Red: the repository has no packages, gave no information about itself, or has not been fetched for more than 24 hours.</li>
+</ul>
+<p>A red dot <span class="editorial-mark">also means stale</span>, not only broken. Refresh the repository before you decide that it is gone.</p>
+<p>While a repository refreshes, a tint widens across its row to show the progress. The badge on the <span class="ui">Repositories</span> tab counts the repositories that are still refreshing. The line under the list counts what you have, for example <span class="ui" data-key="Repositories: %lld · Packages: %lld">Repositories: 6 · Packages: 12480</span>.</p>
+<p>When you have no repositories, the list holds one row: <span class="ui">No repositories</span> with <span class="ui">Use the add button above to add a repository.</span></p>
+</section>
+
+<section class="chapter" id="advanced-source"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M9 17L17 17M27 17L55 18M9 32L37 32M47 32L55 32M10 47L22 47M32 47L55 46"/><circle cx="22" cy="17" r="5"/><circle cx="42" cy="32" r="5"/><circle cx="27" cy="47" r="5"/><path class="icon-detail" d="M58 8L61 5M4 56L7 59"/></svg><span class="section-title-mark">Advanced Source</span></h2>
+<p>Some repositories need a suite and components as well as an address. For those, scroll to the last row of the add sheet and tap <span class="ui">Add Advanced Source</span>. The add sheet closes and the <span class="ui">Advanced Source</span> sheet takes its place.</p>
+<ol>
+	<li>Fill in <span class="ui">URL</span>, <span class="ui">Suite</span>, and <span class="ui">Components</span>. For Procursus on iOS 17 they are <code>https://apt.procurs.us</code>, <code>2000</code>, and <code>main</code>.</li>
+	<li>Watch <span class="ui">Add</span>. It is enabled when the three fields form a valid source.</li>
+	<li>Tap <span class="ui">Add</span>. The sheet closes and the first refresh starts.</li>
+</ol>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/repositories-advanced-light.png" alt="The Advanced Source sheet with URL https://apt.procurs.us, Suite 2000 and Components main filled in, the two footers under Suite and Components, and Add enabled." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/repositories-advanced-dark.png" alt="The Advanced Source sheet with URL https://apt.procurs.us, Suite 2000 and Components main filled in, the two footers under Suite and Components, and Add enabled." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Advanced Source with Procursus for iOS 17.</figcaption></figure>
+<p>A valid source has a host, and then one of three shapes: no suite at all; a suite that ends in <code>/</code> with no components, which is a flat repository; or a suite with at least one component. The footers on the sheet say the same: <span class="ui">The distribution under dists/, or a path ending in / for a flat repository.</span> under <span class="ui">Suite</span>, and <span class="ui">Separated by spaces. Leave empty for a flat repository.</span> under <span class="ui">Components</span>.</p>
+<p>Nothing is looked up on this sheet, so <span class="editorial-mark">a typo is only found at the first refresh</span>, when the repository stays empty and its dot turns red. An address that is already in your list is ignored, and no alert says so.</p>
+</section>
+
+<section class="chapter" id="links"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M28 24L35 17Q42 11 48 17Q54 24 47 31L40 38Q36 41 32 39"/><path d="M36 40L29 47Q22 53 16 47Q10 40 17 33L24 26Q28 23 32 25"/><path class="icon-detail" d="M26 38L38 26M52 44L57 47M46 51L48 56"/></svg><span class="section-title-mark">Links</span></h2>
+<p>Irisin opens two kinds of link. A repository link is <code>irisin://repository/add?url=…</code>, with <code>&amp;suite=…&amp;component=…</code> after it when the repository needs them. A package link is <code>irisin://package/&lt;identifier&gt;</code>.</p>
+<p>A repository link opens the add sheet with its addresses listed under <span class="ui">From Link</span>. <span class="editorial-mark">Nothing is added until you tap</span> <span class="ui">Add</span> on a row or <span class="ui">Add All</span> in the header. A repository you already have is listed too, with a checkmark in place of its button.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/repositories-from-link-light.png" alt="The Add Repository sheet opened by a link. Under the From Link header with Add All are two repositories: one with an Add button, and one already added, with a checkmark." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/repositories-from-link-dark.png" alt="The Add Repository sheet opened by a link. Under the From Link header with Add All are two repositories: one with an Add button, and one already added, with a checkmark." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The add sheet opened by a link, with the two repositories the link offers.</figcaption></figure>
+<p>A package link opens that package's page, at the newest version any of your repositories offers. If none of them offers it, nothing opens and Irisin says <span class="ui">Package Not Found</span> with <span class="ui" data-key="No added repository offers “%@”. Add the repository that has it, then try again.">No added repository offers “com.example.package”. Add the repository that has it, then try again.</span></p>
+<p>A link Irisin cannot read is refused, never guessed at: <span class="ui">Unable to Open Link</span> with <span class="ui">This link is not valid.</span> If you write links for others, these are what Irisin refuses:</p>
+<ul>
+	<li>a parameter it does not know;</li>
+	<li>a parameter with an empty value;</li>
+	<li>a repository link with no <code>url</code>;</li>
+	<li>an address without its own <code>http://</code> or <code>https://</code>;</li>
+	<li>a second <code>suite</code>;</li>
+	<li>a <code>suite</code> together with more than one address.</li>
+</ul>
+</section>
+
+<section class="chapter" id="import-and-export"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M17 8L38 9L48 19L47 55L16 54Z"/><path d="M38 9L38 19L48 19M26 27L26 44M21 39L26 45L31 39"/><path class="icon-detail" d="M38 45L38 29M33 34L38 28L43 34"/></svg><span class="section-title-mark">Import and Export</span></h2>
+<p>Irisin has two file types of its own:</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">File</th><th scope="col">What It Holds</th><th scope="col">Made By</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><code>.irisinrepos</code></th><td data-label="What It Holds">A list of repository addresses.</td><td data-label="Made By"><span class="ui">Export Repository List</span> and <span class="ui">Share</span></td></tr>
+		<tr><th scope="row"><code>.irisinrepo</code></th><td data-label="What It Holds">One repository with its whole catalog.</td><td data-label="Made By"><span class="ui">Export All Repository Information…</span></td></tr>
+	</tbody>
+</table></div>
+<p><span class="editorial-mark">Neither holds a sign-in</span>. Your vendor accounts stay on the device.</p>
+<h3>Export Your List</h3>
+<ol>
+	<li>On the <span class="ui">Repositories</span> tab, tap the … button.</li>
+	<li>Choose <span class="ui">Export Repository List</span>. The share sheet opens with a file named <code>Repositories-&lt;date&gt;.irisinrepos</code> that holds every address in your list.</li>
+</ol>
+<p>With no repositories, Irisin says <span class="ui">Nothing to Export</span> and writes no file.</p>
+<h3>Share One Repository</h3>
+<ul>
+	<li>Swipe a row to the right and tap <span class="ui">Share</span>. The file is an <code>.irisinrepos</code> with that one address in it.</li>
+	<li>Touch and hold a row and choose <span class="ui">Export All Repository Information…</span>. The file is an <code>.irisinrepo</code>: the repository with its whole catalog.</li>
+</ul>
+<h3>Import</h3>
+<ol>
+	<li>Choose the file in one of three ways: tap the … button and choose <span class="ui">Import Repository List…</span>; tap <span class="ui">Import</span> on the add sheet; or open the file from Files or Mail. Irisin's file picker shows only these two file types.</li>
+	<li>The add sheet lists the addresses you do not have yet under <span class="ui">From File</span>.</li>
+	<li>Tap <span class="ui">Add</span> on a row, or <span class="ui">Add All</span>. Nothing is added before you do.</li>
+</ol>
+<p>An import <span class="editorial-mark">takes the addresses and nothing else</span>, even from an <code>.irisinrepo</code> that carries a catalog. The name, description, and packages you see afterward come from the server at the refresh that follows, not from whoever made the file.</p>
+<figure class="sk" id="figure-ch2"><div class="sk-paper"><ol class="sk-steps">
+	<li><strong>The file</strong><span><code>.irisinrepo</code> or a list</span><dl><dt>address</dt><dd>the file</dd><dt>name</dt><dd>the file</dd><dt>packages</dt><dd>the file</dd></dl></li>
+	<li><strong><span class="ui">From File</span></strong><span>on the add sheet</span><dl><dt>address</dt><dd>the file</dd><dt>name</dt><dd><del>the file</del></dd><dt>packages</dt><dd><del>the file</del></dd></dl></li>
+	<li class="sk-goal"><strong>The first refresh</strong><span>starts when you tap <span class="ui">Add</span></span><dl><dt>address</dt><dd>the file</dd><dt>name</dt><dd><ins>the server</ins></dd><dt>packages</dt><dd><ins>the server</ins></dd></dl><em class="sk-ok">up to date</em></li>
+</ol></div><figcaption>Only the address comes out of the file. The first refresh brings the name and packages from the server.</figcaption></figure>
+<p>Three messages belong to these files:</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">Alert</th><th scope="col">Message</th><th scope="col">What It Means</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><span class="ui">Unable to Import</span></th><td data-label="Message"><span class="ui">This file could not be read. Choose another file.</span></td><td data-label="What It Means">The file is damaged, is not one of the two types, or was written by a newer Irisin than yours.</td></tr>
+		<tr><th scope="row"><span class="ui">Nothing to Import</span></th><td data-label="Message"><span class="ui">This file has no new repositories to add.</span></td><td data-label="What It Means">Every address in the file is already in your list.</td></tr>
+		<tr><th scope="row"><span class="ui">Unable to Export</span></th><td data-label="Message"><span class="ui">The file could not be written. Try again.</span></td><td data-label="What It Means">No file was made, and the share sheet does not open.</td></tr>
+	</tbody>
+</table></div>
+<p><span class="ui">Export Packages</span> on a repository's page is a different kind of export. It writes that repository's catalog as a <code>.txt</code> file, one package per line, for you to read. Irisin cannot import it. For every other export, see <a href="../settings/#the-menu-and-exports">The Menu and Exports</a>.</p>
+</section>
+
+<section class="chapter" id="remove-a-repository"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M13 18L51 19M25 18L26 11L38 11L39 18"/><path d="M18 19L21 54L43 55L46 19"/><path class="icon-detail" d="M27 27L28 46M37 27L36 46"/></svg><span class="section-title-mark">Remove a Repository</span></h2>
+<p>To remove one repository:</p>
+<ol>
+	<li>Swipe its row to the left and tap <span class="ui">Delete</span>.</li>
+	<li>Irisin asks <span class="ui">Delete Repository?</span> with <span class="ui">Packages from deleted repositories will no longer be listed. This cannot be undone.</span> and the repository's name.</li>
+	<li>Tap <span class="ui">Delete</span>.</li>
+</ol>
+<p>To remove several at once:</p>
+<ol>
+	<li>Tap the … button and choose <span class="ui">Select</span>, or drag two fingers down the list.</li>
+	<li>Tick the repositories to remove.</li>
+	<li>Tap <span class="ui">Delete</span> in the bar. The alert's title carries the count, for example <span class="ui" data-key="Delete %lld Repositories?">Delete 3 Repositories?</span></li>
+	<li>Tap <span class="ui">Delete</span>.</li>
+</ol>
+<p>The repository's packages leave every list, and <span class="editorial-mark">your sign-in for that repository is deleted</span>. The packages you installed from it stay installed. The address stays too, as a line in <span class="ui">History</span> on the add sheet, so you can add it back.</p>
+<h3>Remove Broken Repositories</h3>
+<p>Tap the … button and choose <span class="ui">Remove Broken Repositories</span>. It removes every repository that has no packages and is not refreshing at that moment. It asks first with <span class="ui">Remove Broken Repositories?</span>, lists their names, and removes them when you tap <span class="ui">Remove All</span>. When there are none, it says <span class="ui">No broken repositories</span>.</p>
+<p><span class="editorial-mark">Refresh before you use it</span>. A repository that has never been fetched has no packages either, so it counts as broken until its first refresh succeeds.</p>
+</section>
+
+<section class="chapter" id="vendor-accounts-and-purchases"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M9 30L30 9L53 10L54 33L33 55Z"/><circle cx="44" cy="20" r="3"/><path class="icon-detail" d="M23 33L32 42M29 27L38 36"/></svg><span class="section-title-mark">Vendor Accounts and Purchases</span></h2>
+<p>A vendor is a repository that sells packages and holds your account. The <span class="ui">Account</span> button appears on a repository's page only if the repository sells packages. While you are signed out, tapping it starts <span class="ui">Sign In</span>: the vendor's own page opens in a sheet, and you sign in there. Sign-in sends your device's identifier and model to the vendor. If you close the sheet yourself, nothing happens and no error appears.</p>
+<p>Once you are signed in, the button is a menu with <span class="ui">Purchased</span>, which lists what you bought from this vendor, and <span class="ui">Sign Out</span>. The same menu is under <span class="ui">Settings → Vendor Accounts</span>, with one row for each repository that sells. That group is absent when none of your repositories does. See <a href="../settings/#vendor-accounts">Vendor Accounts</a>.</p>
+<h3>Buy a Package</h3>
+<p>On the page of a package that is for sale and not installed, the button reads <span class="ui">Buy</span>, shown in capitals, in place of <span class="ui">Install</span>.</p>
+<ol>
+	<li>Tap the button.</li>
+	<li>If you are signed out, sign-in starts for that repository and nothing is queued. Sign in, then tap the button again.</li>
+	<li>If you are signed in, <span class="ui">Checking Purchase…</span> appears while Irisin asks the vendor.</li>
+	<li>If you already bought the package, it goes to the queue like any other. If you have not, the vendor's purchase page opens in a sheet. After you pay, tap the button again.</li>
+</ol>
+<p>These are the messages a vendor can cause:</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">Alert</th><th scope="col">Message</th><th scope="col">What It Means</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><span class="ui">Sign-In Failed</span></th><td data-label="Message"><span class="ui">Sign-in did not complete. Try again.</span></td><td data-label="What It Means">The vendor's page came back without signing you in.</td></tr>
+		<tr><th scope="row"><span class="ui">Vendor Unavailable</span></th><td data-label="Message"><span class="ui">The vendor did not answer. Try again.</span></td><td data-label="What It Means">Irisin could not find out whether you own the package, so nothing is queued.</td></tr>
+		<tr><th scope="row"><span class="ui">Download Unavailable</span></th><td data-label="Message"><span class="ui">The repository did not provide a download for this purchase. Try again later.</span></td><td data-label="What It Means">You own the package, but the vendor gave no download for it.</td></tr>
+		<tr><th scope="row"><span class="ui">Package Unavailable</span></th><td data-label="Message"><span class="ui">This package is not available. Contact the vendor for support.</span></td><td data-label="What It Means">You have not bought the package, and the vendor is not selling it.</td></tr>
+		<tr><th scope="row"><span class="ui">Unable to Load Purchases</span></th><td data-label="Message"><span class="ui">The vendor did not answer. Try again.</span></td><td data-label="What It Means"><span class="ui">Purchased</span> asked the vendor what you own and got no answer, so no list opens.</td></tr>
+	</tbody>
+</table></div>
+<p>A purchased package is downloaded through a link the vendor gives Irisin when you queue it, and that link expires. If the download then fails in the queue, the failure ends with this line: <span class="ui">A purchased package's download link expires. <span class="editorial-mark">Remove it from the queue and add it again.</span></span></p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../installing/"><small>Previous · Chapter 1</small><strong>Installing Irisin</strong></a>
+	<a class="pager-next" rel="next" href="../packages/"><small>Next · Chapter 3</small><strong>Finding and Installing Packages</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="./" aria-current="page">Repositories</a><ol class="manual-nav-tasks">
+			<li><a href="#add-a-repository" data-chapter-link="add-a-repository">Add a Repository</a></li>
+			<li><a href="#a-repositorys-page" data-chapter-link="a-repositorys-page">A Repository's Page</a></li>
+			<li><a href="#refresh-and-status" data-chapter-link="refresh-and-status">Refresh and Status</a></li>
+			<li><a href="#advanced-source" data-chapter-link="advanced-source">Advanced Source</a></li>
+			<li><a href="#links" data-chapter-link="links">Links</a></li>
+			<li><a href="#import-and-export" data-chapter-link="import-and-export">Import and Export</a></li>
+			<li><a href="#remove-a-repository" data-chapter-link="remove-a-repository">Remove a Repository</a></li>
+			<li><a href="#vendor-accounts-and-purchases" data-chapter-link="vendor-accounts-and-purchases">Vendor Accounts and Purchases</a></li>
+		</ol></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

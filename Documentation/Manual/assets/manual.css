@@ -1,0 +1,559 @@
+:root {
+ color-scheme:light;
+ --font-sans:"Helvetica Neue",sans-serif;
+ --font-serif:Charter,"Iowan Old Style",serif;
+ --font-mono:Menlo,Consolas,monospace;
+ --color-background:#faf9f5; --color-surface:#faf9f5; --color-background-secondary:#f0eee6;
+ --color-ink:#191918; --color-primary:#292925; --color-secondary:#77766d;
+ --color-tertiary:#c9c6bb; --color-separator:#d8d5cb;
+ --color-link:#278eff; --color-accent:#278eff;
+}
+* { box-sizing:border-box; }
+html { scroll-padding-top:40px; }
+body { margin:0; background:var(--color-background); color:var(--color-primary); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
+[hidden] { display:none!important; }
+a { color:inherit; text-decoration-thickness:1px; text-underline-offset:3px; }
+a:hover { color:var(--color-link); }
+:focus-visible { outline:2px solid var(--color-link); outline-offset:5px; }
+::selection { background:#dedbca; }
+/* The header floats: it spans the window so its blur covers what scrolls under
+   it, while its padding holds the brand on the reading column's own left edge,
+   max(gutter, half the slack around the column). Sticky, not fixed, so it keeps
+   its place in the flow and nothing has to be pushed down to clear it. */
+.site-header { position:sticky; top:0; z-index:20; padding:18px max(32px,calc((100% - 952px) / 2)); display:flex; justify-content:space-between; align-items:center; background:color-mix(in srgb,var(--color-background) 78%,transparent); -webkit-backdrop-filter:saturate(180%) blur(18px); backdrop-filter:saturate(180%) blur(18px); }
+/* An anchor must clear the floating header, or a heading lands under it. */
+.chapter,.chapter h2,.chapter h3,.article-content section[id] { scroll-margin-top:84px; }
+@supports not (backdrop-filter:blur(1px)) { .site-header { background:var(--color-background); } }
+.site-header a { text-decoration:none; }
+.brand { display:flex; gap:8px; align-items:center; font-size:21px; font-weight:600; letter-spacing:-.6px; }
+.brand svg { width:22px; height:22px; }
+.back { font-size:13px; }
+.page { max-width:1144px; margin:0 auto; padding:0 32px 100px; }
+.article-cover { display:grid; grid-template-columns:220px minmax(0,1fr); column-gap:54px; padding:64px 0 74px; }
+.cover-category { grid-column:1; grid-row:1; margin:9px 0 0; font-size:14px; font-weight:600; line-height:1.5; }
+.page-title { grid-column:2; grid-row:1; color:var(--color-ink); margin:0 0 56px; max-width:790px; font-size:clamp(42px,5vw,64px); font-weight:600; letter-spacing:-.04em; line-height:1.09; text-wrap:balance; }
+.cover-divider { grid-column:1/-1; height:1px; background:#8d8b81; margin-bottom:26px; }
+.cover-meta { grid-column:1; grid-row:3; font-size:13px; line-height:1.8; }
+.cover-deck { grid-column:2; grid-row:3; margin:0; max-width:740px; font-size:24px; line-height:1.55; letter-spacing:-.015em; text-wrap:pretty; }
+.reader-layout { display:grid; grid-template-columns:minmax(0,700px) 180px; gap:72px; max-width:952px; margin:12px auto 0; align-items:start; }
+.article-content { min-width:0; font-family:var(--font-serif); font-size:20px; line-height:1.6; }
+.article-content p { margin:0 0 25px; }
+.article-content h2,.article-content h3 { font-family:var(--font-sans); color:var(--color-ink); }
+.article-content h2 { margin:54px 0 22px; font-size:30px; line-height:1.3; font-weight:600; letter-spacing:-.025em; }
+.article-content h3 { margin:32px 0 15px; font-size:21px; font-weight:600; line-height:1.45; letter-spacing:-.015em; }
+.chapter { scroll-margin-top:36px; }
+.chapter h2:focus { outline:none; }
+.article-content ul,.article-content ol { padding-left:25px; }
+.article-content li { margin:8px 0; }
+.article-content strong { font-weight:600; }
+code { font-family:var(--font-mono); font-size:.75em; background:var(--color-background-secondary); border-radius:3px; padding:2px 4px; overflow-wrap:anywhere; }
+.reading-sidebar { position:sticky; top:40px; padding-left:18px; border-left:1px solid var(--color-separator); font-size:12px; line-height:1.6; }
+.contents-heading { margin:0 0 18px; font-weight:500; color:var(--color-secondary); }
+.reading-sidebar ol { padding:0; margin:0; list-style:none; }
+.reading-sidebar li { margin:0 0 15px; }
+.reading-sidebar a { display:block; text-decoration:none; color:var(--color-secondary); font-weight:400; -webkit-text-stroke:0 currentColor; transition:color .22s ease,-webkit-text-stroke-width .22s ease; }
+.reading-sidebar a:hover,.reading-sidebar a[aria-current] { color:var(--color-link); }
+.reading-sidebar a[aria-current] { -webkit-text-stroke-width:.45px; }
+.reading-progress { position:absolute; top:0; bottom:0; left:-1px; width:2px; background:transparent; overflow:hidden; }
+.reading-progress-fill { display:block; height:100%; background:var(--color-link); transform:scaleY(var(--reading-progress,0)); transform-origin:top; transition:transform .18s linear; }
+@media(prefers-reduced-motion:reduce) { .reading-sidebar a,.reading-progress-fill { transition:none; } }
+.article-end { border-top:1px solid var(--color-separator); margin-top:54px; padding-top:23px; font:14px/1.7 var(--font-sans); }
+@media(max-width:950px) {
+ .site-header { padding:14px max(32px,calc((100% - 680px) / 2)); }.article-cover { grid-template-columns:170px minmax(0,1fr); gap:0 32px; padding-top:45px; }
+ .reader-layout { display:block; max-width:680px; }.reading-sidebar { display:none; }.cover-deck { font-size:21px; }
+}
+@media(max-width:600px) {
+ .site-header { padding:12px max(22px,calc((100% - 680px) / 2)); }.brand { font-size:19px; }.back { font-size:12px; }.page { padding-inline:22px; }
+ .article-cover { display:flex; flex-direction:column; padding:34px 0 46px; }.cover-category { margin:0 0 25px; font-size:12px; }
+ .page-title { font-size:39px; line-height:1.2; margin:0 0 28px; }.cover-divider { width:100%; flex:none; margin-bottom:19px; }
+ .cover-meta { display:flex; justify-content:space-between; align-items:center; gap:14px; font-size:12px; margin-bottom:26px; }
+ .cover-deck { font-size:19px; line-height:1.7; }
+ .article-content { font-size:18px; }.article-content h2 { font-size:26px; margin-top:43px; }.article-content h3 { font-size:20px; }
+}
+@media print { .site-header,.reading-sidebar { display:none; }.reader-layout { display:block; margin:0; max-width:none; }.page { max-width:none; padding:0; }.article-cover { padding-top:0; }.chapter h2 { break-after:avoid; } }
+.cover-date { display:block; margin-top:22px; font-size:13px; font-weight:400; line-height:1.8; }
+.article-cover { padding-bottom:0; }
+.page-title { margin-bottom:40px; }
+.cover-divider { margin-bottom:0; }
+.reader-layout { margin-top:44px; }
+@media(max-width:600px) {
+ .article-cover { padding-bottom:0; }
+ .cover-date { margin-top:12px; font-size:12px; }
+ .page-title { margin-bottom:28px; }
+ .reader-layout { margin-top:32px; }
+}
+/* Monochrome editorial surfaces, with blue reserved for annotations. */
+:root {
+ --color-background:#fff; --color-surface:#fff; --color-background-secondary:#f4f4f5;
+ --color-ink:#101012; --color-primary:#242428; --color-secondary:#74747c;
+ --color-tertiary:#c7c7ce; --color-separator:#e5e5e9;
+ --color-link:#278eff; --color-accent:#278eff;
+ --mark-color:rgba(39,142,255,.8); --diagram-background:#fafafa;
+}
+:root[data-theme="dark"] {
+ color-scheme:dark;
+ --color-background:#111113; --color-surface:#17171a; --color-background-secondary:#222226;
+ --color-ink:#f4f4f5; --color-primary:#dddde1; --color-secondary:#a0a0aa;
+ --color-tertiary:#50505b; --color-separator:#303037;
+ --color-link:#58a6ff; --color-accent:#58a6ff;
+ --mark-color:rgba(88,166,255,.85); --diagram-background:#17171a;
+}
+@media(prefers-color-scheme:dark) {
+ :root:not([data-theme="light"]) {
+  color-scheme:dark;
+  --color-background:#111113; --color-surface:#17171a; --color-background-secondary:#222226;
+  --color-ink:#f4f4f5; --color-primary:#dddde1; --color-secondary:#a0a0aa;
+  --color-tertiary:#50505b; --color-separator:#303037;
+  --color-link:#58a6ff; --color-accent:#58a6ff;
+  --mark-color:rgba(88,166,255,.85); --diagram-background:#17171a;
+ }
+}
+body { background:var(--color-background); }
+::selection { background:rgba(39,142,255,.2); }
+.site-header { gap:22px; }
+.site-header .back { margin-left:auto; color:var(--color-secondary); }
+.brand { color:var(--color-ink); }
+.theme-toggle { display:grid; place-items:center; width:36px; height:36px; flex:none; padding:8px; border:1px solid var(--color-separator); border-radius:50%; background:transparent; color:var(--color-ink); cursor:pointer; transition:border-color .2s,background-color .2s; }
+.theme-toggle:hover { background:var(--color-background-secondary); border-color:var(--color-tertiary); }
+.theme-toggle svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.theme-toggle .theme-sun { display:none; }
+:root[data-theme="dark"] .theme-toggle .theme-moon { display:none; }
+:root[data-theme="dark"] .theme-toggle .theme-sun { display:block; }
+.cover-category { color:var(--color-ink); }
+.cover-date { color:var(--color-secondary); }
+.cover-divider { background:var(--color-separator); }
+.page-title { font-weight:600; letter-spacing:-.055em; line-height:1.13; }
+.title-mark { color:inherit; }
+.article-content p { text-wrap:pretty; }
+.article-content h2 { margin-top:66px; margin-bottom:27px; font-size:31px; letter-spacing:-.035em; }
+.editorial-mark {
+ color:var(--color-ink);
+ background-image:linear-gradient(var(--mark-color),var(--mark-color));
+ background-repeat:no-repeat; background-position:left calc(100% - .025em);
+ background-size:100% 1.5px;
+ -webkit-box-decoration-break:clone; box-decoration-break:clone;
+ padding-bottom:.07em;
+}
+.title-mark { background-size:100% 3px; padding-bottom:.015em; background-position:left 97%; }
+.editorial-mark.mark-pending { background-size:0% 1.5px; }
+.title-mark.mark-pending { background-size:0% 3px; }
+.editorial-mark.mark-visible { background-size:100% 1.5px; transition:background-size .85s cubic-bezier(.22,.61,.36,1); }
+.title-mark.mark-visible { background-size:100% 3px; }
+.section-title-mark { position:relative; display:inline; padding-bottom:10px; }
+.section-title-mark::after { content:""; display:block; width:38px; height:2px; background:var(--color-accent); margin-top:14px; transform-origin:left; }
+.section-title-mark.mark-pending::after { transform:scaleX(0); }
+.section-title-mark.mark-visible::after { transform:scaleX(1); transition:transform .6s cubic-bezier(.22,.61,.36,1); }
+.article-content code { color:var(--color-ink); border:1px solid var(--color-separator); padding:2px 5px; border-radius:4px; }
+.reading-sidebar { font-size:12px; }
+.reading-sidebar a { color:var(--color-secondary); }
+.article-end { display:grid; grid-template-columns:1fr auto; align-items:first baseline; column-gap:24px; margin-top:48px; padding-block:24px; }
+.article-end a { justify-self:start; color:var(--color-ink); text-decoration:none; border-bottom:1px solid var(--color-tertiary); padding-bottom:4px; }
+.article-end a:hover { border-color:var(--color-link); }
+.article-end p { margin:0; color:var(--color-ink); font:italic 15px/1.5 var(--font-serif); text-align:right; }
+.article-end time { display:block; margin-top:3px; color:var(--color-secondary); font:12px/1.6 var(--font-sans); }
+@media(max-width:600px) {
+ .site-header { gap:14px; }.theme-toggle { width:32px; height:32px; padding:6px; }
+ .page-title { letter-spacing:-.04em; }
+ .article-content h2 { font-size:26px; margin-top:48px; }
+ .article-end { grid-template-columns:1fr; row-gap:14px; }.article-end p { text-align:left; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .editorial-mark.mark-pending,.editorial-mark.mark-visible { background-size:100% 1.5px; transition:none; }
+ .title-mark.mark-pending,.title-mark.mark-visible { background-size:100% 3px; }
+ .section-title-mark.mark-pending::after,.section-title-mark.mark-visible::after { transform:none; transition:none; }
+ .theme-toggle { transition:none; }
+}
+@media print {
+ :root { --color-background:#fff; --color-primary:#222; --color-ink:#111; --color-surface:#fff; --color-secondary:#666; --color-separator:#ddd; --color-background-secondary:#f4f4f4; --diagram-background:#fff; }
+ .editorial-mark.mark-pending { background-size:100% 1.5px; }.section-title-mark.mark-pending::after { transform:none; }
+}
+
+/* Hand-drawn annotations on a clean, monochrome page. */
+:root {
+ --sketch-line:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9C42 3 104 11 196 5' fill='none' stroke='%23278eff' stroke-width='2.8' stroke-linecap='round'/%3E%3Cpath d='M13 12C78 7 127 11 184 8' fill='none' stroke='%23278eff' stroke-opacity='.35' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+:root[data-theme="dark"] {
+ --sketch-line:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9C42 3 104 11 196 5' fill='none' stroke='%2358a6ff' stroke-width='2.8' stroke-linecap='round'/%3E%3Cpath d='M13 12C78 7 127 11 184 8' fill='none' stroke='%2358a6ff' stroke-opacity='.4' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.editorial-mark {
+ background-image:var(--sketch-line); background-position:left bottom;
+ background-size:100% .42em; padding-bottom:.16em;
+}
+.editorial-mark.mark-pending { background-size:0% .42em; }
+.editorial-mark.mark-visible { background-size:100% .42em; }
+.title-mark { background-size:100% .23em; padding-bottom:.08em; }
+.title-mark.mark-pending { background-size:0% .23em; }
+.title-mark.mark-visible { background-size:100% .23em; }
+.section-title-mark::after {
+ width:64px; height:9px; margin-top:9px;
+ background:var(--sketch-line) left center / 100% 100% no-repeat;
+ transform:rotate(-2deg);
+}
+.section-title-mark.mark-pending::after { transform:rotate(-2deg) scaleX(0); }
+.section-title-mark.mark-visible::after { transform:rotate(-2deg) scaleX(1); }
+.article-cover { position:relative; }
+.article-cover::after {
+ content:""; position:absolute; width:55px; height:48px; right:5px; top:10px;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 52'%3E%3Cg fill='none' stroke='%23278eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M29 5C28 20 25 24 9 26C24 28 28 32 30 47C32 33 35 28 51 26C35 24 32 20 29 5Z'/%3E%3Cpath d='M47 4L46 13M42 8L52 9M5 9L10 14'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+ transform:rotate(9deg); pointer-events:none;
+}
+.cover-category::after {
+ content:""; display:block; width:100px; height:48px; margin:18px 0 0 32px;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 55'%3E%3Cpath d='M7 13C16 44 68 48 72 26C76 7 40 10 46 30C52 48 87 29 101 14M86 13L102 12L97 28' fill='none' stroke='%23278eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+ opacity:.8; pointer-events:none;
+}
+/* Figures are sketched in HTML on dotted paper rather than drawn as SVG, so
+   their text keeps the page's own sizes at any width, and each one restacks
+   by its own width rather than the window's. */
+:root {
+ --sk-shaft:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 14' preserveAspectRatio='none'%3E%3Cpath d='M1 8.5C28 5.5 62 10 99 7' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+ --sk-head:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14'%3E%3Cpath d='M2.5 2.5 9 7 3 11.5' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+ --sk-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8.8C4 10 5 11 6.4 12.6 8.5 9 10.5 6 13.6 3.2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+ --sk-cross:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 3.5C6.5 6.5 9.5 9.8 12.8 12.8M12.6 3.2C9.4 6.4 6.6 9.6 3.4 12.6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+ --sk-wash:color-mix(in srgb,var(--color-accent) 16%,transparent);
+}
+.sk { margin:44px 0 46px; }
+.sk-paper { container-type:inline-size; padding:38px 26px 30px; border:1px solid var(--color-separator); border-radius:5px 12px 7px 15px / 12px 5px 14px 6px; background:radial-gradient(circle,color-mix(in srgb,var(--color-tertiary) 45%,transparent) .7px,transparent 1.2px) 0 0 / 18px 18px,var(--diagram-background); color:var(--color-primary); font:14px/1.45 var(--font-sans); }
+.sk figcaption { margin-top:14px; color:var(--color-secondary); font:13px/1.65 var(--font-sans); }
+.sk p { margin:0; }
+.sk code { font-size:11px; }
+.sk-steps > li,.sk-card { position:relative; margin:0; padding:17px 13px 14px; border:1.5px solid var(--color-primary); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; background:var(--color-background); }
+.sk-steps > li:nth-child(even),.sk-card:last-child { border-radius:15px 225px 15px 255px / 255px 15px 225px 15px; }
+.sk .sk-goal { border-color:var(--color-accent); box-shadow:5px 6px 0 var(--sk-wash); }
+.sk-steps strong,.sk-card strong { display:block; color:var(--color-ink); font-size:15px; line-height:1.3; }
+.sk-steps li > span,.sk-card > span { display:block; margin-top:3px; color:var(--color-secondary); font-size:12px; line-height:1.45; }
+ol.sk-steps { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:32px; margin:0; padding:0; list-style:none; counter-reset:sk-step; }
+.sk-steps > li { counter-increment:sk-step; }
+.sk-steps > li::before { content:counter(sk-step); position:absolute; top:-14px; left:11px; display:grid; place-items:center; width:25px; height:25px; border:1.5px solid var(--color-accent); border-radius:50% 44% 56% 47% / 55% 49% 51% 45%; background:var(--color-background); color:var(--color-accent); font:600 12px/1 var(--font-sans); }
+.sk-steps > li + li::after,.sk-wire p:first-child::after,.sk-wire p:last-child::before { content:""; display:block; height:14px; background:var(--color-secondary); -webkit-mask:var(--sk-head) right center / 10px 14px no-repeat,var(--sk-shaft) left center / calc(100% - 1px) 14px no-repeat; mask:var(--sk-head) right center / 10px 14px no-repeat,var(--sk-shaft) left center / calc(100% - 1px) 14px no-repeat; }
+.sk-steps > li + li::after { position:absolute; top:calc(50% - 7px); left:-31px; width:27px; }
+.sk-steps dl { display:grid; grid-template-columns:auto 1fr; gap:1px 12px; margin:12px 0 0; font:12px/1.6 var(--font-mono); }
+.sk-steps dt { color:var(--color-secondary); }
+.sk-steps dd { margin:0; color:var(--color-ink); white-space:nowrap; }
+.sk del { color:var(--color-secondary); text-decoration:none; background:var(--sketch-line) 0 58% / 100% .5em no-repeat; }
+.sk ins { margin-left:5px; color:var(--color-accent); font-weight:600; text-decoration:none; }
+.sk-ok,.sk-bad { display:inline-flex; align-items:center; gap:5px; color:var(--color-ink); font-size:12.5px; font-style:normal; font-weight:600; white-space:nowrap; }
+.sk-ok::before,.sk-bad::before { content:""; flex:none; width:14px; height:14px; background:var(--color-accent); -webkit-mask:var(--sk-check) center / contain no-repeat; mask:var(--sk-check) center / contain no-repeat; }
+.sk-bad::before { background:var(--color-ink); -webkit-mask-image:var(--sk-cross); mask-image:var(--sk-cross); }
+.sk-steps .sk-ok { position:absolute; right:14px; bottom:-14px; padding:3px 10px 3px 8px; border:1.5px solid var(--color-accent); border-radius:12px 4px 10px 5px / 5px 10px 4px 12px; background:var(--color-background); color:var(--color-accent); transform:rotate(-3deg); }
+.sk-vm { --limit:calc(768 / 1152 * 100%); position:relative; font-size:13px; line-height:1.4; }
+.sk-vm::before { content:""; position:absolute; top:0; bottom:28px; left:var(--limit); right:0; border-left:1.5px solid var(--color-ink); background:color-mix(in srgb,var(--color-secondary) 8%,transparent); }
+.sk-vm-top { position:relative; display:grid; grid-template-columns:var(--limit) 1fr; align-items:center; padding:0 0 14px; color:var(--color-secondary); font-size:12px; }
+.sk-vm-top span { padding-right:10px; text-align:right; }
+.sk-vm-top code { justify-self:start; margin-left:8px; white-space:nowrap; overflow-wrap:normal; }
+.sk-vm p { position:relative; display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding-bottom:25px; color:var(--color-secondary); }
+.sk-vm p + p { margin-top:6px; }
+.sk-vm p > span { max-width:calc(var(--limit) - 12px); }
+.sk-vm strong { color:var(--color-ink); font-weight:600; }
+.sk-vm p::after { content:""; position:absolute; left:0; bottom:5px; width:calc(min(var(--end),768) / 1152 * 100%); min-width:5px; height:13px; border:1.5px solid var(--color-accent); border-radius:2px 5px 3px 4px / 4px 3px 5px 2px; background:linear-gradient(var(--sk-wash),var(--sk-wash)),var(--color-background); }
+.sk-vm .sk-over::before { content:""; position:absolute; left:var(--limit); bottom:5px; width:calc((var(--end) - 768) / 1152 * 100%); height:13px; border:1.5px dashed var(--color-secondary); border-left:0; border-radius:0 5px 4px 0; background:repeating-linear-gradient(-45deg,var(--color-tertiary) 0 1px,transparent 1px 5px); }
+.sk.mark-pending .sk-vm p::after,.sk.mark-pending .sk-vm .sk-over::before { clip-path:inset(-2px 100% -2px -2px); }
+.sk.mark-visible .sk-vm p::after { clip-path:inset(-2px); transition:clip-path .8s cubic-bezier(.22,.61,.36,1); }
+.sk.mark-visible .sk-vm .sk-over::before { clip-path:inset(-2px); transition:clip-path .5s cubic-bezier(.22,.61,.36,1) .75s; }
+@media print { .sk.mark-pending .sk-vm p::after,.sk.mark-pending .sk-vm .sk-over::before { clip-path:none; } }
+.sk-vm-axis { position:relative; height:28px; border-top:1px solid var(--color-tertiary); color:var(--color-secondary); font-size:11px; }
+.sk-vm-axis span { position:absolute; top:7px; left:calc(var(--at) / 1152 * 100%); transform:translateX(-50%); white-space:nowrap; }
+.sk-vm-axis span::before { content:""; position:absolute; top:-7px; left:50%; height:4px; border-left:1px solid var(--color-tertiary); }
+.sk-vm-axis span:first-child { transform:none; }
+.sk-vm-axis span:first-child::before { left:0; }
+.sk-loop { display:grid; grid-template-columns:minmax(0,1fr) minmax(64px,.8fr) minmax(0,1.3fr); align-items:center; }
+.sk-card { padding-right:48px; }
+.sk-card small { display:block; margin-bottom:5px; color:var(--color-secondary); font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.sk-card code { display:inline-block; margin:6px 3px 0 0; }
+.sk-icon { position:absolute; top:12px; right:12px; width:30px; height:30px; fill:none; stroke:var(--color-accent); stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; transform:rotate(-6deg); }
+.sk-icon .icon-detail { opacity:.55; }
+.sk-wire { position:relative; display:grid; gap:12px; padding:0 8px; color:var(--color-secondary); font-size:12px; line-height:1.3; text-align:center; }
+.sk-wire::before,.sk-wire::after { content:""; position:absolute; left:50%; height:26px; border-left:1.5px dashed var(--color-tertiary); }
+.sk-wire::before { bottom:100%; }
+.sk-wire::after { top:100%; }
+.sk-wire p:first-child::after,.sk-wire p:last-child::before { margin:4px 0; background:var(--color-accent); }
+.sk-wire p:last-child::before { transform:scaleX(-1); }
+.sk .sk-foot { margin-top:24px; color:var(--color-secondary); font-size:12.5px; text-align:center; }
+.sk-src { position:relative; padding:24px 16px 18px; border:1.5px solid var(--color-primary); border-radius:160px 8px 150px 8px / 8px 150px 8px 160px; background:var(--color-background); }
+.sk-file { position:absolute; top:-13px; left:14px; padding:2px 10px; border:1.5px solid var(--color-primary); border-radius:12px 4px 10px 5px / 5px 10px 4px 12px; background:var(--color-background); color:var(--color-ink); font:11.5px/1.5 var(--font-mono); transform:rotate(-1.5deg); }
+.sk-src pre { margin:0; overflow-x:auto; }
+.sk-src code { display:block; padding:0; border:0; border-radius:0; background:none; color:var(--color-ink); font:12px/1.75 var(--font-mono); white-space:pre; overflow-wrap:normal; tab-size:4; }
+.sk-src i { color:var(--color-secondary); font-style:normal; }
+/* Syntax colours pick their theme from color-scheme, which every theme path sets. Blue stays the annotations'. */
+.sk-src .k { color:light-dark(#c4265e,#f27fae); }
+.sk-src .s { color:light-dark(#2a7336,#86cf94); }
+.sk-src .n,.sk-src .v { color:light-dark(#a35300,#eea764); }
+.sk-src .t { color:light-dark(#0f7470,#6ccdc2); }
+.sk-src .f { color:light-dark(#7445c8,#b9a1f5); }
+.sk-src mark { margin:0 -3px; padding:2px 3px; border-radius:3px 8px 4px 7px / 7px 4px 8px 3px; background:var(--sk-wash); color:inherit; }
+.sk-src mark[data-n]::after,.sk-notes > li::before { display:inline-grid; place-items:center; width:19px; height:19px; border:1.5px solid var(--color-accent); border-radius:50% 44% 56% 47% / 55% 49% 51% 45%; background:var(--color-background); color:var(--color-accent); font:600 10.5px/1 var(--font-sans); }
+.sk-src mark[data-n]::after { content:attr(data-n); margin-left:12px; vertical-align:1px; }
+ol.sk-notes { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none; counter-reset:sk-note; font-size:13px; line-height:1.55; }
+.sk-notes > li { position:relative; margin:0; padding-left:30px; counter-increment:sk-note; }
+.sk-notes > li::before { content:counter(sk-note); position:absolute; top:0; left:0; }
+@container (max-width:600px) {
+ ol.sk-steps { grid-auto-flow:row; gap:26px; }
+ .sk-steps > li { display:flex; flex-wrap:wrap; align-items:baseline; column-gap:10px; padding:13px 14px 12px 50px; }
+ .sk-steps > li::before { top:10px; left:12px; }
+ .sk-steps li > span { margin:0; }
+ .sk-steps dl { flex-basis:100%; }
+ .sk-steps > li + li::after { top:-24px; left:13px; width:22px; transform:rotate(90deg); }
+}
+@container (max-width:380px) {
+ .sk-loop { grid-template-columns:minmax(0,1fr); }
+ .sk-wire { grid-template-columns:1fr 1fr; gap:0; padding:12px 0; }
+ .sk-wire::before,.sk-wire::after { display:none; }
+ .sk-wire p { display:flex; align-items:center; gap:4px; }
+ .sk-wire p:first-child { justify-content:flex-end; }
+ .sk-wire p:first-child::after,.sk-wire p:last-child::before { flex:none; width:30px; margin:8px -8px; transform:rotate(90deg); }
+ .sk-wire p:last-child::before { transform:rotate(-90deg); }
+}
+@media(max-width:600px) { .sk-paper { padding:34px 16px 24px; } .sk-src { padding-inline:12px; } }
+@media(max-width:950px) { .cover-category::after { width:76px; margin-left:12px; } }
+@media(max-width:600px) {
+ .article-cover::after { width:37px; height:34px; top:25px; right:0; }
+ .cover-category::after { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .editorial-mark.mark-pending,.editorial-mark.mark-visible { background-size:100% .42em; transition:none; }
+ .title-mark.mark-pending,.title-mark.mark-visible { background-size:100% .23em; }
+ .section-title-mark.mark-pending::after,.section-title-mark.mark-visible::after { transform:rotate(-2deg); transition:none; }
+}
+@media print { .article-cover::after,.cover-category::after { display:none; } }
+
+/* Each chapter gets a small ink drawing in place of the title rule. */
+.section-title-mark { padding-bottom:0; }
+.section-title-mark::after { display:none; }
+.chapter h2 { display:flex; align-items:center; gap:18px; }
+.chapter-icon { display:block; flex:none; width:49px; height:49px; overflow:visible; color:var(--color-accent); stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; transform:rotate(-4deg); }
+.chapter:nth-of-type(even) .chapter-icon { transform:rotate(3deg); }
+.chapter-icon .icon-detail { opacity:.55; }
+@media(max-width:600px) { .chapter h2 { gap:13px; }.chapter-icon { width:37px; height:37px; } }
+
+/* ==========================================================================
+   Irisin manual additions.
+   Everything above this comment is the <style> of the Blue Pencil
+   template.html, verbatim; a fix to it goes to the template and is copied
+   here again. Everything below is the manual's own, each rule scoped under
+   its own class, drawn with the template's tokens and nothing else.
+   ========================================================================== */
+
+/* Header: "Manual" is the template's .back, which carries the auto margin;
+   the one language link sits beside it and looks the same. */
+.site-header .back { white-space:nowrap; }
+@media(max-width:360px) { .site-header { gap:11px; } }
+
+/* a. The manual's chapter list, in the rail above the page's own Contents.
+   Quieter than Contents: smaller, tighter, no weight animation, and a drawn
+   rule between the two. Its links carry no data-chapter-link, so the
+   contents script never touches them; the current page is aria-current="page"
+   in the markup. The rail is hidden at 950px and below, as the template has
+   it; there the pager and the header's Manual link are the navigation. */
+.manual-chapters { margin:0 0 6px; font-size:11.5px; line-height:1.5; }
+.manual-chapters .contents-heading { margin-bottom:11px; }
+.reading-sidebar .manual-chapters li { margin:0 0 7px; }
+.reading-sidebar .manual-chapters a { position:relative; -webkit-text-stroke-width:0; transition:color .22s ease; }
+.reading-sidebar .manual-chapters a[aria-current="page"] { color:var(--color-accent); -webkit-text-stroke-width:0; }
+.reading-sidebar .manual-chapters a[aria-current="page"]::before { content:""; position:absolute; top:.28em; left:-13px; width:8px; height:11px; background:var(--color-accent); -webkit-mask:var(--sk-head) center / contain no-repeat; mask:var(--sk-head) center / contain no-repeat; }
+.manual-chapters::after { content:""; display:block; width:88%; height:14px; margin:14px 0 0; background:var(--color-tertiary); -webkit-mask:var(--sk-shaft) left center / 100% 14px no-repeat; mask:var(--sk-shaft) left center / 100% 14px no-repeat; transform:rotate(-1deg); }
+.manual-chapters + nav { margin-top:14px; }
+@media(prefers-reduced-motion:reduce) { .reading-sidebar .manual-chapters a { transition:none; } }
+
+/* b. Previous and next chapter, above footer.article-end. The first page has
+   only .pager-next and the last only .pager-prev; next keeps the right cell. */
+.manual-pager { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; margin-top:60px; font-family:var(--font-sans); }
+.manual-pager a { display:block; min-width:0; padding:15px 20px 15px; border:1.5px solid var(--color-primary); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; background:var(--color-background); color:var(--color-ink); text-decoration:none; transition:border-color .2s; }
+.manual-pager .pager-prev { grid-column:1; }
+.manual-pager .pager-next { grid-column:2; border-radius:15px 225px 15px 255px / 255px 15px 225px 15px; text-align:right; }
+.manual-pager a:hover { border-color:var(--color-accent); color:var(--color-ink); }
+.manual-pager small { display:block; margin-bottom:3px; color:var(--color-secondary); font-size:12px; font-weight:400; line-height:1.5; }
+.manual-pager strong { display:block; font-size:16px; font-weight:600; line-height:1.35; letter-spacing:-.01em; }
+.manual-pager a:hover strong { color:var(--color-link); }
+.manual-pager + .article-end { margin-top:36px; }
+@media(max-width:600px) {
+ .manual-pager { grid-template-columns:minmax(0,1fr); gap:14px; margin-top:48px; }
+ .manual-pager .pager-prev,.manual-pager .pager-next { grid-column:auto; }
+ .manual-pager strong { font-size:15px; }
+}
+@media(prefers-reduced-motion:reduce) { .manual-pager a { transition:none; } }
+@media print { .manual-pager { display:none; } }
+
+/* c. A screenshot on the figure paper: an ink border with an uneven radius
+   and no device frame. Both themes' images are in the markup and one is
+   shown; the three rules below mirror, path for path, how the template
+   switches its own tokens (the default, the toggle's attribute, and the
+   system's scheme unless the toggle said light), because <picture media>
+   cannot see the toggle. */
+.sk-shot .sk-paper { padding-top:30px; }
+.sk-shot img { display:block; width:100%; max-width:300px; height:auto; margin:0 auto; border:1.5px solid var(--color-primary); border-radius:28px 34px 26px 36px / 34px 27px 35px 28px; background:var(--color-background); }
+.sk-shot .shot-dark { display:none; }
+:root[data-theme="dark"] .sk-shot .shot-light { display:none; }
+:root[data-theme="dark"] .sk-shot .shot-dark { display:block; }
+@media(prefers-color-scheme:dark) {
+ :root:not([data-theme="light"]) .sk-shot .shot-light { display:none; }
+ :root:not([data-theme="light"]) .sk-shot .shot-dark { display:block; }
+}
+@media print { .sk-shot .shot-light { display:block!important; }.sk-shot .shot-dark { display:none!important; } }
+.sk-shots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:26px; align-items:start; }
+.sk-shots > div { min-width:0; }
+.sk-shot-pair img { max-width:270px; }
+.sk-shots span { display:block; margin-top:11px; color:var(--color-secondary); font-size:12px; line-height:1.45; text-align:center; }
+@container (max-width:600px) {
+ .sk-shots { grid-template-columns:minmax(0,1fr); gap:26px; }
+ .sk-shot-pair img { max-width:260px; }
+}
+
+/* d. A control's name, quoted from the app: the UI face inside serif prose,
+   semibold, with no box of its own, so it wraps like any words and neither
+   takes nor disturbs an .editorial-mark, whichever is outside. */
+.ui { font-family:var(--font-sans); font-size:.92em; font-style:normal; font-weight:600; letter-spacing:-.005em; color:inherit; background:none; white-space:normal; }
+.sk .ui,.article-content h2 .ui,.article-content h3 .ui,.manual-pager .ui,.reading-sidebar .ui { font-size:1em; }
+.reading-sidebar .ui { font-weight:inherit; }
+
+
+/* f. A reference table: rules between rows and nothing else. No box, no
+   fill, no zebra, no vertical rules. The head is the rail's heading (small,
+   sans, secondary) over a slightly stronger rule; cells are the body's serif a
+   step down; th[scope=row] names the row in the UI face, semibold. The wrapper
+   is a container, as the figure paper is: below 520px of its own width each
+   row becomes a block and each td is labelled from its data-label, so a table
+   never scrolls sideways. */
+.manual-table { container-type:inline-size; margin:34px 0 40px; }
+.manual-table table { width:100%; border-collapse:collapse; border-spacing:0; font-size:.86em; line-height:1.5; }
+.manual-table th,.manual-table td { padding:11px 20px 11px 0; border:0; border-bottom:1px solid var(--color-separator); background:none; text-align:left; vertical-align:top; overflow-wrap:break-word; }
+.manual-table th:last-child,.manual-table td:last-child { padding-right:0; }
+.manual-table thead th { padding-top:0; padding-bottom:9px; border-bottom:1.5px solid var(--color-tertiary); color:var(--color-secondary); font:500 12px/1.5 var(--font-sans); letter-spacing:0; }
+.manual-table tbody th { color:var(--color-ink); font-family:var(--font-sans); font-size:.9em; font-weight:600; line-height:1.65; }
+.manual-table code { overflow-wrap:break-word; }
+/* While the table is a table, a file name keeps its line: broken at a hyphen,
+   its pill is drawn as two open halves. The column takes the width instead.
+   Restacked on a phone, the name may break again rather than overflow. */
+@container (min-width:521px) { .manual-table code { white-space:nowrap; } }
+.manual-table tbody th .ui { font-size:1em; }
+.manual-table p { margin:0; }
+@container (max-width:520px) {
+ .manual-table table,.manual-table tbody,.manual-table tr,.manual-table tbody th,.manual-table td { display:block; }
+ .manual-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+ .manual-table tbody tr { padding:13px 0 12px; border-bottom:1px solid var(--color-separator); }
+ .manual-table tbody tr:first-child { border-top:1.5px solid var(--color-tertiary); }
+ .manual-table tbody th,.manual-table td { padding:0; border:0; }
+ .manual-table tbody th { margin-bottom:5px; font-size:1em; }
+ .manual-table td + td,.manual-table th + td { margin-top:7px; }
+ .manual-table td[data-label]::before { content:attr(data-label); display:block; margin-bottom:1px; color:var(--color-secondary); font:500 11.5px/1.5 var(--font-sans); letter-spacing:0; }
+}
+@media print { .manual-table tr { break-inside:avoid; } }
+
+/* g. One question, two answers (chapter 1's two packages). The loop's cards
+   without its wire, because nothing passes between them, and without a goal
+   card, because neither bootstrap is the goal on its own: the accent marks
+   the file each one takes. The pair is held to a reading width and centred
+   on the paper, stacks below 600px of paper, and tightens below 380px so
+   the longest file name still keeps its own line. */
+.sk-choice { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; max-width:540px; margin-inline:auto; }
+.sk-choice .sk-card { padding:17px 14px 15px; }
+.sk-choice .sk-card code {
+ margin:9px 0 0; border:1.5px solid var(--color-accent); color:var(--color-ink);
+ border-radius:3px 8px 4px 7px / 7px 4px 8px 3px;
+ background:linear-gradient(var(--sk-wash),var(--sk-wash)),var(--color-background);
+}
+@container (max-width:600px) { .sk-choice { grid-template-columns:minmax(0,1fr); gap:20px; max-width:none; } }
+@container (max-width:380px) {
+ .sk-choice { gap:16px; }
+ .sk-choice .sk-card { padding:15px 12px 13px; }
+}
+
+/* h. A branch off one step that only some queues take: the same button under
+   a condition. Dashed and secondary, so it does not read as a step of its own. */
+.sk-steps .sk-if { display:block; margin-top:9px; padding:4px 8px 3px; border:1.5px dashed var(--color-tertiary); border-radius:12px 5px 10px 6px / 6px 10px 5px 12px; color:var(--color-secondary); font-size:11.5px; line-height:1.45; }
+@container (max-width:600px) {
+ .sk-steps .sk-if { flex-basis:100%; margin-top:8px; }
+}
+@container (max-width:380px) {
+ .sk-steps .sk-if { margin-top:7px; padding:3px 7px 2px; }
+}
+
+/* i. The verdict ledger: what an adapter converts and what it refuses, side
+   by side, each row marked with the figure system's own check or cross. The
+   catalog's before-and-after carries one pipeline through its steps, not two
+   lists of verdicts. It is drawn with the paper's own card border, radii and
+   masks, and the accent stays on the check; it restacks to one column at
+   600px of figure width and tightens at 380px. */
+.sk-ledger { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; align-items:start; }
+.sk-ledger > div { min-width:0; padding:16px 15px 15px; border:1.5px solid var(--color-primary); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; background:var(--color-background); }
+.sk-ledger > div + div { border-radius:15px 225px 15px 255px / 255px 15px 225px 15px; }
+.sk-ledger > div > p { margin:0 0 12px; color:var(--color-secondary); font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.sk-ledger > div > ul { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+.sk-ledger > div > ul > li { position:relative; margin:0; padding-left:22px; }
+.sk-ledger > div > ul > li::before { content:""; position:absolute; top:3px; left:0; width:13px; height:13px; background:var(--color-accent); -webkit-mask:var(--sk-check) center / contain no-repeat; mask:var(--sk-check) center / contain no-repeat; }
+.sk-ledger > div + div > ul > li::before { background:var(--color-ink); -webkit-mask-image:var(--sk-cross); mask-image:var(--sk-cross); }
+.sk-ledger strong { display:block; color:var(--color-ink); font-size:14px; line-height:1.35; }
+.sk-ledger span { display:block; margin-top:2px; color:var(--color-secondary); font-size:12px; line-height:1.45; }
+@container (max-width:600px) { .sk-ledger { grid-template-columns:minmax(0,1fr); gap:18px; } }
+@container (max-width:380px) {
+ .sk-ledger > div { padding:14px 12px 12px; }
+ .sk-ledger > div > ul > li { padding-left:19px; }
+ .sk-ledger strong { font-size:13.5px; }
+}
+
+/* j. A control's name never breaks between two Han glyphs: a two-character
+   name split over a line end reads as two words. Inside a figure's foot line
+   and caption, a short name moves whole rather than break in two. */
+.sk-choice + .sk-foot .ui,.sk-ledger + .sk-foot .ui { white-space:nowrap; }
+
+/* k. The site's root page has no "Manual" link, and that link is what pushes
+   the header's right-hand side to the right. There the toggle does it. */
+.site-header .brand + .theme-toggle { margin-left:auto; }
+
+/* The header stands on the same axis as the page's text. The template centred
+   it in a box of its own and pushed the text column left of centre, so the
+   brand and the first word of the page began at different places. The header
+   now takes the reading column's own width, plus .page's side padding, at
+   each of its three sizes: 952+64, then 680+64, then 680+44. The text column
+   is centred again (the 124px nudge is gone), so the two cannot drift. */
+.site-lede { max-width:16ch; margin:34px 0 40px; font-family:var(--font-sans); font-size:clamp(40px,6vw,72px); font-weight:600; letter-spacing:-.04em; line-height:1.04; text-wrap:balance; }
+@media(max-width:600px) { .site-lede { margin:16px 0 30px; font-size:clamp(34px,10vw,44px); } }
+
+/* l. The manual's title block and its navigation.
+   The cover this style was built for announces a piece of writing: a
+   dateline, a display title, a sparkle in the corner. A manual chapter
+   answers a different question, "where am I", so it carries the trail back
+   to the contents, the chapter's place in the eight, and its title. The
+   drawing stays where it means something: the figures, the icons on the
+   headings, the marks in the prose. The sparkle and the arrow keep one
+   page, the manual's own title page, which asks for a cover. */
+.article-cover:not(.cover-title-page)::after,
+.article-cover:not(.cover-title-page) .cover-category::after { display:none; }
+/* The cover takes the reading column's width, so its divider ends where the
+   text ends and the sparkle sits over the column, not out in the margin. */
+.article-cover { display:block; max-width:952px; margin-inline:auto; padding:46px 0 0; }
+.article-cover .page-title { max-width:none; }
+@media(max-width:950px) { .article-cover { max-width:680px; } }
+.cover-trail { display:flex; flex-wrap:wrap; align-items:baseline; gap:9px; margin:0 0 15px; font-family:var(--font-sans); font-size:12.5px; font-weight:500; line-height:1.5; color:var(--color-secondary); }
+.cover-trail a { color:var(--color-secondary); text-decoration:none; transition:color .2s; }
+.cover-trail a:hover { color:var(--color-link); }
+.cover-trail span { color:var(--color-tertiary); }
+.cover-trail span::before { content:"/"; margin-right:9px; }
+.article-cover:has(.cover-trail) .page-title { max-width:760px; margin:0 0 22px; font-size:clamp(31px,3.4vw,45px); letter-spacing:-.03em; line-height:1.14; }
+.article-cover:has(.cover-trail) .cover-divider { margin-bottom:0; }
+@media(max-width:950px) { .article-cover:has(.cover-trail) { padding-top:38px; } }
+@media(max-width:600px) {
+ .article-cover:has(.cover-trail) { display:block; padding:30px 0 0; }
+ .cover-trail { margin-bottom:12px; font-size:11.5px; }
+ .article-cover:has(.cover-trail) .page-title { margin-bottom:18px; }
+}
+
+/* The rail is the manual's contents, not a reading companion: every chapter
+   in its order, numbered, and under the one you are in, its tasks. The task
+   links keep data-chapter-link, so the script still follows your place. */
+.manual-nav { font-family:var(--font-sans); }
+.manual-nav .contents-heading { margin:0 0 17px; font-size:12px; font-weight:600; color:var(--color-ink); }
+.manual-nav .contents-heading a { color:inherit; text-decoration:none; }
+.manual-nav .contents-heading a:hover { color:var(--color-link); }
+.manual-nav > ol { counter-reset:chapter; }
+.manual-nav > ol > li { margin:0 0 10px; counter-increment:chapter; }
+.manual-nav > ol > li > a { display:grid; grid-template-columns:19px minmax(0,1fr); font-size:12px; line-height:1.45; -webkit-text-stroke-width:0; }
+.manual-nav > ol > li > a::before { content:counter(chapter) "."; color:var(--color-tertiary); font-variant-numeric:tabular-nums; }
+.manual-nav > ol > li > a[aria-current="page"] { color:var(--color-accent); font-weight:600; -webkit-text-stroke-width:0; }
+.manual-nav > ol > li > a[aria-current="page"]::before { color:var(--color-accent); }
+.reading-sidebar .manual-nav-tasks { margin:11px 0 17px 19px; padding-left:14px; border-left:1px solid var(--color-separator); }
+.reading-sidebar .manual-nav-tasks li { margin:0 0 9px; }
+.reading-sidebar .manual-nav-tasks li:last-child { margin-bottom:0; }
+.reading-sidebar .manual-nav-tasks a { font-size:11.5px; line-height:1.45; }
+
+/* The pager says which chapter it is taking you to, as the rail does. */
+.manual-pager small { font-variant-numeric:tabular-nums; }

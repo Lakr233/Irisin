@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Updates.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="See which packages have updates, update everything at once, keep one package at its version, and find out why an update is missing.">
+<meta property="og:title" content="Updates.">
+<meta property="og:description" content="See which packages have updates, update everything at once, keep one package at its version, and find out why an update is missing.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/updates/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 4 of 8</span></p>
+	<h1 class="page-title" lang="en">Updates</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>After this chapter you can update one package or all of them, hold one back at the version you have, and <span class="editorial-mark">find out why an update does not show up</span>.</p>
+
+<section class="chapter" id="where-updates-appear"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M35 20L15 19Q10 19 10 24L9 48Q9 53 14 53L38 54Q43 54 43 49L44 28"/><path d="M26 46L27 29M19 36L27 28L35 37"/><circle cx="46" cy="17" r="8"/><path class="icon-detail" d="M45 14L47 12L47 22"/></svg><span class="section-title-mark">Where Updates Appear</span></h2>
+<p>When a repository offers a newer version of a package you have installed, Irisin shows it in four places:</p>
+<ul>
+	<li>The <span class="ui">Installed</span> tab carries a badge with the number of updates. With no updates there is no badge.</li>
+	<li>On the <span class="ui">Installed</span> page, each row that has an update shows an up arrow.</li>
+	<li>The bar of the <span class="ui">Installed</span> page has an up-arrow button. Tap it to open the <span class="ui">Updates</span> page.</li>
+	<li>The <span class="ui">Dashboard</span> has an <span class="ui">Updates</span> section, present only while there is at least one update. The arrow button in its header opens the same <span class="ui">Updates</span> page.</li>
+</ul>
+<p>With nothing to update, the button in the bar is a green checkmark instead. Tap it and Irisin answers <span class="ui">All packages are up to date</span>.</p>
+<p>The <span class="ui">Updates</span> page lists every update, one row each. A row shows the installed version, an arrow, and the new version. Under that it names the repository in brackets, followed by the new version's description. Tap a row to open the new version's page. Tap the round arrow at the end of a row to <span class="editorial-mark">queue that one update</span> on its own. This page has nothing to refresh. It stays current with your repositories and your installed packages. When its list becomes empty, because you queued or blocked the last update, the page closes and returns you to where you came from.</p>
+
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/updates-page-light.png" alt="The Updates page with several rows. Each row shows the installed version, an arrow and the new version, the repository in brackets, and a round arrow button. Update All is in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/updates-page-dark.png" alt="The Updates page with several rows. Each row shows the installed version, an arrow and the new version, the repository in brackets, and a round arrow button. Update All is in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Updates. The round arrow queues one update; Update All queues them all.</figcaption></figure>
+
+<p><span class="ui">Recent Updates</span> on the <span class="ui">Dashboard</span> is a different list. It shows packages whose records in a repository changed recently. It is not the list of updates waiting for you.</p>
+<p>Updates are <span class="editorial-mark">found when repositories refresh</span>, so a repository that has not been refreshed cannot show its newest versions; see <a href="../repositories/#refresh-and-status">Refresh and Status</a>. Two controls do not check for updates. Pulling the <span class="ui">Dashboard</span> down only redraws it from what Irisin already has, and confirms with <span class="ui">Refreshed</span>. <span class="ui">Refresh</span> in the menu of the <span class="ui">Installed</span> page reads again what is installed on the device, not the repositories, and confirms with <span class="ui">Installed packages refreshed</span>.</p>
+</section>
+
+<section class="chapter" id="update-all"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 50L32 12M24 21L32 11L41 21"/><path d="M16 50L17 27M10 34L17 26L24 35M48 50L47 27M41 34L47 26L54 34"/><path class="icon-detail" d="M8 56Q32 59 57 55"/></svg><span class="section-title-mark">Update All</span></h2>
+<ol>
+	<li>Open the <span class="ui">Updates</span> page: tap the up-arrow button in the bar of the <span class="ui">Installed</span> page.</li>
+	<li>Tap <span class="ui">Update All</span> at the end of the bar.</li>
+	<li>The <span class="ui">Queue Changes</span> sheet opens and shows the plan: every package that would be updated, and anything new those updates need. Nothing is queued yet.</li>
+	<li>Tap <span class="ui">Confirm</span>. The sheet closes and Irisin reports <span class="ui">Added to Queue</span>.</li>
+	<li>Open the queue and tap <span class="ui">Execute</span>. Nothing is installed until you do.</li>
+</ol>
+<p>The sheet, the queue, and the button that runs it work as they do for any other request; see <a href="../packages/#the-queue">The Queue</a>.</p>
+
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/updates-update-all-light.png" alt="The Queue Changes sheet after Update All, with the packages grouped under Update and a Confirm button." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/updates-update-all-dark.png" alt="The Queue Changes sheet after Update All, with the packages grouped under Update and a Confirm button." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Update All shows its plan before anything is queued.</figcaption></figure>
+
+<p><span class="ui">Update All</span> never downgrades a package and <span class="editorial-mark">never removes one to make room</span>. If updating everything would require removing something you have installed, it refuses, and the sheet is a report that reads <span class="ui">Updating everything would remove installed packages. Update packages one at a time.</span> Queue the updates one by one from the <span class="ui">Updates</span> page, and read what each plan removes before you confirm it.</p>
+<p>A package that cannot move to its newest version is named under the list, for example <span class="ui" data-key="%@: kept at the current version by another package or a blocked update.">Example: kept at the current version by another package or a blocked update.</span> Either another installed package requires the version you have, or you blocked that package's updates. The rest of the plan is unaffected.</p>
+<p>To update some packages and not others, pick them on the <span class="ui">Installed</span> page:</p>
+<ol>
+	<li>Open the menu on the <span class="ui">Installed</span> page and tap <span class="ui">Select</span>.</li>
+	<li>Tick the rows you want.</li>
+	<li>Tap <span class="ui">Update</span> in the bar at the bottom. The <span class="ui">Queue Changes</span> sheet opens with one plan for the whole selection.</li>
+</ol>
+<p>Ticked rows that have no update stay as they are. A paid package or one that is not supported on this device cannot be updated in a batch. It is left out, and Irisin says <span class="ui">Some Packages Left Out</span> and <span class="ui">Open their pages instead.</span></p>
+</section>
+
+<section class="chapter" id="block-an-update"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="32" cy="32" r="22"/><path d="M17 16L48 47"/><path class="icon-detail" d="M32 46L32 20M24 28L32 19L40 28"/></svg><span class="section-title-mark">Block an Update</span></h2>
+<p>Block a package's updates when you want it to stay at the version you have.</p>
+<ol>
+	<li>Open the package's menu: touch and hold its row in any list, or open its page and use the menu there. See <a href="../packages/#the-package-menu">The Package Menu</a>.</li>
+	<li>Tap <span class="ui">Advanced</span>.</li>
+	<li>Tap <span class="ui">Block Update</span>.</li>
+</ol>
+<p>It acts at once, with no confirmation, and reports <span class="ui">Done</span>. From then on the same place in the menu reads <span class="ui">Unblock Update</span>, which undoes it at once.</p>
+<p>A blocked package is offered no newer version. It leaves the <span class="ui">Updates</span> page, the <span class="ui">Updates</span> section on the <span class="ui">Dashboard</span>, and the badge, and its row on the <span class="ui">Installed</span> page loses its arrow. <span class="editorial-mark">Its page no longer offers <span class="ui">Update</span></span>, even when you open the newer version's own page. The one exception is a <code>.deb</code> file you open yourself: a file can still update a blocked package. <span class="ui">Update All</span> names a blocked package among those kept at the current version.</p>
+<p><span class="ui">Block All Updates</span> blocks every installed package at once. It is in the menu of the <span class="ui">Installed</span> page, in red, and only while at least one update exists. It acts <span class="editorial-mark">with no confirmation</span>, and the only way back is the <span class="ui">Blocked Updates</span> list below.</p>
+<h3>The Blocked Updates List</h3>
+<p>Open <span class="ui">Settings → Packages → Blocked Updates</span>. The page lists every package you are holding back, sorted by name, and you can search it.</p>
+<ul>
+	<li>To unblock one package, tap its row to open the package's page, then choose <span class="ui">Advanced</span> and <span class="ui">Unblock Update</span> from its menu.</li>
+	<li>To unblock everything, tap the trash button. Irisin asks <span class="ui">Clear Blocked Updates?</span> and warns <span class="ui">This cannot be undone.</span> Tap <span class="ui">Clear</span> to confirm; the list is emptied and the page closes. With nothing blocked, the button only reports <span class="ui">No blocked updates</span>.</li>
+	<li>A row may read <span class="ui">This package is no longer available.</span> That package is not installed and no repository offers it any more; only the block remains.</li>
+</ul>
+
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/updates-blocked-light.png" alt="The Blocked Updates page in Settings, listing the blocked packages, with a trash button in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/updates-blocked-dark.png" alt="The Blocked Updates page in Settings, listing the blocked packages, with a trash button in the bar." width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Blocked Updates lists every package you are holding back.</figcaption></figure>
+</section>
+
+<section class="chapter" id="when-an-update-is-missing"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="27" cy="26" r="17"/><path d="M39 39L55 56"/><path d="M21 22Q21 16 27 16Q33 16 33 21Q33 25 27 28L27 31M27 36L27 37"/><path class="icon-detail" d="M50 11L54 8M54 20L59 20"/></svg><span class="section-title-mark">When an Update Is Missing</span></h2>
+<p>A newer version reaches the <span class="ui">Updates</span> page, the badge, and the <span class="ui">Dashboard</span> only if it passes three checks.</p>
+<figure class="sk" id="figure-ch4"><div class="sk-paper"><ol class="sk-steps">
+	<li><strong>Not blocked</strong><span>a block hides every version</span><span>Undo with <span class="ui">Unblock&nbsp;Update</span></span></li>
+	<li><strong>From its own repository</strong><span>another repository does not count</span><span>Installed another way: any repository</span></li>
+	<li><strong>Built for this system</strong><span>one that needs converting is held</span><span>Turn on <span class="ui">Compatibility Updates</span></span></li>
+	<li class="sk-goal"><strong><span class="ui">Updates</span></strong><span>page, badge and <span class="ui">Dashboard</span></span><em class="sk-ok">listed</em></li>
+</ol><p class="sk-foot"><span class="ui">Compatibility Updates</span> appears only on roothide, where packages can be converted. On rootless there is no such row.</p></div><figcaption>The three checks a newer version passes before it is listed in <span class="ui">Updates</span>. <span class="ui">Unblock Update</span> and <span class="ui">Compatibility Updates</span> are the two you control.</figcaption></figure>
+<ol>
+	<li><strong>It is not blocked.</strong> A blocked package is offered nothing. Look for it in <span class="ui">Settings → Packages → Blocked Updates</span>; see <a href="#block-an-update">Block an Update</a>.</li>
+	<li><strong>It comes from the right repository.</strong> A package that Irisin installed is offered updates <span class="editorial-mark">only from the repository it came from</span>. A newer version in some other repository does not count. A package that was installed another way, by a different package manager or by hand, has no repository on record. It is offered updates from any repository, and the first update you install sets its repository.</li>
+	<li><strong>It is built for this system.</strong> This check matters only on roothide, where Irisin can convert a rootless package. There, a newer version that would have to be converted does not count as an update until <span class="ui">Compatibility Updates</span> is on. <span class="ui">Update All</span> leaves such a package at its version and does not name it as kept back. See <a href="#compatibility-updates">Compatibility Updates</a>.</li>
+</ol>
+<p>Separately, a package that <code>dpkg</code> has on hold stays at its version under <span class="ui">Update All</span>.</p>
+<p>The second and third checks do not stop you from <span class="editorial-mark">choosing the version yourself</span>. Open the package's menu, tap <span class="ui">Choose Version</span>, pick the newer version, and install it from that version's own page; see <a href="../packages/#choose-version">Choose Version</a>. A version that needs converting installs this way whether or not <span class="ui">Compatibility Updates</span> is on. The first check is the exception: a blocked package has to be unblocked first, because its page does not offer <span class="ui">Update</span> while the block stands.</p>
+<p>If the update still does not appear, the repository may not have been refreshed since the new version was published. Refresh it, then look again; see <a href="../repositories/#refresh-and-status">Refresh and Status</a>.</p>
+</section>
+
+<section class="chapter" id="compatibility-updates"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M20 22L44 23Q56 24 55 34Q54 45 43 45L20 44Q9 43 9 33Q10 22 20 22Z"/><circle cx="43" cy="34" r="7"/><path class="icon-detail" d="M14 13Q32 5 50 13M45 8L51 13L44 16M50 54Q32 61 14 54M19 59L13 54L20 51"/></svg><span class="section-title-mark">Compatibility Updates</span></h2>
+<p><span class="ui">Compatibility Updates</span> is a switch in <span class="ui">Settings → Packages</span>. It exists only on a bootstrap where packages can be converted, which means roothide. <span class="editorial-mark">On rootless there is no row</span>, because nothing is converted there. The switch is off by default, and Irisin remembers your choice.</p>
+<p>While it is off, a newer version that would have to be converted is left out of the <span class="ui">Updates</span> page, the badge, and the <span class="ui">Dashboard</span>, and <span class="ui">Update All</span> passes over it. You can still install it from that version's own page, as described in <a href="#when-an-update-is-missing">When an Update Is Missing</a>.</p>
+<p>Turning the switch on asks first. The alert is titled <span class="ui">Allow Compatibility Updates?</span> and reads <span class="ui">An update to a package installed in compatibility mode is converted again. It may stop working and damage the system.</span> The switch returns to off while the alert is up and stays on only after you tap <span class="ui">Allow</span>. <span class="ui">Cancel</span> leaves it off. Turning it off takes effect at once, with no confirmation.</p>
+<p>Even with the switch on, a version built for this system is preferred over a newer one that needs converting. Installing a converted package still asks every time, with the <span class="ui">Compatibility Mode</span> alert and its <span class="ui">Install Anyway</span> button, however you reached it; see <a href="../compatibility-mode/#the-warning">The Warning</a>.</p>
+<p>The footer of <span class="ui">Settings</span>, under the version, names the architectures Irisin can convert: <span class="ui" data-key="Also installs packages for %@">Also installs packages for iphoneos-arm64</span>. If your footer has no such line, your system converts nothing, and you will not find the switch.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../packages/"><small>Previous · Chapter 3</small><strong>Finding and Installing Packages</strong></a>
+	<a class="pager-next" rel="next" href="../compatibility-mode/"><small>Next · Chapter 5</small><strong>Compatibility Mode</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="./" aria-current="page">Updates</a><ol class="manual-nav-tasks">
+			<li><a href="#where-updates-appear" data-chapter-link="where-updates-appear">Where Updates Appear</a></li>
+			<li><a href="#update-all" data-chapter-link="update-all">Update All</a></li>
+			<li><a href="#block-an-update" data-chapter-link="block-an-update">Block an Update</a></li>
+			<li><a href="#when-an-update-is-missing" data-chapter-link="when-an-update-is-missing">When an Update Is Missing</a></li>
+			<li><a href="#compatibility-updates" data-chapter-link="compatibility-updates">Compatibility Updates</a></li>
+		</ol></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="../settings/">Settings and Exports</a></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>

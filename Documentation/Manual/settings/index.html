@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings and Exports.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23fff'/%3E%3Cpath transform='translate(5 5) scale(1.375)' fill='%23278eff' fill-rule='evenodd' d='M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z'/%3E%3C/svg%3E">
+<meta name="description" content="Every row in Irisin's Settings, in the app's order, what each export file contains, and how to reset Irisin from the Settings app.">
+<meta property="og:title" content="Settings and Exports.">
+<meta property="og:description" content="Every row in Irisin's Settings, in the app's order, what each export file contains, and how to reset Irisin from the Settings app.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://lakr233.github.io/Irisin/manual/settings/">
+<link rel="stylesheet" href="../assets/manual.css">
+<script>(function(){var p;try{p=localStorage.getItem('irisin-manual-theme');}catch(e){}document.documentElement.dataset.theme=p==='dark'||p==='light'?p:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
+<script src="../assets/manual.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+	<a class="brand" href="../../" aria-label="Irisin">
+		<svg viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M8.7 1.2 13.6 3.8Q14.4 4.2 14.4 5.1V10.9Q14.4 11.8 13.6 12.2L8.7 14.8Q8 15.2 7.3 14.8L2.4 12.2Q1.6 11.8 1.6 10.9V5.1Q1.6 4.2 2.4 3.8L7.3 1.2Q8 .8 8.7 1.2ZM9.9 2.7 5 5.3V7.6L6.6 8.4V6.2L11.5 3.6Z"/></svg>
+		<span>Irisin</span>
+	</a>
+	<a class="back" href="../"><span>Manual</span></a>
+	<button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme"><svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+</header>
+
+<div class="page"><main>
+
+<header class="article-cover">
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 7 of 8</span></p>
+	<h1 class="page-title" lang="en">Settings and Exports</h1>
+	<div class="cover-divider"></div>
+</header>
+
+<article lang="en"><div class="reader-layout"><div class="article-content">
+
+<p>Open the <span class="ui">Dashboard</span> tab and tap the gear at the top right. That opens <span class="ui">Settings</span>. On iPad, <span class="ui">Settings</span> is a card in the sidebar. This chapter goes through the page <span class="editorial-mark">top to bottom</span> and says what each row does. Where another chapter covers a row in full, you get a summary and a link.</p>
+
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/settings-top-light.png" alt="Irisin's Settings page, with a Vendor Accounts group above the Packages, Downloads, and System sections" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/settings-top-dark.png" alt="Irisin's Settings page, with a Vendor Accounts group above the Packages, Downloads, and System sections" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Settings. Vendor Accounts appears only when a repository sells packages.</figcaption></figure>
+
+<section class="chapter" id="vendor-accounts"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="28" cy="20" r="10"/><path d="M8 54Q9 36 28 36Q40 36 45 44"/><path d="M40 50L46 56L58 41"/><path class="icon-detail" d="M47 9L51 6M50 17L56 16"/></svg><span class="section-title-mark">Vendor Accounts</span></h2>
+<p>The <span class="ui">Vendor Accounts</span> section is <span class="editorial-mark">present only when one of your repositories sells packages</span>. When it is there, it is the first section on the page, with one row for each such repository, under the repository's own name and icon. If you have no such repository, your page starts at <span class="ui">Packages</span>.</p>
+<p>The badge at the end of a row tells you where you stand with that vendor:</p>
+<ul>
+	<li>An arrow means you are signed out. Tap the row to <span class="ui">Sign In</span>. The vendor's sign-in page opens in a sheet.</li>
+	<li>A green check means you are signed in. Tap the row for a menu with <span class="ui">Purchased</span> and <span class="ui">Sign Out</span>. <span class="ui">Purchased</span> asks the vendor what you own and lists those packages.</li>
+</ul>
+<p><span class="ui">Sign Out</span> does not ask first. It removes the sign-in that Irisin stored for that repository and reports <span class="ui">Signed out</span>. For what signing in sends to the vendor, and for buying a package, see <a href="../repositories/#vendor-accounts-and-purchases">Vendor Accounts and Purchases</a>.</p>
+</section>
+
+<section class="chapter" id="packages"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 8L54 19L53 45L32 57L10 46L11 19Z"/><path d="M11 19L32 31L54 19M32 31L32 57"/><path class="icon-detail" d="M21 13L43 25L43 33"/></svg><span class="section-title-mark">Packages</span></h2>
+<p>The <span class="ui">Packages</span> section holds three or four rows that control how packages are shown and handled.</p>
+<ul>
+	<li><span class="ui">Auto Translate</span> is a switch. While it is on, Irisin shows a package's page as written, then again in your language. When you turn it on, Irisin first checks that your device can translate. If it cannot, you see <span class="ui">Unable to Translate</span> and the switch stays off. See <a href="../translation/#auto-translate">Auto Translate</a>.</li>
+	<li><span class="ui">Blocked Updates</span> opens the list of updates you have blocked. The trash button at the top of that list asks <span class="ui">Clear Blocked Updates?</span> and then unblocks all of them at once. See <a href="../updates/#block-an-update">Block an Update</a>.</li>
+	<li><span class="ui">Compatibility Updates</span> is a switch, and the row exists only on roothide, where Irisin can convert rootless packages. While it is off, a newer version of a package you installed in compatibility mode is not offered as an update. Turning it on asks <span class="ui">Allow Compatibility Updates?</span> first. See <a href="../updates/#compatibility-updates">Compatibility Updates</a>.</li>
+	<li><span class="ui">Power Operations</span> is a switch that lets you remove packages the system requires. Turning it on asks <span class="ui">Allow Power Operations?</span> with this warning: <span class="ui">Removing a package the system requires can stop the custom firmware or this app from working.</span> See <a href="../troubleshooting/#power-operations">Power Operations</a>.</li>
+</ul>
+<p>A switch that asks first <span class="editorial-mark">stays off until you tap <span class="ui">Allow</span></span>. It returns to off while the alert is open, and <span class="ui">Cancel</span> leaves it off. Turning any of these switches off takes effect at once, with no alert.</p>
+</section>
+
+<section class="chapter" id="downloads"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 7L31 35M21 26L31 36L42 25"/><path d="M9 34L8 50Q8 55 13 55L51 54Q56 54 56 49L55 33"/><path d="M9 42L22 42Q24 48 32 48Q40 48 42 41L55 41"/><path class="icon-detail" d="M48 12L53 9M50 21L57 21"/></svg><span class="section-title-mark">Downloads</span></h2>
+<p><span class="ui">Downloads Folder</span> opens the folder of downloaded package files in Fila, a file manager. If Fila is not installed, the row offers <span class="ui">Install Fila</span> instead and explains: <span class="ui">Fila opens folders and files on this device. It comes from the OwnGoal Studio repository.</span> If <code>https://apt.owngoal.dev</code> is not among your repositories, the button reads <span class="ui">Add Repository</span> and opens the add sheet with that address filled in. If that repository is already added, the button reads <span class="ui">Install Fila</span> and opens Fila's page, or the repository's page when that repository has not been refreshed yet.</p>
+<p><span class="ui">Clear Downloads</span> shows the space that downloaded files use on the device. Tapping the row deletes nothing yet. It opens a small red menu, and you <span class="editorial-mark">choose <span class="ui">Clear Downloads</span> again</span> there. That cancels every download in progress and deletes both finished and partial downloads. The files of an operation that is still running stay until it ends, so the space shown may not reach zero at once. Irisin measures it again each time you open <span class="ui">Settings</span>.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/settings-clear-downloads-light.png" alt="The Clear Downloads row with a one-item red menu, also reading Clear Downloads, open over the size" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/settings-clear-downloads-dark.png" alt="The Clear Downloads row with a one-item red menu, also reading Clear Downloads, open over the size" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>Clear Downloads asks once more before it deletes.</figcaption></figure>
+</section>
+
+<section class="chapter" id="system"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">System</span></h2>
+<p>Use <span class="ui">Rebuild Icons</span> when <span class="editorial-mark">an installed app's icon is missing</span> from the Home Screen, or when an operation ended with this warning: <span class="ui">Packages were changed, but the home screen was not updated. Choose Rebuild Icons to try again.</span> While it works you see <span class="ui">Rebuilding Icons…</span> with the note <span class="ui">Rebuilding home screen icons will take some time.</span> It ends with <span class="ui">Icons rebuilt</span>, or with an alert titled <span class="ui">Unable to Rebuild Icons</span> that gives the reason.</p>
+<p>Use <span class="ui">Reload Home Screen</span> after you install or remove a package that needs the Home Screen restarted. It asks <span class="ui">Reload Home Screen?</span> and warns: <span class="ui"><span class="editorial-mark">The home screen restarts and every open app closes.</span></span> Tap <span class="ui">Reload</span> to go ahead. Irisin closes too.</p>
+<p>Both actions are also in the … menu of the operation page after a successful install. See <a href="../troubleshooting/#read-the-operation-page">Read the Operation Page</a>.</p>
+</section>
+
+<section class="chapter" id="support"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 8Q56 9 55 32Q54 56 31 55Q8 54 9 31Q10 8 32 8Z"/><path d="M32 21Q43 22 43 32Q42 43 32 43Q21 42 21 32Q22 21 32 21Z"/><path class="icon-detail" d="M24 24L15 15M40 24L49 16M40 40L48 49M24 40L16 48"/></svg><span class="section-title-mark">Support</span></h2>
+<p><span class="ui">View Logs</span> opens what Irisin itself has logged since you opened it, with filters for level and category. See <a href="../troubleshooting/#the-logs">The Logs</a>.</p>
+<p><span class="ui">Report Issue</span> leaves Irisin and opens the project's new-issue page on GitHub in your browser. It <span class="editorial-mark">attaches nothing</span>: no log and no device details go with it, so you add them yourself. See <a href="../troubleshooting/#report-issue">Report Issue</a> for what to include.</p>
+</section>
+
+<section class="chapter" id="the-menu-and-exports"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 39L33 7M22 17L33 6L43 18"/><path d="M22 27L14 27Q10 27 10 32L11 52Q11 56 16 56L49 55Q54 55 53 50L53 31Q53 27 48 27L43 27"/><path class="icon-detail" d="M20 46L44 46"/></svg><span class="section-title-mark">The Menu and Exports</span></h2>
+<p>The … button at the top right of <span class="ui">Settings</span> opens a menu with three entries. <span class="ui">Welcome Page</span> brings back the pages you saw on first launch. You leave it with its own buttons, not by swiping it away. See <a href="../installing/#the-welcome-page">The Welcome Page</a>. <span class="ui">System Settings</span> leaves Irisin and opens Irisin's page in the Settings app. Below a divider, <span class="ui">Export…</span> opens a submenu of the five files Irisin can export.</p>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/settings-export-light.png" alt="The Settings menu with the Export… submenu open, showing five export items in two groups" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/settings-export-dark.png" alt="The Settings menu with the Export… submenu open, showing five export items in two groups" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The Export… submenu, open over the Settings menu.</figcaption></figure>
+<p>Each export makes one file. Its name includes the date and time of the export, shown below as <code>&lt;date&gt;</code>, so your files sort by when you made them.</p>
+<div class="manual-table"><table>
+	<thead><tr><th scope="col">Export</th><th scope="col">File</th><th scope="col">What It Holds</th></tr></thead>
+	<tbody>
+		<tr><th scope="row"><span class="ui">Export Repository List</span></th><td data-label="File"><code>Repositories-&lt;date&gt;.irisinrepos</code></td><td data-label="What It Holds">The address of every repository you have added. Irisin can import it back.</td></tr>
+		<tr><th scope="row"><span class="ui">Export Package List</span></th><td data-label="File"><code>installed-&lt;date&gt;.txt</code></td><td data-label="What It Holds">One installed package per line: identifier, name, and version.</td></tr>
+		<tr><th scope="row"><span class="ui">Export dpkg Status</span></th><td data-label="File"><code>dpkg-status-&lt;date&gt;.txt</code></td><td data-label="What It Holds">The system's raw record of everything installed.</td></tr>
+		<tr><th scope="row"><span class="ui">Export Installer Log</span></th><td data-label="File"><code>irisin-install-&lt;date&gt;.log</code></td><td data-label="What It Holds">What the installer logged during its last run.</td></tr>
+		<tr><th scope="row"><span class="ui">Export App Log</span></th><td data-label="File"><code>irisin-&lt;date&gt;.log</code></td><td data-label="What It Holds">What Irisin itself logged since you opened it, the same text as <span class="ui">View Logs</span>.</td></tr>
+	</tbody>
+</table></div>
+<p>Each export opens the share sheet, where you save the file or send it on. When there is nothing to export, you see <span class="ui">Nothing to Export</span> instead: no repositories added, nothing installed, an empty app log, or a status file or installer log that is missing or empty. If the file cannot be made, you see <span class="ui">Unable to Export</span> with the message <span class="ui">The file could not be written. Try again.</span></p>
+<p>You export a single repository from its own menus, not from here. See <a href="../repositories/#import-and-export">Import and Export</a>. <span class="editorial-mark">Review a log before you share it</span>: the app log records what you typed into search and the addresses of repositories you added or removed. See <a href="../troubleshooting/#the-logs">The Logs</a>.</p>
+</section>
+
+<section class="chapter" id="irisin-in-the-settings-app"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M21 20L44 21Q56 22 55 33Q54 44 43 44L20 43Q9 42 9 32Q10 20 21 20Z"/><circle cx="43" cy="32" r="7"/><path class="icon-detail" d="M17 11Q31 3 46 11M46 11L40 12M46 11L45 5"/></svg><span class="section-title-mark">Irisin in the Settings App</span></h2>
+<p>Irisin's page in the Settings app has one switch, <span class="ui">Reset on Next Launch</span>, which is off until you turn it on. The text with it says what it does: <span class="ui">The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. <span class="editorial-mark">Installed packages are kept.</span> If Irisin is still running, close it in the App Switcher first.</span></p>
+<p>Use it when Irisin will not open properly, or when you want to start over without touching what is installed.</p>
+<ol>
+	<li>In Irisin, open <span class="ui">Settings</span>, tap the … button, and choose <span class="ui">System Settings</span>. If Irisin will not open, open the Settings app yourself and find Irisin in its list of apps.</li>
+	<li>Turn on <span class="ui">Reset on Next Launch</span>.</li>
+	<li>Close Irisin in the App Switcher. The reset happens only when Irisin starts, not when it comes back from the background.</li>
+	<li>Open Irisin.</li>
+</ol>
+<p>Irisin starts fresh, Welcome page included, and says nothing about the reset. The switch is off again, so the next launch keeps what you add.</p>
+</section>
+
+<section class="chapter" id="the-footer"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M15 7L41 8L51 18L50 56L14 55Z"/><path d="M41 8L41 18L51 18"/><path d="M21 37L43 37M21 44L43 45M21 51L36 51"/><path class="icon-detail" d="M21 22L32 22M21 29L28 29"/></svg><span class="section-title-mark">The Footer</span></h2>
+<p>Below the last section, <span class="ui">License</span> opens the notices of the open-source components Irisin ships. Each row names a component with its license and version, and tapping one shows the full text.</p>
+<p>Under <span class="ui">License</span> are four or five gray lines that identify this copy of Irisin and what it runs on. <span class="editorial-mark">A report should quote them</span>, in this order:</p>
+<ul>
+	<li>Irisin's identifier, <code>wiki.qaq.irisin</code>, then the version, then the build number in parentheses.</li>
+	<li>The architecture and the bootstrap, for example <code>iphoneos-arm64 · rootless</code>.</li>
+	<li>On roothide only, a line such as <span class="ui" data-key="Also installs packages for %@">Also installs packages for iphoneos-arm64</span>. It names the architecture that compatibility mode converts. On rootless this line does not exist.</li>
+	<li>The iOS version and the device model, for example <code>iOS 17.0 · iPhone14,2</code>.</li>
+	<li>The installer's line, which is last.</li>
+</ul>
+<figure class="sk sk-shot"><div class="sk-paper">
+	<img class="shot-light" src="../assets/shots/en/settings-footer-light.png" alt="The bottom of Settings: the License button and the gray lines under it, the last one beginning with irisind" width="1206" height="2622" loading="lazy" decoding="async">
+	<img class="shot-dark" src="../assets/shots/en/settings-footer-dark.png" alt="The bottom of Settings: the License button and the gray lines under it, the last one beginning with irisind" width="1206" height="2622" loading="lazy" decoding="async">
+</div><figcaption>The footer. Quote these lines when you report a problem.</figcaption></figure>
+<p>The installer's line tells you whether this Irisin can install anything. When the installer is ready, it reads <code>irisind</code>, a dot, and the folder that holds your bootstrap. While Irisin is still waiting for the installer, it reads <span class="ui">Connecting…</span>. A last line that reads <span class="ui">You can browse, but not install. Install the Irisin package.</span> means this copy of Irisin was installed without its package. See <a href="../troubleshooting/#browsing-only">Browsing Only</a>.</p>
+</section>
+
+<nav class="manual-pager" aria-label="Chapters">
+	<a class="pager-prev" rel="prev" href="../translation/"><small>Previous · Chapter 6</small><strong>Translation</strong></a>
+	<a class="pager-next" rel="next" href="../troubleshooting/"><small>Next · Chapter 8</small><strong>When Something Fails</strong></a>
+</nav>
+
+<footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
+
+</div>
+
+<aside class="reading-sidebar">
+	<nav class="manual-nav" aria-label="Manual"><p class="contents-heading"><a href="../">Irisin Manual</a></p><ol>
+		<li><a href="../installing/">Installing Irisin</a></li>
+		<li><a href="../repositories/">Repositories</a></li>
+		<li><a href="../packages/">Finding and Installing Packages</a></li>
+		<li><a href="../updates/">Updates</a></li>
+		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
+		<li><a href="../translation/">Translation</a></li>
+		<li><a href="./" aria-current="page">Settings and Exports</a><ol class="manual-nav-tasks">
+			<li><a href="#vendor-accounts" data-chapter-link="vendor-accounts">Vendor Accounts</a></li>
+			<li><a href="#packages" data-chapter-link="packages">Packages</a></li>
+			<li><a href="#downloads" data-chapter-link="downloads">Downloads</a></li>
+			<li><a href="#system" data-chapter-link="system">System</a></li>
+			<li><a href="#support" data-chapter-link="support">Support</a></li>
+			<li><a href="#the-menu-and-exports" data-chapter-link="the-menu-and-exports">The Menu and Exports</a></li>
+			<li><a href="#irisin-in-the-settings-app" data-chapter-link="irisin-in-the-settings-app">Irisin in the Settings App</a></li>
+			<li><a href="#the-footer" data-chapter-link="the-footer">The Footer</a></li>
+		</ol></li>
+		<li><a href="../troubleshooting/">When Something Fails</a></li>
+	</ol></nav>
+</aside>
+
+</div></article>
+</main></div>
+</body>
+</html>
