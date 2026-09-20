@@ -191,7 +191,7 @@ extension Package {
     }
 
     /// Has a file already, local or cached. The cache is only a hint here;
-    /// the download center hashes the file before trusting it.
+    /// `Downloads` hashes the file before trusting it.
     var isOnDisk: Bool {
         fileOnDisk != nil
     }
