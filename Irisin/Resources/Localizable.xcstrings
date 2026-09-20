@@ -7051,6 +7051,88 @@
         }
       }
     },
+    "Failed while installing" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فشل أثناء التثبيت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der Installation fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed while installing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error durante la instalación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l’installation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errore durante l’installazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール中に失敗"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치 중 실패"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha durante a instalação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ошибка при установке"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lỗi khi cài đặt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装时失败"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝時失敗"
+          }
+        }
+      }
+    },
     "Find Tweaks" : {
       "localizations" : {
         "ar" : {
@@ -7129,6 +7211,252 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尋找外掛"
+          }
+        }
+      }
+    },
+    "Ignore Script Errors and Retry" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجاهل أخطاء البرامج النصية وإعادة المحاولة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriptfehler ignorieren und erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore Script Errors and Retry"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorar errores de scripts y reintentar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer les erreurs de script et réessayer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignora gli errori degli script e riprova"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリプトエラーを無視して再試行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트 오류 무시하고 재시도"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorar erros de script e tentar novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Игнорировать ошибки скриптов и повторить"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ qua lỗi tập lệnh và thử lại"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略脚本错误并重试"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略腳本錯誤並重試"
+          }
+        }
+      }
+    },
+    "Ignore Script Errors and Retry?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجاهل أخطاء البرامج النصية وإعادة المحاولة؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriptfehler ignorieren und erneut versuchen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore Script Errors and Retry?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Ignorar errores de scripts y reintentar?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer les erreurs de script et réessayer ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorare gli errori degli script e riprovare?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリプトエラーを無視して再試行しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트 오류를 무시하고 재시도할까요?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorar erros de script e tentar novamente?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Игнорировать ошибки скриптов и повторить?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ qua lỗi tập lệnh và thử lại?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略脚本错误并重试？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略腳本錯誤並重試？"
+          }
+        }
+      }
+    },
+    "Installing…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التثبيت…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird installiert…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installazione…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установка…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang cài đặt…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安装…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安裝…"
           }
         }
       }
@@ -11498,82 +11826,6 @@
         }
       }
     },
-    "Failed while unpacking" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فشل أثناء فك الضغط"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehler beim Entpacken"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Error al desempaquetar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Échec de la décompression"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Errore durante l’estrazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展開中に失敗"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "압축 해제 중 실패"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falha ao desempacotar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сбой при распаковке"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lỗi khi giải nén"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解压时失败"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解壓縮時失敗"
-          }
-        }
-      }
-    },
     "Featured" : {
       "localizations" : {
         "ar" : {
@@ -14405,6 +14657,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將以相容模式安裝。"
+          }
+        }
+      }
+    },
+    "Irisin will retry the operation and continue if a package script fails. This can damage installed packages or the system." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيعيد Irisin محاولة تنفيذ العملية وسيواصلها إذا فشل أحد البرامج النصية للحزمة. قد يؤدي ذلك إلى إتلاف الحزم المثبتة أو النظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin versucht den Vorgang erneut und fährt fort, wenn ein Paketskript fehlschlägt. Dies kann installierte Pakete oder das System beschädigen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin will retry the operation and continue if a package script fails. This can damage installed packages or the system."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin volverá a intentar la operación y continuará si falla un script del paquete. Esto puede dañar los paquetes instalados o el sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin réessaiera l’opération et poursuivra si un script de paquet échoue. Cela peut endommager les paquets installés ou le système."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin riproverà l’operazione e continuerà se uno script del pacchetto non riesce. Ciò può danneggiare i pacchetti installati o il sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisinは操作を再試行し、パッケージのスクリプトが失敗しても続行します。インストール済みのパッケージやシステムが破損するおそれがあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin이 작업을 다시 시도하며 패키지 스크립트가 실패해도 계속 진행합니다. 이로 인해 설치된 패키지나 시스템이 손상될 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Irisin tentará executar a operação novamente e continuará se um script de pacote falhar. Isso pode danificar os pacotes instalados ou o sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin повторит операцию и продолжит её, даже если скрипт пакета завершится с ошибкой. Это может повредить установленные пакеты или систему."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin sẽ thử lại thao tác và tiếp tục nếu một tập lệnh của gói thất bại. Việc này có thể làm hỏng các gói đã cài đặt hoặc hệ thống."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 将重试此操作，并在软件包脚本失败时继续执行。这可能损坏已安装的软件包或系统。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 將重試此操作，並在套件腳本失敗時繼續執行。這可能損壞已安裝的套件或系統。"
           }
         }
       }
@@ -21785,6 +22119,88 @@
         }
       }
     },
+    "Recovery Mode removes only this package without checking whether other packages need it. Maintainer scripts still run, but their failures are ignored. Other packages or the system may stop working." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يزيل وضع الاسترداد هذه الحزمة فقط دون التحقق مما إذا كانت الحزم الأخرى تحتاج إليها. يستمر تشغيل البرامج النصية الخاصة بصيانة الحزمة، لكن يتم تجاهل حالات فشلها. قد تتوقف الحزم الأخرى أو النظام عن العمل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Wiederherstellungsmodus entfernt nur dieses Paket, ohne zu prüfen, ob andere Pakete es benötigen. Betreuerskripte werden weiterhin ausgeführt, ihre Fehler werden jedoch ignoriert. Andere Pakete oder das System funktionieren möglicherweise nicht mehr."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery Mode removes only this package without checking whether other packages need it. Maintainer scripts still run, but their failures are ignored. Other packages or the system may stop working."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modo de recuperación elimina solo este paquete sin comprobar si otros paquetes lo necesitan. Los scripts de mantenimiento se ejecutan, pero se ignoran sus errores. Otros paquetes o el sistema podrían dejar de funcionar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mode de récupération supprime uniquement ce paquet sans vérifier si d’autres paquets en ont besoin. Les scripts de maintenance sont toujours exécutés, mais leurs échecs sont ignorés. D’autres paquets ou le système peuvent cesser de fonctionner."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La modalità di recupero rimuove solo questo pacchetto senza verificare se altri pacchetti ne hanno bisogno. Gli script di manutenzione vengono comunque eseguiti, ma i loro errori vengono ignorati. Altri pacchetti o il sistema potrebbero smettere di funzionare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードでは、他のパッケージが必要としているかを確認せずに、このパッケージのみを削除します。メンテナスクリプトは実行されますが、失敗は無視されます。他のパッケージやシステムが動作しなくなるおそれがあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드는 다른 패키지에 필요한지 확인하지 않고 이 패키지만 제거합니다. 유지 관리 스크립트는 계속 실행되지만 실패는 무시됩니다. 다른 패키지나 시스템이 작동하지 않을 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Modo de Recuperação remove apenas este pacote sem verificar se outros pacotes precisam dele. Os scripts de manutenção continuam sendo executados, mas suas falhas são ignoradas. Outros pacotes ou o sistema podem parar de funcionar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим восстановления удаляет только этот пакет без проверки, нужен ли он другим пакетам. Скрипты обслуживания по-прежнему выполняются, но их ошибки игнорируются. Другие пакеты или система могут перестать работать."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ khôi phục chỉ gỡ bỏ gói này mà không kiểm tra xem các gói khác có cần gói này hay không. Các tập lệnh bảo trì vẫn chạy, nhưng lỗi của chúng sẽ được bỏ qua. Các gói khác hoặc hệ thống có thể ngừng hoạt động."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复模式仅移除此软件包，不检查其他软件包是否依赖它。维护脚本仍会运行，但其失败将被忽略。其他软件包或系统可能因此无法正常工作。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復原模式僅移除此套件，不會檢查其他套件是否需要它。維護腳本仍會執行，但其失敗將被忽略。其他套件或系統可能無法正常運作。"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "localizations" : {
         "ar" : {
@@ -22921,6 +23337,88 @@
         }
       }
     },
+    "Remove Using Recovery Mode" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة باستخدام وضع الاسترداد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wiederherstellungsmodus entfernen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Using Recovery Mode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar con el modo de recuperación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer en mode de récupération"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi con la modalità di recupero"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードで削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드로 제거"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover no Modo de Recuperação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить в режиме восстановления"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gỡ bỏ bằng Chế độ khôi phục"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用恢复模式移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用復原模式移除"
+          }
+        }
+      }
+    },
     "Remove from Queue" : {
       "localizations" : {
         "ar" : {
@@ -22993,6 +23491,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從佇列移除"
+          }
+        }
+      }
+    },
+    "Remove in Recovery Mode?" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة في وضع الاسترداد؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Wiederherstellungsmodus entfernen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove in Recovery Mode?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar en modo de recuperación?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer en mode de récupération ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovere in modalità di recupero?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧モードで削除しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 모드로 제거할까요?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover no Modo de Recuperação?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить в режиме восстановления?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gỡ bỏ bằng Chế độ khôi phục?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用恢复模式移除？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用復原模式移除？"
           }
         }
       }
@@ -35442,82 +36022,6 @@
         }
       }
     },
-    "Unpacking…" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جارٍ فك الضغط…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wird entpackt …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desempaquetando…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Décompression…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estrazione…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "展開中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "압축 해제 중…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desempacotando…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Распаковка…"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đang giải nén…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在解压…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在解壓縮…"
-          }
-        }
-      }
-    },
     "Unsupported" : {
       "localizations" : {
         "ar" : {
@@ -38990,252 +39494,6 @@
         }
       }
     },
-    "Ignore Configuration Errors" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تجاهل أخطاء الإعداد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konfigurationsfehler ignorieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignore Configuration Errors"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorar errores de configuración"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorer les erreurs de configuration"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignora gli errori di configurazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "構成エラーを無視"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "구성 오류 무시"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorar erros de configuração"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Игнорировать ошибки настройки"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bỏ qua lỗi cấu hình"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略配置错误"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略設定錯誤"
-          }
-        }
-      }
-    },
-    "Ignore Configuration Errors?" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل تريد تجاهل أخطاء الإعداد؟"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konfigurationsfehler ignorieren?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignore Configuration Errors?"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Ignorar los errores de configuración?"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorer les erreurs de configuration ?"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorare gli errori di configurazione?"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "構成エラーを無視しますか？"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "구성 오류를 무시할까요?"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorar erros de configuração?"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Игнорировать ошибки настройки?"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bỏ qua lỗi cấu hình?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略配置错误？"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略設定錯誤？"
-          }
-        }
-      }
-    },
-    "Ignore Errors" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تجاهل الأخطاء"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehler ignorieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignore Errors"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorar errores"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorer les erreurs"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignora gli errori"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "エラーを無視"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "오류 무시"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorar erros"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Игнорировать ошибки"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bỏ qua lỗi"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略错误"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略錯誤"
-          }
-        }
-      }
-    },
     "Ignoring Configuration Errors" : {
       "localizations" : {
         "ar" : {
@@ -39314,88 +39572,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在忽略設定錯誤"
-          }
-        }
-      }
-    },
-    "Irisin will still run each package’s setup scripts, but installation will continue if one fails. This can damage installed packages or the system." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "سيظل Irisin يشغّل نصوص إعداد كل حزمة، لكن سيستمر التثبيت إذا فشل أحدها. قد يؤدي ذلك إلى إتلاف الحزم المثبتة أو النظام."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin führt die Einrichtungsskripte jedes Pakets weiterhin aus. Schlägt jedoch eines davon fehl, wird die Installation fortgesetzt. Dies kann installierte Pakete oder das System beschädigen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin will still run each package’s setup scripts, but installation will continue if one fails. This can damage installed packages or the system."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin seguirá ejecutando los scripts de configuración de cada paquete, pero la instalación continuará si alguno falla. Esto puede dañar los paquetes instalados o el sistema."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin exécutera tout de même les scripts de configuration de chaque paquet, mais l’installation se poursuivra si l’un d’eux échoue. Cela peut endommager les paquets installés ou le système."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin eseguirà comunque gli script di configurazione di ogni pacchetto, ma l’installazione continuerà anche se uno di essi non riesce. Ciò può danneggiare i pacchetti installati o il sistema."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin は各パッケージのセットアップスクリプトを引き続き実行しますが、いずれかが失敗してもインストールを続行します。インストール済みのパッケージやシステムが破損する可能性があります。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin은 각 패키지의 설정 스크립트를 계속 실행하지만, 스크립트가 실패해도 설치를 계속합니다. 이로 인해 설치된 패키지나 시스템이 손상될 수 있습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Irisin ainda executará os scripts de configuração de cada pacote, mas a instalação continuará se um deles falhar. Isso pode danificar os pacotes instalados ou o sistema."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin всё равно запустит сценарии настройки каждого пакета, но при сбое одного из них установка продолжится. Это может повредить установленные пакеты или систему."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin vẫn chạy các tập lệnh thiết lập của từng gói, nhưng quá trình cài đặt sẽ tiếp tục nếu có tập lệnh thất bại. Điều này có thể làm hỏng các gói đã cài đặt hoặc hệ thống."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin 仍会运行每个软件包的设置脚本，但即使其中一个脚本失败，安装也会继续。这可能会损坏已安装的软件包或系统。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irisin 仍會執行每個套件的設定指令碼，但即使其中一個失敗，安裝仍會繼續。這可能會損壞已安裝的套件或系統。"
           }
         }
       }

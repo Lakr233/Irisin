@@ -66,7 +66,9 @@ public final class NativePackageInstaller {
         }
         emit(.phase(.verifying))
         let archives = try work.prepare(transaction.install)
-        if !transaction.recoveryMode {
+        if transaction.recoveryMode {
+            try work.validateRecoveryRemoval(transaction)
+        } else {
             try work.validateFinalState(transaction, archives: archives)
         }
         if transaction.dryRun {

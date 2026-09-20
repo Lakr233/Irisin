@@ -142,6 +142,34 @@ final class TaskProcessor {
         }
     }
 
+    func createRecoveryRemovalPayload(identity: String) async -> OperationPayload? {
+        do {
+            let plan = try await Self.recoveryRemovalPlan(
+                identity: identity,
+                index: PackageCenter.default.index,
+                allowSystemRemoval: TaskManager.shared.allowSystemRemoval
+            )
+            return await createOperationPayload(plan: plan)
+        } catch {
+            PackageActionReport.shared.clear()
+            if let failure = error as? ResolutionFailure {
+                PackageActionReport.shared.record(failure.message, checks: failure.checks)
+            } else {
+                PackageActionReport.shared.record(String(localized: "Unable to prepare this operation. Try again."))
+            }
+            return nil
+        }
+    }
+
+    @concurrent
+    private nonisolated static func recoveryRemovalPlan(
+        identity: String,
+        index: PackageIndex,
+        allowSystemRemoval: Bool
+    ) async throws -> ResolutionPlan {
+        try .recoveryRemoval(of: identity, in: index.resolutionSnapshot(), allowSystemRemoval: allowSystemRemoval)
+    }
+
     /// A queued package whose file is not on disk: resumed, not diagnosed.
     private struct MissingDownload: Error {
         let identity: String
@@ -201,7 +229,7 @@ final class TaskProcessor {
         for package: Package,
         index: PackageIndex
     ) async throws -> ResolutionPlan {
-        .recoveryInstallation(of: package, in: try index.resolutionSnapshot())
+        try .recoveryInstallation(of: package, in: index.resolutionSnapshot())
     }
 
     /// Runs the whole transaction through `irisin-install` as root. The

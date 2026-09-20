@@ -20,6 +20,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     /// One local archive that may repair a system whose relationships can no
     /// longer be solved. Nil for every ordinary diagnostic report.
     private let recoveryPackage: Package?
+    private let recoveryRemoval: String?
     private let recoveryFooter = UIView()
     private lazy var recoveryButton: UIButton = {
         let button = UIButton(type: .system)
@@ -41,9 +42,24 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         return button
     }()
 
-    init(closesSheet: Bool, recoveryPackage: Package? = nil) {
+    private lazy var removalButton = UIButton(type: .system).then {
+        $0.setAttributedTitle(NSAttributedString(
+            string: String(localized: "Remove Using Recovery Mode"),
+            attributes: [
+                .font: UIFont.footnote,
+                .foregroundColor: UIColor.buttonNormal,
+                .underlineStyle: NSUnderlineStyle.single.rawValue,
+            ]
+        ), for: .normal)
+        $0.titleLabel?.numberOfLines = 0
+        $0.titleLabel?.textAlignment = .center
+        $0.addAction(UIAction { [weak self] _ in self?.confirmRecoveryRemoval() }, for: .touchUpInside)
+    }
+
+    init(closesSheet: Bool, recoveryPackage: Package? = nil, recoveryRemoval: String? = nil) {
         self.closesSheet = closesSheet
         self.recoveryPackage = recoveryPackage
+        self.recoveryRemoval = recoveryRemoval
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -90,7 +106,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         tableView.allowsSelection = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "requirement")
         view.addSubview(tableView)
-        if recoveryPackage != nil {
+        if recoveryPackage != nil || recoveryRemoval != nil {
             configureRecoveryFooter()
             tableView.snp.makeConstraints { x in
                 x.top.equalTo(view.safeAreaLayoutGuide)
@@ -130,15 +146,26 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     private func configureRecoveryFooter() {
         recoveryFooter.backgroundColor = .groupedBackground
         view.addSubview(recoveryFooter)
-        recoveryFooter.addSubview(recoveryButton)
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 4
+        if recoveryPackage != nil {
+            stack.addArrangedSubview(recoveryButton)
+        }
+        if recoveryRemoval != nil {
+            stack.addArrangedSubview(removalButton)
+        }
+        recoveryFooter.addSubview(stack)
         recoveryFooter.snp.makeConstraints { x in
             x.leading.trailing.equalToSuperview()
             x.bottom.equalTo(view.safeAreaLayoutGuide)
         }
-        recoveryButton.snp.makeConstraints { x in
+        stack.snp.makeConstraints { x in
             x.top.bottom.equalToSuperview().inset(8)
             x.leading.trailing.equalToSuperview().inset(20)
-            x.height.greaterThanOrEqualTo(44)
+        }
+        for button in stack.arrangedSubviews {
+            button.snp.makeConstraints { x in x.height.greaterThanOrEqualTo(44) }
         }
     }
 
@@ -191,12 +218,25 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
             destructive: true
         ) { [weak self] in
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            self?.prepareRecoveryInstallation()
+            self?.prepareRecoveryOperation()
         }
     }
 
-    private func prepareRecoveryInstallation() {
-        guard let recoveryPackage else { return }
+    private func confirmRecoveryRemoval() {
+        guard recoveryRemoval != nil else { return }
+        presentConfirmation(
+            title: "Remove in Recovery Mode?",
+            message: "Recovery Mode removes only this package without checking whether other packages need it. Maintainer scripts still run, but their failures are ignored. Other packages or the system may stop working.",
+            confirmTitle: "Remove",
+            destructive: true
+        ) { [weak self] in
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            self?.prepareRecoveryOperation(removing: true)
+        }
+    }
+
+    private func prepareRecoveryOperation(removing: Bool = false) {
+        guard removing ? recoveryRemoval != nil : recoveryPackage != nil else { return }
         let progress = progressAlert(
             title: "Preparing…",
             message: "Checking packages…"
@@ -206,7 +246,13 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
             await withCheckedContinuation { ready in
                 present(progress, animated: true) { ready.resume() }
             }
-            let payload = await TaskProcessor.shared.createRecoveryOperationPayload(package: recoveryPackage)
+            let payload: TaskProcessor.OperationPayload? = if removing, let recoveryRemoval {
+                await TaskProcessor.shared.createRecoveryRemovalPayload(identity: recoveryRemoval)
+            } else if let recoveryPackage {
+                await TaskProcessor.shared.createRecoveryOperationPayload(package: recoveryPackage)
+            } else {
+                nil
+            }
             await progress.dismissFinishing(animated: true)
             guard let payload else {
                 let report = PackageActionReport.shared.allAvailable()

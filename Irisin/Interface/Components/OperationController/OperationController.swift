@@ -5,8 +5,8 @@ import UIKit
 /// The running operation, as the queue's own list: the same cards and rows
 /// the user just reviewed, each row now filling with its package's progress
 /// and counting it on a ring. The rows are the progress and the title says
-/// how it ended; only a failure adds rows on top, its account and Try
-/// Again, and a line under the list fades in while the helper finishes
+/// how it ended; a failure offers Try Again below the list,
+/// and a line under the list fades in while the helper finishes
 /// after the last row. A package that stopped the operation turns red and
 /// opens the account of its failure; every row then says what is true of
 /// its package, since the helper keeps what it finished. The helper's lines
@@ -23,9 +23,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     nonisolated enum Row: Hashable {
-        case status
-        /// Runs the queue again in this sheet.
-        case retry
         /// Recovery work that has stages but no package diff to draw.
         case maintenance
         case change(QueueChange)
@@ -33,7 +30,10 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     private let operation: TaskProcessor.OperationPayload
-    var isRecoveryMode: Bool { operation.plan.recoveryMode }
+    var isRecoveryMode: Bool {
+        operation.plan.recoveryMode
+    }
+
     private let changes: [String: QueueChange]
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     private lazy var operationWarningBanner = OperationWarningBanner(
@@ -41,7 +41,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
     )
     private lazy var icons = PackageIconCache { [weak self] in self?.reconfigure() }
     private(set) var monitor: OperationMonitor?
-    private(set) var ignoresScriptFailures: Bool
+    let ignoresScriptFailures: Bool
     private var subscriptions = Set<AnyCancellable>()
     /// The row the list last scrolled to, so it follows a package once.
     private var followed: String?
@@ -60,6 +60,36 @@ final class OperationController: UIViewController, UITableViewDelegate {
         $0.accessibilityElementsHidden = true
     }
 
+    private let retrySpinner = UIActivityIndicatorView(style: .medium)
+    private lazy var retryButton = UIButton(type: .system).then {
+        $0.setAttributedTitle(NSAttributedString(
+            string: String(localized: "Try Again"),
+            attributes: [
+                .font: UIFont.footnote,
+                .foregroundColor: UIColor.buttonNormal,
+                .underlineStyle: NSUnderlineStyle.single.rawValue,
+            ]
+        ), for: .normal)
+        $0.titleLabel?.numberOfLines = 0
+        $0.titleLabel?.textAlignment = .center
+        $0.addAction(UIAction { [weak self] _ in self?.retry() }, for: .touchUpInside)
+    }
+
+    private lazy var retryFooter = UIView().then { footer in
+        let stack = UIStackView(arrangedSubviews: [retryButton, retrySpinner])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 4
+        footer.addSubview(stack)
+        stack.snp.makeConstraints { x in
+            x.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20))
+        }
+        retryButton.snp.makeConstraints { x in
+            x.height.greaterThanOrEqualTo(44)
+            x.width.equalToSuperview()
+        }
+    }
+
     private var isFinishing = false
     /// Try Again was tapped and the queue is being staged.
     private var retrying = false
@@ -71,22 +101,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
         case let .change(change):
             let cell = table.dequeueReusableCell(withIdentifier: "package", for: indexPath) as! OperationPackageCell
             cell.apply(change, icon: icons.icon(of: change.package), state: state(of: change), animated: false)
-            return cell
-        case .status:
-            let cell = table.dequeueReusableCell(withIdentifier: "plain", for: indexPath)
-            cell.contentConfiguration = statusContent()
-            cell.selectionStyle = .none
-            return cell
-        case .retry:
-            let cell = table.dequeueReusableCell(withIdentifier: "retry", for: indexPath)
-            var content = cell.defaultContentConfiguration()
-            content.text = String(localized: "Try Again")
-            content.textProperties.font = .body
-            content.textProperties.color = retrying ? .textSubtitle : .buttonNormal
-            cell.contentConfiguration = content
-            cell.selectionStyle = retrying ? .none : .default
-            cell.accessoryView = retrying ? UIActivityIndicatorView(style: .medium).then { $0.startAnimating() } : nil
-            cell.accessibilityTraits = retrying ? [.button, .notEnabled] : .button
             return cell
         case .maintenance:
             let cell = table.dequeueReusableCell(withIdentifier: "maintenance", for: indexPath)
@@ -124,7 +138,9 @@ final class OperationController: UIViewController, UITableViewDelegate {
         // read now: a finished operation empties the queue
         changes = QueueChange.changes(
             of: operation.plan,
-            requested: Set(TaskManager.shared.actions.map(\.identity))
+            requested: operation.plan.recoveryMode
+                ? Set((operation.plan.install + operation.plan.remove).map(\.identity))
+                : Set(TaskManager.shared.actions.map(\.identity))
         )
         ignoresScriptFailures = operation.transaction.ignoreScriptFailures
         super.init(nibName: nil, bundle: nil)
@@ -153,7 +169,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
         tableView.backgroundColor = .groupedBackground
         tableView.register(OperationPackageCell.self, forCellReuseIdentifier: "package")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "plain")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "retry")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "maintenance")
         tableView.delegate = self
         tableView.dataSource = dataSource
@@ -179,12 +194,32 @@ final class OperationController: UIViewController, UITableViewDelegate {
         let width = tableView.bounds.width
         guard width > 0 else { return }
         updateOperationWarningBanner()
-        let height = finishingFooter.label
-            .sizeThatFits(CGSize(width: width - 40, height: .greatestFiniteMagnitude))
-            .height + 32
-        guard tableView.tableFooterView == nil || finishingFooter.frame.height != height else { return }
-        finishingFooter.frame = CGRect(x: 0, y: 0, width: width, height: height)
-        tableView.tableFooterView = finishingFooter
+        let footer: UIView
+        let height: CGFloat
+        if monitor?.outcome?.succeeded == false {
+            footer = retryFooter
+            retryButton.isEnabled = !retrying
+            retrySpinner.isHidden = !retrying
+            if retrying {
+                retrySpinner.startAnimating()
+            } else {
+                retrySpinner.stopAnimating()
+            }
+            height = retryFooter.systemLayoutSizeFitting(
+                CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+                withHorizontalFittingPriority: .required,
+                verticalFittingPriority: .fittingSizeLevel
+            ).height
+        } else {
+            footer = finishingFooter
+            height = finishingFooter.label
+                .sizeThatFits(CGSize(width: width - 40, height: .greatestFiniteMagnitude))
+                .height + 32
+        }
+        let frame = CGRect(x: 0, y: 0, width: width, height: height)
+        guard tableView.tableFooterView !== footer || footer.frame != frame else { return }
+        footer.frame = frame
+        tableView.tableFooterView = footer
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -202,14 +237,10 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     /// The packages alone while the operation runs: the rows are the
-    /// progress. A failure heads them with its account and Try Again when
-    /// it ends, and the warnings close the list.
+    /// progress. Warnings close the list; retry is the footer below it.
     private func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
-        if case .failed = monitor?.outcome {
-            snapshot.appendSections([.status])
-            snapshot.appendItems([.status, .retry], toSection: .status)
-        } else if Self.showsMaintenanceRow(changeCount: changes.count, outcome: monitor?.outcome) {
+        if Self.showsMaintenanceRow(changeCount: changes.count, outcome: monitor?.outcome) {
             snapshot.appendSections([.status])
             snapshot.appendItems([.maintenance], toSection: .status)
         }
@@ -218,7 +249,13 @@ final class OperationController: UIViewController, UITableViewDelegate {
             snapshot.appendSections([section])
             snapshot.appendItems(group.changes.map(Row.change), toSection: section)
         }
-        let notices = monitor?.outcome == nil ? [] : notices()
+        var notices = monitor?.outcome == nil ? [] : notices()
+        if let monitor, case let .failed(reason) = monitor.outcome,
+           !monitor.packages.states.contains(where: { changes[$0.key] != nil && $0.value.hasProblem })
+        {
+            notices.insert(reason, at: 0)
+        }
+        notices = notices.uniqued()
         if !notices.isEmpty {
             snapshot.appendSections([.notices])
             snapshot.appendItems(notices.map(Row.notice), toSection: .notices)
@@ -334,10 +371,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
                 refreshVisibleRows()
                 applySnapshot()
                 updateFinishingFooter()
-                if !outcome.succeeded {
-                    // the account of the failure is the row that just arrived on top
-                    tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-                }
+                view.setNeedsLayout()
                 finishOperation(succeeded: outcome.succeeded, requiresExit: monitor.requiresExit)
                 UIAccessibility.post(
                     notification: .announcement,
@@ -384,31 +418,36 @@ final class OperationController: UIViewController, UITableViewDelegate {
 
     /// Try Again: the queue, solved again against what the failed run left,
     /// is staged and run in this sheet, as Execute would run it.
-    private func retry() {
+    private func retry(ignoreScriptFailures: Bool? = nil) {
         guard !retrying else { return }
         retrying = true
-        reconfigure()
+        view.setNeedsLayout()
         Task { [weak self] in
             let manager = TaskManager.shared
             await manager.settled()
             guard let self, view.window != nil else { return }
-            let payload: TaskProcessor.OperationPayload?
-            if operation.plan.recoveryMode,
-               operation.plan.install.count == 1,
-               let package = operation.plan.install.first
+            let payload: TaskProcessor.OperationPayload? = if operation.plan.recoveryMode,
+                                                              operation.plan.install.count == 1,
+                                                              let package = operation.plan.install.first
             {
-                payload = await TaskProcessor.shared.createRecoveryOperationPayload(package: package)
+                await TaskProcessor.shared.createRecoveryOperationPayload(package: package)
+            } else if operation.plan.recoveryMode,
+                      operation.plan.remove.count == 1,
+                      let package = operation.plan.remove.first
+            {
+                await TaskProcessor.shared.createRecoveryRemovalPayload(identity: package.identity)
             } else if manager.blocked == nil, let plan = manager.plan {
-                payload = await TaskProcessor.shared.createOperationPayload(
+                await TaskProcessor.shared.createOperationPayload(
                     plan: plan,
-                    ignoreScriptFailures: ignoresScriptFailures
+                    ignoreScriptFailures: ignoreScriptFailures ?? ignoresScriptFailures
                 )
             } else {
-                payload = nil
+                nil
             }
             // Staging took time; a sheet closed meanwhile has nothing to run.
             guard view.window != nil else { return }
             retrying = false
+            view.setNeedsLayout()
             guard let payload, !payload.transaction.stages.isEmpty else {
                 reconfigure()
                 // staging said why in the report when it could
@@ -419,7 +458,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
                     message: manager.blocked ?? (report.isEmpty ? fallback : report)
                 )
             }
-            navigationController?.setViewControllers([OperationController(operation: payload)], animated: true)
+            navigationController?.pushViewController(OperationController(operation: payload), animated: true)
         }
     }
 
@@ -442,25 +481,18 @@ final class OperationController: UIViewController, UITableViewDelegate {
         navigationItem.leftBarButtonItems?.append(hide)
     }
 
-    /// The menu owns the user's pending choice; a retry copies it into the
-    /// next closed transaction, which is the helper's authoritative policy.
-    func toggleIgnoredScriptFailures() {
-        if ignoresScriptFailures {
-            ignoresScriptFailures = false
-            updateOperationWarningBanner()
-            return
-        }
+    /// Confirm once, then stage a new transaction with script failures tolerated.
+    func retryIgnoringScriptFailures() {
+        guard !retrying else { return }
         presentConfirmation(
-            title: "Ignore Configuration Errors?",
-            message: "Irisin will still run each package’s setup scripts, but installation will continue if one fails. This can damage installed packages or the system.",
-            confirmTitle: "Ignore Errors",
+            title: "Ignore Script Errors and Retry?",
+            message: "Irisin will retry the operation and continue if a package script fails. This can damage installed packages or the system.",
+            confirmTitle: "Retry",
             destructive: true
         ) { [weak self] in
             guard let self else { return }
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            ignoresScriptFailures = true
-            updateOperationWarningBanner()
-            tableView.scrollRectToVisible(operationWarningBanner.frame, animated: true)
+            retry(ignoreScriptFailures: true)
         }
     }
 
@@ -488,7 +520,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
     /// A package row opens only once it has a problem to show.
     func tableView(_: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
         switch dataSource.itemIdentifier(for: indexPath) {
-        case .retry: !retrying
         case let .change(change): state(of: change).hasProblem
         default: false
         }
@@ -496,9 +527,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        if dataSource.itemIdentifier(for: indexPath) == .retry {
-            return retry()
-        }
         guard let monitor, case let .change(change) = dataSource.itemIdentifier(for: indexPath) else { return }
         let problem = OperationProblemController(
             change: change,

@@ -69,9 +69,9 @@ end.
   `OperationPackages` reduces them to one state per package, and
   `InstallerEvent+Console` spells them in the user's language. The
   operation page is the queue's list with a ring per row and nothing else
-  that moves; only a failure adds rows, on top (its account and Try Again,
-  which runs the re-solved queue in the same sheet), a footnote under the list
-  fades in while the helper finishes after the last row, and the helper's
+  that moves; a failure offers Try Again as a small link below the list,
+  which runs the re-solved queue in a new controller in the same sheet. A
+  footnote under the list fades in while the helper finishes after the last row, and the helper's
   lines are on the log page and on the failed package's page, never on the
   list. The
   log file beside the pipe

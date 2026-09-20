@@ -26,11 +26,10 @@ extension OperationController {
         guard let monitor else { return [log] }
         if monitor.outcome?.succeeded == false, !isRecoveryMode {
             let ignore = UIAction(
-                title: String(localized: "Ignore Configuration Errors"),
-                image: UIImage(systemName: "exclamationmark.shield"),
-                state: ignoresScriptFailures ? .on : .off
+                title: String(localized: "Ignore Script Errors and Retry"),
+                image: UIImage(systemName: "exclamationmark.shield")
             ) { [weak self] _ in
-                self?.toggleIgnoredScriptFailures()
+                self?.retryIgnoringScriptFailures()
             }
             return [log, UIMenu(options: .displayInline, children: [ignore])]
         }

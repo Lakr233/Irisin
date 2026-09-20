@@ -77,4 +77,27 @@ struct ExplicitInstallTests {
         #expect(plan.finalPackages == [installed, recovery])
         #expect(plan.recoveryMode)
     }
+
+    @Test func recoveryRemovalKeepsDependentsAndRemovesOnlyTheBrokenPackage() throws {
+        let broken = pkg("broken", "1", ["status": "install reinstreq half-installed"], installed: true)
+        let dependent = pkg("dependent", "1", ["depends": "broken"], installed: true)
+        let snapshot = ResolutionSnapshot(packages: [], installed: [broken, dependent], architecture: "arm64")
+        let plan = try ResolutionPlan.recoveryRemoval(of: "broken", in: snapshot, allowSystemRemoval: false)
+        #expect(plan.install.isEmpty)
+        #expect(plan.remove == [broken])
+        #expect(plan.finalPackages == [dependent])
+        #expect(plan.stages == [.remove(["broken"])])
+        #expect(plan.recoveryMode)
+    }
+
+    @Test(arguments: ["essential", "protected"])
+    func recoveryRemovalProtectsSystemPackages(field: String) throws {
+        let package = pkg("system", "1", [field: "yes"], installed: true)
+        let snapshot = ResolutionSnapshot(packages: [], installed: [package], architecture: "arm64")
+        #expect(throws: ResolutionFailure.self) {
+            try ResolutionPlan.recoveryRemoval(of: package.identity, in: snapshot, allowSystemRemoval: false)
+        }
+        let plan = try ResolutionPlan.recoveryRemoval(of: package.identity, in: snapshot, allowSystemRemoval: true)
+        #expect(plan.remove == [package])
+    }
 }

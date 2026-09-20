@@ -56,6 +56,34 @@ public struct ResolutionPlan: Sendable {
         )
     }
 
+    /// Removes exactly the selected installed package without solving relationships.
+    /// The helper still enforces held/system-package protection and filesystem safety.
+    public static func recoveryRemoval(
+        of identity: String,
+        in snapshot: ResolutionSnapshot,
+        allowSystemRemoval: Bool
+    ) throws -> ResolutionPlan {
+        guard let package = snapshot.installed.first(where: { $0.identity == identity }) else {
+            throw ResolutionFailure(.unfinishedInstall(package: identity))
+        }
+        let fields = package.latestMetadata ?? [:]
+        let protected = fields["essential"] == "yes" || fields["protected"] == "yes"
+            || ["apt", "dpkg", "essential", "firmware", "bash", "coreutils",
+                "base", "base-files", "base-passwd", "libroot", "roothide"].contains(identity)
+        guard fields["status"]?.hasPrefix("hold ") != true else {
+            throw ResolutionFailure(.onHold(package: identity))
+        }
+        guard allowSystemRemoval || !protected else {
+            throw ResolutionFailure(.requiredBySystem(package: identity))
+        }
+        return ResolutionPlan(
+            id: UUID(), snapshot: snapshot, install: [], remove: [package],
+            finalPackages: snapshot.installed.filter { $0.identity != identity },
+            stages: [.remove([identity])], heldBack: [], diagnostics: [], requiredBy: [:],
+            autoInstalled: [], unneeded: [:], recoveryMode: true
+        )
+    }
+
     /// The part of `chosen` that can go: a name is dropped while an
     /// unneeded package that depends on it is not chosen as well.
     public static func removable(_ chosen: Set<String>, unneeded: [String: [String]]) -> Set<String> {

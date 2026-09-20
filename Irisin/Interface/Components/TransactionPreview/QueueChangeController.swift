@@ -95,7 +95,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         let controller = QueueChangeController(request: request)
         await controller.prepare(within: .milliseconds(200))
         let root = controller.failure.map {
-            report(of: $0, alone: true, recoveryPackage: controller.recoveryPackage)
+            report(of: $0, alone: true, recoveryPackage: controller.recoveryPackage, recoveryRemoval: controller.recoveryRemoval)
         } ?? controller
         host.present(UINavigationController.halfSheet(root: root), animated: true)
     }
@@ -104,14 +104,16 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     private static func report(
         of failure: ResolutionFailure,
         alone: Bool,
-        recoveryPackage: Package? = nil
+        recoveryPackage: Package? = nil,
+        recoveryRemoval: String? = nil
     ) -> UIViewController {
         // the page reads the report as it opens: this failure, and only it
         PackageActionReport.shared.clear()
         PackageActionReport.shared.record(failure.message, checks: failure.checks)
         return PackageDiagnosticController(
             closesSheet: alone,
-            recoveryPackage: recoveryPackage
+            recoveryPackage: recoveryPackage,
+            recoveryRemoval: recoveryRemoval
         )
     }
 
@@ -125,6 +127,21 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
               package.supports(anyOf: AptEnvironment.current.installableArchitectures)
         else { return nil }
         return package
+    }
+
+    /// A failed single-package request can offer recovery removal for that
+    /// installed package. The helper rechecks protection when it executes.
+    private var recoveryRemoval: String? {
+        guard case let .actions(actions) = request, actions.count == 1,
+              let installed = PackageCenter.default.obtainPackageInstallationInfo(with: actions[0].identity)?.representObject
+        else { return nil }
+        let fields = installed.latestMetadata ?? [:]
+        guard fields["status"]?.hasPrefix("hold ") != true else { return nil }
+        let protected = fields["essential"] == "yes" || fields["protected"] == "yes"
+            || ["apt", "dpkg", "essential", "firmware", "bash", "coreutils",
+                "base", "base-files", "base-passwd", "libroot", "roothide"].contains(installed.identity)
+        guard TaskManager.shared.allowSystemRemoval || !protected else { return nil }
+        return installed.identity
     }
 
     init(request: Request) {
@@ -238,7 +255,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                     // no answer was ever shown: the report takes the sheet over
                     subscriptions.removeAll()
                     navigationController?.setViewControllers(
-                        [Self.report(of: failure, alone: true, recoveryPackage: recoveryPackage)],
+                        [Self.report(of: failure, alone: true, recoveryPackage: recoveryPackage, recoveryRemoval: recoveryRemoval)],
                         animated: true
                     )
                     return

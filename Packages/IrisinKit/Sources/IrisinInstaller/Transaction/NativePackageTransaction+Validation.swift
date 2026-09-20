@@ -3,6 +3,21 @@ import Foundation
 import IrisinProtocol
 
 extension NativePackageTransaction {
+    /// Recovery bypasses relationships, never the user's system-package protection.
+    func validateRecoveryRemoval(_ transaction: InstallerJob.Transaction) throws {
+        for identity in transaction.remove {
+            guard let fields = database.records[identity] else {
+                throw NativePackageFailure("Cannot remove absent package: \(identity)")
+            }
+            let system = fields["essential"] == "yes" || fields["protected"] == "yes"
+                || ["apt", "dpkg", "essential", "firmware", "bash", "coreutils",
+                    "base", "base-files", "base-passwd", "libroot", "roothide"].contains(identity)
+            if system && !transaction.allowSystemRemoval || fields["status"]?.hasPrefix("hold ") == true {
+                throw NativePackageFailure("Cannot remove protected or held package: \(identity)")
+            }
+        }
+    }
+
     /// What dpkg checks before it acts: the packages this transaction
     /// unpacks or configures must have their dependencies in the final
     /// state, nothing left may depend on what it removes, and a package it

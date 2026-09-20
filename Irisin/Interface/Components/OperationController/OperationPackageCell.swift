@@ -85,7 +85,7 @@ final class OperationPackageCell: UITableViewCell {
             return switch step {
             case .verifying: String(localized: "Checking…")
             case .removing: String(localized: "Removing…")
-            case .unpacking: String(localized: "Unpacking…")
+            case .unpacking: String(localized: "Installing…")
             case .configuring: String(localized: "Setting up…")
             case .triggering: String(localized: "Processing triggers…")
             }
@@ -110,7 +110,7 @@ final class OperationPackageCell: UITableViewCell {
             }
             return switch step {
             case .removing: String(localized: "Failed while removing")
-            case .unpacking: String(localized: "Failed while unpacking")
+            case .unpacking: String(localized: "Failed while installing")
             case .configuring, .triggering: String(localized: "Failed while setting up")
             case .verifying: String(localized: "Failed verification")
             }
