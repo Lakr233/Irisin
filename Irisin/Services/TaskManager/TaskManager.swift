@@ -61,7 +61,7 @@ final class TaskManager {
         }
     }
 
-    private let allowSystemRemovalStore = PropertiesWrapper(key: "package.allowSystemRemoval", defaultValue: false)
+    private let allowSystemRemovalStore = Stored(key: "package.allowSystemRemoval", defaultValue: false)
 
     private var subscription: AnyCancellable?
     private var refreshTask: Task<Void, Never>?

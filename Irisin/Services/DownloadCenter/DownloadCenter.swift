@@ -70,7 +70,7 @@ final class DownloadCenter {
         $0.countStyle = .file
     }
 
-    private let completedStore = PropertiesWrapper(key: "download.completed", defaultValue: Data())
+    private let completedStore = Stored(key: "download.completed", defaultValue: Data())
 
     /// Download URL to the verified file it produced.
     var completedFiles: [URL: URL] {

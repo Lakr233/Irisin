@@ -26,7 +26,7 @@ nonisolated enum AptRepositoryBootstrap {
                     on: EnvironmentDetector.architecture
                 )
             },
-            storage: PropertiesStorage(),
+            storage: SettingStore(),
             logger: DogLogger()
         )
     }
@@ -39,16 +39,6 @@ nonisolated enum AptRepositoryBootstrap {
     /// into it. Both inputs are constants, so this is one.
     static let installableArchitectures: Set<String> =
         PackageAdapters.installed.installable(on: EnvironmentDetector.architecture)
-}
-
-private nonisolated struct PropertiesStorage: AptStorage {
-    func read(key: String) -> Data? {
-        Properties.read(key: key)
-    }
-
-    func write(key: String, value: Data?) {
-        Properties.write(key: key, value: value)
-    }
 }
 
 private nonisolated struct DogLogger: AptLogger {

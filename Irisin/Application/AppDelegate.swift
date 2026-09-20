@@ -78,10 +78,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        // MARK: - Properties
+        // MARK: - SettingStore
 
-        Properties.setup(storeAt: documentsDirectory.appendingPathComponent("Settings")) { str in
-            Dog.shared.join("Properties", "error occurred \(str)")
+        SettingStore.setup(storeAt: documentsDirectory.appendingPathComponent("Settings")) { str in
+            Dog.shared.join("SettingStore", "error occurred \(str)")
         }
 
         // MARK: - Repository Engine

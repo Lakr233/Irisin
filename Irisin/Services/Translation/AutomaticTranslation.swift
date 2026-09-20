@@ -10,7 +10,7 @@ import Foundation
 
 /// The Auto Translate setting and how its failures are spelled.
 enum AutomaticTranslation {
-    private static let store = PropertiesWrapper(key: "package.translateDescriptions", defaultValue: false)
+    private static let store = Stored(key: "package.translateDescriptions", defaultValue: false)
 
     /// Settings turns this on only after `SystemTranslator.verify` passed.
     static var isEnabled: Bool {
@@ -18,7 +18,7 @@ enum AutomaticTranslation {
         set { store.wrappedValue = newValue }
     }
 
-    private static let targetStore = PropertiesWrapper(key: "package.translateTarget", defaultValue: "")
+    private static let targetStore = Stored(key: "package.translateTarget", defaultValue: "")
 
     /// The language pages are translated into: the user's own until the
     /// package page's Translate menu names another.
