@@ -16,13 +16,13 @@ import UIKit
 /// the file is there — on a progress card, then handed to the share sheet.
 /// Cancel stops the download unless the queue needs the same file.
 final class DownloadArchiveController: UIViewController {
-    static func start(for package: Package, from host: UIViewController) {
+    static func start(for package: Package, from host: UIViewController, anchor: PopoverAnchor?) {
         var store: URL?
         if package.isCommercial {
             guard let signedIn = PackageMenuAction.signedInStore(of: package, from: host) else { return }
             store = signedIn
         }
-        let card = DownloadArchiveController(package: package, store: store, host: host)
+        let card = DownloadArchiveController(package: package, store: store, host: host, anchor: anchor)
         host.present(AlertViewController(contentViewController: card), animated: true)
     }
 
@@ -30,6 +30,8 @@ final class DownloadArchiveController: UIViewController {
     /// The repository to ask for the purchased link; nil for a free package.
     private let store: URL?
     private weak var host: UIViewController?
+    /// What the user touched to ask: where the share sheet points on the iPad.
+    private let anchor: PopoverAnchor?
     private var work: Task<Void, Never>?
 
     private let titleLabel = UILabel()
@@ -38,10 +40,11 @@ final class DownloadArchiveController: UIViewController {
     private let bar = UIProgressView(progressViewStyle: .default)
     private let cancelButton = UIButton(type: .system)
 
-    private init(package: Package, store: URL?, host: UIViewController) {
+    private init(package: Package, store: URL?, host: UIViewController, anchor: PopoverAnchor?) {
         self.package = package
         self.store = store
         self.host = host
+        self.anchor = anchor
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -110,7 +113,7 @@ final class DownloadArchiveController: UIViewController {
             host?.presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             return
         }
-        host?.present(next: UIActivityViewController(activityItems: [copy], applicationActivities: nil))
+        host?.presentShareSheet([copy], anchor: anchor)
     }
 
     /// A copy under the name dpkg-name would give it, so what lands in

@@ -456,9 +456,7 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
     }
 
     private func share(_ item: Any) {
-        let activityViewController = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = moreButton
-        present(activityViewController, animated: true)
+        presentShareSheet([item], anchor: PopoverAnchor(moreButton))
     }
 
     @objc

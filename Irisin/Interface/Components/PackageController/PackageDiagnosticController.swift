@@ -181,13 +181,11 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
 
     @objc private func shareReport() {
         let details = report.map { "\($0.package)\n\($0.requirement)\n\($0.detailText)" }.joined(separator: "\n\n")
-        let controller = UIActivityViewController(
+        presentShareSheet(
             // the reason alone is already the summary
-            activityItems: [reasonOnly ? summary : summary + "\n\n" + details],
-            applicationActivities: nil
+            [reasonOnly ? summary : summary + "\n\n" + details],
+            anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) }
         )
-        controller.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
-        present(controller, animated: true)
     }
 
     private func confirmRecoveryInstallation() {

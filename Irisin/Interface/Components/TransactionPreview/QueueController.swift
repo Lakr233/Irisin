@@ -300,9 +300,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             guard let copies else {
                 return presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             }
-            let sheet = UIActivityViewController(activityItems: copies, applicationActivities: nil)
-            sheet.popoverPresentationController?.barButtonItem = menuItem
-            present(sheet, animated: true)
+            presentShareSheet(copies, anchor: PopoverAnchor(menuItem))
         }
     }
 

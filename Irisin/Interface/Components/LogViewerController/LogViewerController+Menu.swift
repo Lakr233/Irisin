@@ -131,12 +131,8 @@ extension LogViewerController {
         } else {
             [logText()]
         }
-        let activityViewController = UIActivityViewController(
-            activityItems: items,
-            applicationActivities: nil
-        )
-        activityViewController.popoverPresentationController?.sourceView = view
-        present(activityViewController, animated: true)
+        // the menu button this came from, not the whole page
+        presentShareSheet(items, anchor: navigationItem.rightBarButtonItem?.customView.map { PopoverAnchor($0) })
     }
 
     @objc private func clearLog() {

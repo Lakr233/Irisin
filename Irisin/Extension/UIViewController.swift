@@ -38,7 +38,7 @@ extension UIViewController {
     }
 
     func present(next: UIViewController) {
-        let neverPushed = next is AlertBaseController || next is UIActivityViewController
+        let neverPushed = next is AlertBaseController
         if let navigator = navigationController, !neverPushed {
             navigator.pushViewController(next, animated: true)
         } else if neverPushed || next is UINavigationController {
@@ -60,12 +60,62 @@ extension UIViewController {
         }
     }
 
+    /// The share sheet, which the iPad shows as a popover and refuses with an
+    /// exception when the popover has nowhere to point. So it always has
+    /// somewhere: `anchor` while what it names is still on screen, then the
+    /// page's own bar button, then the middle of the page with no arrow.
+    func presentShareSheet(_ items: [Any], anchor: PopoverAnchor?) {
+        let sheet = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        if let popover = sheet.popoverPresentationController {
+            let barVisible = navigationController?.isNavigationBarHidden == false
+            let pageItems = barVisible ? navigationItem.rightBarButtonItems ?? [] : []
+            let barItems = [anchor?.barButtonItem].compactMap(\.self) + pageItems
+            if let source = anchor?.view, source.window != nil {
+                popover.sourceView = source
+                popover.sourceRect = source.bounds
+            } else if let item = barItems.first(where: { !$0.isHidden }) {
+                popover.barButtonItem = item
+            } else {
+                popover.sourceView = view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
+            }
+        }
+        present(sheet, animated: true)
+    }
+
     /// Shows a context menu's preview as a page. The preview's size was the
     /// menu's: pushed with it, the page would resize the sheet it lands in.
     func show(preview animator: UIContextMenuInteractionCommitAnimating) {
         guard let page = animator.previewViewController else { return }
         page.preferredContentSize = .zero
         animator.addAnimations { self.show(page, sender: self) }
+    }
+}
+
+/// What a popover points at on the iPad: the view or the bar button the user
+/// touched. Held weakly, since a share may wait on a download and the cell
+/// it came from may be gone by then.
+struct PopoverAnchor {
+    private(set) weak var view: UIView?
+    private(set) weak var barButtonItem: UIBarButtonItem?
+
+    init(_ view: UIView) {
+        self.view = view
+    }
+
+    init(_ barButtonItem: UIBarButtonItem) {
+        self.barButtonItem = barButtonItem
+    }
+
+    /// From a `UIAction`'s sender: the button or bar button whose menu it
+    /// was. A context menu's sender is neither, and the caller names the cell.
+    init?(sender: Any?) {
+        switch sender {
+        case let view as UIView: self.init(view)
+        case let item as UIBarButtonItem: self.init(item)
+        default: return nil
+        }
     }
 }
 

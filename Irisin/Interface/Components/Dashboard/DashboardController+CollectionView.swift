@@ -111,7 +111,7 @@ extension DashboardController {
     }
 
     override func collectionView(
-        _: UICollectionView,
+        _ collectionView: UICollectionView,
         contextMenuConfigurationForItemsAt indexPaths: [IndexPath],
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
@@ -120,7 +120,11 @@ extension DashboardController {
         else {
             return nil
         }
-        return InterfaceBridge.packageContextMenuConfiguration(for: data, from: self)
+        return InterfaceBridge.packageContextMenuConfiguration(
+            for: data,
+            from: self,
+            anchor: collectionView.cellForItem(at: indexPath)
+        )
     }
 
     override func collectionView(

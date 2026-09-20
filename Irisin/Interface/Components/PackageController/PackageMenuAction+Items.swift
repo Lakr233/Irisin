@@ -12,7 +12,7 @@ extension PackageMenuAction {
     static let allMenuActions: [MenuAction] = [
         .init(
             descriptor: .dequeue,
-            block: { package, host in
+            block: { package, host, _ in
                 await QueueChangeController.show(.withdraw(package.identity), from: host)
             },
             eligibleForPerform: { package in
@@ -108,7 +108,7 @@ extension PackageMenuAction {
         ),
         .init(
             descriptor: .remove,
-            block: { package, host in
+            block: { package, host, _ in
                 await enqueue([.remove(package.identity)], from: host)
             },
             eligibleForPerform: { package in
@@ -120,7 +120,7 @@ extension PackageMenuAction {
         ),
         .init(
             descriptor: .versionControl,
-            block: { package, host in
+            block: { package, host, _ in
                 let sheet = PackageVersionPickerController.sheet(package: package) { [weak host] picked in
                     guard let host else { return }
                     if let page = host as? PackageController {
@@ -135,7 +135,7 @@ extension PackageMenuAction {
             },
             eligibleForPerform: { _ in true }
         ),
-        .init(descriptor: .blockUpdate, block: { package, _ in
+        .init(descriptor: .blockUpdate, block: { package, _, _ in
             PackageCenter.default.blockedUpdateTable.append(package.identity)
             SPIndicator.present(
                 title: String(localized: "Done"),
@@ -148,7 +148,7 @@ extension PackageMenuAction {
         }, eligibleForPerform: { package in
             !PackageCenter.default.blockedUpdateTable.contains(package.identity)
         }),
-        .init(descriptor: .unblockUpdate, block: { package, _ in
+        .init(descriptor: .unblockUpdate, block: { package, _, _ in
             PackageCenter.default.blockedUpdateTable.removeAll { $0 == package.identity }
             SPIndicator.present(
                 title: String(localized: "Done"),
@@ -161,12 +161,12 @@ extension PackageMenuAction {
         }, eligibleForPerform: { package in
             PackageCenter.default.blockedUpdateTable.contains(package.identity)
         }),
-        .init(descriptor: .download, block: { package, host in
-            DownloadArchiveController.start(for: package, from: host)
+        .init(descriptor: .download, block: { package, host, anchor in
+            DownloadArchiveController.start(for: package, from: host, anchor: anchor)
         }, eligibleForPerform: { package in
             package.localFileURL == nil && package.obtainDownloadLink() != PackageBadUrl
         }),
-        .init(descriptor: .viewMeta, block: { package, host in
+        .init(descriptor: .viewMeta, block: { package, host, _ in
             // every field the repository gave, in the order dpkg would list them
             let text = (package.latestMetadata ?? [:])
                 .sorted { $0.key < $1.key }
@@ -176,7 +176,7 @@ extension PackageMenuAction {
         }, eligibleForPerform: { _ in true }),
         .init(
             descriptor: .revealFiles,
-            block: { package, host in
+            block: { package, host, _ in
                 let path = JailbreakRoot.installedPath("/Library/dpkg/info/\(package.identity).list")
                 guard FileManager.default.fileExists(atPath: path) else { return }
                 host.present(next: PathListController(path: path))

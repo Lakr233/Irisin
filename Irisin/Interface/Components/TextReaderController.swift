@@ -101,9 +101,7 @@ final class TextReaderController: UIViewController {
     }
 
     private func share() {
-        let controller = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        controller.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
-        present(controller, animated: true)
+        presentShareSheet([text], anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) })
     }
 }
 
