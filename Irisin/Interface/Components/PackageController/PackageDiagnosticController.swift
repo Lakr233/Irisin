@@ -1,6 +1,7 @@
 import AptRepository
 import AptResolver
 import Dog
+import SnapKit
 import UIKit
 
 final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
@@ -89,19 +90,19 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         tableView.allowsSelection = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "requirement")
         view.addSubview(tableView)
-        let tableBottom: NSLayoutYAxisAnchor
         if recoveryPackage != nil {
             configureRecoveryFooter()
-            tableBottom = recoveryFooter.topAnchor
+            tableView.snp.makeConstraints { x in
+                x.top.equalTo(view.safeAreaLayoutGuide)
+                x.leading.trailing.equalToSuperview()
+                x.bottom.equalTo(recoveryFooter.snp.top)
+            }
         } else {
-            tableBottom = view.bottomAnchor
+            tableView.snp.makeConstraints { x in
+                x.top.equalTo(view.safeAreaLayoutGuide)
+                x.leading.trailing.bottom.equalToSuperview()
+            }
         }
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: tableBottom),
-        ])
         dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, check in
             let cell = table.dequeueReusableCell(withIdentifier: "requirement", for: indexPath)
             let isSummary = check.package.isEmpty && check.requirement == summary
@@ -127,20 +128,18 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     }
 
     private func configureRecoveryFooter() {
-        recoveryFooter.translatesAutoresizingMaskIntoConstraints = false
         recoveryFooter.backgroundColor = .groupedBackground
         view.addSubview(recoveryFooter)
         recoveryFooter.addSubview(recoveryButton)
-        NSLayoutConstraint.activate([
-            recoveryFooter.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            recoveryFooter.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            recoveryFooter.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            recoveryButton.topAnchor.constraint(equalTo: recoveryFooter.topAnchor, constant: 8),
-            recoveryButton.leadingAnchor.constraint(equalTo: recoveryFooter.leadingAnchor, constant: 20),
-            recoveryButton.trailingAnchor.constraint(equalTo: recoveryFooter.trailingAnchor, constant: -20),
-            recoveryButton.bottomAnchor.constraint(equalTo: recoveryFooter.bottomAnchor, constant: -8),
-            recoveryButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
-        ])
+        recoveryFooter.snp.makeConstraints { x in
+            x.leading.trailing.equalToSuperview()
+            x.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+        recoveryButton.snp.makeConstraints { x in
+            x.top.bottom.equalToSuperview().inset(8)
+            x.leading.trailing.equalToSuperview().inset(20)
+            x.height.greaterThanOrEqualTo(44)
+        }
     }
 
     private func applyReport() {

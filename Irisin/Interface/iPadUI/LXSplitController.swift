@@ -6,6 +6,7 @@
 //  Copyright © 2021 Lakr Aream. All rights reserved.
 //
 
+import SnapKit
 import Then
 import UIKit
 
@@ -140,14 +141,11 @@ final class LXColumnHostController: UIViewController {
         if #unavailable(iOS 17.0) {
             setOverrideTraitCollection(UITraitCollection(userInterfaceLevel: .elevated), forChild: content)
         }
-        content.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(content.view)
-        NSLayoutConstraint.activate([
-            content.view.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            content.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            content.view.topAnchor.constraint(equalTo: view.topAnchor),
-            content.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
+        content.view.snp.makeConstraints { x in
+            x.leading.equalTo(view.safeAreaLayoutGuide)
+            x.trailing.top.bottom.equalToSuperview()
+        }
         content.didMove(toParent: self)
     }
 

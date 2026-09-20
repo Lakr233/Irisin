@@ -328,7 +328,9 @@ private final class RepoListCell: UICollectionViewListCell {
         row.snp.makeConstraints { x in
             x.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 12, bottom: 4, right: 12))
         }
-        separatorLayoutGuide.leadingAnchor.constraint(equalTo: row.title.leadingAnchor).isActive = true
+        separatorLayoutGuide.snp.makeConstraints { x in
+            x.leading.equalTo(row.title)
+        }
         // the focus ring is a rectangle around a card's rounded row
         focusEffect = nil
         configurationUpdateHandler = { [updateFill] cell, state in

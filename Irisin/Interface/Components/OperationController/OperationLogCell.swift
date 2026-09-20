@@ -1,3 +1,4 @@
+import SnapKit
 import UIKit
 
 final class OperationLogCell: UITableViewCell {
@@ -14,19 +15,18 @@ final class OperationLogCell: UITableViewCell {
         messageLabel.font = .monospaced(.footnote)
         messageLabel.textColor = .textTitle
         messageLabel.numberOfLines = 0
-        numberLabel.translatesAutoresizingMaskIntoConstraints = false
-        messageLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(numberLabel)
         contentView.addSubview(messageLabel)
-        NSLayoutConstraint.activate([
-            numberLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
-            numberLabel.widthAnchor.constraint(equalToConstant: 32),
-            numberLabel.firstBaselineAnchor.constraint(equalTo: messageLabel.firstBaselineAnchor),
-            messageLabel.leadingAnchor.constraint(equalTo: numberLabel.trailingAnchor, constant: 12),
-            messageLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            messageLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
-            messageLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5),
-        ])
+        numberLabel.snp.makeConstraints { x in
+            x.leading.equalToSuperview().inset(12)
+            x.width.equalTo(32)
+            x.firstBaseline.equalTo(messageLabel)
+        }
+        messageLabel.snp.makeConstraints { x in
+            x.leading.equalTo(numberLabel.snp.trailing).offset(12)
+            x.trailing.equalToSuperview().inset(20)
+            x.top.bottom.equalToSuperview().inset(5)
+        }
         isAccessibilityElement = true
         numberLabel.isAccessibilityElement = false
         messageLabel.isAccessibilityElement = false
