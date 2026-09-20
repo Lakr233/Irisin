@@ -8,6 +8,7 @@
 //
 
 import LinkPresentation
+import SnapKit
 import UIKit
 
 final class PhotoViewerController: UIViewController {
@@ -109,12 +110,11 @@ final class PhotoViewerController: UIViewController {
             label: String(localized: "Close"),
             action: #selector(close)
         ))
-        chrome.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(chrome)
-        NSLayoutConstraint.activate([
-            chrome.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            chrome.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-        ])
+        chrome.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+            make.trailing.equalTo(view.safeAreaLayoutGuide).inset(8)
+        }
 
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(toggleChrome))
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(toggleZoom(_:)))
@@ -157,15 +157,12 @@ final class PhotoViewerController: UIViewController {
             round.clipsToBounds = true
         }
         round.contentView.addSubview(button)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            round.widthAnchor.constraint(equalToConstant: 44),
-            round.heightAnchor.constraint(equalToConstant: 44),
-            button.topAnchor.constraint(equalTo: round.contentView.topAnchor),
-            button.bottomAnchor.constraint(equalTo: round.contentView.bottomAnchor),
-            button.leadingAnchor.constraint(equalTo: round.contentView.leadingAnchor),
-            button.trailingAnchor.constraint(equalTo: round.contentView.trailingAnchor),
-        ])
+        round.snp.makeConstraints { make in
+            make.size.equalTo(44)
+        }
+        button.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         return round
     }
 
