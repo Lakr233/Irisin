@@ -18,7 +18,7 @@ extension PackageMenuAction {
         )
     }
 
-    static let resolveInstallRequest: @MainActor (Package, UIViewController) async -> Void = { package, host in
+    static let resolveInstallRequest: MenuAction.Block = { package, host, _ in
         guard package.isSupportedOnDevice || package.localFileURL != nil else {
             presentUnsupportedArchitecture(of: package, from: host)
             return

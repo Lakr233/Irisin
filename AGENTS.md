@@ -242,7 +242,12 @@ end.
   changes by applying a snapshot (`reconfigureItems(survivingFrom:)` for
   rows that stay). No `UITableViewDataSource` or `UICollectionViewDataSource`
   conformance, no `numberOfRowsInSection`, no `reloadData()`; `make check`
-  greps for all of them.
+  greps for all of them. Rows measured again are a snapshot that
+  reconfigures them, never the view's own mutation calls
+  (`performBatchUpdates`, `beginUpdates()`, `reconfigureRows(at:)`): iOS 16
+  throws from any of them, an empty batch included, on a table whose data
+  source is diffable (issue 125), and `make check` greps for those too, in
+  the app and in `Packages/`.
 - **Fonts and colors are design tokens.** `Interface/DesignTokens/` owns
   the type ramp (`TypeSize.swift`: `TypeSize`, `UIFont.rounded(.body,
   emphasized:)`, `.type`, `.monospaced`) and the named colors by purpose:
@@ -265,6 +270,13 @@ end.
   `.systemBackground` or `.systemGroupedBackground`, whose elevated
   `#1C1C1E` is a shade too bright; `make check` greps for both. The
   package page's photo sits on `.panelBackground`, a step below its card.
+- **The share sheet is `InterfaceBridge.presentShareSheet(_:anchor:from:)`.**
+  The iPad shows it as a popover and answers one with nowhere to point
+  with an exception. A `PopoverAnchor` names the view or bar button that
+  was touched; the bridge points there while it is still on screen, then
+  at the page's bar button, then at the middle of the page. Nothing else
+  makes a `UIActivityViewController` or touches a popover presentation
+  controller; `make check` greps for both.
 - **One asset catalog.** Everything the app draws from a file is in
   `Resources/Assets.xcassets`.
 - **Swift 6 language mode, everywhere.** `SWIFT_VERSION = 6.0` on every

@@ -142,8 +142,10 @@ final class OperationProblemController: UIViewController {
             state.problem?.description ?? happened,
             "",
         ] + output).joined(separator: "\n")
-        let sheet = UIActivityViewController(activityItems: [report], applicationActivities: nil)
-        sheet.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
-        present(sheet, animated: true)
+        InterfaceBridge.presentShareSheet(
+            [report],
+            anchor: navigationItem.rightBarButtonItem.map { PopoverAnchor($0) },
+            from: self
+        )
     }
 }

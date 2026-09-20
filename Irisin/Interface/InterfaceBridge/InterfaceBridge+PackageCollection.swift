@@ -51,18 +51,26 @@ extension InterfaceBridge {
 
     static func packageContextMenuConfiguration(
         for package: Package,
-        from host: UIViewController
+        from host: UIViewController,
+        anchor cell: UIView?
     ) -> UIContextMenuConfiguration {
-        UIContextMenuConfiguration(identifier: nil) {
+        // the pressed cell, for an action that ends in a popover on the iPad
+        let anchor = cell.map { PopoverAnchor($0) }
+        return UIContextMenuConfiguration(identifier: nil) {
             let target = PackageController(package: package)
             // the preview's own size; `show(preview:)` drops it on commit
             target.preferredContentSize = CGSize(width: 780, height: 1000)
             return target
         } actionProvider: { [weak host] _ in
             guard let host else { return nil }
-            // a dpkg row asks as its page would: with the repository's record
+            // a dpkg row asks as its page would, with the repository's
+            // record. The preview above stays the row's: the package page
+            // finds that record itself, as it does when the row is tapped.
             let requested = PackageMenuAction.requestPackage(for: package)
-            return UIMenu(title: "", children: PackageMenuAction.menuElements(for: requested, from: host))
+            return UIMenu(
+                title: "",
+                children: PackageMenuAction.menuElements(for: requested, from: host, anchor: anchor)
+            )
         }
     }
 }

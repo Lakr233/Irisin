@@ -38,7 +38,7 @@ extension UIViewController {
     }
 
     func present(next: UIViewController) {
-        let neverPushed = next is AlertBaseController || next is UIActivityViewController
+        let neverPushed = next is AlertBaseController
         if let navigator = navigationController, !neverPushed {
             navigator.pushViewController(next, animated: true)
         } else if neverPushed || next is UINavigationController {

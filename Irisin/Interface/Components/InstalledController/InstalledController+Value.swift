@@ -81,7 +81,9 @@ extension InstalledController {
             if sortReversed {
                 result = result.reversed()
             }
-            dataSource = result
+            // never no section at all: the layout's footer hangs off the
+            // last one, and a list with none has nowhere to put it
+            dataSource = result.isEmpty ? [.init(key: nil, section: nil, package: [])] : result
         }
         applySnapshot()
     }

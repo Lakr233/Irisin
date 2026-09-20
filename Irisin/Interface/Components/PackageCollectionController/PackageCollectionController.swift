@@ -222,12 +222,16 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     }
 
     func collectionView(
-        _: UICollectionView,
+        _ collectionView: UICollectionView,
         contextMenuConfigurationForItemAt indexPath: IndexPath,
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(for: data, from: self)
+        return InterfaceBridge.packageContextMenuConfiguration(
+            for: data,
+            from: self,
+            anchor: collectionView.cellForItem(at: indexPath)
+        )
     }
 
     func collectionView(

@@ -34,6 +34,8 @@ extension InstalledController {
 
         if identitiesWithUpdate.contains(fetch.identity) {
             cell.originalCell.overrideIndicator(with: .fluent(.arrowUpCircle24Filled), and: .updateAvailable)
+        } else {
+            cell.originalCell.clearOverrideIndicator()
         }
 
         // PackageCell holds its icon 4 in from the edge; here, as on the
@@ -76,12 +78,16 @@ extension InstalledController {
     }
 
     override func collectionView(
-        _: UICollectionView,
+        _ collectionView: UICollectionView,
         contextMenuConfigurationForItemAt indexPath: IndexPath,
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard !isEditing, let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return InterfaceBridge.packageContextMenuConfiguration(for: data, from: self)
+        return InterfaceBridge.packageContextMenuConfiguration(
+            for: data,
+            from: self,
+            anchor: collectionView.cellForItem(at: indexPath)
+        )
     }
 
     override func collectionView(

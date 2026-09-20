@@ -129,6 +129,7 @@ class InstalledController: UICollectionViewController {
                     for: indexPath
                 )
                 (view as? FootnoteView)?.label.text = footerText
+                view.isHidden = isEmpty
                 footerView = view as? FootnoteView
                 return view
             }
@@ -148,8 +149,13 @@ class InstalledController: UICollectionViewController {
         return source
     }()
 
-    /// Whether the layout in use was made with date headers.
-    private var layoutShowsHeaders: Bool?
+    /// Whether the sections have date headers, which the layout reads. An
+    /// empty list has its one section and no header over it.
+    private(set) var showsHeaders = false
+
+    var isEmpty: Bool {
+        dataSource.allSatisfy(\.package.isEmpty)
+    }
 
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Date?, Package>()
@@ -160,15 +166,24 @@ class InstalledController: UICollectionViewController {
         }
         // the update indicator lives outside the package: repaint survivors
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
-        diffableDataSource.apply(snapshot, animatingDifferences: collectionView.shouldAnimateDiff)
-        // the footer is not a row: a diff never redraws it, so tell it directly
-        footerView?.label.text = footerText
-        // nor are the date headers: a section that stays would keep its own
-        let showsHeaders = sortOption == .lastModification
-        if showsHeaders != layoutShowsHeaders {
-            layoutShowsHeaders = showsHeaders
-            collectionView.collectionViewLayout.invalidateLayout()
+        // the date headers are the layout's: when they come or go the
+        // sections change shape, and that is no diff to animate. The flag is
+        // set before the rows move and the layout made again once they have.
+        let headers = sortOption == .lastModification && !isEmpty
+        let reshaped = headers != showsHeaders
+        showsHeaders = headers
+        diffableDataSource.apply(
+            snapshot,
+            animatingDifferences: !reshaped && collectionView.shouldAnimateDiff
+        ) { [weak self] in
+            if reshaped {
+                self?.collectionView.collectionViewLayout.invalidateLayout()
+            }
         }
+        // the footer is not a row: a diff never redraws it, so tell it
+        // directly. Over an empty list it would sit on the empty state.
+        footerView?.label.text = footerText
+        footerView?.isHidden = isEmpty
         // a row that left the list left the selection
         updateSelectionItems()
         rebuildMoreMenu()
@@ -178,7 +193,7 @@ class InstalledController: UICollectionViewController {
     /// Nothing to list is said, and says whether a search or a filter is
     /// the reason; a blank screen looks like a broken one.
     private func updateEmptyState() {
-        guard dataSource.allSatisfy(\.package.isEmpty) else {
+        guard isEmpty else {
             collectionView.backgroundView = nil
             return
         }
@@ -439,7 +454,7 @@ class InstalledController: UICollectionViewController {
             ExportFile.packageText(packages),
             named: "installed-\(ExportFile.stamp()).txt",
             from: self,
-            anchor: moreButton
+            anchor: PopoverAnchor(moreButton)
         )
     }
 
@@ -463,14 +478,12 @@ class InstalledController: UICollectionViewController {
     }
 
     private func share(_ item: Any) {
-        let activityViewController = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = moreButton
-        present(activityViewController, animated: true)
+        InterfaceBridge.presentShareSheet([item], anchor: PopoverAnchor(moreButton), from: self)
     }
 
     @objc
     func showAllUpdateToDate() {
-        let nothingInstalled = dataSource.allSatisfy(\.package.isEmpty) && !isNarrowed
+        let nothingInstalled = isEmpty && !isNarrowed
         SPIndicator.present(
             title: nothingInstalled
                 ? String(localized: "No packages are installed.")
@@ -514,32 +527,59 @@ class InstalledController: UICollectionViewController {
         false
     }
 
-    func setupBarItems() {
+    /// The update button, or the tick that says there is nothing to update.
+    /// One item for the page's life: the bar is told what changed, never
+    /// handed a new item to animate in.
+    private lazy var statusItem = UIBarButtonItem(
+        image: nil,
+        style: .plain,
+        target: self,
+        action: nil
+    )
+
+    /// The items this page put on the bar, either side.
+    private var ownBarItems: [UIBarButtonItem] = []
+
+    /// Puts the page's items on the bar and leaves the rest alone: the split
+    /// view keeps its Show Sidebar item first on the leading side
+    /// (`LXSplitController.syncSidebarToggle`), and the page's follow it.
+    func placeBarItems(
+        leading: [UIBarButtonItem],
+        trailing: [UIBarButtonItem],
+        animated: Bool
+    ) {
+        let own = Set(ownBarItems.map(ObjectIdentifier.init))
+        func kept(_ items: [UIBarButtonItem]?) -> [UIBarButtonItem] {
+            (items ?? []).filter { !own.contains(ObjectIdentifier($0)) }
+        }
+        let left = kept(navigationItem.leftBarButtonItems) + leading
+        let right = trailing + kept(navigationItem.rightBarButtonItems)
+        ownBarItems = leading + trailing
+        // every reload comes through here: a bar that already reads so stays
+        if !(navigationItem.leftBarButtonItems ?? []).elementsEqual(left, by: ===) {
+            navigationItem.setLeftBarButtonItems(left.isEmpty ? nil : left, animated: animated)
+        }
+        if !(navigationItem.rightBarButtonItems ?? []).elementsEqual(right, by: ===) {
+            navigationItem.setRightBarButtonItems(right.isEmpty ? nil : right, animated: animated)
+        }
+    }
+
+    func setupBarItems(animated: Bool = false) {
         // the bar is the selection's while the list is edited
         guard !isEditing else { return }
-        let rightItem: UIBarButtonItem
         if updateFound {
-            rightItem = UIBarButtonItem(
-                image: .fluent(.arrowUpCircle24Filled),
-                style: .plain,
-                target: self,
-                action: #selector(sendUpdate)
-            )
+            statusItem.image = .fluent(.arrowUpCircle24Filled)
+            statusItem.action = #selector(sendUpdate)
+            statusItem.tintColor = nil
         } else {
-            rightItem = UIBarButtonItem(
-                image: .fluent(.checkmarkCircle24Filled),
-                style: .plain,
-                target: self,
-                action: #selector(showAllUpdateToDate)
-            )
-            rightItem.tintColor = .upToDate
+            statusItem.image = .fluent(.checkmarkCircle24Filled)
+            statusItem.action = #selector(showAllUpdateToDate)
+            statusItem.tintColor = .upToDate
         }
         if placesBarItemsLeading {
-            navigationItem.rightBarButtonItems = nil
-            navigationItem.leftBarButtonItems = [rightItem, moreItem]
+            placeBarItems(leading: [statusItem, moreItem], trailing: [], animated: animated)
         } else {
-            navigationItem.leftBarButtonItems = nil
-            navigationItem.rightBarButtonItems = [rightItem, moreItem]
+            placeBarItems(leading: [], trailing: [statusItem, moreItem], animated: animated)
         }
     }
 }

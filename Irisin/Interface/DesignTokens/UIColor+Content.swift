@@ -55,4 +55,7 @@ extension UIColor {
 
     /// A bar button that deletes the selection.
     static let destructiveAction = UIColor.systemRed
+
+    /// The ring of a selection mark on a row that is not selected.
+    static let selectionMarkIdle = UIColor.systemGray3
 }

@@ -30,7 +30,7 @@ enum ExportFile {
     /// One repository as a `.irisinrepos` with a single entry: Share on the
     /// list, on the iPad's sidebar and on the repository's own page all hand
     /// out the same file.
-    static func shareRepository(_ url: URL, from host: UIViewController, anchor: UIView?) {
+    static func shareRepository(_ url: URL, from host: UIViewController, anchor: PopoverAnchor?) {
         guard let source = RepositoryCenter.default.obtainImmutableRepository(withUrl: url)?.source,
               let data = try? RepositoryListFile(sources: [source]).encoded()
         else {
@@ -45,7 +45,7 @@ enum ExportFile {
     static func exportRepositoryAction(
         _ url: URL,
         host: @escaping () -> UIViewController?,
-        anchor: @escaping () -> UIView?
+        anchor: @escaping () -> PopoverAnchor?
     ) -> UIAction {
         UIAction(
             title: String(localized: "Export All Repository Information…"),
@@ -76,9 +76,9 @@ enum ExportFile {
 
     /// Writes the bytes beside the app's other temporaries and puts the share
     /// sheet over `host`. On the iPad a popover needs somewhere to point:
-    /// `anchor` when the caller has a view, the page's own bar button when it
-    /// does not.
-    static func share(_ data: Data, named name: String, from host: UIViewController, anchor: UIView? = nil) {
+    /// `anchor` when the caller has one, and what `InterfaceBridge.popoverTarget`
+    /// finds on the page when it does not.
+    static func share(_ data: Data, named name: String, from host: UIViewController, anchor: PopoverAnchor? = nil) {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent(name)
         do {
             try data.write(to: file, options: .atomic)
@@ -86,13 +86,6 @@ enum ExportFile {
             host.presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             return
         }
-        let sheet = UIActivityViewController(activityItems: [file], applicationActivities: nil)
-        if let anchor {
-            sheet.popoverPresentationController?.sourceView = anchor
-        } else {
-            sheet.popoverPresentationController?.barButtonItem =
-                host.navigationItem.rightBarButtonItems?.first ?? host.navigationItem.rightBarButtonItem
-        }
-        host.present(next: sheet)
+        InterfaceBridge.presentShareSheet([file], anchor: anchor, from: host)
     }
 }

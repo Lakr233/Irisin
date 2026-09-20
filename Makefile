@@ -169,9 +169,15 @@ check:
 		&& { echo "error: user-facing text is a String.LocalizationValue spelled out in English (\"Delete All Downloads\"), never NSLocalizedString or a SHOUTING_KEY" >&2; exit 65; } || true
 	@grep -rnE 'numberOfRowsInSection|numberOfItemsInSection|\.reloadData\(\)|(UITableView|UICollectionView)DataSource($$|[^A-Za-z])' --include='*.swift' "$(ROOT_DIR)/Irisin" \
 		&& { echo "error: every list is a diffable data source (UITableViewDiffableDataSource / UICollectionViewDiffableDataSource) applying snapshots; no classic data source protocol, no reloadData()" >&2; exit 65; } || true
+	@grep -rnE '(^|[^A-Za-z])(performBatchUpdates\(|beginUpdates\(\)|endUpdates\(\)|(reconfigure|reload|insert|delete)Rows\(|moveRow\()' --include='*.swift' --exclude-dir=.build "$(ROOT_DIR)/Irisin" "$(ROOT_DIR)/Packages" \
+		| grep -vE '^[^:]+:[0-9]+:[[:space:]]*//' \
+		&& { echo "error: a list whose data source is diffable changes by snapshot alone; iOS 16 throws from the view's own mutation calls (performBatchUpdates, beginUpdates, reconfigureRows), an empty batch included. Measure rows again with snapshot.reconfigureItems" >&2; exit 65; } || true
 	@grep -rnE '[sS]ystemFont\(ofSize:|UIFont\(name:|UIFont\(descriptor:|preferredFont\(forTextStyle:|withDesign\(|weight: \.(ultraLight|thin|light|medium|bold|heavy|black)|UIColor\((hex|red|white|hue|named):|\.system(Red|Green|Blue|Orange|Yellow|Pink|Purple|Teal|Indigo|Mint|Cyan|Brown|Gray[2-6]?|Background|GroupedBackground)([^A-Za-z0-9]|$$)|(Color|color)(:| =|\() *\.(white|black|gray|lightGray|darkGray|red|green|blue|cyan|yellow|magenta|orange|purple|brown)([^A-Za-z0-9]|$$)|UIColor\.(white|black|gray|lightGray|darkGray|red|green|blue|cyan|yellow|magenta|orange|purple|brown)([^A-Za-z0-9]|$$)' --include='*.swift' "$(ROOT_DIR)/Irisin" \
 		| grep -vE '/Interface/DesignTokens/' \
 		&& { echo "error: fonts and colors are design tokens (UIFont.rounded(.body), UIColor.swipeDelete) from Interface/DesignTokens/; no literal size, weight, color or asset colour at a call site" >&2; exit 65; } || true
+	@grep -rnE 'UIActivityViewController\(|\.init\(activityItems:|[pP]opoverPresentationController' --include='*.swift' "$(ROOT_DIR)/Irisin" \
+		| grep -vF "$(ROOT_DIR)/Irisin/Interface/InterfaceBridge/InterfaceBridge+ShareSheet.swift:" \
+		&& { echo "error: the share sheet is InterfaceBridge.presentShareSheet(_:anchor:from:), which always gives the iPad's popover somewhere to point; no UIActivityViewController, .init(activityItems: or popover presentation controller at a call site. Packages/ is not searched: PackageDepiction's PhotoViewerController cannot reach the bridge and points its own sheet at the button that was tapped" >&2; exit 65; } || true
 	@plutil -lint "$(ENTITLEMENTS)" "$(DAEMON_ENTITLEMENTS)" "$(HELPER_ENTITLEMENTS)" "$(LAUNCH_DAEMON)" "$(INFO_PLIST_SUPPLEMENT)"
 	@targets="$$(xcodebuild -project "$(PROJECT)" -list)" || exit $$?; \
 	for target in Irisin irisind irisin-install IrisinUnitTest; do \

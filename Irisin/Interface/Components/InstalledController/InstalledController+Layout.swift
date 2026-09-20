@@ -29,17 +29,20 @@ extension InstalledController {
             ),
         ]
         return UICollectionViewCompositionalLayout(
-            sectionProvider: { [weak self] _, environment in
-                self?.makeSection(in: environment)
+            sectionProvider: { [weak self] index, environment in
+                self?.makeSection(at: index, in: environment)
             },
             configuration: configuration
         )
     }
 
-    private func makeSection(in environment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+    private func makeSection(
+        at index: Int,
+        in environment: NSCollectionLayoutEnvironment
+    ) -> NSCollectionLayoutSection {
         let width = environment.container.effectiveContentSize.width - Self.horizontalInset * 2
         let (cellSize, itemsPerRow) = InterfaceBridge.calculatesPackageCellSize(availableWidth: width)
-        let rowHeight = InstalledPackageCell.rowHeight(for: environment.traitCollection)
+        let rowHeight = InstalledPackageCell.rowHeight
 
         let section: NSCollectionLayoutSection
         if itemsPerRow < 2 {
@@ -70,10 +73,13 @@ extension InstalledController {
         section.contentInsets = NSDirectionalEdgeInsets(
             top: 0,
             leading: Self.horizontalInset,
-            bottom: 0,
+            // the next date stands off these rows as far as they stand off
+            // each other; after the last of them comes the footer
+            bottom: showsHeaders && index < diffableDataSource.snapshot().numberOfSections - 1
+                ? Self.rowSpacing : 0,
             trailing: Self.horizontalInset
         )
-        if sortOption == .lastModification {
+        if showsHeaders {
             let header = NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1),
@@ -82,10 +88,16 @@ extension InstalledController {
                 elementKind: UICollectionView.elementKindSectionHeader,
                 alignment: .top
             )
-            if itemsPerRow < 2 {
-                // a list section leaves its header at the edge, a grid insets it
-                header.contentInsets = section.contentInsets
-            }
+            // list and grid alike: the date is measured from the page's edge
+            // and starts where the rows do, whatever either kind of section
+            // would make of its own insets
+            section.supplementaryContentInsetsReference = .none
+            header.contentInsets = NSDirectionalEdgeInsets(
+                top: 0,
+                leading: Self.horizontalInset,
+                bottom: 0,
+                trailing: Self.horizontalInset
+            )
             section.boundarySupplementaryItems = [header]
         }
         return section
@@ -100,18 +112,34 @@ extension InstalledController {
         guard !isEditing, let row = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
         let (package, actions) = PackageMenuAction.swipeActions(forInstalled: row)
         guard !actions.isEmpty else { return nil }
-        return UISwipeActionsConfiguration(actions: actions.map { action in
+        let configuration = UISwipeActionsConfiguration(actions: actions.map { action in
             let removes = action.descriptor == .remove || action.descriptor == .dequeue
-            let item = UIContextualAction(
-                style: .normal,
-                title: action.descriptor.describe()
-            ) { [weak self] _, _, completion in
+            let item = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
                 completion(true)
                 guard let self else { return }
-                Task { await action.block(package, self) }
+                // the row, for an action that ends in a popover
+                let anchor = collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
+                Task { await action.block(package, self, anchor) }
             }
+            // the menu's own symbol and name, as the sidebar's rows swipe
+            item.image = action.descriptor.icon()
+            item.accessibilityLabel = action.descriptor.describe()
             item.backgroundColor = removes ? .swipeDelete : .swipeRefresh
             return item
         })
+        // a request is never made by a swipe that went too far
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
+    }
+
+    // MARK: - TEXT SIZE
+
+    /// A row is as tall as its text: a new text size is a new layout, for
+    /// the grid too, whose rows are a number the layout was given.
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        if previous?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            collectionView.collectionViewLayout.invalidateLayout()
+        }
     }
 }
