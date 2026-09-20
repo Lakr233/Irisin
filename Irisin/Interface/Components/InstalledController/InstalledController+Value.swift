@@ -44,9 +44,9 @@ extension InstalledController {
             if sortReversed {
                 read = read.reversed()
             }
-            dataSource = [.init(key: nil, section: nil, package: read)]
+            dataSource = [.init(key: nil, section: nil, packages: read)]
         case .lastModification:
-            var builder = [Date?: InstalledData]()
+            var builder = [Date?: InstalledGroup]()
             for item in read {
                 let lastModifiedDate = PackageCenter
                     .default
@@ -58,14 +58,14 @@ extension InstalledController {
                 }
                 var sectionBuilder = builder[
                     lastModifiedDate,
-                    default: InstalledData(key: lastModifiedDate, section: section, package: [])
+                    default: InstalledGroup(key: lastModifiedDate, section: section, packages: [])
                 ]
-                sectionBuilder.package.append(item)
+                sectionBuilder.packages.append(item)
                 builder[lastModifiedDate] = sectionBuilder
             }
             for (key, value) in builder {
-                let foo = value.package.sorted { compareName(a: $0, b: $1) }
-                builder[key] = InstalledData(key: key, section: value.section, package: foo)
+                let foo = value.packages.sorted { compareName(a: $0, b: $1) }
+                builder[key] = InstalledGroup(key: key, section: value.section, packages: foo)
             }
             let none = builder[nil]
             let constructor = builder
@@ -83,7 +83,7 @@ extension InstalledController {
             }
             // never no section at all: the layout's footer hangs off the
             // last one, and a list with none has nowhere to put it
-            dataSource = result.isEmpty ? [.init(key: nil, section: nil, package: [])] : result
+            dataSource = result.isEmpty ? [.init(key: nil, section: nil, packages: [])] : result
         }
         applySnapshot()
     }

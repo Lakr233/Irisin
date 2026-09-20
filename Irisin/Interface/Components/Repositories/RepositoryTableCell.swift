@@ -1,5 +1,5 @@
 //
-//  RepoTableViewCell.swift
+//  RepositoryTableCell.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2020/4/19.
@@ -9,10 +9,10 @@
 import SnapKit
 import UIKit
 
-class RepoTableViewCell: UITableViewCell {
-    let coordinatedCell = RepoCell()
+class RepositoryTableCell: UITableViewCell {
+    let coordinatedCell = RepositoryRow()
 
-    private let updateFill = RepoUpdateFill()
+    private let updateFill = RepositoryUpdateFill()
 
     /// Padding around the repository row.
     var contentInsets: UIEdgeInsets = .zero {

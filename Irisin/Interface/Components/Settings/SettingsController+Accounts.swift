@@ -47,7 +47,7 @@ final class SettingsAccountCell: SettingsCell {
 
     func configure(repo: Repository) {
         self.repo = repo
-        iconView.image = UIImage(data: repo.avatar) ?? UIImage(named: "RepoTableViewCell.Missing")
+        iconView.image = UIImage(data: repo.avatar) ?? UIImage(named: "RepositoryTableCell.Missing")
         titleLabel.text = repo.nickName
         menuButton.menu = UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in

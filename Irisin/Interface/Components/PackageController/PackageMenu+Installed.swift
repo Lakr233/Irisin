@@ -1,5 +1,5 @@
 //
-//  PackageMenuAction+Installed.swift
+//  PackageMenu+Installed.swift
 //  Irisin
 //
 
@@ -10,20 +10,20 @@ import UIKit
 /// What the Installed page asks for without opening a package: a swipe on a
 /// row and the bar of a selection. Both are the package menu's own actions,
 /// decided by the same eligibility and run by the same blocks.
-extension PackageMenuAction {
+extension PackageMenu {
     /// What a swipe offers, from the trailing edge in: a queued package
     /// leaves the queue, an installed one is removed, and updated or
     /// reinstalled when a repository has the version for it.
-    static let swipeDescriptors: [ActionDescriptor] = [.dequeue, .remove, .update, .reinstall]
+    static let swipeDescriptors: [Action] = [.dequeue, .remove, .update, .reinstall]
 
     /// `eligible` narrowed to what a swipe offers, in the swipe's order.
-    static func swipeOrder(of eligible: [ActionDescriptor]) -> [ActionDescriptor] {
+    static func swipeOrder(of eligible: [Action]) -> [Action] {
         swipeDescriptors.filter(eligible.contains)
     }
 
     /// The swipe actions of a dpkg row, with the package each one is made
     /// with: the one the package page's button would use.
-    static func swipeActions(forInstalled row: Package) -> (package: Package, actions: [MenuAction]) {
+    static func swipeActions(forInstalled row: Package) -> (package: Package, actions: [Item]) {
         let package = requestPackage(for: row)
         let eligible = eligibleActions(for: package)
         let actions = swipeOrder(of: eligible.map(\.descriptor)).compactMap { descriptor in

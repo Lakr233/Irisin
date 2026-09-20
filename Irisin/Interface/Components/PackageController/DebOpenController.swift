@@ -1,5 +1,5 @@
 //
-//  DirectInstallController.swift
+//  DebOpenController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/27.
@@ -12,7 +12,7 @@ import UIKit
 
 /// Takes a `.deb` handed to the app, keeps a copy of its own, reads the
 /// control file in-process and opens the package page for it.
-class DirectInstallController: UIViewController {
+class DebOpenController: UIViewController {
     var patternLocation: URL?
     /// The file is still the user's, in their Files app: copied, not taken.
     var openedInPlace = false

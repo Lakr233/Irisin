@@ -1,5 +1,5 @@
 //
-//  RepoAddController.swift
+//  RepositoryAddController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2020/4/19.
@@ -18,7 +18,7 @@ import UIKit
 /// with its own Add that registers it on the spot. A source is a bare
 /// address or a sources.list line (`deb URL suite components`); the last
 /// row hands over to the advanced sheet for typing the latter piecewise.
-class RepoAddViewController: UITableViewController {
+class RepositoryAddController: UITableViewController {
     /// Where a section of offered sources came from. The sheet reads the
     /// clipboard itself; a link and a file hand their sources over already
     /// parsed.
@@ -56,7 +56,7 @@ class RepoAddViewController: UITableViewController {
     private var candidates: [String] = []
     private var candidateOrigin: Origin = .clipboard
     private var history: [String] = []
-    private var previews: [String: RepoAddCandidateCell.Preview] = [:]
+    private var previews: [String: RepositoryAddCandidateCell.Preview] = [:]
 
     private lazy var addButton = UIBarButtonItem(
         title: String(localized: "Add"),
@@ -78,7 +78,7 @@ class RepoAddViewController: UITableViewController {
     ) { [unowned self] tableView, indexPath, row in
         switch row {
         case .input:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "input", for: indexPath) as! RepoAddInputCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: "input", for: indexPath) as! RepositoryAddInputCell
             cell.field.text = inputText
             cell.onChange = { [weak self] text in self?.inputChanged(text) }
             cell.onReturn = { [weak self] in self?.confirm() }
@@ -94,7 +94,7 @@ class RepoAddViewController: UITableViewController {
             return cell
         case let .candidate(section, line):
             let cell = tableView
-                .dequeueReusableCell(withIdentifier: "candidate", for: indexPath) as! RepoAddCandidateCell
+                .dequeueReusableCell(withIdentifier: "candidate", for: indexPath) as! RepositoryAddCandidateCell
             cell.configure(line: line, preview: preview(for: line), added: isRegistered(line))
             cell.showsButton = section != .pending
             cell.onAdd = { [weak self] in self?.add(line) }
@@ -105,13 +105,13 @@ class RepoAddViewController: UITableViewController {
     /// The sheet the callers present: Cancel and Add over the list, half
     /// height on the iPhone until the list needs more.
     static func sheet(initialInput: String? = nil) -> UINavigationController {
-        .halfSheet(root: RepoAddViewController(initialInput: initialInput))
+        .halfSheet(root: RepositoryAddController(initialInput: initialInput))
     }
 
     /// The same sheet with sources already found for the user to pick from,
     /// in place of the row that reads the clipboard.
     static func sheet(candidates: [RepositorySource], origin: Origin) -> UINavigationController {
-        .halfSheet(root: RepoAddViewController(candidates: candidates.map(\.line), origin: origin))
+        .halfSheet(root: RepositoryAddController(candidates: candidates.map(\.line), origin: origin))
     }
 
     init(initialInput: String? = nil, candidates: [String] = [], origin: Origin = .clipboard) {
@@ -139,12 +139,12 @@ class RepoAddViewController: UITableViewController {
         // nothing typed yet: Add waits for a probed source
         updateAddButton()
 
-        tableView.register(RepoAddInputCell.self, forCellReuseIdentifier: "input")
-        tableView.register(RepoAddCandidateCell.self, forCellReuseIdentifier: "candidate")
+        tableView.register(RepositoryAddInputCell.self, forCellReuseIdentifier: "input")
+        tableView.register(RepositoryAddCandidateCell.self, forCellReuseIdentifier: "candidate")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "action")
         tableView.keyboardDismissMode = .onDrag
         tableView.dataSource = dataSource
-        tableView.register(RepoAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "candidates")
+        tableView.register(RepositoryAddSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: "candidates")
         // the offered sources have a header view of their own, and a title
         // given here as well would be drawn over it
         dataSource.headerTitle = { section in
@@ -235,7 +235,7 @@ class RepoAddViewController: UITableViewController {
 
     /// Kicks off the Release fetch the first time a source is shown. A
     /// source that does not answer is said so, and can still be added.
-    private func preview(for line: String) -> RepoAddCandidateCell.Preview {
+    private func preview(for line: String) -> RepositoryAddCandidateCell.Preview {
         if let known = previews[line] {
             return known
         }
@@ -282,7 +282,7 @@ class RepoAddViewController: UITableViewController {
     /// Add All leaves with the last source it could add.
     private func updateCandidatesHeader() {
         guard let index = dataSource.snapshot().indexOfSection(.candidates(candidateOrigin)),
-              let header = tableView.headerView(forSection: index) as? RepoAddSectionHeaderView
+              let header = tableView.headerView(forSection: index) as? RepositoryAddSectionHeaderView
         else { return }
         header.showsButton = offersAddAll
     }
@@ -437,7 +437,7 @@ class RepoAddViewController: UITableViewController {
     private func openAdvanced() {
         guard let presenter = presentingViewController else { return }
         dismiss(animated: true) {
-            presenter.present(RepoAddAdvancedViewController.sheet(), animated: true)
+            presenter.present(RepositoryAddAdvancedController.sheet(), animated: true)
         }
     }
 
@@ -466,7 +466,7 @@ class RepoAddViewController: UITableViewController {
         guard let identifier = dataSource.sectionIdentifier(for: section),
               case .candidates = identifier,
               let header = tableView
-              .dequeueReusableHeaderFooterView(withIdentifier: "candidates") as? RepoAddSectionHeaderView
+              .dequeueReusableHeaderFooterView(withIdentifier: "candidates") as? RepositoryAddSectionHeaderView
         else { return nil }
         header.configure(title: Self.headerTitle(of: identifier) ?? "", showsButton: offersAddAll)
         header.onAddAll = { [weak self] in self?.addAll() }
@@ -491,7 +491,7 @@ class RepoAddViewController: UITableViewController {
 
 /// A text field row: the URL field here, and the suite and component
 /// fields on the advanced sheet.
-final class RepoAddInputCell: UITableViewCell {
+final class RepositoryAddInputCell: UITableViewCell {
     let field = UITextField().then {
         $0.placeholder = "https://"
         $0.keyboardType = .URL
@@ -548,7 +548,7 @@ final class RepoAddInputCell: UITableViewCell {
     }
 }
 
-extension RepoAddViewController: UIDocumentPickerDelegate {
+extension RepositoryAddController: UIDocumentPickerDelegate {
     func documentPicker(_: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let file = urls.first else { return }
         importSources(from: file)

@@ -52,7 +52,7 @@ class RepositoriesController: UIViewController {
     let refreshControl = SettlingRefreshControl()
     private let cellIdentity = "repository"
 
-    private let footer = FootnoteView()
+    private let footer = ListFootnoteView()
 
     /// Read as the view loads, never at init: the tab bar makes this page
     /// at launch and nothing listens until the tab is opened, so what
@@ -70,7 +70,7 @@ class RepositoriesController: UIViewController {
     ) { [unowned self] tableView, indexPath, row in
         let cell = tableView
             .dequeueReusableCell(withIdentifier: cellIdentity, for: indexPath)
-            as! RepoTableViewCell
+            as! RepositoryTableCell
         cell.backgroundColor = .clear
         cell.contentInsets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
         switch row {
@@ -88,7 +88,7 @@ class RepositoriesController: UIViewController {
 
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
 
-        tableView.register(RepoTableViewCell.self, forCellReuseIdentifier: cellIdentity)
+        tableView.register(RepositoryTableCell.self, forCellReuseIdentifier: cellIdentity)
         tableView.dataSource = diffableDataSource
         tableView.delegate = self
         tableView.backgroundColor = .clear
@@ -373,12 +373,12 @@ class RepositoriesController: UIViewController {
             )
             return
         }
-        present(RepoAddViewController.sheet(candidates: fresh, origin: .file), animated: true)
+        present(RepositoryAddController.sheet(candidates: fresh, origin: .file), animated: true)
     }
 
     @objc
     func openAdd() {
-        present(RepoAddViewController.sheet(), animated: true)
+        present(RepositoryAddController.sheet(), animated: true)
     }
 
     /// Pulling forces every repository and the control spins until the

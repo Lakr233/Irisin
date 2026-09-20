@@ -1,5 +1,5 @@
 //
-//  PackageMenuAction.swift
+//  PackageMenu.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/24.
@@ -12,8 +12,8 @@ import Dog
 import UIKit
 
 @MainActor
-class PackageMenuAction {
-    enum ActionDescriptor: String, CaseIterable {
+enum PackageMenu {
+    enum Action: String, CaseIterable {
         case dequeue
         /// The queue installs a different package record: this one takes its place.
         case replace
@@ -97,8 +97,8 @@ class PackageMenuAction {
         }
     }
 
-    struct MenuAction {
-        let descriptor: ActionDescriptor
+    struct Item {
+        let descriptor: Action
         /// Runs with the page the menu belongs to, which presents what the
         /// action shows, and what the user touched to get here, for an
         /// action that ends in a popover on the iPad.
@@ -110,19 +110,19 @@ class PackageMenuAction {
 
     /// The menu's inline sections, in order: the transaction, then another
     /// version.
-    static let menuSections: [[ActionDescriptor]] = [
+    static let menuSections: [[Action]] = [
         [.dequeue, .replace, .directInstall, .install, .update, .downgrade, .remove],
         [.versionControl],
     ]
 
     /// The requests a queued package no longer offers: it leaves the queue
     /// first.
-    static let requestActions: Set<ActionDescriptor> = [
+    static let requestActions: Set<Action> = [
         .directInstall, .install, .reinstall, .downgrade, .update, .remove,
     ]
 
     /// What the package offers now, in menu order.
-    static func eligibleActions(for package: Package) -> [MenuAction] {
+    static func eligibleActions(for package: Package) -> [Item] {
         let queued = TaskManager.shared.isQueued(package.identity)
         return allMenuActions.filter { action in
             !(queued && requestActions.contains(action.descriptor)) && action.eligibleForPerform(package)
@@ -130,12 +130,12 @@ class PackageMenuAction {
     }
 
     /// What goes under Advanced, a submenu at the end.
-    static let advancedSection: [ActionDescriptor] = [
+    static let advancedSection: [Action] = [
         .reinstall, .blockUpdate, .unblockUpdate, .download, .viewMeta, .revealFiles,
     ]
 
     /// The actions that take the package down: red.
-    static let destructiveActions: Set<ActionDescriptor> = [.downgrade, .remove]
+    static let destructiveActions: Set<Action> = [.downgrade, .remove]
 
     /// Every package menu in the app — the install button, the navigation
     /// bar, a long press on a cell — is this one.
@@ -148,7 +148,7 @@ class PackageMenuAction {
         anchor: PopoverAnchor? = nil
     ) -> [UIMenuElement] {
         let actions = eligibleActions(for: package)
-        func children(of section: [ActionDescriptor]) -> [UIAction] {
+        func children(of section: [Action]) -> [UIAction] {
             actions
                 .filter { section.contains($0.descriptor) }
                 .map { action in
@@ -207,7 +207,7 @@ class PackageMenuAction {
     }
 }
 
-extension PackageMenuAction {
+extension PackageMenu {
     /// A package row's long press: the package page as the preview, and the
     /// page's own menu.
     static func contextMenu(

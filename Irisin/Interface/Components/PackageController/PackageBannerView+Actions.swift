@@ -17,7 +17,7 @@ extension PackageBannerView {
         UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in
                 guard let self, let host = parentViewController else { return completion([]) }
-                completion(PackageMenuAction.menuElements(for: package, from: host))
+                completion(PackageMenu.menuElements(for: package, from: host))
             },
         ])
     }
@@ -31,7 +31,7 @@ extension PackageBannerView {
         // the page, taken now: the banner may leave it while the action runs
         guard let host = parentViewController else { return }
         guard package.isSupportedOnDevice || package.localFileURL != nil else {
-            PackageMenuAction.presentUnsupportedArchitecture(of: package, from: host)
+            PackageMenu.presentUnsupportedArchitecture(of: package, from: host)
             return
         }
         guard let action = obtainQuickAction() else {
@@ -58,8 +58,8 @@ extension PackageBannerView {
     /// version, Replace for a different queued package record. nil
     /// when the tap opens the menu instead, or the queue for a package
     /// queued as it is (`opensQueue`).
-    func obtainQuickAction() -> PackageMenuAction.MenuAction? {
-        let actions = PackageMenuAction.eligibleActions(for: package)
+    func obtainQuickAction() -> PackageMenu.Item? {
+        let actions = PackageMenu.eligibleActions(for: package)
         guard !TaskManager.shared.isQueued(package.identity) else {
             return actions.first { $0.descriptor == .replace }
         }

@@ -10,7 +10,7 @@ import AptRepository
 import UIKit
 
 class PackageTableCell: UITableViewCell {
-    let originalCell = PackageCell()
+    let originalCell = PackageListRow()
 
     override func prepareForReuse() {
         super.prepareForReuse()

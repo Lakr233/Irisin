@@ -111,7 +111,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     ) { [unowned self] (table: UITableView, indexPath: IndexPath, row: Row) -> UITableViewCell in
         switch row {
         case let .change(change):
-            let cell = table.dequeueReusableCell(withIdentifier: "package", for: indexPath) as! TransactionPackageCell
+            let cell = table.dequeueReusableCell(withIdentifier: "package", for: indexPath) as! QueuePackageCell
             let manager = TaskManager.shared
             cell.apply(
                 change.content(
@@ -141,7 +141,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         navigationItem.largeTitleDisplayMode = .always
 
         tableView.backgroundColor = .groupedBackground
-        tableView.register(TransactionPackageCell.self, forCellReuseIdentifier: "package")
+        tableView.register(QueuePackageCell.self, forCellReuseIdentifier: "package")
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "failure")
         tableView.delegate = self
         tableView.dataSource = dataSource
@@ -333,7 +333,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     private func refreshVisibleProgress() {
         for cell in tableView.visibleCells {
-            (cell as? TransactionPackageCell)?.refreshProgress(animated: true)
+            (cell as? QueuePackageCell)?.refreshProgress(animated: true)
         }
     }
 

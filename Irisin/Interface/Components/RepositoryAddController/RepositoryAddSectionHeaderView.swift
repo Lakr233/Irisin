@@ -1,5 +1,5 @@
 //
-//  RepoAddSectionHeaderView.swift
+//  RepositoryAddSectionHeaderView.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2026/9/20.
@@ -13,13 +13,13 @@ import UIKit
 /// The header over a section of offered sources: the list's own header
 /// text, and Add All at the trailing edge while a row under it still
 /// offers Add.
-final class RepoAddSectionHeaderView: UITableViewHeaderFooterView {
+final class RepositoryAddSectionHeaderView: UITableViewHeaderFooterView {
     /// What the list's own header is drawn with: a label of ours wears it,
     /// so the button has a baseline to sit on.
     private static let style = UIListContentConfiguration.groupedHeader()
 
     private let label = UILabel().then {
-        let properties = RepoAddSectionHeaderView.style.textProperties
+        let properties = RepositoryAddSectionHeaderView.style.textProperties
         $0.font = properties.font
         $0.textColor = properties.resolvedColor()
         $0.adjustsFontForContentSizeCategory = true

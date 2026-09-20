@@ -52,7 +52,7 @@ class PackageUpdateTableCell: PackageTableCell {
     @objc
     func sendUpdate() {
         guard let package = updateCandidate, let host = parentViewController else { return }
-        Task { await PackageMenuAction.enqueue([.install(package)], from: host) }
+        Task { await PackageMenu.enqueue([.install(package)], from: host) }
     }
 
     override func prepareForReuse() {

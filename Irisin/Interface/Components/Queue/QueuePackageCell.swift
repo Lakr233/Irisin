@@ -1,5 +1,5 @@
 //
-//  TransactionPackageCell.swift
+//  QueuePackageCell.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2026/9/17.
@@ -22,7 +22,7 @@ import UIKit
 /// The row is the cell's content configuration, so the table aligns the
 /// separator with the name; the fill lives in the background, which a
 /// configuration never replaces.
-final class TransactionPackageCell: UITableViewCell {
+final class QueuePackageCell: UITableViewCell {
     /// The cell's own ground with the fill over it, as the background's
     /// custom view.
     private let ground = UIView()

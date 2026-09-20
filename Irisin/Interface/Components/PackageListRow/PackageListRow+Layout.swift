@@ -1,5 +1,5 @@
 //
-//  PackageCell+Layout.swift
+//  PackageListRow+Layout.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/9/12.
@@ -9,7 +9,7 @@
 import AptRepository
 import UIKit
 
-extension PackageCell {
+extension PackageListRow {
     /// The smallest cell a package list lays out, whatever width it is given.
     static let minimumSize = CGSize(width: 32, height: 32)
 

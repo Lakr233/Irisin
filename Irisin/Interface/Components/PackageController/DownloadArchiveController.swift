@@ -19,7 +19,7 @@ final class DownloadArchiveController: UIViewController {
     static func start(for package: Package, from host: UIViewController, anchor: PopoverAnchor?) {
         var store: URL?
         if package.isCommercial {
-            guard let signedIn = PackageMenuAction.signedInStore(of: package, from: host) else { return }
+            guard let signedIn = PackageMenu.signedInStore(of: package, from: host) else { return }
             store = signedIn
         }
         let card = DownloadArchiveController(package: package, store: store, host: host, anchor: anchor)
@@ -72,12 +72,12 @@ final class DownloadArchiveController: UIViewController {
     private func run() async {
         var target = package
         if let store {
-            let check = await PackageMenuAction.checkPurchase(of: package, in: store)
+            let check = await PackageMenu.checkPurchase(of: package, in: store)
             guard case let .purchased(purchased) = check else {
                 guard !Task.isCancelled else { return }
                 await close()
                 if let host {
-                    await PackageMenuAction.present(check, from: host)
+                    await PackageMenu.present(check, from: host)
                 }
                 return
             }

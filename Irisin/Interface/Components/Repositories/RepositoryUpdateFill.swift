@@ -1,5 +1,5 @@
 //
-//  RepoUpdateFill.swift
+//  RepositoryUpdateFill.swift
 //  Irisin
 //
 
@@ -11,8 +11,8 @@ import UIKit
 
 /// A repository's update progress, drawn as a tint behind the whole row
 /// that widens from the leading edge as the download moves. The cell that
-/// hosts a `RepoCell` lays it out behind the row and hands it the URL.
-final class RepoUpdateFill: UIView {
+/// hosts a `RepositoryRow` lays it out behind the row and hands it the URL.
+final class RepositoryUpdateFill: UIView {
     private var subscriptions = Set<AnyCancellable>()
 
     private let fill = UIView().then {

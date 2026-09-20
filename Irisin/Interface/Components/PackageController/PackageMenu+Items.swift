@@ -1,5 +1,5 @@
 //
-//  PackageMenuAction+Items.swift
+//  PackageMenu+Items.swift
 //  Irisin
 //
 
@@ -8,8 +8,8 @@ import AptResolver
 import SPIndicator
 import UIKit
 
-extension PackageMenuAction {
-    static let allMenuActions: [MenuAction] = [
+extension PackageMenu {
+    static let allMenuActions: [Item] = [
         .init(
             descriptor: .dequeue,
             block: { package, host, _ in

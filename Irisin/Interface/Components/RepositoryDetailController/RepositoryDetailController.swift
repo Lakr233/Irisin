@@ -1,5 +1,5 @@
 //
-//  RepoDetailController.swift
+//  RepositoryDetailController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/17.
@@ -17,7 +17,7 @@ import UIKit
 /// packages, its sections as an inset grouped list, and where it all comes
 /// from underneath. One collection view with a compositional layout draws
 /// the whole page.
-class RepoDetailController: UIViewController {
+class RepositoryDetailController: UIViewController {
     private(set) var repo: Repository
     private var subscriptions = Set<AnyCancellable>()
 
@@ -365,7 +365,7 @@ class RepoDetailController: UIViewController {
     }
 }
 
-extension RepoDetailController: UICollectionViewDelegate {
+extension RepositoryDetailController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         guard case let .filter(filter) = dataSource.itemIdentifier(for: indexPath) else { return }

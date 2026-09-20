@@ -22,7 +22,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     let searchController = UISearchController()
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
-    var collectionViewCellSizeCache = PackageCell.minimumSize
+    var collectionViewCellSizeCache = PackageListRow.minimumSize
 
     /// Sections are their header text; the plain list is one untitled section.
     private(set) lazy var diffableDataSource: UICollectionViewDiffableDataSource<String, Package> = {
@@ -41,7 +41,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
                 withReuseIdentifier: headerId,
                 for: indexPath
             )
-            if let view = view as? ReuseTimerHeaderView {
+            if let view = view as? PackageSectionHeaderView {
                 view.horizontalPadding = 5
                 view.loadText(diffableDataSource.sectionIdentifier(for: indexPath.section) ?? "")
             }
@@ -129,7 +129,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         collectionView.delegate = self
         collectionView.register(PackageCollectionCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(
-            ReuseTimerHeaderView.self,
+            PackageSectionHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: headerId
         )
@@ -165,7 +165,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     }
 
     /// Before the collection view lays out, never after it: a size that
-    /// arrives a turn late leaves a frame of `PackageCell.minimumSize` cells.
+    /// arrives a turn late leaves a frame of `PackageListRow.minimumSize` cells.
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         updateCellSize()
@@ -188,7 +188,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     func updateCellSize() {
         let inset: CGFloat = 15
         collectionView.contentInset = UIEdgeInsets(top: 10, left: inset, bottom: 10, right: inset)
-        let size = PackageCell
+        let size = PackageListRow
             // we are not inside UICollectionViewController
             // so don't use collectionView.contentSize
             // otherwise it will load all of the cells when boot
@@ -227,7 +227,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
-        return PackageMenuAction.contextMenu(
+        return PackageMenu.contextMenu(
             for: data,
             from: self,
             anchor: collectionView.cellForItem(at: indexPath)

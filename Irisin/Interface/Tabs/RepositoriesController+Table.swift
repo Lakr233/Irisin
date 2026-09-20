@@ -41,7 +41,7 @@ extension RepositoriesController: UITableViewDelegate {
         else {
             return
         }
-        present(next: RepoDetailController(withRepo: repo))
+        present(next: RepositoryDetailController(withRepo: repo))
     }
 
     func tableView(

@@ -28,7 +28,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     /// The text size the cached cell size was measured at: a row is as tall
     /// as its lines, so a change of text size has to measure it again.
     var collectionViewTextSizeCache: UIContentSizeCategory?
-    var collectionViewCellSizeCache = PackageCell.minimumSize
+    var collectionViewCellSizeCache = PackageListRow.minimumSize
 
     var cellLimit = 16
 
@@ -160,7 +160,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
 private final class DashboardPackageCell: PackageCollectionCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
-        // PackageCell holds its icon 4 in from the edge, for rows on a card
+        // PackageListRow holds its icon 4 in from the edge, for rows on a card
         horizontalPadding = -4
     }
 

@@ -98,13 +98,13 @@ class InstalledController: UICollectionViewController {
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
 
-    struct InstalledData {
+    struct InstalledGroup {
         let key: Date? // the section: the modification date, nil when unsorted or never modified
         let section: String?
-        var package: [Package]
+        var packages: [Package]
     }
 
-    var dataSource: [InstalledData] = []
+    var dataSource: [InstalledGroup] = []
     /// Installed packages with a candidate. Answering this per row costs two
     /// index lookups, so the whole set is refreshed on a reload and read from.
     /// The install origins by identity, as of the last reload: the rows are
@@ -128,9 +128,9 @@ class InstalledController: UICollectionViewController {
                     withReuseIdentifier: footerId,
                     for: indexPath
                 )
-                (view as? FootnoteView)?.label.text = footerText
+                (view as? ListFootnoteView)?.label.text = footerText
                 view.isHidden = isEmpty
-                footerView = view as? FootnoteView
+                footerView = view as? ListFootnoteView
                 return view
             }
             let view = collectionView.dequeueReusableSupplementaryView(
@@ -138,7 +138,7 @@ class InstalledController: UICollectionViewController {
                 withReuseIdentifier: headerId,
                 for: indexPath
             )
-            if let view = view as? ReuseTimerHeaderView,
+            if let view = view as? PackageSectionHeaderView,
                let key = diffableDataSource.sectionIdentifier(for: indexPath.section)
             {
                 view.horizontalPadding = 0
@@ -154,7 +154,7 @@ class InstalledController: UICollectionViewController {
     private(set) var showsHeaders = false
 
     var isEmpty: Bool {
-        dataSource.allSatisfy(\.package.isEmpty)
+        dataSource.allSatisfy(\.packages.isEmpty)
     }
 
     func applySnapshot() {
@@ -162,7 +162,7 @@ class InstalledController: UICollectionViewController {
         var seen = Set<Package>()
         for section in dataSource {
             snapshot.appendSections([section.key])
-            snapshot.appendItems(section.package.filter { seen.insert($0).inserted }, toSection: section.key)
+            snapshot.appendItems(section.packages.filter { seen.insert($0).inserted }, toSection: section.key)
         }
         // the update indicator lives outside the package: repaint survivors
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
@@ -215,11 +215,11 @@ class InstalledController: UICollectionViewController {
 
     let footerId = UUID().uuidString
     /// The one footer on screen, so a new list can retitle it without a reload.
-    weak var footerView: FootnoteView?
+    weak var footerView: ListFootnoteView?
 
     /// What the list shows, filter and search applied.
     var footerText: String {
-        let shown = dataSource.flatMap(\.package)
+        let shown = dataSource.flatMap(\.packages)
         let sections = Set(shown.map(Self.section(of:))).count
         return String(localized: "Packages: \(shown.count) · Sections: \(sections)")
     }
@@ -444,7 +444,7 @@ class InstalledController: UICollectionViewController {
 
     /// The rows as they are filtered and sorted right now, one package a line.
     private func exportPackageList() {
-        let packages = dataSource.flatMap(\.package)
+        let packages = dataSource.flatMap(\.packages)
         guard !packages.isEmpty else {
             presentNotice(title: "Nothing to Export", dismissTitle: "OK")
             return
@@ -501,7 +501,7 @@ class InstalledController: UICollectionViewController {
 
     /// The bar while the list is edited (`InstalledController+Selection`).
     private(set) lazy var removeSelectedItem = UIBarButtonItem(
-        title: PackageMenuAction.ActionDescriptor.remove.describe(),
+        title: PackageMenu.Action.remove.describe(),
         style: .plain,
         target: self,
         action: #selector(removeSelected)
@@ -510,7 +510,7 @@ class InstalledController: UICollectionViewController {
     }
 
     private(set) lazy var updateSelectedItem = UIBarButtonItem(
-        title: PackageMenuAction.ActionDescriptor.update.describe(),
+        title: PackageMenu.Action.update.describe(),
         style: .plain,
         target: self,
         action: #selector(updateSelected)

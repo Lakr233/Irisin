@@ -54,7 +54,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
     /// in place so fading it moves nothing. The label fades, not the footer:
     /// a table's update animation sets its footer's alpha back to 1, and
     /// the failure row showed the line under a list that had stopped.
-    private let finishingFooter = FootnoteView().then {
+    private let finishingFooter = ListFootnoteView().then {
         $0.label.text = String(localized: "Finishing installation…")
         $0.label.alpha = 0
         $0.accessibilityElementsHidden = true

@@ -1,5 +1,5 @@
 //
-//  RepoAddCandidateCell.swift
+//  RepositoryAddCandidateCell.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2026/9/7.
@@ -14,7 +14,7 @@ import UIKit
 /// One address on the add sheet. Starts as the host name over the URL with
 /// a spinner where the icon goes, and becomes the repository's own name and
 /// icon once its Release file has been read.
-final class RepoAddCandidateCell: UITableViewCell {
+final class RepositoryAddCandidateCell: UITableViewCell {
     enum Preview {
         case loading
         case loaded(RepositoryPreview)
@@ -122,7 +122,7 @@ final class RepoAddCandidateCell: UITableViewCell {
             spinner.startAnimating()
             title.text = RepositorySource(line: line)?.url.host ?? line
         case let .loaded(info):
-            icon.image = info.avatar.flatMap(UIImage.init(data:)) ?? UIImage(named: "RepoTableViewCell.Missing")
+            icon.image = info.avatar.flatMap(UIImage.init(data:)) ?? UIImage(named: "RepositoryTableCell.Missing")
             spinner.stopAnimating()
             title.text = info.name
         case .failed:

@@ -1,5 +1,5 @@
 //
-//  ArtworkView.swift
+//  PackageArtworkView.swift
 //  Irisin
 //
 
@@ -13,7 +13,7 @@ import UIKit
 /// A package's picture, which may never come. Until it does, and when there
 /// is none, the package's name writes itself out over and over; when it
 /// does, it fades in over the handwriting.
-final class ArtworkView: UIView {
+final class PackageArtworkView: UIView {
     let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true

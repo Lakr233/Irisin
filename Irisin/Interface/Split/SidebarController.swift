@@ -88,7 +88,7 @@ class SidebarController: UIViewController {
                 cell.row.setNoRepoAvailable()
             }
         }
-        let footer = UICollectionView.SupplementaryRegistration<FootnoteView>(
+        let footer = UICollectionView.SupplementaryRegistration<ListFootnoteView>(
             elementKind: UICollectionView.elementKindSectionFooter
         ) { [unowned self] view, _, _ in
             view.label.text = RepositoriesController.footnote
@@ -111,7 +111,7 @@ class SidebarController: UIViewController {
     }()
 
     /// The footer on screen: it is not a row, so a snapshot never retitles it.
-    private weak var footnote: FootnoteView?
+    private weak var footnote: ListFootnoteView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -123,7 +123,7 @@ class SidebarController: UIViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "plus"),
             primaryAction: UIAction { [weak self] _ in
-                self?.present(RepoAddViewController.sheet(), animated: true)
+                self?.present(RepositoryAddController.sheet(), animated: true)
             }
         ).then { $0.accessibilityLabel = String(localized: "Add Repository") }
 
@@ -158,7 +158,7 @@ class SidebarController: UIViewController {
     // MARK: - Rows
 
     /// A collapsed section stays collapsed across a rebuild. The rows that
-    /// stay repaint themselves: `RepoCell` listens for its own repository.
+    /// stay repaint themselves: `RepositoryRow` listens for its own repository.
     private func rebuild(animated: Bool) {
         let urls = RepositoryCenter.default.obtainRepositoryUrls(sortedByName: true).uniqued()
         let previous = dataSource.snapshot(for: .repositories)
@@ -309,18 +309,18 @@ extension SidebarController: UICollectionViewDelegate {
         guard let url = url(at: indexPath),
               let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: url),
               let navigator = detailNavigator,
-              (navigator.topViewController as? RepoDetailController)?.repo.url != url
+              (navigator.topViewController as? RepositoryDetailController)?.repo.url != url
         else { return }
-        navigator.pushViewController(RepoDetailController(withRepo: repo), animated: true)
+        navigator.pushViewController(RepositoryDetailController(withRepo: repo), animated: true)
     }
 }
 
-/// `RepoCell` as a list row, tinted rather than filled while it is pressed.
+/// `RepositoryRow` as a list row, tinted rather than filled while it is pressed.
 /// The update's progress is part of the background, so it keeps the
 /// card's rounded corners.
 private final class RepoListCell: UICollectionViewListCell {
-    let row = RepoCell()
-    let updateFill = RepoUpdateFill()
+    let row = RepositoryRow()
+    let updateFill = RepositoryUpdateFill()
 
     override init(frame: CGRect) {
         super.init(frame: frame)

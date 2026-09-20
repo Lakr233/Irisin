@@ -1,5 +1,5 @@
 //
-//  PackageCell.swift
+//  PackageListRow.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/18.
@@ -12,7 +12,7 @@ import SDWebImage
 import Then
 import UIKit
 
-class PackageCell: UIView {
+class PackageListRow: UIView {
     /// Between the icon and the text, and between the icon and whatever a
     /// list puts before it: the Installed page's selection mark.
     static let iconSpacing: CGFloat = 8
@@ -83,7 +83,7 @@ class PackageCell: UIView {
     /// that lay rows out by number. A table row sizes itself from the same
     /// constraints and needs no number.
     static var rowHeight: CGFloat {
-        let cell = PackageCell()
+        let cell = PackageListRow()
         cell.title.text = "X"
         cell.subtitle.text = "X"
         cell.describe.text = "X"
@@ -295,7 +295,7 @@ extension NSUserActivity {
     nonisolated static let dropPackageActivityType = "wiki.qaq.irisin.drop.package"
 }
 
-extension PackageCell: UIDragInteractionDelegate {
+extension PackageListRow: UIDragInteractionDelegate {
     func dragInteraction(_: UIDragInteraction, itemsForBeginning _: UIDragSession) -> [UIDragItem] {
         guard let package = represent else { return [] }
 

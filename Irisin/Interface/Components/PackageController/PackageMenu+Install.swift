@@ -1,5 +1,5 @@
 //
-//  PackageMenuAction+Install.swift
+//  PackageMenu+Install.swift
 //  Irisin
 //
 
@@ -8,7 +8,7 @@ import AptResolver
 import Dog
 import UIKit
 
-extension PackageMenuAction {
+extension PackageMenu {
     /// The alert behind the Unsupported button and behind any install path a
     /// foreign flavour still reaches.
     static func presentUnsupportedArchitecture(of package: Package, from host: UIViewController) {
@@ -18,7 +18,7 @@ extension PackageMenuAction {
         )
     }
 
-    static let resolveInstallRequest: MenuAction.Block = { package, host, _ in
+    static let resolveInstallRequest: Item.Block = { package, host, _ in
         guard package.isSupportedOnDevice || package.localFileURL != nil else {
             presentUnsupportedArchitecture(of: package, from: host)
             return

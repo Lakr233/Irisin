@@ -1,5 +1,5 @@
 //
-//  PackageControllerProxy.swift
+//  DepictionPresentationProxy.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/19.
@@ -10,7 +10,7 @@ import PackageDepiction
 import SafariServices
 import UIKit
 
-class PackageControllerProxy: UIViewController, DepictionRenderObserver {
+class DepictionPresentationProxy: UIViewController, DepictionRenderObserver {
     weak var parentController: UIViewController?
 
     /// The classes the depiction named that this build could not build.

@@ -10,42 +10,8 @@ import AptRepository
 import SDWebImage
 import UIKit
 
-class ReuseTimerHeaderView: UICollectionReusableView {
-    let label = UILabel()
-    var horizontalPadding: CGFloat = 10 {
-        didSet {
-            updateSnapKitConstraints()
-        }
-    }
-
-    override init(frame _: CGRect) {
-        super.init(frame: CGRect())
-        label.font = .rounded(.caption, emphasized: true)
-        label.textColor = .textMuted
-        addSubview(label)
-        updateSnapKitConstraints()
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    func loadText(_ str: String) {
-        label.text = str
-    }
-
-    func updateSnapKitConstraints() {
-        label.snp.remakeConstraints { x in
-            x.leading.equalToSuperview().offset(horizontalPadding)
-            x.trailing.equalToSuperview().offset(-horizontalPadding)
-            x.centerY.equalToSuperview()
-        }
-    }
-}
-
 class PackageCollectionCell: UICollectionViewCell {
-    let originalCell = PackageCell()
+    let originalCell = PackageListRow()
 
     var horizontalPadding: CGFloat {
         get {

@@ -15,7 +15,7 @@ import UIKit
 final class FeaturedBanner: UIView {
     let button = UIButton()
     let name = UILabel()
-    let artwork = ArtworkView()
+    let artwork = PackageArtworkView()
     let package: Package
 
     /// The banner entries of a repository's featured json; none when it

@@ -1,5 +1,5 @@
 //
-//  RepoCell.swift
+//  RepositoryRow.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/20.
@@ -12,7 +12,7 @@ import SnapKit
 import Then
 import UIKit
 
-class RepoCell: UIView {
+class RepositoryRow: UIView {
     private var subscriptions = Set<AnyCancellable>()
 
     var title = UILabel().then {
@@ -28,13 +28,13 @@ class RepoCell: UIView {
     }
 
     var icon = UIImageView().then {
-        $0.image = UIImage(named: "RepoTableViewCell.Missing")
+        $0.image = UIImage(named: "RepositoryTableCell.Missing")
         $0.layer.cornerRadius = 8
         $0.clipsToBounds = true
         $0.contentMode = .scaleAspectFit
     }
 
-    let arrow = UIImageView(image: UIImage(named: "RepoTableViewCell.Right")).then {
+    let arrow = UIImageView(image: UIImage(named: "RepositoryTableCell.Right")).then {
         $0.contentMode = .scaleAspectFit
     }
 

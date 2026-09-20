@@ -1,5 +1,5 @@
 //
-//  RepoAddAdvancedViewController.swift
+//  RepositoryAddAdvancedController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2026/9/8.
@@ -13,7 +13,7 @@ import UIKit
 /// A sources.list line typed piecewise: the address, the suite, and the
 /// components. Nothing is fetched; Add lights up as soon as the three make a
 /// well-formed source, and registering it starts the first update.
-final class RepoAddAdvancedViewController: UITableViewController {
+final class RepositoryAddAdvancedController: UITableViewController {
     nonisolated enum Section: Hashable {
         case url, suite, components
     }
@@ -32,7 +32,7 @@ final class RepoAddAdvancedViewController: UITableViewController {
     private lazy var dataSource = EditableTableDiffableDataSource<Section, Section>(
         tableView: tableView
     ) { [unowned self] tableView, indexPath, section in
-        let cell = tableView.dequeueReusableCell(withIdentifier: "input", for: indexPath) as! RepoAddInputCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "input", for: indexPath) as! RepositoryAddInputCell
         cell.fillsScheme = section == .url
         cell.field.keyboardType = section == .url ? .URL : .asciiCapable
         cell.field.returnKeyType = section == .components ? .done : .next
@@ -55,7 +55,7 @@ final class RepoAddAdvancedViewController: UITableViewController {
     }
 
     static func sheet() -> UINavigationController {
-        .halfSheet(root: RepoAddAdvancedViewController(style: .insetGrouped))
+        .halfSheet(root: RepositoryAddAdvancedController(style: .insetGrouped))
     }
 
     override func viewDidLoad() {
@@ -70,7 +70,7 @@ final class RepoAddAdvancedViewController: UITableViewController {
         navigationItem.rightBarButtonItem = addButton
         addButton.isEnabled = false
 
-        tableView.register(RepoAddInputCell.self, forCellReuseIdentifier: "input")
+        tableView.register(RepositoryAddInputCell.self, forCellReuseIdentifier: "input")
         tableView.keyboardDismissMode = .onDrag
         tableView.dataSource = dataSource
         dataSource.headerTitle = { section in

@@ -60,9 +60,9 @@ extension InstalledController {
     func updateSelectionItems() {
         guard isEditing else { return }
         let selected = selectedPackages
-        removeSelectedItem.isEnabled = PackageMenuAction.removal(ofInstalled: selected).request != nil
+        removeSelectedItem.isEnabled = PackageMenu.removal(ofInstalled: selected).request != nil
         updateSelectedItem.isEnabled = selected.contains {
-            identitiesWithUpdate.contains($0.identity) && PackageMenuAction.updateRequest(forInstalled: $0) != nil
+            identitiesWithUpdate.contains($0.identity) && PackageMenu.updateRequest(forInstalled: $0) != nil
         }
     }
 
@@ -73,7 +73,7 @@ extension InstalledController {
 
     @objc
     func removeSelected() {
-        let (request, leftOut) = PackageMenuAction.removal(ofInstalled: selectedPackages)
+        let (request, leftOut) = PackageMenu.removal(ofInstalled: selectedPackages)
         send(request, leavingOut: leftOut)
     }
 
@@ -85,7 +85,7 @@ extension InstalledController {
         var updates: [ResolutionAction] = []
         var leftOut: [Package] = []
         for row in selectedPackages where identitiesWithUpdate.contains(row.identity) {
-            if let update = PackageMenuAction.updateRequest(forInstalled: row) {
+            if let update = PackageMenu.updateRequest(forInstalled: row) {
                 updates.append(update)
             } else {
                 leftOut.append(row)

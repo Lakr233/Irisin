@@ -8,7 +8,7 @@ import SnapKit
 import Then
 import UIKit
 
-/// A row of the Installed page: `PackageCell` in a list cell, which is what
+/// A row of the Installed page: `PackageListRow` in a list cell, which is what
 /// slides aside for a swipe. It draws no ground of its own, selected or not.
 ///
 /// While the list is edited the row shows a selection mark of its own. The
@@ -17,11 +17,11 @@ import UIKit
 /// when nothing is edited and the date above the row begins, and stands as
 /// far from the icon as the icon does from the text.
 final class InstalledPackageCell: UICollectionViewListCell {
-    let originalCell = PackageCell()
+    let originalCell = PackageListRow()
     private let selectionMark = SelectionMarkView()
 
-    /// A row is as tall as `PackageCell` at the text size in use, which is
-    /// the app's and not a view's: `PackageCell` takes its fonts from there.
+    /// A row is as tall as `PackageListRow` at the text size in use, which is
+    /// the app's and not a view's: `PackageListRow` takes its fonts from there.
     /// Measured once per text size: a list section asks every row.
     private static var heights: [UIContentSizeCategory: CGFloat] = [:]
 
@@ -30,13 +30,13 @@ final class InstalledPackageCell: UICollectionViewListCell {
         if let known = heights[category] {
             return known
         }
-        let height = max(PackageCell.rowHeight, PackageCell.minimumSize.height)
+        let height = max(PackageListRow.rowHeight, PackageListRow.minimumSize.height)
         heights[category] = height
         return height
     }
 
     /// How far the row moves in to make room for the mark.
-    private static let editingIndent = SelectionMarkView.side + PackageCell.iconSpacing
+    private static let editingIndent = SelectionMarkView.side + PackageListRow.iconSpacing
 
     private var leading: Constraint?
     private var showsMark = false
