@@ -7,6 +7,7 @@
 //
 
 import AptRepository
+import Dog
 import Foundation
 
 /// Brings up every engine, once per process. Their state lives on the main
@@ -46,12 +47,21 @@ enum AppBootstrap {
             // MARK: - PROCESSOR
 
             _ = Installer.shared
+
+            isFinished = true
         }
     }
 
+    /// False while the engines are still coming up: what they read then is
+    /// fresh, and nothing needs to be read again on their account.
+    private(set) static var isFinished = false
+
     /// Returns when the engines are up; `false` where they never start.
     static func finished() async -> Bool {
-        guard let task else { return false }
+        guard let task else {
+            Dog.shared.join("AppBootstrap", "asked for engines that were never started", level: .warning)
+            return false
+        }
         await task.value
         return true
     }

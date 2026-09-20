@@ -29,7 +29,9 @@ public final class PackageCenter {
     /// The handle to what the center knows. Copy it for work off the main actor.
     public internal(set) var index = PackageIndex(db: AptDatabase.shared)
 
+    /// True once the installed list is read, never while `load()` reads it.
     public private(set) var isLoaded = false
+    private var isLoading = false
 
     // MARK: - PACKAGE TABLE
 
@@ -88,14 +90,15 @@ public final class PackageCenter {
     /// Reads the dpkg status file. Once per process, before
     /// `RepositoryCenter.load()`.
     public func load() async {
-        guard !isLoaded else { return }
-        isLoaded = true
+        guard !isLoading else { return }
+        isLoading = true
 
         aptLog(self, "tracing package status with \(AptEnvironment.current.dpkgStatusLocation)", level: .info)
 
         restoreUpdatePreferences()
 
         await reloadLocalPackages()
+        isLoaded = true
     }
 
     /// What the user said about updates, read into `index`. `load()` does

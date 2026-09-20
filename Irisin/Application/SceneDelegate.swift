@@ -65,10 +65,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidBecomeActive(_: UIScene) {
         guard PackagedArchitecture.incompatibilityMessage == nil else { return }
         Dog.shared.join(self, "sceneDidBecomeActive", level: .info)
+        // at launch the first read is `load()`'s own, and a second one right
+        // behind it reads the same file
+        guard AppBootstrap.isFinished else { return }
         reloadThrottle.throttle {
             Task {
-                // the first read is `load()`'s own; this one never runs beside it
-                guard await AppBootstrap.finished() else { return }
                 await PackageCenter.default.reloadLocalPackages()
             }
         }

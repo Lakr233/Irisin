@@ -148,7 +148,12 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         })
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in
-            Task { await self?.reload(animated: self?.hasShownSections ?? false) }
+            Task {
+                // a center that announces itself mid-bootstrap is half of
+                // what the page shows; the first load above covers it
+                guard await AppBootstrap.finished() else { return }
+                await self?.reload(animated: self?.hasShownSections ?? false)
+            }
         }
         .store(in: &subscriptions)
     }
