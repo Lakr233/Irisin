@@ -19,6 +19,7 @@ class LXSplitController: UISplitViewController {
     /// The detail column's stack, where the sidebar opens a repository.
     let navigator = LXMainNavigator()
     private let panel = LXSplitPanelController()
+    private lazy var column = LXColumnHostController(content: navigator)
 
     init() {
         super.init(style: .doubleColumn)
@@ -48,9 +49,9 @@ class LXSplitController: UISplitViewController {
         // A column that is not a navigation controller gets one from UIKit,
         // bar and all, stacked on the navigator's own. Ours has no bar; the
         // button that brings the sidebar back goes on the navigator's.
-        let column = UINavigationController(rootViewController: LXColumnHostController(content: navigator))
-        column.setNavigationBarHidden(true, animated: false)
-        setViewController(column, for: .secondary)
+        let secondary = UINavigationController(rootViewController: column)
+        secondary.setNavigationBarHidden(true, animated: false)
+        setViewController(secondary, for: .secondary)
         delegate = self
         navigator.delegate = self
     }
@@ -109,15 +110,29 @@ extension LXSplitController: UISplitViewControllerDelegate, UINavigationControll
         }
     }
 
-    func navigationController(_: UINavigationController, willShow viewController: UIViewController, animated _: Bool) {
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated _: Bool
+    ) {
         syncSidebarToggle(on: viewController)
+        // the Queue page and what it pushes need no way to the queue
+        column.isQueueOpen = navigationController.viewControllers.first is QueueController
     }
 }
 
 /// Hosts a column's content inside the column's safe area, so a screen
-/// that lays out to its view's edges lays out to the visible pane.
+/// that lays out to its view's edges lays out to the visible pane. The
+/// queue's bar floats at the bottom of that pane: the sidebar's Queue card
+/// says as much while it is there, and the sidebar can be hidden.
 final class LXColumnHostController: UIViewController {
     let content: UIViewController
+    private var queueBar: QueueBarDock?
+
+    /// The content shows the Queue page: see `QueueBarDock.isQueueOpen`.
+    var isQueueOpen = false {
+        didSet { queueBar?.isQueueOpen = isQueueOpen }
+    }
 
     init(content: UIViewController) {
         self.content = content
@@ -147,6 +162,20 @@ final class LXColumnHostController: UIViewController {
             x.trailing.top.bottom.equalToSuperview()
         }
         content.didMove(toParent: self)
+
+        let pane = UILayoutGuide()
+        view.addLayoutGuide(pane)
+        pane.snp.makeConstraints { x in
+            x.edges.equalTo(content.view)
+        }
+        queueBar = QueueBarDock(host: self, centeredIn: pane) { [content] in [content] }
+        queueBar?.isQueueOpen = isQueueOpen
+        queueBar?.bottomInset = view.safeAreaInsets.bottom
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        queueBar?.bottomInset = view.safeAreaInsets.bottom
     }
 
     override var childForStatusBarStyle: UIViewController? {

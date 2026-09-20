@@ -20,6 +20,22 @@ extension UIView {
             animations: changes
         )
     }
+
+    /// How a bar that floats over a page comes and goes (`QueueBarDock`): a
+    /// spring that barely overshoots and picks up from wherever the last one
+    /// left the bar, so a hide that interrupts a show turns round in place.
+    /// `completion` hears whether the animation ran to its end.
+    static func animateFloatingBar(_ changes: @escaping () -> Void, completion: @escaping (Bool) -> Void) {
+        animate(
+            withDuration: 0.4,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0,
+            options: [.beginFromCurrentState, .allowUserInteraction],
+            animations: changes,
+            completion: completion
+        )
+    }
 }
 
 extension UIProgressView {
