@@ -120,7 +120,7 @@ extension SettingsController {
                 title: String(localized: "Downloads Folder"),
                 kind: .disclosure,
                 action: { [weak self] in
-                    self?.openInFila(path: DownloadCenter.shared.workingLocation.path)
+                    self?.openInFila(path: Downloads.shared.workingLocation.path)
                 }
             ),
             SettingsItem(
@@ -133,7 +133,7 @@ extension SettingsController {
                     if let cache = try? PartialDownloads.directory.directoryTotalAllocatedSize() {
                         compute += cache
                     }
-                    if let download = try? DownloadCenter.shared.workingLocation.directoryTotalAllocatedSize() {
+                    if let download = try? Downloads.shared.workingLocation.directoryTotalAllocatedSize() {
                         compute += download
                     }
                     if let staged = try? TaskProcessor.shared.workingLocation.directoryTotalAllocatedSize() {
@@ -154,7 +154,7 @@ extension SettingsController {
                 menu: { [weak self] in
                     guard let self else { return [] }
                     return confirmMenu(String(localized: "Clear Downloads")) {
-                        DownloadCenter.shared.clear()
+                        Downloads.shared.clear()
                         try? FileManager.default
                             .removeItem(at: documentsDirectory.appendingPathComponent("DirectInstallCache"))
                         if !TaskProcessor.shared.inProcessingQueue {

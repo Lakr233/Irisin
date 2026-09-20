@@ -93,7 +93,7 @@ class SetupViewController: UIViewController {
 
                 CellularPolicy.allowForThisApplication()
 
-                await DownloadCenter.shared.load()
+                await Downloads.shared.load()
 
                 // MARK: - PROCESSOR
 

@@ -393,7 +393,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         switch stage {
         case .downloadFailed:
             failure = nil
-            DownloadCenter.shared.download(plan.install)
+            Downloads.shared.download(plan.install)
             reload()
         case .patchFailed, .stagingFailed, .ready:
             run(plan)
@@ -553,14 +553,14 @@ final class QueueController: UIViewController, UITableViewDelegate {
         in plan: UUID,
         progress: @MainActor () -> Void
     ) async -> String? {
-        let center = DownloadCenter.shared
+        let downloads = Downloads.shared
         // ponytail: polls the statuses four times a second; a publisher on
         // the statuses if the tick ever shows
         while !Task.isCancelled, TaskManager.shared.plan?.id == plan {
-            let statuses = packages.map { (package: $0, status: center.status(for: $0.obtainDownloadLink())) }
+            let statuses = packages.map { (package: $0, status: downloads.status(for: $0.obtainDownloadLink())) }
             // a retry's download keeps the old error until it first reports
             if let failed = statuses.first(where: {
-                $0.status?.errorDescription != nil && !center.isDownloading($0.package.obtainDownloadLink())
+                $0.status?.errorDescription != nil && !downloads.isDownloading($0.package.obtainDownloadLink())
             })?.status?.errorDescription {
                 return failed
             }
@@ -569,7 +569,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             }
             // the queue starts every download it needs; one that is neither
             // done nor running was stopped from outside
-            if statuses.contains(where: { $0.status?.file == nil && !center.isDownloading($0.package.obtainDownloadLink()) }) {
+            if statuses.contains(where: { $0.status?.file == nil && !downloads.isDownloading($0.package.obtainDownloadLink()) }) {
                 return String(localized: "The download was interrupted.")
             }
             progress()

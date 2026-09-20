@@ -117,7 +117,7 @@ final class TaskManager {
         changed()
         // this starts what the plan needs and stops what it no longer does,
         // except a download Download Archive is waiting for
-        DownloadCenter.shared.download(proposal.plan?.install ?? [])
+        Downloads.shared.download(proposal.plan?.install ?? [])
         prunePatched()
         return true
     }
@@ -186,7 +186,7 @@ final class TaskManager {
             }
             var file = package.localFileURL
             if file == nil {
-                file = await DownloadCenter.shared.downloadedFile(for: package)
+                file = await Downloads.shared.downloadedFile(for: package)
             }
             guard let file else {
                 return .failure(PatchFailure(
@@ -354,7 +354,7 @@ final class TaskManager {
         blocked = nil
         prunePatched()
         changed()
-        DownloadCenter.shared.cancelAll()
+        Downloads.shared.cancelAll()
     }
 
     /// Every installed package with a newer version, as install requests,

@@ -134,7 +134,7 @@ class PackageBannerView: UIView {
         // (what it takes on disk for a package only dpkg knows)
         version.text = [
             package.latestVersion ?? String(localized: "Unknown"),
-            (package.publishedSize ?? package.installedSize).map(DownloadCenter.shared.byteFormat),
+            (package.publishedSize ?? package.installedSize).map(Downloads.shared.byteFormat),
         ].compactMap(\.self).joined(separator: " · ")
         icon.showIcon(of: package)
         updateButton()

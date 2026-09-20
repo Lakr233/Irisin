@@ -146,7 +146,7 @@ final class QueuePackageCell: UITableViewCell {
         guard let download else { return }
         label.disablesAnimations = !animated
         defer { label.disablesAnimations = false }
-        let status = DownloadCenter.shared.status(for: download.obtainDownloadLink())
+        let status = Downloads.shared.status(for: download.obtainDownloadLink())
         chevron.isHidden = !(status?.completed == true && status?.errorDescription == nil)
         guard let status else {
             spinner.startAnimating()

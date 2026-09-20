@@ -55,7 +55,7 @@ final class TaskProcessor {
             for package in plan.install {
                 var file = package.localFileURL
                 if file == nil {
-                    file = await DownloadCenter.shared.downloadedFile(for: package)
+                    file = await Downloads.shared.downloadedFile(for: package)
                 }
                 guard let file else {
                     throw MissingDownload(identity: package.identity)

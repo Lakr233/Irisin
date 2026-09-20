@@ -284,7 +284,7 @@ end.
   The app defaults to main-actor isolation (`SWIFT_DEFAULT_ACTOR_ISOLATION`).
 - **State lives on the main actor; work that takes time runs on a copy.**
   `RepositoryCenter`, `PackageCenter`, `TaskManager`, `TaskProcessor` and
-  `DownloadCenter` hold their state on the main actor, so a read or a commit
+  `Downloads` hold their state on the main actor, so a read or a commit
   is a dictionary operation and no lock guards anything. Parsing dpkg's
   status, resolving dependencies, hashing downloads and fetching a
   repository take a copy (`PackageCenter.default.index`,
@@ -318,7 +318,7 @@ end.
   from standard input, the transcript on standard output.
 - `IrisinUnitTest/` — test bundle hosted in the app (`@testable import
   irisin`), for what only makes sense against the app's own types:
-  `Services/DownloadCenter/Downloader` against a `URLProtocol` stub, the
+  `Services/Downloads/Downloader` against a `URLProtocol` stub, the
   operation page's reduction of the transcript (`OperationMonitor`,
   `OperationPackages`), task resolution, notification bindings, the path
   list and the depiction's contact parsing.
