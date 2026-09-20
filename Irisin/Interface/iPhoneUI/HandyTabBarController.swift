@@ -15,6 +15,8 @@ class HandyTabBarController: UITabBarController {
     /// Every tab, the Queue tab included: `UITab`s from iOS 18, the
     /// controllers before it.
     private var everyTab: [AnyObject] = []
+    /// The bar over every tab but the Queue's own, while there is a queue.
+    private var queueBar: QueueBarDock?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,6 +79,17 @@ class HandyTabBarController: UITabBarController {
 
         selectedIndex = 0
         updateQueueTab()
+
+        let pages = [dashboard, repositories, installed, search]
+        queueBar = QueueBarDock(host: self, centeredIn: view.safeAreaLayoutGuide) { pages }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Above the tab bar where it is at the bottom; an iPad window wide
+        // enough has it at the top, and the bar keeps to the safe area.
+        let atBottom = !tabBar.isHidden && tabBar.frame.midY > view.bounds.midY
+        queueBar?.bottomInset = atBottom ? view.bounds.maxY - tabBar.frame.minY : view.safeAreaInsets.bottom
     }
 
     /// The Queue tab is there while there is a queue, and while it is open:
@@ -84,6 +97,7 @@ class HandyTabBarController: UITabBarController {
     /// `UITab.isHidden` only hides a tab from the sidebar, so the tab
     /// leaves the list instead.
     private func updateQueueTab() {
+        queueBar?.isQueueOpen = selectedViewController === queue
         let shown = TaskManager.shared.plan != nil || selectedViewController === queue
         if #available(iOS 18.0, *) {
             let every = everyTab.compactMap { $0 as? UITab }
@@ -106,6 +120,7 @@ class HandyTabBarController: UITabBarController {
             guard viewControllers?.contains(queue) == true else { return }
             selectedViewController = queue
         }
+        queueBar?.isQueueOpen = selectedViewController === queue
         queue.popToRootViewController(animated: false)
     }
 

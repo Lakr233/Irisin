@@ -311,9 +311,14 @@ final class QueueController: UIViewController, UITableViewDelegate {
         try? files.map { try DownloadArchiveController.namedCopy(of: $1, for: $0) }
     }
 
-    /// How many packages the queue touches, for a tab or a card; nil when none.
+    /// How many packages the queue touches.
+    static var queuedCount: Int {
+        (TaskManager.shared.plan).map { $0.install.count + $0.remove.count } ?? 0
+    }
+
+    /// `queuedCount` for a tab or a card; nil when none.
     static var badge: String? {
-        let count = (TaskManager.shared.plan).map { $0.install.count + $0.remove.count } ?? 0
+        let count = queuedCount
         return count > 0 ? String(count) : nil
     }
 
