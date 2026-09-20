@@ -48,7 +48,7 @@ make deb-all      # build the roothide and rootless packages
 make install      # update a device connected through `iproxy 2333 22`
 ```
 
-You need `ldid` and `dpkg` from Homebrew. Notes for contributors are in [AGENTS.md](AGENTS.md).
+You need `ldid` and `dpkg` from your preferred package manager. Notes for contributors are in [AGENTS.md](AGENTS.md).
 
 ## Acknowledgements
 
