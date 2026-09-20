@@ -1,5 +1,5 @@
 //
-//  PaymentManager.swift
+//  VendorAccount.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/25.
@@ -16,19 +16,19 @@ import UIKit
 /// vendor about accounts, purchases and download links. Lives on the main
 /// actor because every entry point ends in a sheet or a notification; the
 /// network calls suspend instead of blocking.
-final class PaymentManager {
-    static let shared = PaymentManager()
+final class VendorAccount {
+    static let shared = VendorAccount()
 
     private init() {}
 
     // MARK: - STRUCT
 
-    nonisolated struct UserTokenInfo: Sendable {
+    nonisolated struct UserToken: Sendable {
         let token: String
         let secret: String
     }
 
-    nonisolated struct PackageInfo: Sendable {
+    nonisolated struct PurchaseStatus: Sendable {
         let purchased: Bool?
         let available: Bool?
     }
@@ -53,7 +53,7 @@ final class PaymentManager {
             completionCallback()
             return
         }
-        if obtainStoredTokenInfomation(for: repo) != nil {
+        if storedToken(for: repo) != nil {
             Dog.shared.join(self, "user already signed in \(repo.url.absoluteString)")
             completionCallback()
             return
@@ -126,7 +126,7 @@ final class PaymentManager {
         postNotification()
     }
 
-    nonisolated func obtainStoredTokenInfomation(for repo: Repository) -> UserTokenInfo? {
+    nonisolated func storedToken(for repo: Repository) -> UserToken? {
         let keys = Self.keychainKeys(for: repo)
         guard let tokenRaw = Self.loadKeychainItem(account: keys.token),
               let token = String(data: tokenRaw, encoding: .utf8),
@@ -145,7 +145,7 @@ final class PaymentManager {
         else {
             return
         }
-        guard let info = obtainStoredTokenInfomation(for: repo) else { return }
+        guard let info = storedToken(for: repo) else { return }
         let keys = Self.keychainKeys(for: repo)
         Self.deleteKeychainItem(account: keys.token)
         Self.deleteKeychainItem(account: keys.secret)
@@ -165,10 +165,10 @@ final class PaymentManager {
             guard let (data, _) = try? await URLSession.shared.data(for: request),
                   let str = String(data: data, encoding: .utf8)
             else {
-                Dog.shared.join("PaymentManager", "signing out on \(repoName) got no readable reply", level: .warning)
+                Dog.shared.join("VendorAccount", "signing out on \(repoName) got no readable reply", level: .warning)
                 return
             }
-            Dog.shared.join("PaymentManager", "signing out on \(repoName) replied with \(str)")
+            Dog.shared.join("VendorAccount", "signing out on \(repoName) replied with \(str)")
         }
     }
 
@@ -179,7 +179,7 @@ final class PaymentManager {
             .default
             .obtainImmutableRepository(withUrl: repo),
             let endpoint = repo.endpoint,
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return nil
         }
@@ -189,7 +189,7 @@ final class PaymentManager {
         return json["items"] as? [String] ?? []
     }
 
-    func obtainPackageInfo(for repo: URL, withPackageIdentity identity: String) async -> PackageInfo? {
+    func purchaseStatus(for repo: URL, withPackageIdentity identity: String) async -> PurchaseStatus? {
         guard let repo = RepositoryCenter
             .default
             .obtainImmutableRepository(withUrl: repo),
@@ -198,14 +198,14 @@ final class PaymentManager {
             .appendingPathComponent("package")
             .appendingPathComponent(identity)
             .appendingPathComponent("info"),
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return nil
         }
 
         let request = Self.jsonRequest(endpoint, token: userInfo.token)
         guard let json = await Self.jsonReply(for: request) else { return nil }
-        return PackageInfo(
+        return PurchaseStatus(
             purchased: json["purchased"] as? Bool,
             available: json["available"] as? Bool
         )
@@ -224,7 +224,7 @@ final class PaymentManager {
             .appendingPathComponent("package")
             .appendingPathComponent(identity)
             .appendingPathComponent("purchase"),
-            let userInfo = obtainStoredTokenInfomation(for: repo)
+            let userInfo = storedToken(for: repo)
         else {
             return
         }
@@ -265,7 +265,7 @@ final class PaymentManager {
               .appendingPathComponent("package")
               .appendingPathComponent(package.identity)
               .appendingPathComponent("authorize_download"),
-              let userInfo = obtainStoredTokenInfomation(for: repo)
+              let userInfo = storedToken(for: repo)
         else {
             return nil
         }
@@ -316,18 +316,18 @@ final class PaymentManager {
         do {
             let (body, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, !(200 ..< 300).contains(http.statusCode) {
-                Dog.shared.join("PaymentManager", "\(endpoint) answered HTTP \(http.statusCode)", level: .error)
+                Dog.shared.join("VendorAccount", "\(endpoint) answered HTTP \(http.statusCode)", level: .error)
                 return nil
             }
             data = body
         } catch {
-            Dog.shared.join("PaymentManager", "\(endpoint) failed: \(error.localizedDescription)", level: .error)
+            Dog.shared.join("VendorAccount", "\(endpoint) failed: \(error.localizedDescription)", level: .error)
             return nil
         }
         guard let json = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
         else {
             Dog.shared.join(
-                "PaymentManager",
+                "VendorAccount",
                 "\(endpoint) did not answer with a JSON object, \(data.count) bytes",
                 level: .error
             )

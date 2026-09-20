@@ -184,7 +184,7 @@ class RepositoryDetailController: UIViewController {
     /// menu, or, with sign in the only thing to do, a tap that does it.
     private func updateAccountItem() {
         guard let share = navigationItem.rightBarButtonItems?.first else { return }
-        let elements = PaymentManager.shared.accountMenu(for: repo) { [weak self] in self }
+        let elements = VendorAccount.shared.accountMenu(for: repo) { [weak self] in self }
         let only = elements.count == 1 ? elements.first as? UIAction : nil
         let account = UIBarButtonItem(
             image: UIImage(systemName: "person.crop.circle"),

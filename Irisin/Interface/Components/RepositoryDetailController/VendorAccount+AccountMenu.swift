@@ -1,5 +1,5 @@
 //
-//  PaymentManager+AccountMenu.swift
+//  VendorAccount+AccountMenu.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/25.
@@ -12,19 +12,19 @@ import Dog
 import SPIndicator
 import UIKit
 
-extension PaymentManager {
+extension VendorAccount {
     /// The vendor account of a repository as a menu: sign in while there is
     /// no account, sign out or list the purchases once there is one. Shared
     /// by the repository page and the Settings row.
     @MainActor
     func accountMenu(for repo: Repository, in controller: @escaping () -> UIViewController?) -> [UIMenuElement] {
-        guard obtainStoredTokenInfomation(for: repo) != nil else {
+        guard storedToken(for: repo) != nil else {
             return [UIAction(
                 title: String(localized: "Sign In"),
                 image: UIImage(systemName: "person.crop.circle")
             ) { _ in
                 let host = controller()
-                PaymentManager.shared.startUserAuthenticate(
+                VendorAccount.shared.startUserAuthenticate(
                     window: host?.view.window ?? UIWindow(),
                     controller: host,
                     repoUrl: repo.url
@@ -41,7 +41,7 @@ extension PaymentManager {
                 host.present(alert, animated: true, completion: nil)
                 Task {
                     // the request times out on its own; nothing waits forever
-                    guard let identities = await PaymentManager.shared.purchasedIdentities(for: repo.url) else {
+                    guard let identities = await VendorAccount.shared.purchasedIdentities(for: repo.url) else {
                         // jsonReply said why; this says the user saw nothing at all.
                         Dog.shared.join(
                             "Payment",
@@ -79,7 +79,7 @@ extension PaymentManager {
                 image: UIImage(systemName: "rectangle.portrait.and.arrow.right"),
                 attributes: .destructive
             ) { _ in
-                PaymentManager.shared.deleteSignInRecord(for: repo.url)
+                VendorAccount.shared.deleteSignInRecord(for: repo.url)
                 SPIndicator.present(
                     title: String(localized: "Signed out"),
                     message: nil,

@@ -250,7 +250,7 @@ class SettingsController: UITableViewController {
         case let .account(url):
             // a signed-in row is covered by its menu button and never gets here
             guard let repo = RepositoryCenter.default.repositories[url] else { return }
-            PaymentManager.shared.startUserAuthenticate(
+            VendorAccount.shared.startUserAuthenticate(
                 window: view.window ?? UIWindow(),
                 controller: self,
                 repoUrl: repo.url
