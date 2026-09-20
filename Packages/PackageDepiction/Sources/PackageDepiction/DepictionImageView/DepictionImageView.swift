@@ -11,7 +11,7 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionImageView: DepictionBaseView {
+final class DepictionImageView: DepictionView {
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.clipsToBounds = true

@@ -11,8 +11,8 @@ struct DepictionTests {
     private let unknown: [String: Any] = ["class": "DepictionNoSuchView"]
     private let label: [String: Any] = ["class": "DepictionLabelView", "text": "body"]
 
-    private func build(_ dictionary: [String: Any]) -> DepictionBaseView? {
-        DepictionBaseView.view(
+    private func build(_ dictionary: [String: Any]) -> DepictionView? {
+        DepictionView.view(
             dictionary: dictionary,
             viewController: UIViewController(),
             tintColor: nil,
@@ -32,6 +32,13 @@ struct DepictionTests {
 
     private func height(of views: [[String: Any]]) -> CGFloat {
         height(of: build(["class": "DepictionStackView", "views": views]))
+    }
+
+    /// The factory looks a class up by the json's string, so the root type
+    /// still answers to the runtime name it always had.
+    @Test
+    func rootViewKeepsItsRuntimeName() {
+        #expect(build(["class": "DepictionBaseView"]) != nil)
     }
 
     /// A stack drops the children this build cannot render; the headers and

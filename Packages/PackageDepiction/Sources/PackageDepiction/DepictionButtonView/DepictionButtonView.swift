@@ -10,8 +10,8 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionButtonView: DepictionBaseView {
-    private let button = DepictionButton(type: .custom)
+final class DepictionButtonView: DepictionView {
+    private let button = Button(type: .custom)
 
     private let action: String
     private let backupAction: String
@@ -56,7 +56,7 @@ final class DepictionButtonView: DepictionBaseView {
         }
 
         let content = (dictionary["view"] as? [String: Any]).flatMap { dict in
-            DepictionBaseView.view(
+            DepictionView.view(
                 dictionary: dict,
                 viewController: viewController,
                 tintColor: isLink ? tintColor : .white,
@@ -80,7 +80,7 @@ final class DepictionButtonView: DepictionBaseView {
 
     @objc private func buttonTapped() {
         for action in [action, backupAction] {
-            DepictionButton.processAction(
+            DepictionView.processAction(
                 action,
                 parentViewController: parentViewController,
                 openExternal: openExternal

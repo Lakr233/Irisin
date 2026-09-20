@@ -10,7 +10,7 @@ import AVKit
 import SnapKit
 import UIKit
 
-final class DepictionVideoView: DepictionBaseView {
+final class DepictionVideoView: DepictionView {
     private let playerViewController = AVPlayerViewController()
     private let playerLooper: AVPlayerLooper?
 

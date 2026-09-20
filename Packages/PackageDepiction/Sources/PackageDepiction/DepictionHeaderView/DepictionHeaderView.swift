@@ -12,7 +12,7 @@ import UIKit
 
 /// A section title. `DepictionSubheaderView` is the same view with a
 /// quieter default weight and more room around it.
-class DepictionHeaderView: DepictionBaseView {
+class DepictionHeaderView: DepictionView {
     class var boldByDefault: Bool {
         true
     }

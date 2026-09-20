@@ -10,9 +10,9 @@ import MarkdownView
 import SnapKit
 import UIKit
 
-final class DepictionMarkdownView: DepictionBaseView {
+final class DepictionMarkdownView: DepictionView {
     /// Markdown is a `MarkdownTextView`; html (`useRawFormat`) is a
-    /// `DepictionHTMLView`. Both wear the same theme.
+    /// `HTMLView`. Both wear the same theme.
     private let content: UIView
 
     /// The width the markdown was last laid out for; its height follows.
@@ -31,7 +31,7 @@ final class DepictionMarkdownView: DepictionBaseView {
         let useMargins = (dictionary["useMargins"] as? Bool) ?? true
 
         if (dictionary["useRawFormat"] as? Bool) == true {
-            guard let htmlView = DepictionHTMLView(html: markdown, tintColor: tintColor) else {
+            guard let htmlView = HTMLView(html: markdown, tintColor: tintColor) else {
                 return nil
             }
             content = htmlView
@@ -50,7 +50,7 @@ final class DepictionMarkdownView: DepictionBaseView {
         )
 
         let open: (String) -> Void = { [weak self] action in
-            DepictionButton.processAction(
+            DepictionView.processAction(
                 action,
                 parentViewController: self?.parentViewController,
                 openExternal: false
@@ -64,7 +64,7 @@ final class DepictionMarkdownView: DepictionBaseView {
                 case let .string(string): open(string)
                 }
             }
-        case let htmlView as DepictionHTMLView:
+        case let htmlView as HTMLView:
             htmlView.linkHandler = open
         default:
             break

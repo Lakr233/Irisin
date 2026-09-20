@@ -322,7 +322,7 @@ end.
   operation page's reduction of the transcript (`OperationMonitor`,
   `OperationPackages`), task resolution, notification bindings, the path
   list and the depiction's contact parsing.
-- `Packages/IrisinKit/` — `IrisinProtocol` (wire, `InstallerJob`),
+- `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`),
   `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),
   `IrisinClient` (`DaemonLink`, `JobTranscript`), `IrisinAdapter`
   (`PackageAdapter`, `PackageAdapters`, `BootstrapArchitecture`), each with

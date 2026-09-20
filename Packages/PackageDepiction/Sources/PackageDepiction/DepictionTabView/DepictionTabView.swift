@@ -9,9 +9,9 @@
 import SnapKit
 import UIKit
 
-final class DepictionTabView: DepictionBaseView {
+final class DepictionTabView: DepictionView {
     private let segments = UISegmentedControl()
-    private let tabContentViews: [DepictionBaseView]
+    private let tabContentViews: [DepictionView]
 
     /// Holds the one tab on show; the others are not in the hierarchy.
     private let contentArea = UIView()
@@ -31,11 +31,11 @@ final class DepictionTabView: DepictionBaseView {
             }
         }
 
-        var views: [DepictionBaseView] = []
+        var views: [DepictionView] = []
         var names: [String] = []
         for tab in tabs {
             guard let tabName = tab["tabname"] as? String,
-                  let view = DepictionBaseView.view(
+                  let view = DepictionView.view(
                       dictionary: tab,
                       viewController: viewController,
                       tintColor: tintColor,

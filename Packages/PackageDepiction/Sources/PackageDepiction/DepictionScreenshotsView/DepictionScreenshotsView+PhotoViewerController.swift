@@ -1,5 +1,5 @@
 //
-//  PhotoViewerController.swift
+//  DepictionScreenshotsView+PhotoViewerController.swift
 //  JsonDepiction
 //
 //  A full-screen viewer for a row of images: swipe sideways between them,
@@ -11,289 +11,291 @@ import LinkPresentation
 import SnapKit
 import UIKit
 
-final class PhotoViewerController: UIViewController {
-    /// The image views the pictures were tapped in, in page order. The
-    /// viewer shows their images and grows out of and shrinks back into them.
-    private let sourceViews: [UIImageView]
-    private var index: Int
+extension DepictionScreenshotsView {
+    final class PhotoViewerController: UIViewController {
+        /// The image views the pictures were tapped in, in page order. The
+        /// viewer shows their images and grows out of and shrinks back into them.
+        private let sourceViews: [UIImageView]
+        private var index: Int
 
-    private let backdrop = UIView()
-    /// Pages sideways; each page is a zooming scroll view around one image.
-    private let pager = UIScrollView()
-    private var pages: [UIScrollView] = []
-    private var imageViews: [UIImageView] = []
-    private let chrome = UIStackView()
-    private let gap: CGFloat = 16
+        private let backdrop = UIView()
+        /// Pages sideways; each page is a zooming scroll view around one image.
+        private let pager = UIScrollView()
+        private var pages: [UIScrollView] = []
+        private var imageViews: [UIImageView] = []
+        private let chrome = UIStackView()
+        private let gap: CGFloat = 16
 
-    /// - Parameters:
-    ///   - sourceViews: the image views to page through; each holds its image.
-    ///   - index: the page to open on.
-    init(sourceViews: [UIImageView], index: Int) {
-        self.sourceViews = sourceViews
-        self.index = index
-        super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .overFullScreen
-        modalPresentationCapturesStatusBarAppearance = true
-        transitioningDelegate = self
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override var prefersStatusBarHidden: Bool {
-        true
-    }
-
-    override var prefersHomeIndicatorAutoHidden: Bool {
-        true
-    }
-
-    private var sourceView: UIImageView {
-        sourceViews[index]
-    }
-
-    private var image: UIImage? {
-        sourceView.image
-    }
-
-    private var page: UIScrollView {
-        pages[index]
-    }
-
-    private var imageView: UIImageView {
-        imageViews[index]
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .clear
-
-        backdrop.backgroundColor = .black
-        view.addSubview(backdrop)
-
-        pager.isPagingEnabled = true
-        pager.delegate = self
-        pager.showsHorizontalScrollIndicator = false
-        pager.contentInsetAdjustmentBehavior = .never
-        view.addSubview(pager)
-
-        for source in sourceViews {
-            let page = UIScrollView()
-            page.delegate = self
-            page.minimumZoomScale = 1
-            page.maximumZoomScale = 4
-            page.showsVerticalScrollIndicator = false
-            page.showsHorizontalScrollIndicator = false
-            page.contentInsetAdjustmentBehavior = .never
-            let imageView = UIImageView(image: source.image)
-            imageView.contentMode = .scaleAspectFill
-            imageView.isAccessibilityElement = true
-            imageView.accessibilityTraits = .image
-            imageView.accessibilityLabel = source.accessibilityLabel
-            page.addSubview(imageView)
-            pager.addSubview(page)
-            pages.append(page)
-            imageViews.append(imageView)
+        /// - Parameters:
+        ///   - sourceViews: the image views to page through; each holds its image.
+        ///   - index: the page to open on.
+        init(sourceViews: [UIImageView], index: Int) {
+            self.sourceViews = sourceViews
+            self.index = index
+            super.init(nibName: nil, bundle: nil)
+            modalPresentationStyle = .overFullScreen
+            modalPresentationCapturesStatusBarAppearance = true
+            transitioningDelegate = self
         }
 
-        chrome.axis = .horizontal
-        chrome.spacing = 8
-        chrome.addArrangedSubview(chromeButton(
-            symbol: "square.and.arrow.up",
-            label: String(localized: "Share"),
-            action: #selector(share)
-        ))
-        chrome.addArrangedSubview(chromeButton(
-            symbol: "xmark",
-            label: String(localized: "Close"),
-            action: #selector(close)
-        ))
-        view.addSubview(chrome)
-        chrome.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
-            make.trailing.equalTo(view.safeAreaLayoutGuide).inset(8)
+        @available(*, unavailable)
+        required init?(coder _: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
         }
 
-        let singleTap = UITapGestureRecognizer(target: self, action: #selector(toggleChrome))
-        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(toggleZoom(_:)))
-        doubleTap.numberOfTapsRequired = 2
-        singleTap.require(toFail: doubleTap)
-        pager.addGestureRecognizer(singleTap)
-        pager.addGestureRecognizer(doubleTap)
-
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(drag(_:)))
-        pan.delegate = self
-        view.addGestureRecognizer(pan)
-        // one drag does one thing: a vertical one closes and the pager
-        // stays put, a sideways one pages and nothing shrinks
-        pager.panGestureRecognizer.require(toFail: pan)
-        for page in pages {
-            page.panGestureRecognizer.require(toFail: pan)
+        override var prefersStatusBarHidden: Bool {
+            true
         }
-    }
 
-    /// A symbol on a round of glass, so it reads over any picture: liquid
-    /// glass where the system has it, a dark material before that.
-    private func chromeButton(symbol: String, label: String, action: Selector) -> UIView {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: symbol)
-        config.preferredSymbolConfigurationForImage = .init(pointSize: 17, weight: .semibold)
-        config.baseForegroundColor = .white
-        let button = UIButton(configuration: config)
-        button.accessibilityLabel = label
-        button.addTarget(self, action: action, for: .touchUpInside)
-
-        let round: UIVisualEffectView
-        if #available(iOS 26, *) {
-            let glass = UIGlassEffect()
-            glass.isInteractive = true
-            round = UIVisualEffectView(effect: glass)
-            round.cornerConfiguration = .capsule()
-        } else {
-            round = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialDark))
-            round.layer.cornerRadius = 22
-            round.clipsToBounds = true
+        override var prefersHomeIndicatorAutoHidden: Bool {
+            true
         }
-        round.contentView.addSubview(button)
-        round.snp.makeConstraints { make in
-            make.size.equalTo(44)
+
+        private var sourceView: UIImageView {
+            sourceViews[index]
         }
-        button.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+
+        private var image: UIImage? {
+            sourceView.image
         }
-        return round
-    }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        backdrop.frame = view.bounds
-        // the pager is a gap wider than the page, so pages sit apart
-        let stride = CGRect(x: 0, y: 0, width: view.bounds.width + gap, height: view.bounds.height)
-        // compared and set as bounds and centre, never as a frame: a drag
-        // scales the pager, and a frame set under that transform inflates
-        // its bounds until the neighbouring pages show
-        guard pager.bounds.size != stride.size else { return }
-        pager.bounds = CGRect(origin: pager.bounds.origin, size: stride.size)
-        pager.center = CGPoint(x: stride.midX, y: stride.midY)
-        pager.contentSize = CGSize(width: stride.width * CGFloat(pages.count), height: stride.height)
-        for (i, page) in pages.enumerated() {
-            page.frame = CGRect(
-                x: stride.width * CGFloat(i),
-                y: 0,
-                width: view.bounds.width,
-                height: view.bounds.height
-            )
-            page.zoomScale = 1
-            imageViews[i].frame = CGRect(
-                origin: .zero,
-                size: fittedSize(of: sourceViews[i].image, in: page.bounds.size)
-            )
-            page.contentSize = imageViews[i].frame.size
-            center(page)
+        private var page: UIScrollView {
+            pages[index]
         }
-        pager.contentOffset = CGPoint(x: stride.width * CGFloat(index), y: 0)
-    }
 
-    private func fittedSize(of image: UIImage?, in size: CGSize) -> CGSize {
-        guard let image, image.size.width > 0, image.size.height > 0 else { return .zero }
-        let scale = min(size.width / image.size.width, size.height / image.size.height)
-        return CGSize(width: image.size.width * scale, height: image.size.height * scale)
-    }
-
-    private func center(_ page: UIScrollView) {
-        guard let i = pages.firstIndex(of: page) else { return }
-        let bounds = page.bounds.size
-        let imageView = imageViews[i]
-        var frame = imageView.frame
-        frame.origin.x = max(0, (bounds.width - frame.width) / 2)
-        frame.origin.y = max(0, (bounds.height - frame.height) / 2)
-        imageView.frame = frame
-    }
-
-    // MARK: - Actions
-
-    @objc private func close() {
-        dismiss(animated: true)
-    }
-
-    @objc private func share(_ sender: UIButton) {
-        guard let image else { return }
-        let item = PhotoShareItem(image: image, title: sourceView.accessibilityLabel)
-        let sheet = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-        sheet.popoverPresentationController?.sourceView = sender
-        present(sheet, animated: true)
-    }
-
-    @objc private func toggleChrome() {
-        UIView.animate(withDuration: 0.2) {
-            self.chrome.alpha = self.chrome.alpha == 0 ? 1 : 0
+        private var imageView: UIImageView {
+            imageViews[index]
         }
-    }
 
-    @objc private func toggleZoom(_ tap: UITapGestureRecognizer) {
-        if page.zoomScale > page.minimumZoomScale {
-            page.setZoomScale(page.minimumZoomScale, animated: true)
-            return
-        }
-        let scale: CGFloat = 2.5
-        let point = tap.location(in: imageView)
-        let size = CGSize(width: page.bounds.width / scale, height: page.bounds.height / scale)
-        page.zoom(
-            to: CGRect(
-                x: point.x - size.width / 2,
-                y: point.y - size.height / 2,
-                width: size.width,
-                height: size.height
-            ),
-            animated: true
-        )
-    }
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            view.backgroundColor = .clear
 
-    @objc private func drag(_ pan: UIPanGestureRecognizer) {
-        let translation = pan.translation(in: view)
-        let progress = min(1, abs(translation.y) / (view.bounds.height / 2))
-        switch pan.state {
-        case .began:
-            // only the picture on show moves with the finger: the pager
-            // settles on it and cannot page until the drag is over
-            pager.setContentOffset(CGPoint(x: pager.bounds.width * CGFloat(index), y: 0), animated: false)
-            pager.isScrollEnabled = false
-            for (i, page) in pages.enumerated() {
-                page.isHidden = i != index
+            backdrop.backgroundColor = .black
+            view.addSubview(backdrop)
+
+            pager.isPagingEnabled = true
+            pager.delegate = self
+            pager.showsHorizontalScrollIndicator = false
+            pager.contentInsetAdjustmentBehavior = .never
+            view.addSubview(pager)
+
+            for source in sourceViews {
+                let page = UIScrollView()
+                page.delegate = self
+                page.minimumZoomScale = 1
+                page.maximumZoomScale = 4
+                page.showsVerticalScrollIndicator = false
+                page.showsHorizontalScrollIndicator = false
+                page.contentInsetAdjustmentBehavior = .never
+                let imageView = UIImageView(image: source.image)
+                imageView.contentMode = .scaleAspectFill
+                imageView.isAccessibilityElement = true
+                imageView.accessibilityTraits = .image
+                imageView.accessibilityLabel = source.accessibilityLabel
+                page.addSubview(imageView)
+                pager.addSubview(page)
+                pages.append(page)
+                imageViews.append(imageView)
             }
-            sourceView.alpha = 0
-        case .changed:
-            let scale = 1 - progress * 0.25
-            pager.transform = CGAffineTransform(translationX: translation.x, y: translation.y)
-                .scaledBy(x: scale, y: scale)
-            backdrop.alpha = 1 - progress
-            chrome.alpha = 0
-        case .ended, .cancelled:
-            pager.isScrollEnabled = true
-            if progress > 0.3 || abs(pan.velocity(in: view).y) > 900 {
-                dismiss(animated: true)
+
+            chrome.axis = .horizontal
+            chrome.spacing = 8
+            chrome.addArrangedSubview(chromeButton(
+                symbol: "square.and.arrow.up",
+                label: String(localized: "Share"),
+                action: #selector(share)
+            ))
+            chrome.addArrangedSubview(chromeButton(
+                symbol: "xmark",
+                label: String(localized: "Close"),
+                action: #selector(close)
+            ))
+            view.addSubview(chrome)
+            chrome.snp.makeConstraints { make in
+                make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+                make.trailing.equalTo(view.safeAreaLayoutGuide).inset(8)
+            }
+
+            let singleTap = UITapGestureRecognizer(target: self, action: #selector(toggleChrome))
+            let doubleTap = UITapGestureRecognizer(target: self, action: #selector(toggleZoom(_:)))
+            doubleTap.numberOfTapsRequired = 2
+            singleTap.require(toFail: doubleTap)
+            pager.addGestureRecognizer(singleTap)
+            pager.addGestureRecognizer(doubleTap)
+
+            let pan = UIPanGestureRecognizer(target: self, action: #selector(drag(_:)))
+            pan.delegate = self
+            view.addGestureRecognizer(pan)
+            // one drag does one thing: a vertical one closes and the pager
+            // stays put, a sideways one pages and nothing shrinks
+            pager.panGestureRecognizer.require(toFail: pan)
+            for page in pages {
+                page.panGestureRecognizer.require(toFail: pan)
+            }
+        }
+
+        /// A symbol on a round of glass, so it reads over any picture: liquid
+        /// glass where the system has it, a dark material before that.
+        private func chromeButton(symbol: String, label: String, action: Selector) -> UIView {
+            var config = UIButton.Configuration.plain()
+            config.image = UIImage(systemName: symbol)
+            config.preferredSymbolConfigurationForImage = .init(pointSize: 17, weight: .semibold)
+            config.baseForegroundColor = .white
+            let button = UIButton(configuration: config)
+            button.accessibilityLabel = label
+            button.addTarget(self, action: action, for: .touchUpInside)
+
+            let round: UIVisualEffectView
+            if #available(iOS 26, *) {
+                let glass = UIGlassEffect()
+                glass.isInteractive = true
+                round = UIVisualEffectView(effect: glass)
+                round.cornerConfiguration = .capsule()
             } else {
-                for page in pages {
-                    page.isHidden = false
-                }
-                sourceView.alpha = 1
-                UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.85, initialSpringVelocity: 0) {
-                    self.pager.transform = .identity
-                    self.backdrop.alpha = 1
-                    self.chrome.alpha = 1
-                }
+                round = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialDark))
+                round.layer.cornerRadius = 22
+                round.clipsToBounds = true
             }
-        default:
-            break
+            round.contentView.addSubview(button)
+            round.snp.makeConstraints { make in
+                make.size.equalTo(44)
+            }
+            button.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+            return round
+        }
+
+        override func viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            backdrop.frame = view.bounds
+            // the pager is a gap wider than the page, so pages sit apart
+            let stride = CGRect(x: 0, y: 0, width: view.bounds.width + gap, height: view.bounds.height)
+            // compared and set as bounds and centre, never as a frame: a drag
+            // scales the pager, and a frame set under that transform inflates
+            // its bounds until the neighbouring pages show
+            guard pager.bounds.size != stride.size else { return }
+            pager.bounds = CGRect(origin: pager.bounds.origin, size: stride.size)
+            pager.center = CGPoint(x: stride.midX, y: stride.midY)
+            pager.contentSize = CGSize(width: stride.width * CGFloat(pages.count), height: stride.height)
+            for (i, page) in pages.enumerated() {
+                page.frame = CGRect(
+                    x: stride.width * CGFloat(i),
+                    y: 0,
+                    width: view.bounds.width,
+                    height: view.bounds.height
+                )
+                page.zoomScale = 1
+                imageViews[i].frame = CGRect(
+                    origin: .zero,
+                    size: fittedSize(of: sourceViews[i].image, in: page.bounds.size)
+                )
+                page.contentSize = imageViews[i].frame.size
+                center(page)
+            }
+            pager.contentOffset = CGPoint(x: stride.width * CGFloat(index), y: 0)
+        }
+
+        private func fittedSize(of image: UIImage?, in size: CGSize) -> CGSize {
+            guard let image, image.size.width > 0, image.size.height > 0 else { return .zero }
+            let scale = min(size.width / image.size.width, size.height / image.size.height)
+            return CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        }
+
+        private func center(_ page: UIScrollView) {
+            guard let i = pages.firstIndex(of: page) else { return }
+            let bounds = page.bounds.size
+            let imageView = imageViews[i]
+            var frame = imageView.frame
+            frame.origin.x = max(0, (bounds.width - frame.width) / 2)
+            frame.origin.y = max(0, (bounds.height - frame.height) / 2)
+            imageView.frame = frame
+        }
+
+        // MARK: - Actions
+
+        @objc private func close() {
+            dismiss(animated: true)
+        }
+
+        @objc private func share(_ sender: UIButton) {
+            guard let image else { return }
+            let item = PhotoShareItem(image: image, title: sourceView.accessibilityLabel)
+            let sheet = UIActivityViewController(activityItems: [item], applicationActivities: nil)
+            sheet.popoverPresentationController?.sourceView = sender
+            present(sheet, animated: true)
+        }
+
+        @objc private func toggleChrome() {
+            UIView.animate(withDuration: 0.2) {
+                self.chrome.alpha = self.chrome.alpha == 0 ? 1 : 0
+            }
+        }
+
+        @objc private func toggleZoom(_ tap: UITapGestureRecognizer) {
+            if page.zoomScale > page.minimumZoomScale {
+                page.setZoomScale(page.minimumZoomScale, animated: true)
+                return
+            }
+            let scale: CGFloat = 2.5
+            let point = tap.location(in: imageView)
+            let size = CGSize(width: page.bounds.width / scale, height: page.bounds.height / scale)
+            page.zoom(
+                to: CGRect(
+                    x: point.x - size.width / 2,
+                    y: point.y - size.height / 2,
+                    width: size.width,
+                    height: size.height
+                ),
+                animated: true
+            )
+        }
+
+        @objc private func drag(_ pan: UIPanGestureRecognizer) {
+            let translation = pan.translation(in: view)
+            let progress = min(1, abs(translation.y) / (view.bounds.height / 2))
+            switch pan.state {
+            case .began:
+                // only the picture on show moves with the finger: the pager
+                // settles on it and cannot page until the drag is over
+                pager.setContentOffset(CGPoint(x: pager.bounds.width * CGFloat(index), y: 0), animated: false)
+                pager.isScrollEnabled = false
+                for (i, page) in pages.enumerated() {
+                    page.isHidden = i != index
+                }
+                sourceView.alpha = 0
+            case .changed:
+                let scale = 1 - progress * 0.25
+                pager.transform = CGAffineTransform(translationX: translation.x, y: translation.y)
+                    .scaledBy(x: scale, y: scale)
+                backdrop.alpha = 1 - progress
+                chrome.alpha = 0
+            case .ended, .cancelled:
+                pager.isScrollEnabled = true
+                if progress > 0.3 || abs(pan.velocity(in: view).y) > 900 {
+                    dismiss(animated: true)
+                } else {
+                    for page in pages {
+                        page.isHidden = false
+                    }
+                    sourceView.alpha = 1
+                    UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.85, initialSpringVelocity: 0) {
+                        self.pager.transform = .identity
+                        self.backdrop.alpha = 1
+                        self.chrome.alpha = 1
+                    }
+                }
+            default:
+                break
+            }
         }
     }
 }
 
 // MARK: - Paging and zooming
 
-extension PhotoViewerController: UIScrollViewDelegate {
+extension DepictionScreenshotsView.PhotoViewerController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         pages.firstIndex(of: scrollView).map { imageViews[$0] }
     }
@@ -308,7 +310,7 @@ extension PhotoViewerController: UIScrollViewDelegate {
     }
 }
 
-extension PhotoViewerController: UIGestureRecognizerDelegate {
+extension DepictionScreenshotsView.PhotoViewerController: UIGestureRecognizerDelegate {
     func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
         guard let pan = recognizer as? UIPanGestureRecognizer,
               page.zoomScale <= page.minimumZoomScale
@@ -324,7 +326,7 @@ extension PhotoViewerController: UIGestureRecognizerDelegate {
 
 // MARK: - Transition
 
-extension PhotoViewerController: UIViewControllerTransitioningDelegate, UIViewControllerAnimatedTransitioning {
+extension DepictionScreenshotsView.PhotoViewerController: UIViewControllerTransitioningDelegate, UIViewControllerAnimatedTransitioning {
     func animationController(
         forPresented _: UIViewController,
         presenting _: UIViewController,
@@ -408,37 +410,39 @@ extension PhotoViewerController: UIViewControllerTransitioningDelegate, UIViewCo
 
 // MARK: - Sharing
 
-/// The picture as the share sheet receives it, with the header filled in:
-/// the picture itself as the preview and its caption as the title.
-private final class PhotoShareItem: NSObject, UIActivityItemSource {
-    private let image: UIImage
-    private let title: String?
+extension DepictionScreenshotsView.PhotoViewerController {
+    /// The picture as the share sheet receives it, with the header filled in:
+    /// the picture itself as the preview and its caption as the title.
+    private final class PhotoShareItem: NSObject, UIActivityItemSource {
+        private let image: UIImage
+        private let title: String?
 
-    init(image: UIImage, title: String?) {
-        self.image = image
-        self.title = title
-    }
+        init(image: UIImage, title: String?) {
+            self.image = image
+            self.title = title
+        }
 
-    func activityViewControllerPlaceholderItem(_: UIActivityViewController) -> Any {
-        image
-    }
+        func activityViewControllerPlaceholderItem(_: UIActivityViewController) -> Any {
+            image
+        }
 
-    func activityViewController(_: UIActivityViewController, itemForActivityType _: UIActivity.ActivityType?) -> Any? {
-        image
-    }
+        func activityViewController(_: UIActivityViewController, itemForActivityType _: UIActivity.ActivityType?) -> Any? {
+            image
+        }
 
-    func activityViewController(
-        _: UIActivityViewController,
-        subjectForActivityType _: UIActivity.ActivityType?
-    ) -> String {
-        title ?? ""
-    }
+        func activityViewController(
+            _: UIActivityViewController,
+            subjectForActivityType _: UIActivity.ActivityType?
+        ) -> String {
+            title ?? ""
+        }
 
-    func activityViewControllerLinkMetadata(_: UIActivityViewController) -> LPLinkMetadata? {
-        let metadata = LPLinkMetadata()
-        metadata.title = title
-        metadata.imageProvider = NSItemProvider(object: image)
-        metadata.iconProvider = NSItemProvider(object: image)
-        return metadata
+        func activityViewControllerLinkMetadata(_: UIActivityViewController) -> LPLinkMetadata? {
+            let metadata = LPLinkMetadata()
+            metadata.title = title
+            metadata.imageProvider = NSItemProvider(object: image)
+            metadata.iconProvider = NSItemProvider(object: image)
+            return metadata
+        }
     }
 }

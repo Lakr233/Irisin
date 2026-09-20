@@ -10,9 +10,9 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionSeparatorView: DepictionBaseView {
+final class DepictionSeparatorView: DepictionView {
     private let line = UIView().then {
-        $0.backgroundColor = .sileoSeparatorColor
+        $0.backgroundColor = .depictionSeparator
     }
 
     required init?(

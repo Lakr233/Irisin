@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionReviewView: DepictionBaseView {
+final class DepictionReviewView: DepictionView {
     required init?(
         dictionary: [String: Any],
         viewController: UIViewController,
@@ -23,7 +23,7 @@ final class DepictionReviewView: DepictionBaseView {
         else {
             return nil
         }
-        let review = DepictionBaseView.view(
+        let review = DepictionView.view(
             dictionary: [
                 "class": "DepictionStackView",
                 "views": [

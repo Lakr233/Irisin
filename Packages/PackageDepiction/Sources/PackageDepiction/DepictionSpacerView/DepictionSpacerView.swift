@@ -9,7 +9,7 @@
 import SnapKit
 import UIKit
 
-final class DepictionSpacerView: DepictionBaseView {
+final class DepictionSpacerView: DepictionView {
     required init?(
         dictionary: [String: Any],
         viewController: UIViewController,

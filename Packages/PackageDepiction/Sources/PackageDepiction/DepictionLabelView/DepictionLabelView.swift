@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionLabelView: DepictionBaseView {
+final class DepictionLabelView: DepictionView {
     private let label = UILabel().then {
         $0.numberOfLines = 0
     }
