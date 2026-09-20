@@ -5,8 +5,19 @@ import SnapKit
 import UIKit
 
 final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
+    nonisolated enum Section: Hashable {
+        case report(String)
+        case recovery
+    }
+
+    nonisolated enum Row: Hashable {
+        case check(ResolutionCheck)
+        case recoveryInstallation
+        case recoveryRemoval
+    }
+
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    private var dataSource: UITableViewDiffableDataSource<String, ResolutionCheck>!
+    private var dataSource: UITableViewDiffableDataSource<Section, Row>!
     private var report: [ResolutionCheck] = []
     private var summary = ""
     /// A reason of the app's own, an operation still running or packages
@@ -21,40 +32,6 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
     /// longer be solved. Nil for every ordinary diagnostic report.
     private let recoveryPackage: Package?
     private let recoveryRemoval: String?
-    private let recoveryFooter = UIView()
-    private lazy var recoveryButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setAttributedTitle(
-            NSAttributedString(
-                string: String(localized: "Install Using Recovery Mode"),
-                attributes: [
-                    .font: UIFont.footnote,
-                    .foregroundColor: UIColor.buttonNormal,
-                    .underlineStyle: NSUnderlineStyle.single.rawValue,
-                ]
-            ),
-            for: .normal
-        )
-        button.titleLabel?.numberOfLines = 0
-        button.titleLabel?.textAlignment = .center
-        button.addAction(UIAction { [weak self] _ in self?.confirmRecoveryInstallation() }, for: .touchUpInside)
-        return button
-    }()
-
-    private lazy var removalButton = UIButton(type: .system).then {
-        $0.setAttributedTitle(NSAttributedString(
-            string: String(localized: "Remove Using Recovery Mode"),
-            attributes: [
-                .font: UIFont.footnote,
-                .foregroundColor: UIColor.buttonNormal,
-                .underlineStyle: NSUnderlineStyle.single.rawValue,
-            ]
-        ), for: .normal)
-        $0.titleLabel?.numberOfLines = 0
-        $0.titleLabel?.textAlignment = .center
-        $0.addAction(UIAction { [weak self] _ in self?.confirmRecoveryRemoval() }, for: .touchUpInside)
-    }
 
     init(closesSheet: Bool, recoveryPackage: Package? = nil, recoveryRemoval: String? = nil) {
         self.closesSheet = closesSheet
@@ -103,24 +80,31 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         tableView.sectionHeaderHeight = UITableView.automaticDimension
         tableView.estimatedSectionHeaderHeight = 44
         tableView.delegate = self
-        tableView.allowsSelection = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "requirement")
         view.addSubview(tableView)
-        if recoveryPackage != nil || recoveryRemoval != nil {
-            configureRecoveryFooter()
-            tableView.snp.makeConstraints { x in
-                x.top.equalTo(view.safeAreaLayoutGuide)
-                x.leading.trailing.equalToSuperview()
-                x.bottom.equalTo(recoveryFooter.snp.top)
-            }
-        } else {
-            tableView.snp.makeConstraints { x in
-                x.top.equalTo(view.safeAreaLayoutGuide)
-                x.leading.trailing.bottom.equalToSuperview()
-            }
+        tableView.snp.makeConstraints { x in
+            x.top.equalTo(view.safeAreaLayoutGuide)
+            x.leading.trailing.bottom.equalToSuperview()
         }
-        dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, check in
+        dataSource = UITableViewDiffableDataSource(tableView: tableView) { [unowned self] table, indexPath, row in
             let cell = table.dequeueReusableCell(withIdentifier: "requirement", for: indexPath)
+            guard case let .check(check) = row else {
+                var content = cell.defaultContentConfiguration()
+                content.text = row == .recoveryRemoval
+                    ? String(localized: "Remove Using Recovery Mode")
+                    : String(localized: "Install Using Recovery Mode")
+                content.textProperties.font = .body
+                content.textProperties.color = row == .recoveryRemoval ? .swipeDelete : .buttonNormal
+                content.textProperties.numberOfLines = 0
+                cell.contentConfiguration = content
+                cell.backgroundColor = .cardBackground
+                cell.selectionStyle = .default
+                cell.accessibilityTraits = .button
+                cell.accessibilityLabel = content.text
+                return cell
+            }
+            cell.selectionStyle = .none
+            cell.accessibilityTraits = .staticText
             let isSummary = check.package.isEmpty && check.requirement == summary
             let detail = isSummary ? "" : check.detailText
             var content = cell.defaultContentConfiguration()
@@ -143,59 +127,56 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         }
     }
 
-    private func configureRecoveryFooter() {
-        recoveryFooter.backgroundColor = .groupedBackground
-        view.addSubview(recoveryFooter)
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 4
-        if recoveryPackage != nil {
-            stack.addArrangedSubview(recoveryButton)
-        }
-        if recoveryRemoval != nil {
-            stack.addArrangedSubview(removalButton)
-        }
-        recoveryFooter.addSubview(stack)
-        recoveryFooter.snp.makeConstraints { x in
-            x.leading.trailing.equalToSuperview()
-            x.bottom.equalTo(view.safeAreaLayoutGuide)
-        }
-        stack.snp.makeConstraints { x in
-            x.top.bottom.equalToSuperview().inset(8)
-            x.leading.trailing.equalToSuperview().inset(20)
-        }
-        for button in stack.arrangedSubviews {
-            button.snp.makeConstraints { x in x.height.greaterThanOrEqualTo(44) }
-        }
-    }
-
     private func applyReport() {
-        var snapshot = NSDiffableDataSourceSnapshot<String, ResolutionCheck>()
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         let summaryCheck = ResolutionCheck(
             package: "",
             requirement: summary,
             outcome: .conflictingRequirements
         )
-        snapshot.appendSections([summaryCheck.package])
-        snapshot.appendItems([summaryCheck], toSection: summaryCheck.package)
+        snapshot.appendSections([.report(summaryCheck.package)])
+        snapshot.appendItems([.check(summaryCheck)], toSection: .report(summaryCheck.package))
         var seen: Set<ResolutionCheck> = [summaryCheck]
         for check in report where seen.insert(check).inserted {
-            if !snapshot.sectionIdentifiers.contains(check.package) {
-                snapshot.appendSections([check.package])
+            if !snapshot.sectionIdentifiers.contains(.report(check.package)) {
+                snapshot.appendSections([.report(check.package)])
             }
-            snapshot.appendItems([check], toSection: check.package)
+            snapshot.appendItems([.check(check)], toSection: .report(check.package))
+        }
+        if recoveryPackage != nil {
+            snapshot.appendSections([.recovery])
+            snapshot.appendItems([.recoveryInstallation], toSection: .recovery)
+        } else if recoveryRemoval != nil {
+            snapshot.appendSections([.recovery])
+            snapshot.appendItems([.recoveryRemoval], toSection: .recovery)
         }
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 
     func tableView(_: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard case let .report(identity) = dataSource.snapshot().sectionIdentifiers[section] else { return nil }
         let header = UITableViewHeaderFooterView(reuseIdentifier: nil)
-        let identity = dataSource.snapshot().sectionIdentifiers[section]
         header.textLabel?.text = identity.isEmpty ? String(localized: "What Happened") : identity
         header.textLabel?.font = .rounded(.subheadline, emphasized: true)
         header.textLabel?.textColor = .textTitle
         header.textLabel?.numberOfLines = 0
         return header
+    }
+
+    func tableView(_: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        switch dataSource.itemIdentifier(for: indexPath) {
+        case .recoveryInstallation, .recoveryRemoval: true
+        default: false
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        switch dataSource.itemIdentifier(for: indexPath) {
+        case .recoveryInstallation: confirmRecoveryInstallation()
+        case .recoveryRemoval: confirmRecoveryRemoval()
+        default: break
+        }
     }
 
     @objc private func shareReport() {

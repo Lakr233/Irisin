@@ -129,11 +129,12 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         return package
     }
 
-    /// A failed single-package request can offer recovery removal for that
+    /// A failed single-package removal can offer recovery removal for that
     /// installed package. The helper rechecks protection when it executes.
     private var recoveryRemoval: String? {
         guard case let .actions(actions) = request, actions.count == 1,
-              let installed = PackageCenter.default.obtainPackageInstallationInfo(with: actions[0].identity)?.representObject
+              case let .remove(identity) = actions[0],
+              let installed = PackageCenter.default.obtainPackageInstallationInfo(with: identity)?.representObject
         else { return nil }
         let fields = installed.latestMetadata ?? [:]
         guard fields["status"]?.hasPrefix("hold ") != true else { return nil }
