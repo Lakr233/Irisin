@@ -60,7 +60,9 @@ extension InterfaceBridge {
             return target
         } actionProvider: { [weak host] _ in
             guard let host else { return nil }
-            return UIMenu(title: "", children: PackageMenuAction.menuElements(for: package, from: host))
+            // a dpkg row asks as its page would: with the repository's record
+            let requested = PackageMenuAction.requestPackage(for: package)
+            return UIMenu(title: "", children: PackageMenuAction.menuElements(for: requested, from: host))
         }
     }
 }

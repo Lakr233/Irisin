@@ -12,7 +12,7 @@ import SPIndicator
 import Then
 import UIKit
 
-class InstalledController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
+class InstalledController: UICollectionViewController {
     var subscriptions = Set<AnyCancellable>()
     var updateSetTask: Task<Void, Never>?
 
@@ -148,6 +148,9 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
         return source
     }()
 
+    /// Whether the layout in use was made with date headers.
+    private var layoutShowsHeaders: Bool?
+
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Date?, Package>()
         var seen = Set<Package>()
@@ -160,6 +163,14 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
         diffableDataSource.apply(snapshot, animatingDifferences: collectionView.shouldAnimateDiff)
         // the footer is not a row: a diff never redraws it, so tell it directly
         footerView?.label.text = footerText
+        // nor are the date headers: a section that stays would keep its own
+        let showsHeaders = sortOption == .lastModification
+        if showsHeaders != layoutShowsHeaders {
+            layoutShowsHeaders = showsHeaders
+            collectionView.collectionViewLayout.invalidateLayout()
+        }
+        // a row that left the list left the selection
+        updateSelectionItems()
         rebuildMoreMenu()
         updateEmptyState()
     }
@@ -207,18 +218,10 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
 
     let refreshControl = UIRefreshControl()
 
-    var collectionViewFrameCache: CGSize?
-    /// The text size the cached cell size was measured at: a row is as tall
-    /// as its lines, so a change of text size has to measure it again.
-    var collectionViewTextSizeCache: UIContentSizeCategory?
-    var collectionViewCellSizeCache = InterfaceBridge.minimumPackageCellSize
-
+    /// The layout needs the controller, which `super.init` has to come
+    /// before: `viewDidLoad` sets `makeLayout()` ahead of the first row.
     init() {
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        flowLayout.scrollDirection = UICollectionView.ScrollDirection.vertical
-        flowLayout.minimumInteritemSpacing = 0.0
-        super.init(collectionViewLayout: flowLayout)
+        super.init(collectionViewLayout: UICollectionViewFlowLayout())
     }
 
     @available(*, unavailable)
@@ -349,6 +352,10 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
                 title: String(localized: "Refresh"),
                 image: UIImage(systemName: "arrow.clockwise")
             ) { [weak self] _ in self?.refresh() },
+            UIAction(
+                title: String(localized: "Select"),
+                image: UIImage(systemName: "checkmark.circle")
+            ) { [weak self] _ in self?.setEditing(true, animated: true) },
         ]
         if updateFound {
             top.append(UIAction(
@@ -478,7 +485,38 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
         refreshUpdateSet()
     }
 
-    func setupRightButtonItem() {
+    // MARK: - SELECTION
+
+    /// The bar while the list is edited (`InstalledController+Selection`).
+    private(set) lazy var removeSelectedItem = UIBarButtonItem(
+        title: PackageMenuAction.ActionDescriptor.remove.describe(),
+        style: .plain,
+        target: self,
+        action: #selector(removeSelected)
+    ).then {
+        $0.tintColor = .destructiveAction
+    }
+
+    private(set) lazy var updateSelectedItem = UIBarButtonItem(
+        title: PackageMenuAction.ActionDescriptor.update.describe(),
+        style: .plain,
+        target: self,
+        action: #selector(updateSelected)
+    )
+
+    /// Where the bar's items go. The iPad's detail column has the search
+    /// field inline at the trailing end of the bar, which leaves the title
+    /// little room as it is: there the items lead, the update button first
+    /// and the ellipsis after it. The compact interface is another
+    /// controller (`NavigatorEnterViewController` swaps the two), so an
+    /// item never changes sides while it is on screen.
+    var placesBarItemsLeading: Bool {
+        false
+    }
+
+    func setupBarItems() {
+        // the bar is the selection's while the list is edited
+        guard !isEditing else { return }
         let rightItem: UIBarButtonItem
         if updateFound {
             rightItem = UIBarButtonItem(
@@ -496,6 +534,12 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
             )
             rightItem.tintColor = .upToDate
         }
-        navigationItem.rightBarButtonItems = [rightItem, moreItem]
+        if placesBarItemsLeading {
+            navigationItem.rightBarButtonItems = nil
+            navigationItem.leftBarButtonItems = [rightItem, moreItem]
+        } else {
+            navigationItem.leftBarButtonItems = nil
+            navigationItem.rightBarButtonItems = [rightItem, moreItem]
+        }
     }
 }

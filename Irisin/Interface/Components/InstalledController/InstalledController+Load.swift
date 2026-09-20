@@ -18,16 +18,15 @@ extension InstalledController {
 
         view.backgroundColor = .plainBackground
 
-        setupRightButtonItem()
+        setupBarItems()
 
+        collectionView.collectionViewLayout = makeLayout()
         collectionView.dataSource = diffableDataSource
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
         collectionView.backgroundColor = .clear
-        // the dashboard's edge: icons and date headers start 20 in
-        collectionView.contentInset.left = 20
-        collectionView.contentInset.right = 20
-        collectionView.register(PackageCollectionCell.self, forCellWithReuseIdentifier: cellId)
+        collectionView.allowsMultipleSelectionDuringEditing = true
+        collectionView.register(InstalledPackageCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(
             ReuseTimerHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
@@ -57,7 +56,6 @@ extension InstalledController {
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
         collectionView.addSubview(refreshControl)
 
-        updateCellSize()
         justReload()
 
         // Repository ticks and package records share one rebuild per second.

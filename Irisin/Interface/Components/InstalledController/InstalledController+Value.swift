@@ -95,7 +95,7 @@ extension InstalledController {
             let identities = await InterfaceBridge.identitiesWithUpdate()
             guard !Task.isCancelled, let self else { return }
             identitiesWithUpdate = identities
-            setupRightButtonItem()
+            setupBarItems()
             // the indicator lives outside the package: repaint the rows
             applySnapshot()
         }

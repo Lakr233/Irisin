@@ -10,57 +10,13 @@ import AptRepository
 import UIKit
 
 extension InstalledController {
-    // MARK: - CELL SIZE
-
-    /// Before the collection view lays out, never after it: a size that
-    /// arrives a turn late leaves a frame of `minimumPackageCellSize` cells.
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        if collectionView.frame.size == collectionViewFrameCache,
-           traitCollection.preferredContentSizeCategory == collectionViewTextSizeCache
-        {
-            return
-        }
-        collectionViewFrameCache = collectionView.frame.size
-        collectionViewTextSizeCache = traitCollection.preferredContentSizeCategory
-        updateCellSize()
-    }
-
-    func updateCellSize() {
-        let inset = collectionView.contentInset.left + collectionView.contentInset.right
-        collectionViewCellSizeCache = InterfaceBridge
-            .calculatesPackageCellSize(availableWidth: view.frame.width - inset).size
-        collectionView.collectionViewLayout.invalidateLayout()
-    }
-
     // MARK: - COLLECTION VIEW
 
-    func collectionView(_: UICollectionView, layout _: UICollectionViewLayout, sizeForItemAt _: IndexPath) -> CGSize {
-        collectionViewCellSizeCache
-    }
-
-    func collectionView(
-        _: UICollectionView,
-        layout _: UICollectionViewLayout,
-        referenceSizeForHeaderInSection _: Int
-    ) -> CGSize {
-        if sortOption == .lastModification {
-            return CGSize(width: 300, height: 20)
-        }
-        return CGSize(width: 0, height: 0)
-    }
-
-    /// The count hangs off the last section only.
-    func collectionView(
-        _: UICollectionView,
-        layout _: UICollectionViewLayout,
-        referenceSizeForFooterInSection section: Int
-    ) -> CGSize {
-        guard section == diffableDataSource.snapshot().numberOfSections - 1 else { return .zero }
-        return CGSize(width: 300, height: FootnoteView.height)
-    }
-
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard !isEditing else {
+            updateSelectionItems()
+            return
+        }
         collectionView.deselectItem(at: indexPath, animated: true)
         guard let data = diffableDataSource.itemIdentifier(for: indexPath) else { return }
         let target = PackageController(package: data)
@@ -73,21 +29,22 @@ extension InstalledController {
         for fetch: Package
     ) -> UICollectionViewCell {
         let cell = collectionView
-            .dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! PackageCollectionCell
-        cell.loadValue(package: fetch)
+            .dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath) as! InstalledPackageCell
+        cell.originalCell.loadValue(package: fetch)
 
         if identitiesWithUpdate.contains(fetch.identity) {
-            cell.overrideIndicator(with: .fluent(.arrowUpCircle24Filled), and: .updateAvailable)
+            cell.originalCell.overrideIndicator(with: .fluent(.arrowUpCircle24Filled), and: .updateAvailable)
         }
 
         // PackageCell holds its icon 4 in from the edge; here, as on the
         // dashboard, the icon starts at the inset
-        cell.horizontalPadding = -4
+        cell.originalCell.horizontalPadding = -4
         return cell
     }
 
     override func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
-        if let cell = collectionView.cellForItem(at: indexPath) {
+        // a row being ticked stays where it is
+        if !isEditing, let cell = collectionView.cellForItem(at: indexPath) {
             UIView.animate(
                 withDuration: 0.5,
                 delay: 0,
@@ -123,7 +80,7 @@ extension InstalledController {
         contextMenuConfigurationForItemAt indexPath: IndexPath,
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
-        guard let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
+        guard !isEditing, let data = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
         return InterfaceBridge.packageContextMenuConfiguration(for: data, from: self)
     }
 

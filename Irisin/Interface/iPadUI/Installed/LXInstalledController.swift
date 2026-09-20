@@ -10,6 +10,10 @@ import AptRepository
 import UIKit
 
 class LXInstalledController: InstalledController {
+    override var placesBarItemsLeading: Bool {
+        true
+    }
+
     override func viewDidLoad() {
         view.backgroundColor = .pageBackground
         super.viewDidLoad()
