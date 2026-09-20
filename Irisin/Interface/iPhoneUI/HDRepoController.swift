@@ -390,6 +390,12 @@ class HDRepoController: UIViewController {
         settleRefreshControl()
     }
 
+    /// The Repositories tab tapped again over its own list: every
+    /// repository is forced, as pulling the list does.
+    func refreshFromTab() {
+        refresh()
+    }
+
     private func settleRefreshControl() {
         guard refreshControl.isRefreshing, RepositoryCenter.default.obtainUpdateRemain() == 0 else { return }
         refreshControl.endRefreshing()

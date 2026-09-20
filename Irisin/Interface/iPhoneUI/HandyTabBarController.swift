@@ -128,7 +128,7 @@ class HandyTabBarController: UITabBarController {
     private var privSelectIndex: Int?
     private var privClicks = 0
     override func tabBar(_: UITabBar, didSelect _: UITabBarItem) {
-        // double tap to select search bar; the tab has switched once this returns
+        // double tap to select search bar, or to refresh the repositories; the tab has switched once this returns
         Task { [self] in
             updateQueueTab()
             if privSelectIndex == selectedIndex {
@@ -141,6 +141,9 @@ class HandyTabBarController: UITabBarController {
                     }
                     if let controller = page as? HDInstalledController {
                         controller.searchController.searchBar.becomeFirstResponder()
+                    }
+                    if let controller = page as? HDRepoController {
+                        controller.refreshFromTab()
                     }
                 }
             } else {
