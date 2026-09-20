@@ -19852,6 +19852,88 @@
         }
       }
     },
+    "Package Does Not Match Repository" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحزمة لا تطابق المستودع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket stimmt nicht mit der Quelle überein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Package Does Not Match Repository"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete no coincide con el repositorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet ne correspond pas au dépôt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pacchetto non corrisponde al repository"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パッケージがリポジトリと一致しません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "패키지가 소스와 일치하지 않음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O pacote não corresponde ao repositório"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет не соответствует репозиторию"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gói không khớp với nguồn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "软件包与软件源不一致"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "套件與軟體源不一致"
+          }
+        }
+      }
+    },
     "Package Info" : {
       "localizations" : {
         "ar" : {
@@ -31249,6 +31331,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "軟體源未提供此購買項目的下載。請稍後再試。"
+          }
+        }
+      }
+    },
+    "The repository lists %@ differently from the package file (%@), so it was not installed. Refresh the repository, or ask its maintainer to correct the listing." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يصف المستودع %1$@ بشكل مختلف عن ملف الحزمة (%2$@)، لذلك لم يتم تثبيتها. حدِّث المستودع، أو اطلب من مشرفه تصحيح القائمة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Quelle führt %1$@ anders auf als die Paketdatei (%2$@), daher wurde es nicht installiert. Aktualisiere die Quelle oder bitte ihren Betreuer, den Eintrag zu korrigieren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The repository lists %1$@ differently from the package file (%2$@), so it was not installed. Refresh the repository, or ask its maintainer to correct the listing."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El repositorio describe %1$@ de forma distinta al archivo del paquete (%2$@), por lo que no se ha instalado. Actualiza el repositorio o pide a su responsable que corrija el listado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le dépôt décrit %1$@ différemment du fichier du paquet (%2$@) ; il n’a donc pas été installé. Actualisez le dépôt ou demandez à son responsable de corriger la liste."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il repository descrive %1$@ in modo diverso dal file del pacchetto (%2$@), quindi non è stato installato. Aggiorna il repository o chiedi al suo responsabile di correggere l’elenco."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリに掲載されている %1$@ の情報がパッケージファイルと異なるため(%2$@)、インストールされませんでした。リポジトリを更新するか、管理者に掲載内容の修正を依頼してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스에 등록된 %1$@의 정보가 패키지 파일과 달라(%2$@) 설치되지 않았습니다. 소스를 새로 고치거나 소스 관리자에게 목록 수정을 요청하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O repositório descreve %1$@ de forma diferente do arquivo do pacote (%2$@), por isso ele não foi instalado. Atualize o repositório ou peça ao responsável que corrija a listagem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Репозиторий описывает %1$@ иначе, чем файл пакета (%2$@), поэтому пакет не был установлен. Обновите репозиторий или попросите его владельца исправить список."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nguồn mô tả %1$@ khác với tệp gói (%2$@) nên gói chưa được cài đặt. Hãy làm mới nguồn hoặc nhờ người quản lý nguồn sửa lại danh sách."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "软件源对 %1$@ 的描述与软件包文件不一致（%2$@），因此未安装。请刷新软件源，或联系其维护者更正列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "軟體源對 %1$@ 的描述與套件檔案不一致（%2$@），因此未安裝。請重新整理軟體源，或聯絡其維護者更正列表。"
           }
         }
       }

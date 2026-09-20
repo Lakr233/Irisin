@@ -521,7 +521,12 @@ final class QueueController: UIViewController, UITableViewDelegate {
             guard let payload, !payload.transaction.stages.isEmpty else {
                 // staging said why in the report when it could
                 let report = PackageActionReport.shared.allAvailable()
-                return stagingFailed(report.isEmpty ? String(localized: "Unable to prepare this operation. Try again.") : report)
+                stagingFailed(report.isEmpty ? String(localized: "Unable to prepare this operation. Try again.") : report)
+                // a reason that asked to be an alert is one as well as the row
+                if let title = PackageActionReport.shared.alertTitle {
+                    presentNotice(title: String.LocalizationValue(title), message: report)
+                }
+                return
             }
             showConsole(payload)
         }

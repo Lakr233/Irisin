@@ -32,6 +32,36 @@ final class LocalPackageTests: XCTestCase {
         XCTAssertThrowsError(try Package(debianPackageAt: dir.appendingPathComponent("control")))
     }
 
+    /// A listing that leaves out what the file's control says (a repository
+    /// whose index dropped Conflicts) is refused by name, field by field;
+    /// the file against itself passes.
+    func testListingThatDisagreesWithTheFileIsNamed() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        try "Package: a.b\nVersion: 1\nArchitecture: iphoneos-arm64\nConflicts: c.d\n"
+            .write(to: dir.appendingPathComponent("control"), atomically: true, encoding: .utf8)
+        try "2.0\n".write(to: dir.appendingPathComponent("debian-binary"), atomically: true, encoding: .utf8)
+        try run("/usr/bin/tar", ["-czf", "control.tar.gz", "control"], in: dir)
+        try run("/usr/bin/tar", ["-czf", "data.tar.gz", "control"], in: dir)
+        try run("/usr/bin/ar", ["rcS", "a.deb", "debian-binary", "control.tar.gz", "data.tar.gz"], in: dir)
+        let deb = dir.appendingPathComponent("a.deb")
+
+        XCTAssertNoThrow(try Package(debianPackageAt: deb).validateArchive(at: deb))
+        let listed = try Package(
+            identity: "a.b",
+            payload: ["1": ["version": "1", "architecture": "iphoneos-arm64"]],
+            repoRef: XCTUnwrap(URL(string: "https://r.example"))
+        )
+        XCTAssertThrowsError(try listed.validateArchive(at: deb)) { error in
+            XCTAssertEqual(
+                (error as? ArchiveMismatch)?.differences,
+                [.init(field: "conflicts", listed: "", found: "c.d")]
+            )
+        }
+    }
+
     /// The listing reads both inner archives through the outer one: every
     /// control member as bytes, the payload as absolute paths, directories
     /// apart from what is not one.

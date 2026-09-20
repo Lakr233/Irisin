@@ -98,6 +98,16 @@ final class Installer {
             PackageActionReport.shared.clear()
             Dog.shared.join(self, "download for \(missing.identity) is missing, not staging", level: .warning)
             return nil
+        } catch let mismatch as ArchiveMismatch {
+            // the file is whole and the listing is wrong: rejected before the
+            // helper hears of it, and said out loud, since Retry cannot fix it
+            PackageActionReport.shared.clear()
+            PackageActionReport.shared.record(
+                mismatch.report,
+                alertTitle: String(localized: "Package Does Not Match Repository")
+            )
+            Dog.shared.join(self, "refusing to install: \(mismatch)", level: .error)
+            return nil
         } catch {
             // this attempt's reason, not every attempt's
             PackageActionReport.shared.clear()
