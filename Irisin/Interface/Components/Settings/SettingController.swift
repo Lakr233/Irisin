@@ -76,9 +76,6 @@ class SettingController: UITableViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
             menu: UIMenu(children: [
-                ExportFile.menu(from: self) { [weak self] in
-                    (self?.navigationItem.rightBarButtonItem).map { PopoverAnchor($0) }
-                },
                 UIAction(
                     title: String(localized: "Welcome Page"),
                     image: UIImage(systemName: "hand.wave")
@@ -92,6 +89,12 @@ class SettingController: UITableViewController {
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     UIApplication.shared.open(url)
                 },
+                // below a divider: the files this app hands out
+                UIMenu(options: .displayInline, children: [
+                    ExportFile.menu(from: self) { [weak self] in
+                        (self?.navigationItem.rightBarButtonItem).map { PopoverAnchor($0) }
+                    },
+                ]),
             ])
         )
         // the grouped ground: the page and the cards match every other

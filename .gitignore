@@ -124,3 +124,4 @@ yarn-debug.log*
 yarn-error.log*
 ldid_macosx_x86_64
 *.deb
+.claude/worktrees
