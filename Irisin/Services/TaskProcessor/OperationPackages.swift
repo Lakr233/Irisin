@@ -39,7 +39,12 @@ nonisolated struct OperationPackages: Equatable {
         fileprivate(set) var needsRepair = false
         /// A package-owned script failed under the explicit continue policy.
         /// The step completed, but the package may not work as intended.
-        fileprivate(set) var ignoredScriptFailure = false
+        var ignoredScriptFailure: Bool {
+            if case .scriptFailureIgnored = problem {
+                return true
+            }
+            return false
+        }
 
         /// The whole package, 0 to 1. Placing files is most of an install
         /// and is the part that can be measured.
@@ -186,7 +191,6 @@ nonisolated struct OperationPackages: Equatable {
             case let .packageNeedsRepair(identity):
                 states[identity]?.needsRepair = true
             case let .scriptFailureIgnored(identity, _, _):
-                states[identity]?.ignoredScriptFailure = true
                 states[identity]?.problem = problem
             default:
                 break

@@ -124,4 +124,20 @@ final class OperationPackagesTests: XCTestCase {
         XCTAssertEqual(packages.states["a"]?.failedScript, "preinst")
         XCTAssertEqual(packages.states["a"]?.hasProblem, true)
     }
+
+    func testTerminalFailureReplacesIgnoredScriptWarning() {
+        var packages = OperationPackages(stages: [.unpack(["a"]), .configure(["a"])])
+        packages.record(.package(.unpacking, identity: "a", version: "1"))
+        packages.record(.warning(.scriptFailureIgnored(identity: "a", script: "preinst", detail: "exited with status 3")))
+        let problem = InstallerEvent.Problem.packageFailed(identity: "a", step: .unpacking, detail: "No space left on device")
+        packages.record(.failure(problem))
+        packages.record(.warning(.packageNeedsRepair(identity: "a")))
+        packages.finish(succeeded: false)
+
+        XCTAssertEqual(packages.states["a"]?.status, .failed(step: .unpacking))
+        XCTAssertEqual(packages.states["a"]?.problem, problem)
+        XCTAssertEqual(packages.states["a"]?.ignoredScriptFailure, false)
+        XCTAssertEqual(packages.states["a"]?.needsRepair, true)
+        XCTAssertNil(packages.states["a"]?.failedScript)
+    }
 }
