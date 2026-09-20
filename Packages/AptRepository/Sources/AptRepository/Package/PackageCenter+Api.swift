@@ -83,7 +83,7 @@ public extension PackageCenter {
     }
 
     /// search for record table, get the last modification time if available
-    func obtainLastModification(for identity: String, and table: RecordTable) -> Date? {
+    func obtainLastModification(for identity: String, and table: TraceScope) -> Date? {
         index.obtainLastModification(for: identity, and: table)
     }
 

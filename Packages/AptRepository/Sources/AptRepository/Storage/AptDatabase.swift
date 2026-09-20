@@ -358,14 +358,14 @@ final class AptDatabase: @unchecked Sendable {
 
     // MARK: - Traces
 
-    private static func table(for scope: PackageCenter.RecordTable) -> String {
+    private static func table(for scope: TraceScope) -> String {
         switch scope {
         case .install: Table.installTrace
         case .repo: Table.repoTrace
         }
     }
 
-    func trace(_ scope: PackageCenter.RecordTable, identity: String) -> TraceRow? {
+    func trace(_ scope: TraceScope, identity: String) -> TraceRow? {
         read(nil) {
             try database.getObject(
                 on: TraceRow.Properties.all,
@@ -375,11 +375,11 @@ final class AptDatabase: @unchecked Sendable {
         }
     }
 
-    func traces(_ scope: PackageCenter.RecordTable) -> [TraceRow] {
+    func traces(_ scope: TraceScope) -> [TraceRow] {
         read([]) { try database.getObjects(on: TraceRow.Properties.all, fromTable: Self.table(for: scope)) }
     }
 
-    func replaceTraces(_ scope: PackageCenter.RecordTable, with rows: [TraceRow]) {
+    func replaceTraces(_ scope: TraceScope, with rows: [TraceRow]) {
         let table = Self.table(for: scope)
         write { handle in
             try handle.delete(fromTable: table)
@@ -510,6 +510,12 @@ struct VirtualRow: TableCodable {
         self.identity = identity
         self.repo = repo
     }
+}
+
+/// Which of the two trace tables a question is about.
+public enum TraceScope: String, Sendable {
+    case install
+    case repo
 }
 
 /// When a package was first seen or last changed; one table for the

@@ -41,11 +41,6 @@ public final class PackageCenter {
 
     // MARK: - RECORDS
 
-    public enum RecordTable: String, Sendable {
-        case install
-        case repo
-    }
-
     /// a newer trace cancels the one in flight
     var traceTask: Task<Void, Never>?
 

@@ -26,7 +26,7 @@ extension AppDelegate {
         }
         if object.complete, !object.success,
            let failedRepoName = RepositoryCenter.default
-           .obtainImmutableRepository(withUrl: object.representedRepo)?.nickName
+           .obtainImmutableRepository(withUrl: object.repository)?.nickName
         {
             SPIndicator.present(
                 title: String(localized: "Repository update failed"),
