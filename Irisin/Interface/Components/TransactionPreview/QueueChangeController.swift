@@ -501,6 +501,16 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 
+    /// Only a cleanup row that can be toggled answers a touch. The rest are
+    /// a report: a cell that never highlights cannot keep the grey ground,
+    /// whatever row it is reused for.
+    func tableView(_: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        switch dataSource.itemIdentifier(for: indexPath) {
+        case let .cleanup(name): blockers(of: name).isEmpty
+        default: false
+        }
+    }
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         switch dataSource.itemIdentifier(for: indexPath) {

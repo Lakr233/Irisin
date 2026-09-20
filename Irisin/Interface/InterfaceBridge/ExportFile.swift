@@ -4,6 +4,8 @@
 //
 
 import AptRepository
+import Dog
+import IrisinProtocol
 import UIKit
 
 /// Everything the app hands out as a file goes through here: a stamp for the
@@ -87,5 +89,117 @@ enum ExportFile {
             return
         }
         InterfaceBridge.presentShareSheet([file], anchor: anchor, from: host)
+    }
+
+    // MARK: - WHOLE EXPORTS
+
+    /// Every registered repository as one `.irisinrepos`.
+    static func shareRepositoryList(from host: UIViewController, anchor: PopoverAnchor? = nil) {
+        let sources = RepositoryCenter.default.obtainRepositoryUrls()
+            .compactMap { RepositoryCenter.default.obtainImmutableRepository(withUrl: $0)?.source }
+        guard !sources.isEmpty else {
+            host.presentNotice(title: "Nothing to Export", dismissTitle: "OK")
+            return
+        }
+        guard let data = try? RepositoryListFile(sources: sources).encoded() else {
+            host.presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
+            return
+        }
+        share(data, named: "Repositories-\(stamp()).irisinrepos", from: host, anchor: anchor)
+    }
+
+    /// Everything installed, one package a line, by name.
+    static func shareInstalledPackageList(from host: UIViewController, anchor: PopoverAnchor? = nil) {
+        let packages = PackageCenter.default.obtainInstalledPackageList()
+            .sorted { $0.identity < $1.identity }
+        guard !packages.isEmpty else {
+            host.presentNotice(title: "Nothing to Export", dismissTitle: "OK")
+            return
+        }
+        share(packageText(packages), named: "installed-\(stamp()).txt", from: host, anchor: anchor)
+    }
+
+    /// dpkg's own status file, the raw record of what is installed.
+    static func shareStatus(from host: UIViewController, anchor: PopoverAnchor? = nil) {
+        shareCopy(
+            of: JailbreakRoot.installedPath("/Library/dpkg/status"),
+            named: "dpkg-status-\(stamp()).txt",
+            from: host,
+            anchor: anchor
+        )
+    }
+
+    /// The helper's plain-text account of its last run.
+    static func shareInstallerLog(from host: UIViewController, anchor: PopoverAnchor? = nil) {
+        shareCopy(
+            of: JailbreakRoot.installedPath(IrisinProtocol.installerLogPath),
+            named: "irisin-install-\(stamp()).log",
+            from: host,
+            anchor: anchor
+        )
+    }
+
+    /// This launch's journal, what Logs shows.
+    static func shareAppLog(from host: UIViewController, anchor: PopoverAnchor? = nil) {
+        let text = Dog.shared.obtainCurrentLogContent()
+        guard !text.isEmpty else {
+            host.presentNotice(title: "Nothing to Export", dismissTitle: "OK")
+            return
+        }
+        share(Data(text.utf8), named: "irisin-\(stamp()).log", from: host, anchor: anchor)
+    }
+
+    /// A copy, so the sheet never holds a bootstrap file open while its
+    /// owner rewrites it. A file that is not there is nothing to export.
+    private static func shareCopy(
+        of path: String,
+        named name: String,
+        from host: UIViewController,
+        anchor: PopoverAnchor?
+    ) {
+        guard let data = FileManager.default.contents(atPath: path), !data.isEmpty else {
+            host.presentNotice(title: "Nothing to Export", dismissTitle: "OK")
+            return
+        }
+        share(data, named: name, from: host, anchor: anchor)
+    }
+
+    /// Export… as a submenu: the same files wherever it hangs.
+    static func menu(from host: UIViewController, anchor: @escaping () -> PopoverAnchor?) -> UIMenu {
+        func action(
+            _ title: String,
+            _ symbol: String,
+            _ run: @escaping (UIViewController, PopoverAnchor?) -> Void
+        ) -> UIAction {
+            UIAction(title: title, image: UIImage(systemName: symbol)) { [weak host] _ in
+                guard let host else { return }
+                run(host, anchor())
+            }
+        }
+        return UIMenu(
+            title: String(localized: "Export…"),
+            image: UIImage(systemName: "square.and.arrow.up"),
+            children: [
+                UIMenu(options: .displayInline, children: [
+                    action(String(localized: "Export Repository List"), "list.bullet.rectangle") {
+                        shareRepositoryList(from: $0, anchor: $1)
+                    },
+                    action(String(localized: "Export Package List"), "shippingbox") {
+                        shareInstalledPackageList(from: $0, anchor: $1)
+                    },
+                    action(String(localized: "Export dpkg Status"), "doc.text") {
+                        shareStatus(from: $0, anchor: $1)
+                    },
+                ]),
+                UIMenu(options: .displayInline, children: [
+                    action(String(localized: "Export Installer Log"), "doc.plaintext") {
+                        shareInstallerLog(from: $0, anchor: $1)
+                    },
+                    action(String(localized: "Export App Log"), "ladybug") {
+                        shareAppLog(from: $0, anchor: $1)
+                    },
+                ]),
+            ]
+        )
     }
 }

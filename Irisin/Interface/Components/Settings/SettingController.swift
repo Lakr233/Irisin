@@ -76,6 +76,9 @@ class SettingController: UITableViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
             menu: UIMenu(children: [
+                ExportFile.menu(from: self) { [weak self] in
+                    (self?.navigationItem.rightBarButtonItem).map { PopoverAnchor($0) }
+                },
                 UIAction(
                     title: String(localized: "Welcome Page"),
                     image: UIImage(systemName: "hand.wave")

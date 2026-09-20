@@ -328,17 +328,7 @@ class HDRepoController: UIViewController {
 
     /// Every registered repository as one `.irisinrepos`.
     private func exportList() {
-        let sources = RepositoryCenter.default.obtainRepositoryUrls()
-            .compactMap { RepositoryCenter.default.obtainImmutableRepository(withUrl: $0)?.source }
-        guard !sources.isEmpty else {
-            presentNotice(title: "Nothing to Export", dismissTitle: "OK")
-            return
-        }
-        guard let data = try? RepositoryListFile(sources: sources).encoded() else {
-            presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
-            return
-        }
-        ExportFile.share(data, named: "Repositories-\(ExportFile.stamp()).irisinrepos", from: self)
+        ExportFile.shareRepositoryList(from: self)
     }
 
     // MARK: - IMPORT

@@ -210,6 +210,11 @@ final class QueuePackageController: UIViewController, UITableViewDelegate {
         return content
     }
 
+    /// A row that opens nothing never highlights, whatever it was reused from.
+    func tableView(_: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        dataSource.itemIdentifier(for: indexPath).map(opens) ?? false
+    }
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let row = dataSource.itemIdentifier(for: indexPath), opens(row) else { return }
