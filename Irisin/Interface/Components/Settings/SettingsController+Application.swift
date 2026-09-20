@@ -64,6 +64,16 @@ extension SettingsController {
                 }
             ),
             SettingsItem(
+                id: "app.manual",
+                icon: "book",
+                title: String(localized: "User Manual"),
+                kind: .disclosure,
+                action: {
+                    guard let url = URL(string: "https://lakr233.github.io/Irisin/manual/") else { return }
+                    UIApplication.shared.open(url)
+                }
+            ),
+            SettingsItem(
                 id: "app.report",
                 icon: "exclamationmark.bubble",
                 title: String(localized: "Report Issue"),
