@@ -272,8 +272,8 @@ class HDRepoController: UIViewController {
         SPIndicator.present(title: String(localized: "Refreshing…"), preset: .done)
     }
 
-    func share(_ url: URL, from sourceView: UIView?) {
-        ExportFile.shareRepository(url, from: self, anchor: sourceView)
+    func share(_ url: URL, from cell: UIView?) {
+        ExportFile.shareRepository(url, from: self, anchor: cell.map { PopoverAnchor($0) })
     }
 
     @objc

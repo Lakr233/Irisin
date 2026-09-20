@@ -249,12 +249,16 @@ class LXSplitPanelController: UIViewController {
         return UISwipeActionsConfiguration(actions: [reloadItem, deleteItem])
     }
 
+    private func cellAnchor(at indexPath: IndexPath) -> PopoverAnchor? {
+        collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
+    }
+
     private func leadingSwipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard let url = url(at: indexPath) else { return nil }
         let shareItem = UIContextualAction(style: .normal, title: String(localized: "Share")) { [weak self] _, _, completion in
             completion(true)
             guard let self else { return }
-            ExportFile.shareRepository(url, from: self, anchor: collectionView.cellForItem(at: indexPath))
+            ExportFile.shareRepository(url, from: self, anchor: cellAnchor(at: indexPath))
         }
         shareItem.backgroundColor = .swipeShare
         return UISwipeActionsConfiguration(actions: [shareItem])
@@ -273,14 +277,14 @@ class LXSplitPanelController: UIViewController {
                 UIAction(
                     title: String(localized: "Share"),
                     image: UIImage(systemName: "square.and.arrow.up")
-                ) { _ in
+                ) { [weak self] _ in
                     guard let self else { return }
-                    ExportFile.shareRepository(url, from: self, anchor: collectionView.cellForItem(at: indexPath))
+                    ExportFile.shareRepository(url, from: self, anchor: cellAnchor(at: indexPath))
                 },
                 ExportFile.exportRepositoryAction(
                     url,
                     host: { self },
-                    anchor: { collectionView.cellForItem(at: indexPath) }
+                    anchor: { self?.cellAnchor(at: indexPath) }
                 ),
             ])
         }

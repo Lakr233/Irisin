@@ -105,7 +105,7 @@ extension HDRepoController: UITableViewDelegate {
                     ExportFile.exportRepositoryAction(
                         url,
                         host: { self },
-                        anchor: { tableView.cellForRow(at: indexPath) }
+                        anchor: { tableView.cellForRow(at: indexPath).map { PopoverAnchor($0) } }
                     ),
                 ]),
                 UIAction(

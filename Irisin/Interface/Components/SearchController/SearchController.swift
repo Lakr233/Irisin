@@ -220,17 +220,25 @@ class SearchController: UITableViewController {
     }
 
     override func tableView(
-        _: UITableView,
+        _ tableView: UITableView,
         contextMenuConfigurationForRowAt indexPath: IndexPath,
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
         guard let object = result(at: indexPath) else { return nil }
         switch object.associatedValue {
         case let .installed(package):
-            return InterfaceBridge.packageContextMenuConfiguration(for: package, from: self)
+            return InterfaceBridge.packageContextMenuConfiguration(
+                for: package,
+                from: self,
+                anchor: tableView.cellForRow(at: indexPath)
+            )
         case let .package(identity, repository):
             if let lookup = PackageCenter.default.obtainPackage(with: identity, in: repository) {
-                return InterfaceBridge.packageContextMenuConfiguration(for: lookup, from: self)
+                return InterfaceBridge.packageContextMenuConfiguration(
+                    for: lookup,
+                    from: self,
+                    anchor: tableView.cellForRow(at: indexPath)
+                )
             }
         case .repository, .author:
             return nil

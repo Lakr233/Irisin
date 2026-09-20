@@ -432,7 +432,7 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
             ExportFile.packageText(packages),
             named: "installed-\(ExportFile.stamp()).txt",
             from: self,
-            anchor: moreButton
+            anchor: PopoverAnchor(moreButton)
         )
     }
 
@@ -456,9 +456,7 @@ class InstalledController: UICollectionViewController, UICollectionViewDelegateF
     }
 
     private func share(_ item: Any) {
-        let activityViewController = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = moreButton
-        present(activityViewController, animated: true)
+        InterfaceBridge.presentShareSheet([item], anchor: PopoverAnchor(moreButton), from: self)
     }
 
     @objc

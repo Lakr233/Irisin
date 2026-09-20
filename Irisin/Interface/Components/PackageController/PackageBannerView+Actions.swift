@@ -42,7 +42,7 @@ extension PackageBannerView {
         }
         button.titleLabel?.alpha = 0.5
         Task {
-            await action.block(package, host)
+            await action.block(package, host, PopoverAnchor(button))
             button.titleLabel?.alpha = 1
         }
     }

@@ -131,12 +131,12 @@ extension LogViewerController {
         } else {
             [logText()]
         }
-        let activityViewController = UIActivityViewController(
-            activityItems: items,
-            applicationActivities: nil
+        // the bar button is a custom view, and that view is the anchor
+        InterfaceBridge.presentShareSheet(
+            items,
+            anchor: navigationItem.rightBarButtonItem?.customView.map { PopoverAnchor($0) },
+            from: self
         )
-        activityViewController.popoverPresentationController?.sourceView = view
-        present(activityViewController, animated: true)
     }
 
     @objc private func clearLog() {

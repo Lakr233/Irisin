@@ -100,8 +100,11 @@ class PackageMenuAction {
     struct MenuAction {
         let descriptor: ActionDescriptor
         /// Runs with the page the menu belongs to, which presents what the
-        /// action shows.
-        let block: @MainActor (Package, UIViewController) async -> Void
+        /// action shows, and what the user touched to get here, for an
+        /// action that ends in a popover on the iPad.
+        typealias Block = @MainActor (Package, UIViewController, PopoverAnchor?) async -> Void
+
+        let block: Block
         let eligibleForPerform: (Package) -> (Bool)
     }
 
@@ -136,7 +139,14 @@ class PackageMenuAction {
 
     /// Every package menu in the app — the install button, the navigation
     /// bar, a long press on a cell — is this one.
-    static func menuElements(for package: Package, from host: UIViewController) -> [UIMenuElement] {
+    /// `anchor` is the cell of a long press, and wins: a context menu's
+    /// sender may be the whole list. A button's or a bar button's menu
+    /// passes none and names itself as the action's sender.
+    static func menuElements(
+        for package: Package,
+        from host: UIViewController,
+        anchor: PopoverAnchor? = nil
+    ) -> [UIMenuElement] {
         let actions = eligibleActions(for: package)
         func children(of section: [ActionDescriptor]) -> [UIAction] {
             actions
@@ -146,9 +156,10 @@ class PackageMenuAction {
                         title: action.descriptor.describe(),
                         image: action.descriptor.icon(),
                         attributes: destructiveActions.contains(action.descriptor) ? .destructive : []
-                    ) { [weak host] _ in
+                    ) { [weak host] chosen in
                         guard let host else { return }
-                        Task { await action.block(package, host) }
+                        let anchor = anchor ?? PopoverAnchor(sender: chosen.sender)
+                        Task { await action.block(package, host, anchor) }
                     }
                 }
         }
