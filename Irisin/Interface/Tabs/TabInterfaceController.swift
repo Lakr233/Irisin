@@ -1,5 +1,5 @@
 //
-//  HandyTabBarController.swift
+//  TabInterfaceController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -9,9 +9,9 @@
 import Combine
 import UIKit
 
-class HandyTabBarController: UITabBarController {
+class TabInterfaceController: UITabBarController {
     private var subscriptions = Set<AnyCancellable>()
-    private let queue = HDQueueNavigator()
+    private let queue = QueueNavigator()
     /// Every tab, the Queue tab included: `UITab`s from iOS 18, the
     /// controllers before it.
     private var everyTab: [AnyObject] = []
@@ -21,11 +21,11 @@ class HandyTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let dashboard = HDMainNavigator()
-        let repositories = HDRepoNavigator()
-        let installed = HDInstalledNavigator()
+        let dashboard = DashboardNavigator()
+        let repositories = RepositoriesNavigator()
+        let installed = InstalledNavigator()
         let queue = queue
-        let search = HDSearchNavigator()
+        let search = SearchNavigator()
 
         if #available(iOS 18.0, *) {
             let searchTab = UISearchTab { _ in search }
@@ -125,36 +125,36 @@ class HandyTabBarController: UITabBarController {
         queue.popToRootViewController(animated: false)
     }
 
-    private var privSelectIndex: Int?
-    private var privClicks = 0
+    private var lastSelectedIndex: Int?
+    private var tapCount = 0
     override func tabBar(_: UITabBar, didSelect _: UITabBarItem) {
         // double tap to select search bar, or to refresh the repositories; the tab has switched once this returns
         Task { [self] in
             updateQueueTab()
-            if privSelectIndex == selectedIndex {
-                privClicks += 1
-                if privClicks >= 2 {
-                    privSelectIndex = nil
+            if lastSelectedIndex == selectedIndex {
+                tapCount += 1
+                if tapCount >= 2 {
+                    lastSelectedIndex = nil
                     let page = (selectedViewController as? UINavigationController)?.topViewController
                     if let controller = page as? SearchController {
                         controller.searchController.searchBar.becomeFirstResponder()
                     }
-                    if let controller = page as? HDInstalledController {
+                    if let controller = page as? InstalledController {
                         controller.searchController.searchBar.becomeFirstResponder()
                     }
-                    if let controller = page as? HDRepoController {
+                    if let controller = page as? RepositoriesController {
                         controller.refreshFromTab()
                     }
                 }
             } else {
-                privSelectIndex = selectedIndex
-                privClicks = 0
+                lastSelectedIndex = selectedIndex
+                tapCount = 0
             }
         }
     }
 }
 
-class HDQueueNavigator: UINavigationController {
+class QueueNavigator: UINavigationController {
     private var subscriptions = Set<AnyCancellable>()
 
     /// The tab comes on screen (true, before it shows) or has left it.

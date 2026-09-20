@@ -464,7 +464,7 @@ is `/var/jb/var/log/irisin-install.log`.
   has no Xcode 27, so one thing is a workaround and comes out the day it
   does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and
   not in Xcode 26's, and `#available` guards the call, not the reference, so
-  `HandyTabBarController` sets it through KVC under its `iOS 27.0` check.
+  `TabInterfaceController` sets it through KVC under its `iOS 27.0` check.
   Same behaviour, any SDK.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller

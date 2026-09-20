@@ -91,7 +91,7 @@ class SidebarController: UIViewController {
         let footer = UICollectionView.SupplementaryRegistration<FootnoteView>(
             elementKind: UICollectionView.elementKindSectionFooter
         ) { [unowned self] view, _, _ in
-            view.label.text = HDRepoController.footnote
+            view.label.text = RepositoriesController.footnote
             footnote = view
         }
         let source = UICollectionViewDiffableDataSource<Section, Item>(
@@ -174,7 +174,7 @@ class SidebarController: UIViewController {
         {
             configureHeader(cell)
         }
-        footnote?.label.text = HDRepoController.footnote
+        footnote?.label.text = RepositoriesController.footnote
     }
 
     private func configureHeader(_ cell: UICollectionViewListCell) {
@@ -225,7 +225,7 @@ class SidebarController: UIViewController {
                 confirmTitle: "Delete",
                 destructive: true
             ) { [weak self] in
-                HDRepoController.remove(url)
+                RepositoriesController.remove(url)
                 self?.rebuild(animated: true)
                 SPIndicator.present(title: String(localized: "Deleted"), preset: .done)
             }

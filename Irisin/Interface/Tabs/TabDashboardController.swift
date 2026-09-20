@@ -1,5 +1,5 @@
 //
-//  HDMainController.swift
+//  TabDashboardController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -9,9 +9,9 @@
 import SPIndicator
 import UIKit
 
-class HDMainNavigator: UINavigationController {
+class DashboardNavigator: UINavigationController {
     init() {
-        super.init(rootViewController: HDMainController())
+        super.init(rootViewController: TabDashboardController())
 
         navigationBar.prefersLargeTitles = true
 
@@ -28,7 +28,7 @@ class HDMainNavigator: UINavigationController {
     }
 }
 
-class HDMainController: DashboardController {
+class TabDashboardController: DashboardController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .plainBackground

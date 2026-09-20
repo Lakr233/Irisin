@@ -16,7 +16,7 @@ import UIKit
 /// puts its bar at the top of the screen and keeps that space even when the
 /// bar is hidden.
 class InterfaceHostController: UIViewController {
-    private var tabs: HandyTabBarController?
+    private var tabs: TabInterfaceController?
     private var split: SplitInterfaceController?
     /// The layout on screen right now.
     private(set) var current: UIViewController?
@@ -49,7 +49,7 @@ class InterfaceHostController: UIViewController {
             dismiss(animated: true)
         }
         (current as? SplitInterfaceController)?.showQueue()
-        (current as? HandyTabBarController)?.showQueue()
+        (current as? TabInterfaceController)?.showQueue()
     }
 
     override func viewDidLoad() {
@@ -101,7 +101,7 @@ class InterfaceHostController: UIViewController {
             split = controller
             target = controller
         } else {
-            let controller = tabs ?? HandyTabBarController()
+            let controller = tabs ?? TabInterfaceController()
             tabs = controller
             target = controller
         }

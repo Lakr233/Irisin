@@ -1,5 +1,5 @@
 //
-//  HDRepoController.swift
+//  RepositoriesController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/17.
@@ -14,11 +14,11 @@ import Then
 import UIKit
 import UniformTypeIdentifiers
 
-class HDRepoNavigator: UINavigationController {
+class RepositoriesNavigator: UINavigationController {
     private var subscriptions = Set<AnyCancellable>()
 
     init() {
-        super.init(rootViewController: HDRepoController())
+        super.init(rootViewController: RepositoriesController())
 
         navigationBar.prefersLargeTitles = true
 
@@ -45,12 +45,12 @@ class HDRepoNavigator: UINavigationController {
 
 /// The registered repositories, one list, nothing else. The iPad lists them
 /// in its sidebar (`SidebarController`).
-class HDRepoController: UIViewController {
+class RepositoriesController: UIViewController {
     private var subscriptions = Set<AnyCancellable>()
 
     let tableView = UITableView(frame: .zero, style: .plain)
     let refreshControl = SettlingRefreshControl()
-    private let cellIdentity = "wiki.qaq.HDRepoController.cellidentity"
+    private let cellIdentity = "repository"
 
     private let footer = FootnoteView()
 
@@ -452,7 +452,7 @@ class HDRepoController: UIViewController {
     }
 }
 
-extension HDRepoController: UIDocumentPickerDelegate {
+extension RepositoriesController: UIDocumentPickerDelegate {
     func documentPicker(_: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let file = urls.first else { return }
         importRepositories(from: file)

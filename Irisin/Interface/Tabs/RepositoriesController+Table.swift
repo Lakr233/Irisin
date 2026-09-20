@@ -1,12 +1,12 @@
 //
-//  HDRepoController+Table.swift
+//  RepositoriesController+Table.swift
 //  Irisin
 //
 
 import AptRepository
 import UIKit
 
-extension HDRepoController: UITableViewDelegate {
+extension RepositoriesController: UITableViewDelegate {
     func url(at indexPath: IndexPath) -> URL? {
         guard case let .repository(url) = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
         return url

@@ -1,5 +1,5 @@
 //
-//  HDInstalledController.swift
+//  InstalledNavigator.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/17.
@@ -10,12 +10,12 @@ import AptRepository
 import Combine
 import UIKit
 
-class HDInstalledNavigator: UINavigationController {
+class InstalledNavigator: UINavigationController {
     private var subscriptions = Set<AnyCancellable>()
     private var updateCountTask: Task<Void, Never>?
 
     init() {
-        super.init(rootViewController: HDInstalledController())
+        super.init(rootViewController: InstalledController())
 
         navigationBar.prefersLargeTitles = true
 
@@ -53,5 +53,3 @@ class HDInstalledNavigator: UINavigationController {
         fatalError("init(coder:) has not been implemented")
     }
 }
-
-class HDInstalledController: InstalledController {}

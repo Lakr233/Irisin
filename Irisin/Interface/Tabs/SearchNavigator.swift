@@ -1,5 +1,5 @@
 //
-//  HDSearchNavigator.swift
+//  SearchNavigator.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/17.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-class HDSearchNavigator: UINavigationController {
+class SearchNavigator: UINavigationController {
     init() {
         super.init(rootViewController: SearchController())
 
