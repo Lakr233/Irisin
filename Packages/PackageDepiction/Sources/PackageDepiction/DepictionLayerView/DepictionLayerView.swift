@@ -11,8 +11,8 @@ import UIKit
 
 /// Its children stacked on top of one another, each at its own height; the
 /// layer is as tall as the tallest.
-final class DepictionLayerView: DepictionBaseView {
-    private var views: [DepictionBaseView] = []
+final class DepictionLayerView: DepictionView {
+    private var views: [DepictionView] = []
 
     required init?(
         dictionary: [String: Any],
@@ -32,7 +32,7 @@ final class DepictionLayerView: DepictionBaseView {
         )
 
         for rawView in rawViews {
-            guard let view = DepictionBaseView.view(
+            guard let view = DepictionView.view(
                 dictionary: rawView,
                 viewController: viewController,
                 tintColor: tintColor,

@@ -176,7 +176,7 @@ struct ResolutionTests {
 
     @Test func graphTraversalHandlesLongChainsWithoutRecursion() {
         let graph = Dictionary(uniqueKeysWithValues: (0 ..< 20000).map { ($0, $0 == 19999 ? [] : [$0 + 1]) })
-        let groups = DependencyComponents.components(graph)
+        let groups = StronglyConnectedComponents.components(graph)
         #expect(groups.count == 20000)
         #expect(groups.first == [19999])
     }

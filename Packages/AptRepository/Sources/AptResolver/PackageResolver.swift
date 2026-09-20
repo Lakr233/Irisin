@@ -15,7 +15,7 @@ public enum PackageResolver {
             if reason == .noPlan || error is LibSolv.ResolutionFailure, !checks.isEmpty {
                 // Private SAT token names are implementation details. The
                 // evidence rows explain which real package requirement failed.
-                let unmatched: Set<ResolutionCheckOutcome> = [
+                let unmatched: Set<ResolutionCheck.Outcome> = [
                     .missing, .incompatibleArchitecture, .noMatchingVersion, .invalidMetadata,
                 ]
                 reason = checks.contains { unmatched.contains($0.outcome) }
@@ -31,10 +31,10 @@ public enum PackageResolver {
         for action in request.actions {
             actions[action.identity] = action
         }
-        var records: [SolverPackage] = []
+        var records: [PoolPackage] = []
         var diagnostics: [ResolutionFailure.Reason] = []
         for package in snapshot.installed.sorted(by: { $0.identity < $1.identity }) {
-            try records.append(SolverPackage(package, installed: true, action: actions[package.identity], in: snapshot))
+            try records.append(PoolPackage(package, installed: true, action: actions[package.identity], in: snapshot))
         }
         // an installed identity follows the repository it came from: the
         // other repositories' copies are not candidates for it, unless the
@@ -71,7 +71,7 @@ public enum PackageResolver {
         var adapted = Set<Int>()
         for record in candidates {
             do {
-                try records.append(SolverPackage(record, installed: false, in: snapshot))
+                try records.append(PoolPackage(record, installed: false, in: snapshot))
                 if snapshot.adapts(record) {
                     adapted.insert(records.count - 1)
                 }
@@ -97,11 +97,11 @@ public enum PackageResolver {
         for (index, record) in records.enumerated() {
             var definition = PackageDefinition(
                 name: record.name,
-                version: SolverPackage.solvVersion(record.version),
+                version: PoolPackage.solvVersion(record.version),
                 architecture: record.architecture
             )
             definition.provides = [.named(token(index))]
-            for kind in [SolverPackage.Group.RequirementType.depends, .preDepends] {
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
                 let dependencies = (record.relations[kind] ?? []).map { relation -> Dependency in
                     let witnesses = universe.witnesses(relation)
                     return disjunction(
@@ -117,7 +117,7 @@ public enum PackageResolver {
             }
             // Breaks restricts the final configured set. Its weaker unpack-time
             // semantics are preserved separately by TransactionPlanner.
-            for kind in [SolverPackage.Group.RequirementType.conflicts, .breaks] {
+            for kind in [PoolPackage.Group.Kind.conflicts, .breaks] {
                 for relation in record.relations[kind] ?? [] {
                     definition.conflicts += universe.witnesses(relation)
                         .filter { $0 != index }
@@ -164,7 +164,7 @@ public enum PackageResolver {
         /// what no plan may remove: everything protected, or once the user
         /// allows removing system packages, only the records the bootstrap
         /// writes for the device itself. No repository offers those again.
-        func kept(_ record: SolverPackage) -> Bool {
+        func kept(_ record: PoolPackage) -> Bool {
             let device = record.name == "firmware" || record.name.hasPrefix("gsc.") || record.name.hasPrefix("cy+")
             return record.protected && !(request.allowSystemRemoval && !device)
         }
@@ -328,7 +328,7 @@ public enum PackageResolver {
         var requiredBy: [String: Set<String>] = [:]
         for index in selected {
             let record = records[index]
-            for kind in [SolverPackage.Group.RequirementType.depends, .preDepends] {
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
                 for relation in record.relations[kind] ?? [] {
                     for witness in universe.witnesses(relation) where additions.contains(witness) && witness != index {
                         requiredBy[records[witness].name, default: []].insert(record.name)
@@ -362,7 +362,7 @@ public enum PackageResolver {
         _ removed: Int,
         base: Set<Int>,
         universe: PackageUniverse,
-        kept: (SolverPackage) -> Bool
+        kept: (PoolPackage) -> Bool
     ) -> ResolutionFailure? {
         let packages = universe.packages
         let name = packages[removed].name

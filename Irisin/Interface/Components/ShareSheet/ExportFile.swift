@@ -132,7 +132,7 @@ enum ExportFile {
     /// The helper's plain-text account of its last run.
     static func shareInstallerLog(from host: UIViewController, anchor: PopoverAnchor? = nil) {
         shareCopy(
-            of: JailbreakRoot.installedPath(IrisinProtocol.installerLogPath),
+            of: JailbreakRoot.installedPath(IrisinWire.installerLogPath),
             named: "irisin-install-\(stamp()).log",
             from: host,
             anchor: anchor

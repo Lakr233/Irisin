@@ -6,7 +6,7 @@ import IrisinProtocol
 /// matching as the solver, retaining incompatible architectures as evidence.
 enum ResolutionDiagnostics {
     static func checks(request: ResolutionRequest, snapshot: ResolutionSnapshot) -> [ResolutionCheck] {
-        var records: [SolverPackage] = []
+        var records: [PoolPackage] = []
         let requested = request.actions.compactMap { action -> Package? in
             if case let .install(package) = action {
                 return package
@@ -22,14 +22,14 @@ enum ResolutionDiagnostics {
                     repoRef: package.repoRef
                 )
                 guard seen.insert(candidate).inserted else { continue }
-                if let record = try? SolverPackage(candidate, installed: metadata["status"] != nil, in: snapshot) {
+                if let record = try? PoolPackage(candidate, installed: metadata["status"] != nil, in: snapshot) {
                     records.append(record)
                 }
             }
         }
         let universe = PackageUniverse(packages: records, architecture: snapshot.architecture)
         var checks: [ResolutionCheck] = []
-        var pending: [SolverPackage] = []
+        var pending: [PoolPackage] = []
         for package in requested {
             guard let version = package.latestVersion, let metadata = package.latestMetadata else {
                 checks.append(.init(
@@ -41,8 +41,8 @@ enum ResolutionDiagnostics {
             }
             let candidate = Package(identity: package.identity, payload: [version: metadata], repoRef: package.repoRef)
             do {
-                let record = try SolverPackage(candidate, installed: false, in: snapshot)
-                let outcome: ResolutionCheckOutcome = candidate.supports(anyOf: snapshot.installableArchitectures)
+                let record = try PoolPackage(candidate, installed: false, in: snapshot)
+                let outcome: ResolutionCheck.Outcome = candidate.supports(anyOf: snapshot.installableArchitectures)
                     ? .matched
                     : .incompatibleArchitecture
                 checks.append(.init(
@@ -72,7 +72,7 @@ enum ResolutionDiagnostics {
             let owner = pending[offset]
             offset += 1
             guard visited.insert(owner.package).inserted else { continue }
-            for kind in [SolverPackage.Group.RequirementType.preDepends, .depends] {
+            for kind in [PoolPackage.Group.Kind.preDepends, .depends] {
                 for requirement in owner.relations[kind] ?? [] {
                     let named = Set(
                         requirement.elements.flatMap { universe.providers[$0.representPackage] ?? [] }
@@ -81,7 +81,7 @@ enum ResolutionDiagnostics {
                         records[$0].package.supports(anyOf: snapshot.installableArchitectures)
                     }
                     let matching = universe.witnesses(requirement).filter { compatible.contains($0) }
-                    let outcome: ResolutionCheckOutcome = if !matching.isEmpty {
+                    let outcome: ResolutionCheck.Outcome = if !matching.isEmpty {
                         .matched
                     } else if named.isEmpty {
                         .missing
@@ -115,14 +115,14 @@ enum ResolutionDiagnostics {
         return checks.filter { unique.insert($0).inserted }
     }
 
-    private static func describe(_ record: SolverPackage) -> String {
+    private static func describe(_ record: PoolPackage) -> String {
         let source = record.package.repoRef?.host ?? "installed"
         return "\(record.name) \(record.version) · \(record.fields["architecture"] ?? "all") · \(source)"
     }
 
     /// Show the newest relevant version from each source/architecture instead
     /// of burying the failed requirement beneath a repository's version history.
-    private static func representativeCandidates(_ records: [SolverPackage]) -> [String] {
+    private static func representativeCandidates(_ records: [PoolPackage]) -> [String] {
         let newestFirst = records.sorted {
             let comparison = DebianVersion.compare($0.version, $1.version)
             return comparison == 0 ? describe($0) < describe($1) : comparison > 0

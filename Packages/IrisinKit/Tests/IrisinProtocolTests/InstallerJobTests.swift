@@ -51,7 +51,7 @@ final class InstallerJobTests: XCTestCase {
         let badIdentity = InstallerJob.transaction(.init(install: [], remove: ["rm -rf /"]))
         XCTAssertThrowsError(try badIdentity.validate())
 
-        let tweak = InstallerJob.Transaction.Package(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")
+        let tweak = InstallerJob.Transaction.Item(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")
         let automatic = InstallerJob.transaction(.init(install: [tweak], remove: [], autoInstalled: [tweak.identity]))
         XCTAssertNoThrow(try automatic.validate())
         let markedTwice = InstallerJob.transaction(.init(
@@ -76,7 +76,7 @@ final class InstallerJobTests: XCTestCase {
         ))
         let decoded = try InstallerJob.decode(job.encoded())
         XCTAssertEqual(decoded, job)
-        XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinProtocol.maximumJobByteCount + 1)))
+        XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinWire.maximumJobByteCount + 1)))
         XCTAssertThrowsError(try InstallerJob.decode(Data("{}".utf8)))
 
         for maintenance in [InstallerJob.bootstrapIrisinDaemon, .bootoutIrisinDaemon] {

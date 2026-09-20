@@ -9,8 +9,8 @@
 import SnapKit
 import UIKit
 
-final class DepictionMinVersionForceView: DepictionBaseView {
-    private var containedView: DepictionBaseView?
+final class DepictionMinVersionForceView: DepictionView {
+    private var containedView: DepictionView?
 
     required init?(
         dictionary: [String: Any],
@@ -31,7 +31,7 @@ final class DepictionMinVersionForceView: DepictionBaseView {
 
         // A child that cannot be built is reported by `view`; this stays,
         // flat, so the stack around it keeps its shape.
-        guard let containedView = DepictionBaseView.view(
+        guard let containedView = DepictionView.view(
             dictionary: view,
             viewController: viewController,
             tintColor: tintColor,

@@ -9,7 +9,7 @@ import IrisinProtocol
 /// decides whether there is one.
 ///
 /// The backend is chosen once, at the handshake, and never revisited:
-/// `Hello.backend` is the only honest answer to "can this app install
+/// what `hello()` answers is the only honest answer to "can this app install
 /// anything", and it is an enum carrying the install root rather than a flag
 /// beside it so a caller cannot read the polarity backwards.
 public final class DaemonLink: @unchecked Sendable {
@@ -24,6 +24,16 @@ public final class DaemonLink: @unchecked Sendable {
         /// installed, and every `run` is refused. The simulator never binds
         /// this: `SimulatorDaemon` answers there as `.daemon`.
         case local
+
+        public var installRoot: String {
+            guard case let .daemon(root) = self else { return "" }
+            return root
+        }
+
+        public var isPrivileged: Bool {
+            guard case .daemon = self else { return false }
+            return true
+        }
     }
 
     #if targetEnvironment(simulator)
@@ -33,20 +43,6 @@ public final class DaemonLink: @unchecked Sendable {
             SimulatorDaemon.installRoot
         }
     #endif
-
-    public struct Hello: Sendable, Equatable {
-        public let backend: Backend
-
-        public var installRoot: String {
-            guard case let .daemon(root) = backend else { return "" }
-            return root
-        }
-
-        public var isPrivileged: Bool {
-            guard case .daemon = backend else { return false }
-            return true
-        }
-    }
 
     /// How long a build that shipped no daemon keeps asking before it settles
     /// for browsing only. About two seconds of *Connecting…* in a build with
@@ -68,7 +64,7 @@ public final class DaemonLink: @unchecked Sendable {
     private var firstMiss: Date?
 
     public convenience init() {
-        self.init(daemonIsInstalled: DaemonInstallation.isInstalled(besideBundleAt: Bundle.main.bundleURL))
+        self.init(daemonIsInstalled: Self.daemonIsInstalled(besideBundleAt: Bundle.main.bundleURL))
     }
 
     /// `grace` is a seam for the tests and nothing else.
@@ -84,6 +80,24 @@ public final class DaemonLink: @unchecked Sendable {
         return bound
     }
 
+    /// Whether this copy of the app was installed with `irisind` beside it.
+    ///
+    /// On disk rather than in a build flag on purpose: one binary ships in every
+    /// wrapper and only the `.deb` carries the daemon. The package installs the
+    /// app at `<prefix>/Applications/irisin.app` and the daemon at
+    /// `<prefix>/usr/libexec/irisind` on every bootstrap.
+    public static func daemonIsInstalled(besideBundleAt bundle: URL) -> Bool {
+        let applications = bundle.deletingLastPathComponent()
+        guard applications.lastPathComponent == "Applications" else { return false }
+        let daemon = applications
+            .deletingLastPathComponent()
+            .appendingPathComponent(String(IrisinWire.daemonPath.dropFirst()))
+        guard access(daemon.path, F_OK) != 0 else { return true }
+        // Only "it is not there" answers false. "I could not look" must not
+        // demote a device that has a daemon.
+        return errno != ENOENT && errno != ENOTDIR
+    }
+
     // MARK: - Choosing a backend
 
     /// Asks the daemon, and decides what a silence means.
@@ -95,16 +109,16 @@ public final class DaemonLink: @unchecked Sendable {
     ///    There is no path to the local backend on a device that has one.
     /// 3. Otherwise this binary came without a daemon. Once the grace period
     ///    has elapsed since the first miss, bind the local backend and say so.
-    public func hello() async throws -> Hello {
+    public func hello() async throws -> Backend {
         if let bound {
-            return Hello(backend: bound)
+            return bound
         }
         do {
             let backend = try await transport.hello()
-            return Hello(backend: bind(backend))
+            return bind(backend)
         } catch {
             guard !daemonIsInstalled, graceHasElapsed() else { throw error }
-            return Hello(backend: bind(.local))
+            return bind(.local)
         }
     }
 
@@ -147,25 +161,5 @@ public final class DaemonLink: @unchecked Sendable {
     /// connection whose Mach service was not registered is invalid for good.
     public func invalidate() {
         transport.invalidate()
-    }
-}
-
-/// Whether this copy of the app was installed with `irisind` beside it.
-///
-/// On disk rather than in a build flag on purpose: one binary ships in every
-/// wrapper and only the `.deb` carries the daemon. The package installs the
-/// app at `<prefix>/Applications/irisin.app` and the daemon at
-/// `<prefix>/usr/libexec/irisind` on every bootstrap.
-public enum DaemonInstallation {
-    public static func isInstalled(besideBundleAt bundle: URL) -> Bool {
-        let applications = bundle.deletingLastPathComponent()
-        guard applications.lastPathComponent == "Applications" else { return false }
-        let daemon = applications
-            .deletingLastPathComponent()
-            .appendingPathComponent(String(IrisinProtocol.daemonPath.dropFirst()))
-        guard access(daemon.path, F_OK) != 0 else { return true }
-        // Only "it is not there" answers false. "I could not look" must not
-        // demote a device that has a daemon.
-        return errno != ENOENT && errno != ENOTDIR
     }
 }

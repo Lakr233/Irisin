@@ -38,7 +38,7 @@ struct InstallerLoopTests {
             [Self.link("a", to: "b"), Self.link("b", to: "a")],
             [Self.link("a", to: "b"), Self.link("b", to: "c"), Self.link("c", to: "b")],
         ]
-        let resolved = try #require(finished { rings.map { try? NativePackageArchive.resolveHardLinks($0) } })
+        let resolved = try #require(finished { rings.map { try? PackageArchive.resolveHardLinks($0) } })
         #expect(resolved.allSatisfy { $0 == nil })
     }
 
@@ -61,9 +61,9 @@ struct InstallerLoopTests {
 
     @Test func aConffilesRecordOfFlagsAloneIsRefused() throws {
         let records = [" obsolete", " obsolete remove-on-upgrade", " remove-on-upgrade obsolete obsolete", " /etc/x"]
-        let read = try #require(finished { records.map { (try? NativeConffiles(status: $0)) != nil } })
+        let read = try #require(finished { records.map { (try? Conffiles(status: $0)) != nil } })
         #expect(read.allSatisfy { !$0 })
-        #expect(try #require(finished { (try? NativeConffiles(status: "\n\n \n")) != nil }))
+        #expect(try #require(finished { (try? Conffiles(status: "\n\n \n")) != nil }))
     }
 
     @Test func linesEndWithThePipe() {

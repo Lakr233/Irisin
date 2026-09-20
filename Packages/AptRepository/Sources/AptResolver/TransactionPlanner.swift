@@ -18,19 +18,19 @@ enum TransactionPlanner {
         func requirementsSatisfied(
             _ index: Int,
             in available: Set<Int>,
-            kinds: [SolverPackage.Group.RequirementType]
+            kinds: [PoolPackage.Group.Kind]
         ) -> Bool {
             kinds.allSatisfy { kind in
                 (packages[index].relations[kind] ?? []).allSatisfy { universe.satisfied($0, in: available) }
             }
         }
-        func conflicts(_ lhs: Int, _ rhs: Int, kind: SolverPackage.Group.RequirementType) -> Bool {
+        func conflicts(_ lhs: Int, _ rhs: Int, kind: PoolPackage.Group.Kind) -> Bool {
             guard packages[lhs].name != packages[rhs].name else { return false }
             return (packages[lhs].relations[kind] ?? []).contains { universe.witnesses($0).contains(rhs) }
         }
         /// The Depends and Pre-Depends witnesses of a package, through Provides.
         func dependencies(_ index: Int) -> [Int] {
-            [SolverPackage.Group.RequirementType.depends, .preDepends]
+            [PoolPackage.Group.Kind.depends, .preDepends]
                 .flatMap { packages[index].relations[$0] ?? [] }
                 .flatMap(universe.witnesses)
                 .filter { $0 != index }
@@ -43,7 +43,7 @@ enum TransactionPlanner {
             for index in members {
                 edges[index] = dependencies(index).filter(members.contains)
             }
-            return DependencyComponents.components(edges).flatMap { $0.sorted() }
+            return StronglyConnectedComponents.components(edges).flatMap { $0.sorted() }
         }
 
         while !unpack.isEmpty || !remove.isEmpty || !selected.isSubset(of: configured) {
@@ -56,7 +56,7 @@ enum TransactionPlanner {
                 changed = false
                 let remaining = present.subtracting(removable)
                 for dependent in configured.subtracting(removable) {
-                    for kind in [SolverPackage.Group.RequirementType.depends, .preDepends] {
+                    for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
                         for relation in packages[dependent].relations[kind] ?? []
                             where !universe.satisfied(relation, in: remaining)
                         {
@@ -115,7 +115,7 @@ enum TransactionPlanner {
             var edges: [Int: [Int]] = [:]
             for index in pending {
                 edges[index] = []
-                for kind in [SolverPackage.Group.RequirementType.depends, .preDepends] {
+                for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
                     for relation in packages[index].relations[kind] ?? [] {
                         let witnesses = universe.witnesses(relation)
                         if witnesses.contains(where: { configured.contains($0) }) {
@@ -127,7 +127,7 @@ enum TransactionPlanner {
                     }
                 }
             }
-            for component in DependencyComponents.components(edges) {
+            for component in StronglyConnectedComponents.components(edges) {
                 let available = configured.union(component)
                 guard component.allSatisfy({
                     requirementsSatisfied($0, in: available, kinds: [.depends, .preDepends])

@@ -2,7 +2,7 @@ import Foundation
 
 public extension InstallerJob {
     struct Transaction: Codable, Equatable, Sendable {
-        public var install: [Package]
+        public var install: [Item]
         public var remove: [String]
         public var dryRun: Bool
         public var stages: [InstallerStage]
@@ -28,7 +28,7 @@ public extension InstallerJob {
         public var recoveryMode: Bool
 
         public init(
-            install: [Package],
+            install: [Item],
             remove: [String],
             dryRun: Bool = false,
             stages: [InstallerStage]? = nil,

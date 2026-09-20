@@ -201,7 +201,7 @@ struct OrderedExecutionTests {
             ]
         )
 
-        #expect(throws: NativePackageFailure.self) {
+        #expect(throws: PackageFailure.self) {
             try fixture.run(install: [recovery])
         }
         try fixture.run(install: [recovery], recoveryMode: true)

@@ -196,7 +196,7 @@ public struct PackageIndex: Sendable {
     ///   - identity: package identity
     ///   - table: the table to search for, either installed or repo table
     /// - Returns: date for last modification, nil if not modified or found
-    public func obtainLastModification(for identity: String, and table: PackageCenter.RecordTable) -> Date? {
+    public func obtainLastModification(for identity: String, and table: TraceScope) -> Date? {
         db.trace(table, identity: identity)?.lastModification
     }
 

@@ -10,11 +10,11 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionStackView: DepictionBaseView {
+final class DepictionStackView: DepictionView {
     private let stack: UIStackView
 
-    private var views: [DepictionBaseView] {
-        stack.arrangedSubviews.compactMap { $0 as? DepictionBaseView }
+    private var views: [DepictionView] {
+        stack.arrangedSubviews.compactMap { $0 as? DepictionView }
     }
 
     required init?(
@@ -40,7 +40,7 @@ final class DepictionStackView: DepictionBaseView {
         }
 
         let built = views.compactMap { viewDict in
-            DepictionBaseView.view(
+            DepictionView.view(
                 dictionary: viewDict,
                 viewController: viewController,
                 tintColor: tintColor,
@@ -75,8 +75,8 @@ final class DepictionStackView: DepictionBaseView {
     /// in a row, a separator at an edge. A section is the run between two
     /// separators; one holding only headers and spacers goes, separator
     /// included, and so does a separator left at either end.
-    static func dropEmptySections(_ views: [DepictionBaseView]) -> [DepictionBaseView] {
-        var kept: [DepictionBaseView] = []
+    static func dropEmptySections(_ views: [DepictionView]) -> [DepictionView] {
+        var kept: [DepictionView] = []
         var sectionStart = 0
         var sectionHasContent = false
         for view in views {

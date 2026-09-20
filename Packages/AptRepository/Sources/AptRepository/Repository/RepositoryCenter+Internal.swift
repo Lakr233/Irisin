@@ -138,7 +138,7 @@ extension RepositoryCenter {
             progress.completedUnitCount += units
         }
         let object = UpdateNotification(
-            representedRepo: url,
+            repository: url,
             progress: progress,
             complete: false,
             success: false,
@@ -224,7 +224,7 @@ extension RepositoryCenter {
 
         PackageCenter.default.repositoryDidChange()
         let object = UpdateNotification(
-            representedRepo: url,
+            repository: url,
             progress: nil,
             complete: true,
             success: outcome.succeeded,
@@ -507,7 +507,7 @@ extension RepositoryCenter {
     // MARK: - Notification Emitter
 
     func issueNotification() {
-        notificationThrotte.throttle {
+        notificationThrottle.throttle {
             NotificationCenter.default.post(name: RepositoryCenter.registrationUpdate, object: nil)
         }
     }

@@ -15,7 +15,7 @@ import UIKit
 /// A row of screenshots the height the json asks for, scrolled sideways
 /// when wider than the page and centred when narrower. One wider than the
 /// page is shrunk with its ratio kept, so its edges meet the page's gutter.
-final class DepictionScreenshotsView: DepictionBaseView {
+final class DepictionScreenshotsView: DepictionView {
     private let scrollView = UIScrollView().then {
         $0.decelerationRate = .fast
         $0.showsVerticalScrollIndicator = false

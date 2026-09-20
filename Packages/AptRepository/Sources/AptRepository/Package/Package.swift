@@ -147,9 +147,9 @@ public struct Package: Codable, Hashable, Identifiable, Sendable {
     /// The whole-package parse gives up on any malformed relationship
     /// field, so reaching this through it would drop a package's virtual
     /// names over an unrelated bad `Depends:`.
-    public var provides: [PackageRequirement.PackageRequirementGroup.Requirement.RequirementElement] {
+    public var provides: [PackageRequirementGroup.Clause.Term] {
         guard let value = latestMetadata?["provides"],
-              let group = PackageRequirement.PackageRequirementGroup(value: value, type: .provides)
+              let group = PackageRequirementGroup(value: value, type: .provides)
         else { return [] }
         return group.requirements.flatMap(\.elements)
     }

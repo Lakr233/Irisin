@@ -110,7 +110,7 @@ class RepositoryRow: UIView {
 
     func updateRepoMetadata(withNotification: Notification) {
         guard let updateOn = withNotification.object as? RepositoryCenter.UpdateNotification,
-              let url = repoUrl, url == updateOn.representedRepo
+              let url = repoUrl, url == updateOn.repository
         else { return }
         setRepository(withUrl: url)
     }

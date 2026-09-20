@@ -14,7 +14,7 @@ struct DpkgParityTests {
     /// dpkg's `varbufrecord`: a value's lines are continued with a space,
     /// and `\r\n` ends one, which `String` would take for a character.
     @Test func paragraphLinesEndAtEveryNewline() {
-        #expect(NativePackageDatabase.paragraph(["package": "x", "description": "a\r\nStatus: b"]) == "Package: x\nDescription: a\r\n Status: b\n")
+        #expect(PackageDatabase.paragraph(["package": "x", "description": "a\r\nStatus: b"]) == "Package: x\nDescription: a\r\n Status: b\n")
     }
 
     /// dpkg keeps a field it does not know as the stanza spelled it and
@@ -37,11 +37,11 @@ struct DpkgParityTests {
         """
         let fixture = try NativeInstallFixture()
         try Data(stanza.utf8).write(to: fixture.database.appendingPathComponent("status"))
-        let database = try NativePackageDatabase(directory: fixture.database)
+        let database = try PackageDatabase(directory: fixture.database)
         try database.consolidate()
         #expect(try fixture.text("Library/dpkg/status") == stanza)
         // a field nothing spelled follows them, capitalised by word
-        #expect(NativePackageDatabase.paragraph(["package": "x", "tag": "a", "sileodepiction": "b"], names: ["SileoDepiction"]) == "Package: x\nSileoDepiction: b\nTag: a\n")
+        #expect(PackageDatabase.paragraph(["package": "x", "tag": "a", "sileodepiction": "b"], names: ["SileoDepiction"]) == "Package: x\nSileoDepiction: b\nTag: a\n")
     }
 
     // MARK: process_archive
@@ -121,8 +121,8 @@ struct DpkgParityTests {
         #expect(try fixture.status("hostile") == nil)
     }
 
-    @Test(arguments: [PreparedEntryKind.symbolicLink, .hardLink])
-    func packageMayNotShipDatabaseLinks(_ kind: PreparedEntryKind) throws {
+    @Test(arguments: [PreparedEntry.Kind.symbolicLink, .hardLink])
+    func packageMayNotShipDatabaseLinks(_ kind: PreparedEntry.Kind) throws {
         let fixture = try NativeInstallFixture()
         let entry = PreparedEntry(
             path: "Library/dpkg/redirect",
@@ -142,7 +142,7 @@ struct DpkgParityTests {
     }
 
     private func seed(_ fixture: NativeInstallFixture, _ paragraphs: [[String: String]]) throws {
-        let text = paragraphs.map { NativePackageDatabase.paragraph($0) }.joined(separator: "\n")
+        let text = paragraphs.map { PackageDatabase.paragraph($0) }.joined(separator: "\n")
         try Data(text.utf8).write(to: fixture.database.appendingPathComponent("status"))
     }
 
@@ -156,13 +156,13 @@ struct DpkgParityTests {
         )
         try fixture.run(install: [package])
         try fixture.run(remove: [package.identity])
-        let record = try #require(NativePackageDatabase(directory: fixture.database).records[package.identity])
+        let record = try #require(PackageDatabase(directory: fixture.database).records[package.identity])
         #expect(record["status"] == "deinstall ok config-files")
         // the version the postinst last configured survives for the next install
         #expect(record["config-version"] == "1")
         #expect(record["triggers-pending"] == nil)
         // dpkg keeps the list and the postrm for the purge and nothing else
-        #expect(try Set(NativePackageDatabase(directory: fixture.database).infoMembers(package.identity)) == ["list", "postrm"])
+        #expect(try Set(PackageDatabase(directory: fixture.database).infoMembers(package.identity)) == ["list", "postrm"])
         #expect(try fixture.text("Library/dpkg/info/example.package.list") == "/.\n/etc/example\n")
         #expect(try fixture.text("etc/example") == "conf")
         #expect(try fixture.text("script log") == "postrm:remove\n")
@@ -170,7 +170,7 @@ struct DpkgParityTests {
         #expect(try fixture.status() == nil)
         #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("etc/example").path))
         #expect(try fixture.text("script log") == "postrm:remove\npostrm:purge\n")
-        #expect(try NativePackageDatabase(directory: fixture.database).infoMembers(package.identity).isEmpty)
+        #expect(try PackageDatabase(directory: fixture.database).infoMembers(package.identity).isEmpty)
     }
 
     @Test func removalNeverWritesReinstreq() throws {
@@ -190,7 +190,7 @@ struct DpkgParityTests {
         let postrm = "#!/bin/sh\n[ \"$1\" != remove ]\n"
         try fixture.run(install: [fixture.package(files: ["usr/share/example": "one"], controls: ["postrm": postrm])])
         #expect(throws: PackageStepFailure.self) { try fixture.run(remove: ["example.package"]) }
-        let record = try NativePackageDatabase(directory: fixture.database).records["example.package"]
+        let record = try PackageDatabase(directory: fixture.database).records["example.package"]
         #expect(record?["status"] == "deinstall ok half-installed")
         #expect(record?["config-version"] == "1")
     }
@@ -243,7 +243,7 @@ struct DpkgParityTests {
         try fixture.run(install: [watcher])
         let shipper = try fixture.package("shipper.package", files: ["usr/share/things/one": "x"])
         #expect(throws: (any Error).self) { try fixture.run(install: [shipper]) }
-        let record = try NativePackageDatabase(directory: fixture.database).records["watcher.package"]
+        let record = try PackageDatabase(directory: fixture.database).records["watcher.package"]
         #expect(record?["status"] == "install ok half-configured")
         #expect(record?["triggers-pending"] == nil)
         // the next transaction is not held hostage by the broken postinst
@@ -276,7 +276,7 @@ struct DpkgParityTests {
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fixture.database.appendingPathComponent("info/pend.package.postinst").path)
         try fixture.run(install: [fixture.package("waiter", version: "2")])
         // processing pend.package's trigger at the end released the waiter
-        let records = try NativePackageDatabase(directory: fixture.database).records
+        let records = try PackageDatabase(directory: fixture.database).records
         #expect(records["waiter"]?["status"] == "install ok installed")
         #expect(records["pend.package"]?["status"] == "install ok installed")
     }
@@ -297,7 +297,7 @@ struct DpkgParityTests {
             ["package": "pkg-b", "version": "1", "architecture": "all", "status": "install ok triggers-awaited", "triggers-awaited": "pkg-a"],
         ])
         try fixture.run(install: [fixture.package("pkg-a", version: "2", controls: ["postinst": log])])
-        let records = try NativePackageDatabase(directory: fixture.database).records
+        let records = try PackageDatabase(directory: fixture.database).records
         #expect(records["pkg-a"]?["status"] == "install ok installed")
         #expect(records["pkg-a"]?["triggers-pending"] == nil)
         #expect(records["pkg-b"]?["status"] == "install ok installed")
@@ -398,7 +398,7 @@ struct DpkgParityTests {
         try fixture.run(install: [replacing])
         #expect(try fixture.status("old.package") == nil)
         #expect(try fixture.text("script log") == "postrm:disappear new.package 1\n")
-        #expect(try NativePackageDatabase(directory: fixture.database).infoMembers("old.package").isEmpty)
+        #expect(try PackageDatabase(directory: fixture.database).infoMembers("old.package").isEmpty)
     }
 
     private func divertTool(_ fixture: NativeInstallFixture) throws {
@@ -476,7 +476,7 @@ struct DpkgParityTests {
     }
 
     @Test func conffilesFieldRoundTripsBothFlags() throws {
-        let parsed = try NativeConffiles(status: "/etc/a 0123 obsolete remove-on-upgrade\n/etc/b 4567 remove-on-upgrade\n/etc/c 89ab")
+        let parsed = try Conffiles(status: "/etc/a 0123 obsolete remove-on-upgrade\n/etc/b 4567 remove-on-upgrade\n/etc/c 89ab")
         #expect(parsed.obsolete == ["/etc/a"])
         #expect(parsed.removeOnUpgrade == ["/etc/a", "/etc/b"])
         #expect(parsed.status == "/etc/a 0123 obsolete remove-on-upgrade\n/etc/b 4567 remove-on-upgrade\n/etc/c 89ab")
@@ -488,7 +488,7 @@ struct DpkgParityTests {
         try fixture.run(install: [fixture.package(files: files, controls: ["conffiles": "/etc/keep\n/etc/drop\n"])])
         try fixture.run(install: [fixture.package(version: "2", files: ["etc/keep": "k"], controls: ["conffiles": "/etc/keep\nremove-on-upgrade /etc/drop\n"])])
         #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("etc/drop").path))
-        let record = try NativePackageDatabase(directory: fixture.database).records["example.package"]
+        let record = try PackageDatabase(directory: fixture.database).records["example.package"]
         #expect(record?["conffiles"]?.contains("/etc/drop") == true)
         #expect(record?["conffiles"]?.contains("remove-on-upgrade") == true)
         // in the field, as dpkg keeps it, but not in the list of files it has
@@ -502,7 +502,7 @@ struct DpkgParityTests {
         let fixture = try NativeInstallFixture()
         try fixture.run(install: [fixture.package(files: ["etc/example": "one"], controls: ["conffiles": "/etc/example\n"])])
         try fixture.run(install: [fixture.package(version: "2", files: ["etc/example": "two"])])
-        #expect(try NativePackageDatabase(directory: fixture.database).records["example.package"]?["conffiles"] == nil)
+        #expect(try PackageDatabase(directory: fixture.database).records["example.package"]?["conffiles"] == nil)
         #expect(try fixture.text("etc/example") == "two")
     }
 
@@ -529,7 +529,7 @@ struct DpkgParityTests {
         try fixture.run(install: [fixture.package(version: "2", files: ["etc/new/conf": "two"], controls: ["conffiles": "/etc/new/conf\n"])])
         #expect(try fixture.text("etc/new/conf") == "two")
         #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("etc/new/conf.dpkg-dist").path))
-        let conffiles = try NativePackageDatabase(directory: fixture.database).records["example.package"]?["conffiles"]
+        let conffiles = try PackageDatabase(directory: fixture.database).records["example.package"]?["conffiles"]
         #expect(conffiles?.contains("/etc/old/conf") == false)
     }
 

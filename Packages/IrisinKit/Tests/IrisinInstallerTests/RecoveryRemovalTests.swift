@@ -33,7 +33,7 @@ struct RecoveryRemovalTests {
         )
         let dependent = try fixture.package("dependent", fields: ["depends": "broken"])
         try fixture.run(install: [package, dependent])
-        let database = try NativePackageDatabase(directory: fixture.database)
+        let database = try PackageDatabase(directory: fixture.database)
         var fields = try #require(database.records["broken"])
         fields["status"] = "install reinstreq half-installed"
         try database.commit("broken", fields)
@@ -66,7 +66,7 @@ struct RecoveryRemovalTests {
         let fixture = try NativeInstallFixture()
         let package = try fixture.package()
         try fixture.run(install: [package])
-        let database = try NativePackageDatabase(directory: fixture.database)
+        let database = try PackageDatabase(directory: fixture.database)
         var fields = try #require(database.records[package.identity])
         fields["status"] = "hold ok installed"
         try database.commit(package.identity, fields)

@@ -9,7 +9,7 @@
 import UIKit
 
 extension UIColor {
-    static let sileoSeparatorColor = UIColor.gray.withAlphaComponent(0.2)
+    static let depictionSeparator = UIColor.gray.withAlphaComponent(0.2)
 }
 
 public extension UIColor {

@@ -18,7 +18,7 @@ struct PeerAuthenticator {
     /// A sandboxed App Store app cannot obtain these, and the first is ours
     /// alone.
     private static let requiredEntitlements = [
-        IrisinProtocol.clientEntitlement,
+        IrisinWire.clientEntitlement,
         "platform-application",
         "com.apple.private.security.no-sandbox",
     ]
@@ -26,7 +26,7 @@ struct PeerAuthenticator {
     private let clientPaths: [String]
 
     init(installRoot: String) {
-        clientPaths = IrisinProtocol.clientPaths.compactMap { ProcessPath.canonical(installRoot + $0) }
+        clientPaths = IrisinWire.clientPaths.compactMap { ProcessPath.canonical(installRoot + $0) }
     }
 
     /// The peer's pid when it may be served, nil when the connection must be

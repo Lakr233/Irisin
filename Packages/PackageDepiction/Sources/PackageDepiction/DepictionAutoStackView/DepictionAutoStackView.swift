@@ -10,8 +10,8 @@ import UIKit
 
 /// Children of a preferred width each, laid in rows that wrap at the edge,
 /// every row centred.
-final class DepictionAutoStackView: DepictionBaseView {
-    private var items: [(view: DepictionBaseView, width: CGFloat)] = []
+final class DepictionAutoStackView: DepictionView {
+    private var items: [(view: DepictionView, width: CGFloat)] = []
     private let spacing: CGFloat
     private var laidOutHeight: CGFloat = 0
 
@@ -45,7 +45,7 @@ final class DepictionAutoStackView: DepictionBaseView {
         )
 
         for (viewDict, preferredWidth) in zip(views, preferredWidths) {
-            guard let view = DepictionBaseView.view(
+            guard let view = DepictionView.view(
                 dictionary: viewDict,
                 viewController: viewController,
                 tintColor: tintColor,

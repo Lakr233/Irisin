@@ -41,15 +41,15 @@ final class DaemonServer: @unchecked Sendable {
 
     init(installRoot: String) {
         self.installRoot = installRoot
-        helperPath = installRoot + IrisinProtocol.helperPath
+        helperPath = installRoot + IrisinWire.helperPath
         authenticator = PeerAuthenticator(installRoot: installRoot)
     }
 
     /// False when the Mach service could not be registered.
     func start() -> Bool {
         controlQueue.sync {
-            guard let listener = IrisinProtocol.serviceName.withCString({
-                irisinCreateMachServiceConnection($0, controlQueue, IrisinXPCFlag.listener)
+            guard let listener = IrisinWire.serviceName.withCString({
+                irisinCreateMachServiceConnection($0, controlQueue, IrisinXPC.Flag.listener)
             }) else {
                 return false
             }
@@ -96,24 +96,24 @@ final class DaemonServer: @unchecked Sendable {
             return
         }
         guard let reply = xpc_dictionary_create_reply(message) else { return }
-        xpc_dictionary_set_uint64(reply, IrisinWireKey.version, IrisinProtocol.version)
+        xpc_dictionary_set_uint64(reply, IrisinWire.Key.version, IrisinWire.version)
 
-        let operation = IrisinOperation(rawValue: xpc_dictionary_get_uint64(message, IrisinWireKey.operation))
+        let operation = IrisinOperation(rawValue: xpc_dictionary_get_uint64(message, IrisinWire.Key.operation))
         do {
-            guard xpc_dictionary_get_uint64(message, IrisinWireKey.version) == IrisinProtocol.version,
+            guard xpc_dictionary_get_uint64(message, IrisinWire.Key.version) == IrisinWire.version,
                   let operation
             else {
                 throw IrisinFailure(code: .invalidRequest)
             }
             try perform(operation, message: message, into: reply)
-            xpc_dictionary_set_int64(reply, IrisinWireKey.code, IrisinReplyCode.success.rawValue)
+            xpc_dictionary_set_int64(reply, IrisinWire.Key.code, IrisinReplyCode.success.rawValue)
         } catch let failure as IrisinFailure {
             failure.encode(into: reply)
             log.warning(
                 "\(operation?.name ?? "?", privacy: .public) refused: \(failure.code.rawValue) errno \(failure.systemError)"
             )
         } catch {
-            xpc_dictionary_set_int64(reply, IrisinWireKey.code, IrisinReplyCode.operationFailed.rawValue)
+            xpc_dictionary_set_int64(reply, IrisinWire.Key.code, IrisinReplyCode.operationFailed.rawValue)
             log.error(
                 "\(operation?.name ?? "?", privacy: .public) failed: \(String(describing: error), privacy: .public)"
             )
@@ -129,17 +129,17 @@ final class DaemonServer: @unchecked Sendable {
     private func perform(_ operation: IrisinOperation, message: xpc_object_t, into reply: xpc_object_t) throws {
         switch operation {
         case .hello:
-            xpc_dictionary_set_string(reply, IrisinWireKey.installRoot, installRoot)
+            xpc_dictionary_set_string(reply, IrisinWire.Key.installRoot, installRoot)
         case .run:
             let job = try InstallerJob.decode(from: message)
             let resolved = try resolve(job)
-            let descriptor = try HelperLaunch.start(helper: helperPath, job: resolved)
+            let descriptor = try Self.startHelper(at: helperPath, job: resolved)
             let identifier = nextJobIdentifier
             nextJobIdentifier &+= 1
             defer { close(descriptor) }
             log.info("job \(identifier) \(resolved.name, privacy: .public) started")
-            xpc_dictionary_set_fd(reply, IrisinWireKey.descriptor, descriptor)
-            xpc_dictionary_set_uint64(reply, IrisinWireKey.jobIdentifier, identifier)
+            xpc_dictionary_set_fd(reply, IrisinWire.Key.descriptor, descriptor)
+            xpc_dictionary_set_uint64(reply, IrisinWire.Key.jobIdentifier, identifier)
         case .goodbye:
             break
         }

@@ -457,7 +457,7 @@ final class RootlessToRoothideTests: XCTestCase {
 
     private struct Entry {
         var path: String
-        var kind: PreparedEntryKind
+        var kind: PreparedEntry.Kind
         /// nil shares the blob of the file before it, as an archive's hard
         /// link resolved to a copy would.
         var data: Data?

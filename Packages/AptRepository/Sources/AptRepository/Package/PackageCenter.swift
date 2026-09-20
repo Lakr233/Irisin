@@ -41,11 +41,6 @@ public final class PackageCenter {
 
     // MARK: - RECORDS
 
-    public enum RecordTable: String, Sendable {
-        case install
-        case repo
-    }
-
     /// a newer trace cancels the one in flight
     var traceTask: Task<Void, Never>?
 
@@ -82,7 +77,7 @@ public final class PackageCenter {
     public nonisolated static let packageRecordChanged = Notification.Name(
         rawValue: "\(kPackageCenterIdentity).packageRecordChanged"
     )
-    lazy var notificationThrotte = Throttler(minimumDelay: 0.5)
+    lazy var notificationThrottle = Throttler(minimumDelay: 0.5)
 
     // MARK: - INIT
 

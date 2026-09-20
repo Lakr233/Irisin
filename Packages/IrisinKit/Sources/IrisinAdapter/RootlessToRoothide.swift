@@ -425,95 +425,97 @@ extension String {
     }
 }
 
-/// The entries of the adapted package, in the order they are added, every
-/// path once. The script unpacks to a directory and packs it again, so every
-/// directory on the way to a file is an entry of its result even where the
-/// package never listed it; the same is made up here, for the mirror and
-/// the patcher's own directories (the payload's are refused, `madeUp`).
-private struct Tree {
-    /// Named in a refusal.
-    let package: String
-    private(set) var entries: [PreparedEntry] = []
-    /// Where each path is in `entries`.
-    private var index: [String: Int] = [:]
-    /// The directories made up for a path below them that the archive has
-    /// not listed.
-    private(set) var madeUp: Set<String> = []
+extension RootlessToRoothide {
+    /// The entries of the adapted package, in the order they are added, every
+    /// path once. The script unpacks to a directory and packs it again, so every
+    /// directory on the way to a file is an entry of its result even where the
+    /// package never listed it; the same is made up here, for the mirror and
+    /// the patcher's own directories (the payload's are refused, `madeUp`).
+    private struct Tree {
+        /// Named in a refusal.
+        let package: String
+        private(set) var entries: [PreparedEntry] = []
+        /// Where each path is in `entries`.
+        private var index: [String: Int] = [:]
+        /// The directories made up for a path below them that the archive has
+        /// not listed.
+        private(set) var madeUp: Set<String> = []
 
-    /// `index` is private, so the implicit memberwise
-    /// initializer is private to `Tree` itself and the adaptation above
-    /// cannot call it. Xcode 26 says so and Xcode 27 does not, which is how
-    /// this passed here and failed on CI. A tree is filled by `add` in any
-    /// case; the package name is the whole of its state at birth.
-    init(package: String) {
-        self.package = package
-    }
+        /// `index` is private, so the implicit memberwise
+        /// initializer is private to `Tree` itself and the adaptation above
+        /// cannot call it. Xcode 26 says so and Xcode 27 does not, which is how
+        /// this passed here and failed on CI. A tree is filled by `add` in any
+        /// case; the package name is the whole of its state at birth.
+        init(package: String) {
+            self.package = package
+        }
 
-    /// A path below anything but a directory (a link, a file) is refused:
-    /// what installs there depends on what the link points at. `reported`
-    /// is the entry as the archive spells it, for the refusal.
-    mutating func add(_ entry: PreparedEntry, parents owner: UInt32 = 0, reportedAs reported: String) throws {
-        let refusal = AdaptationFailure.notSimple(package: package, path: reported)
-        var missing: [String] = []
-        var path = entry.path
-        while let parent = Self.parent(of: path) {
-            path = parent
-            if let at = index[path] {
-                guard entries[at].kind == .directory else { throw refusal }
-                break
+        /// A path below anything but a directory (a link, a file) is refused:
+        /// what installs there depends on what the link points at. `reported`
+        /// is the entry as the archive spells it, for the refusal.
+        mutating func add(_ entry: PreparedEntry, parents owner: UInt32 = 0, reportedAs reported: String) throws {
+            let refusal = AdaptationFailure.notSimple(package: package, path: reported)
+            var missing: [String] = []
+            var path = entry.path
+            while let parent = Self.parent(of: path) {
+                path = parent
+                if let at = index[path] {
+                    guard entries[at].kind == .directory else { throw refusal }
+                    break
+                }
+                missing.append(path)
             }
-            missing.append(path)
-        }
-        for path in missing.reversed() {
-            index[path] = entries.count
-            madeUp.insert(path)
-            entries.append(PreparedEntry(
-                path: path, kind: .directory, mode: 0o755, uid: owner, gid: owner, modificationTime: entry.modificationTime
-            ))
-        }
-        if let at = index[entry.path] {
-            // anything but two directories is two things in one place
-            guard entries[at].kind == .directory, entry.kind == .directory else { throw refusal }
-            // the archive listed the directory after its contents: its own
-            // entry is the one unpacking leaves; one the mirror needs as well
-            // (`var/mobile/Library`) stays the package's
-            if madeUp.remove(entry.path) != nil {
-                entries[at] = entry
+            for path in missing.reversed() {
+                index[path] = entries.count
+                madeUp.insert(path)
+                entries.append(PreparedEntry(
+                    path: path, kind: .directory, mode: 0o755, uid: owner, gid: owner, modificationTime: entry.modificationTime
+                ))
             }
-            return
+            if let at = index[entry.path] {
+                // anything but two directories is two things in one place
+                guard entries[at].kind == .directory, entry.kind == .directory else { throw refusal }
+                // the archive listed the directory after its contents: its own
+                // entry is the one unpacking leaves; one the mirror needs as well
+                // (`var/mobile/Library`) stays the package's
+                if madeUp.remove(entry.path) != nil {
+                    entries[at] = entry
+                }
+                return
+            }
+            index[entry.path] = entries.count
+            entries.append(entry)
         }
-        index[entry.path] = entries.count
-        entries.append(entry)
-    }
 
-    /// The file at `path` as a hard link to `target`, which holds the same.
-    mutating func link(_ path: String, to target: String) {
-        guard let at = index[path] else { return }
-        let entry = entries[at]
-        entries[at] = PreparedEntry(
-            path: path, kind: .hardLink, linkTarget: target,
-            mode: entry.mode, uid: entry.uid, gid: entry.gid, modificationTime: entry.modificationTime
-        )
-    }
+        /// The file at `path` as a hard link to `target`, which holds the same.
+        mutating func link(_ path: String, to target: String) {
+            guard let at = index[path] else { return }
+            let entry = entries[at]
+            entries[at] = PreparedEntry(
+                path: path, kind: .hardLink, linkTarget: target,
+                mode: entry.mode, uid: entry.uid, gid: entry.gid, modificationTime: entry.modificationTime
+            )
+        }
 
-    /// The entry at `path` as root leaves what it writes: root's, in
-    /// `group` or its directory's, or at the top in the group of the
-    /// directory the patcher unpacks into (mobile's, where RootHidePatcher
-    /// works), and with `umask` cleared from its mode.
-    mutating func makeRoots(_ path: String, clearing umask: UInt32 = 0, group: UInt32? = nil) {
-        guard let at = index[path] else { return }
-        let entry = entries[at]
-        let group = group ?? Self.parent(of: path).flatMap { index[$0] }.map { entries[$0].gid } ?? 501
-        entries[at] = PreparedEntry(
-            path: path, kind: entry.kind, file: entry.file, linkTarget: entry.linkTarget,
-            mode: entry.mode & ~umask, uid: 0, gid: group, modificationTime: entry.modificationTime
-        )
-    }
+        /// The entry at `path` as root leaves what it writes: root's, in
+        /// `group` or its directory's, or at the top in the group of the
+        /// directory the patcher unpacks into (mobile's, where RootHidePatcher
+        /// works), and with `umask` cleared from its mode.
+        mutating func makeRoots(_ path: String, clearing umask: UInt32 = 0, group: UInt32? = nil) {
+            guard let at = index[path] else { return }
+            let entry = entries[at]
+            let group = group ?? Self.parent(of: path).flatMap { index[$0] }.map { entries[$0].gid } ?? 501
+            entries[at] = PreparedEntry(
+                path: path, kind: entry.kind, file: entry.file, linkTarget: entry.linkTarget,
+                mode: entry.mode & ~umask, uid: 0, gid: group, modificationTime: entry.modificationTime
+            )
+        }
 
-    /// Up to the last `/`, which is a byte: a combining mark after it would
-    /// make one character of the two.
-    private static func parent(of path: String) -> String? {
-        path.utf8.lastIndex(of: 0x2F).map { String(decoding: path.utf8[..<$0], as: UTF8.self) }
+        /// Up to the last `/`, which is a byte: a combining mark after it would
+        /// make one character of the two.
+        private static func parent(of path: String) -> String? {
+            path.utf8.lastIndex(of: 0x2F).map { String(decoding: path.utf8[..<$0], as: UTF8.self) }
+        }
     }
 }
 

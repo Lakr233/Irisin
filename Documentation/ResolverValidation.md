@@ -5,7 +5,7 @@
 Felicity Pro 4.1 contains `Replaces: com.xandesign.FelicityPro (3.3)`.
 The shared requirement parser previously rejected the implicit equality.
 Ubuntu dpkg accepts it with a warning and treats it as an exact version match.
-`RequirementElement` now owns that compatibility rule and lowercases package
+`PackageRequirementGroup.Clause.Term` now owns that compatibility rule and lowercases package
 references. The original requirement remains available for display. Exact
 matching still rejects 3.4; unversioned Provides still cannot satisfy a
 versioned dependency by borrowing its provider's package version.

@@ -209,7 +209,7 @@ extension RootlessToRoothide {
     ///
     /// The resolver reads the package's own `Conflicts`, not this one, so a
     /// rootless package that conflicts with the bootstrap is refused a plan
-    /// rather than offered one that removes it (`SolverPackage.protected`
+    /// rather than offered one that removes it (`PoolPackage.protected`
     /// names `roothide`). Solving it as rewritten would mean teaching
     /// AptResolver this substitution, which it cannot see from here.
     static func control(_ control: String, preDepends: String?) -> String {

@@ -179,9 +179,9 @@ final class TaskProcessor {
     private nonisolated static func stage(
         _ sources: [(Package, URL, TaskManager.PatchedPackage?)],
         at location: URL
-    ) async throws -> [InstallerJob.Transaction.Package] {
+    ) async throws -> [InstallerJob.Transaction.Item] {
         try reset(location)
-        var result: [InstallerJob.Transaction.Package] = []
+        var result: [InstallerJob.Transaction.Item] = []
         for (package, source, patched) in sources {
             let destination = location.appendingPathComponent(package.identity + ".deb")
             try FileManager.default.copyItem(at: source, to: destination)

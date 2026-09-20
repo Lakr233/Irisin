@@ -85,7 +85,7 @@ end.
   a second icli on the device that the user did not install is a question
   they should not have to ask. `ApplicationRegistrar` makes one of four closed
   requests (register, unregister, refresh a directory, respring), while
-  `LaunchDaemonManager` can only boot out or bootstrap and start Irisin's
+  `LaunchDaemon` can only boot out or bootstrap and start Irisin's
   own daemon through IcliKit. The package has no `launchctl` dependency, and
   `verify-deb.sh` fails on a package that contains an `icli`. A refused
   respring falls back to signalling backboardd. Safe mode and the AirDrop
@@ -322,7 +322,7 @@ end.
   operation page's reduction of the transcript (`OperationMonitor`,
   `OperationPackages`), task resolution, notification bindings, the path
   list and the depiction's contact parsing.
-- `Packages/IrisinKit/` — `IrisinProtocol` (wire, `InstallerJob`),
+- `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`),
   `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),
   `IrisinClient` (`DaemonLink`, `JobTranscript`), `IrisinAdapter`
   (`PackageAdapter`, `PackageAdapters`, `BootstrapArchitecture`), each with

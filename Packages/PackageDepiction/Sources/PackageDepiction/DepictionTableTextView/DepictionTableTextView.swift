@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionTableTextView: DepictionBaseView {
+final class DepictionTableTextView: DepictionView {
     /// Not part of Sileo's format: the app's own depiction sets it to turn
     /// the value into a link (a maintainer's name opening `mailto:`).
     private let action: String?
@@ -74,6 +74,6 @@ final class DepictionTableTextView: DepictionBaseView {
 
     @objc private func textTapped() {
         guard let action else { return }
-        DepictionButton.processAction(action, parentViewController: parentViewController, openExternal: true)
+        DepictionView.processAction(action, parentViewController: parentViewController, openExternal: true)
     }
 }

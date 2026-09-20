@@ -33,9 +33,9 @@ final class DaemonTransport: @unchecked Sendable {
 
         func hello() async throws -> DaemonLink.Backend {
             let reply = try await send(.hello) { request in
-                xpc_dictionary_set_uint64(request, IrisinWireKey.version, IrisinProtocol.version)
+                xpc_dictionary_set_uint64(request, IrisinWire.Key.version, IrisinWire.version)
             }
-            guard let root = xpc_dictionary_get_string(reply, IrisinWireKey.installRoot) else {
+            guard let root = xpc_dictionary_get_string(reply, IrisinWire.Key.installRoot) else {
                 throw IrisinFailure(code: .operationFailed)
             }
             return .daemon(installRoot: String(cString: root))
@@ -45,8 +45,8 @@ final class DaemonTransport: @unchecked Sendable {
             let reply = try await send(.run) { request in
                 try job.encode(into: request)
             }
-            let descriptor = xpc_dictionary_dup_fd(reply, IrisinWireKey.descriptor)
-            let identifier = xpc_dictionary_get_uint64(reply, IrisinWireKey.jobIdentifier)
+            let descriptor = xpc_dictionary_dup_fd(reply, IrisinWire.Key.descriptor)
+            let identifier = xpc_dictionary_get_uint64(reply, IrisinWire.Key.jobIdentifier)
             guard descriptor >= 0, identifier != 0 else {
                 if descriptor >= 0 {
                     close(descriptor)
@@ -70,8 +70,8 @@ final class DaemonTransport: @unchecked Sendable {
             fill: (xpc_object_t) throws -> Void
         ) async throws -> xpc_object_t {
             let request = xpc_dictionary_create(nil, nil, 0)
-            xpc_dictionary_set_uint64(request, IrisinWireKey.version, IrisinProtocol.version)
-            xpc_dictionary_set_uint64(request, IrisinWireKey.operation, operation.rawValue)
+            xpc_dictionary_set_uint64(request, IrisinWire.Key.version, IrisinWire.version)
+            xpc_dictionary_set_uint64(request, IrisinWire.Key.operation, operation.rawValue)
             try fill(request)
 
             let connection = try activeConnection()
@@ -100,8 +100,8 @@ final class DaemonTransport: @unchecked Sendable {
             if let connection {
                 return connection
             }
-            guard let created = IrisinProtocol.serviceName.withCString({
-                irisinCreateMachServiceConnection($0, queue, IrisinXPCFlag.client)
+            guard let created = IrisinWire.serviceName.withCString({
+                irisinCreateMachServiceConnection($0, queue, IrisinXPC.Flag.client)
             }) else {
                 throw IrisinFailure(code: .operationFailed, systemError: ENOENT)
             }

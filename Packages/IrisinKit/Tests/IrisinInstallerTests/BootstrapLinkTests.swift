@@ -31,7 +31,7 @@ struct BootstrapLinkTests {
     /// A tweak's payload, with the prefix's own directories as a rootless
     /// archive has them.
     private static func tweak(_ fixture: NativeInstallFixture, _ identity: String, prefix: String) throws
-        -> InstallerJob.Transaction.Package
+        -> InstallerJob.Transaction.Item
     {
         try fixture.package(
             identity,
@@ -236,9 +236,9 @@ struct BootstrapLinkTests {
         #expect(try String(contentsOf: group.appendingPathComponent("mobile/Library/Preferences/example.plist"), encoding: .utf8) == "prefs")
 
         let filesystem = try PackageFilesystem(root: fixture.root, layout: layout, database: fixture.database)
-        #expect(throws: NativePackageFailure.self) { try filesystem.location("/escape/file") }
+        #expect(throws: PackageFailure.self) { try filesystem.location("/escape/file") }
         let none = try PackageFilesystem(root: fixture.root, layout: .init(kind: .none), database: fixture.database)
-        #expect(throws: NativePackageFailure.self) { try none.location("/var/file") }
+        #expect(throws: PackageFailure.self) { try none.location("/var/file") }
     }
 
     @Test func roothideLinkTextIsTheKernelPath() {

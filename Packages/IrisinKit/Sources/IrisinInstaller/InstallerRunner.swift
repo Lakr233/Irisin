@@ -4,7 +4,7 @@ import IrisinProtocol
 
 /// What `irisin-install` does with a job, as root.
 ///
-/// A transaction is carried out natively by `NativePackageInstaller`; the
+/// A transaction is carried out natively by `PackageInstaller`; the
 /// app bundles it added or removed are then told to LaunchServices through
 /// icli, linked in as a library (`ApplicationRegistrar`). The maintenance jobs are the
 /// same registrar (rebuild, respring) or a signal sent from this process
@@ -20,7 +20,7 @@ public final class InstallerRunner {
     private let layout: BootstrapLayout
     private let emit: (InstallerEvent) -> Void
     private let registrar: ApplicationRegistrar
-    private let daemonManager: LaunchDaemonManager
+    private let daemonManager: LaunchDaemon
     /// `ProcessTable.signal`, except in the harness: a Mac running a
     /// simulator has a backboardd of its own that a test must not touch.
     private let signalProcesses: (String, Int32) -> Int
@@ -47,7 +47,7 @@ public final class InstallerRunner {
         layout: BootstrapLayout?,
         emit: @escaping (InstallerEvent) -> Void,
         registrar: ((ApplicationRegistrar.Request) throws -> [String: Any])? = nil,
-        daemonManager: ((LaunchDaemonManager.Request) throws -> Void)? = nil,
+        daemonManager: ((LaunchDaemon.Request) throws -> Void)? = nil,
         signalProcesses: @escaping (String, Int32) -> Int
     ) {
         self.installRoot = installRoot
@@ -55,7 +55,7 @@ public final class InstallerRunner {
         self.emit = emit
         self.signalProcesses = signalProcesses
         self.registrar = ApplicationRegistrar(perform: registrar ?? ApplicationRegistrar.live(emit: emit))
-        self.daemonManager = LaunchDaemonManager(perform: daemonManager ?? LaunchDaemonManager.live(emit: emit))
+        self.daemonManager = LaunchDaemon(perform: daemonManager ?? LaunchDaemon.live(emit: emit))
     }
 
     /// The whole job, to completion. Returns the status the transcript ends
@@ -76,7 +76,7 @@ public final class InstallerRunner {
         case .respring:
             respring()
         case .bootstrapIrisinDaemon:
-            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinProtocol.daemonPath))))
+            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinWire.daemonPath))))
         case .bootoutIrisinDaemon:
             manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:
@@ -111,7 +111,7 @@ public final class InstallerRunner {
         emit(.notice("Applications directory \(applicationsDirectory)"))
 
         do {
-            let installer = NativePackageInstaller(installRoot: installRoot, layout: layout, emit: emit)
+            let installer = PackageInstaller(installRoot: installRoot, layout: layout, emit: emit)
             try installer.run(transaction)
         } catch let error as PackageStepFailure {
             emit(.failure(error.problem))
@@ -228,7 +228,7 @@ public final class InstallerRunner {
 
     // MARK: - Maintenance
 
-    private func manageDaemon(_ request: LaunchDaemonManager.Request) -> Int32 {
+    private func manageDaemon(_ request: LaunchDaemon.Request) -> Int32 {
         emit(.phase(.applying))
         do {
             try daemonManager.perform(request)

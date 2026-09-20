@@ -60,9 +60,9 @@ final class PackageFilesystem {
                 // a journal spells a destination the way its own run did
                 guard let path = physical(backup.destination.path, followingLast: false),
                       contains(path) || path.hasPrefix(database.path + "/info/")
-                else { throw NativePackageFailure("Invalid recovery destination") }
+                else { throw PackageFailure("Invalid recovery destination") }
                 if let copy = backup.saved, copy.deletingLastPathComponent() != interrupted {
-                    throw NativePackageFailure("Invalid recovery backup")
+                    throw PackageFailure("Invalid recovery backup")
                 }
                 return PackageFileBackup(
                     destination: URL(fileURLWithPath: path),
@@ -150,7 +150,7 @@ final class PackageFilesystem {
         var info = stat()
         guard lstat(url.path, &info) == 0 else { return nil }
         switch info.st_mode & S_IFMT {
-        case S_IFREG: return try? NativePackageArchive.digest(url, md5: false)
+        case S_IFREG: return try? PackageArchive.digest(url, md5: false)
         case S_IFLNK: return (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)).map { "link:" + $0 }
         default: return "other"
         }
@@ -177,7 +177,7 @@ final class PackageFilesystem {
         if handle == nil {
             let path = journal.appendingPathComponent(Self.recordName).path
             guard FileManager.default.createFile(atPath: path, contents: nil, attributes: [.posixPermissions: 0o644])
-            else { throw NativePackageFailure("Cannot open the recovery journal") }
+            else { throw PackageFailure("Cannot open the recovery journal") }
             handle = try FileHandle(forWritingTo: URL(fileURLWithPath: path))
         }
         // a JSON string escapes its newlines, so one record is one line
@@ -198,7 +198,7 @@ final class PackageFilesystem {
         var saved: [Int: PackageFileBackup] = [:]
         for (number, line) in lines.enumerated() {
             guard let record = try? JSONDecoder().decode(JournalRecord.self, from: Data(line)) else {
-                guard number == lines.count - 1 else { throw NativePackageFailure("Damaged recovery journal") }
+                guard number == lines.count - 1 else { throw PackageFailure("Damaged recovery journal") }
                 break
             }
             saved[record.at] = record.backup
@@ -234,7 +234,7 @@ final class PackageFilesystem {
     func location(_ path: String) throws -> URL {
         let destination = try resolvedLocation(path)
         guard !isInDatabase(destination) else {
-            throw NativePackageFailure("Package data cannot overwrite the package database")
+            throw PackageFailure("Package data cannot overwrite the package database")
         }
         return destination
     }
@@ -246,7 +246,7 @@ final class PackageFilesystem {
     func location(_ path: String, for entry: PreparedEntry) throws -> URL {
         let destination = try resolvedLocation(path)
         guard !isInDatabase(destination) || entry.kind == .directory else {
-            throw NativePackageFailure("Package data cannot overwrite the package database")
+            throw PackageFailure("Package data cannot overwrite the package database")
         }
         return destination
     }
@@ -264,16 +264,16 @@ final class PackageFilesystem {
     private func resolvedLocation(_ path: String) throws -> URL {
         // in bytes, as the kernel reads it: a combining mark after a `/` is
         // one character with it
-        guard path.utf8.first == 0x2F else { throw NativePackageFailure("Package path must be absolute: \(path)") }
+        guard path.utf8.first == 0x2F else { throw PackageFailure("Package path must be absolute: \(path)") }
         var relative = String(decoding: path.utf8.dropFirst(), as: UTF8.self)
         if case let .rootless(prefix) = layout.kind {
             guard path.utf8.starts(with: "\(prefix)/".utf8) else {
-                throw NativePackageFailure("Package path is outside the bootstrap: \(path)")
+                throw PackageFailure("Package path is outside the bootstrap: \(path)")
             }
             relative = String(decoding: path.utf8.dropFirst(prefix.utf8.count + 1), as: UTF8.self)
         }
         guard try PreparedPackage.relativePath(relative) == relative, !relative.isEmpty else {
-            throw NativePackageFailure("Invalid package pathname")
+            throw PackageFailure("Invalid package pathname")
         }
         // The walk is of the directory the entry is in; the entry itself is
         // appended, never followed. Asking for the same directory again is
@@ -290,14 +290,14 @@ final class PackageFilesystem {
             physical = known.physical
         } else {
             guard let walked = Self.physicalPath(directory, followingLast: true, layout: layout, under: root.path) else {
-                throw NativePackageFailure("Package path runs through a symbolic link loop: \(path)")
+                throw PackageFailure("Package path runs through a symbolic link loop: \(path)")
             }
             lastDirectory = (directory, walked)
             physical = walked
         }
         let result = physical + "/" + (relative as NSString).lastPathComponent
         guard contains(physical) else {
-            throw NativePackageFailure("Package path traverses a symlink outside the bootstrap: \(path)")
+            throw PackageFailure("Package path traverses a symlink outside the bootstrap: \(path)")
         }
         return URL(fileURLWithPath: result)
     }
@@ -345,14 +345,14 @@ final class PackageFilesystem {
     private static func synchronize(_ url: URL, naming path: String) throws {
         let descriptor = open(url.path, O_RDONLY | O_NOFOLLOW)
         guard descriptor >= 0 else {
-            throw NativePackageFailure("Cannot synchronize installed file: \(path)")
+            throw PackageFailure("Cannot synchronize installed file: \(path)")
         }
         defer { close(descriptor) }
         if fcntl(descriptor, F_BARRIERFSYNC) == 0 {
             return
         }
         guard fsync(descriptor) == 0 else {
-            throw NativePackageFailure("Cannot synchronize installed file: \(path)")
+            throw PackageFailure("Cannot synchronize installed file: \(path)")
         }
     }
 
@@ -372,7 +372,7 @@ final class PackageFilesystem {
         var info = stat()
         if lstat(url.path, &info) == 0 {
             guard info.st_mode & S_IFMT != S_IFDIR else {
-                throw NativePackageFailure("Cannot replace directory with file: \(url.path)")
+                throw PackageFailure("Cannot replace directory with file: \(url.path)")
             }
             try Self.clone(url, to: saved)
             // a clone never carries setuid or setgid over, and a rollback
@@ -380,7 +380,7 @@ final class PackageFilesystem {
             // `sudo`, `su` and `ping`. The kind is already in hand, and it
             // is a file: `chmod` would follow a cloned link.
             if info.st_mode & S_IFMT == S_IFREG, chmod(saved.path, info.st_mode & 0o7777) != 0 {
-                throw NativePackageFailure("Cannot save the file's permissions: \(url.path)")
+                throw PackageFailure("Cannot save the file's permissions: \(url.path)")
             }
             backups.append(.init(destination: url, saved: saved))
         } else {
@@ -392,7 +392,7 @@ final class PackageFilesystem {
 
     func install(
         _ entry: PreparedEntry,
-        from archive: NativePackageArchive,
+        from archive: PackageArchive,
         at destination: URL,
         hardLinkTarget: URL? = nil,
         mode: UInt32? = nil,
@@ -405,7 +405,7 @@ final class PackageFilesystem {
                 return
             }
             guard !exists(destination) else {
-                throw NativePackageFailure("Directory collides with a file: \(entry.path)")
+                throw PackageFailure("Directory collides with a file: \(entry.path)")
             }
             try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
             ensured.insert(destination)
@@ -429,30 +429,30 @@ final class PackageFilesystem {
                 lastDirectory = nil
             case .hardLink:
                 guard let target = hardLinkTarget else {
-                    throw NativePackageFailure("Missing resolved hard link target")
+                    throw PackageFailure("Missing resolved hard link target")
                 }
                 guard link(target.path, temporary.path) == 0 else {
-                    throw NativePackageFailure("Cannot create hard link: \(entry.path)")
+                    throw PackageFailure("Cannot create hard link: \(entry.path)")
                 }
-                installed = try? NativePackageArchive.digest(target, md5: false)
+                installed = try? PackageArchive.digest(target, md5: false)
             case .directory: break
             }
             if entry.kind != .symbolicLink {
                 try Self.synchronize(temporary, naming: entry.path)
             }
             guard rename(temporary.path, destination.path) == 0 else {
-                throw NativePackageFailure("Cannot install file: \(entry.path)")
+                throw PackageFailure("Cannot install file: \(entry.path)")
             }
             try note(destination, installed: installed, removed: false)
         }
         let uid = owner?.0 ?? entry.uid
         let gid = owner?.1 ?? entry.gid
         if geteuid() == 0, lchown(destination.path, uid, gid) != 0 {
-            throw NativePackageFailure("Cannot set file ownership: \(entry.path)")
+            throw PackageFailure("Cannot set file ownership: \(entry.path)")
         }
         if entry.kind != .symbolicLink {
             guard chmod(destination.path, mode_t(mode ?? entry.mode)) == 0 else {
-                throw NativePackageFailure("Cannot set permissions: \(entry.path)")
+                throw PackageFailure("Cannot set permissions: \(entry.path)")
             }
             // the archive's time, the one the filesystem keeps: asking
             // Foundation for it reads the file's attributes first, and the
@@ -462,7 +462,7 @@ final class PackageFilesystem {
                 timespec(tv_sec: Int(entry.modificationTime), tv_nsec: 0),
             ]
             guard utimensat(AT_FDCWD, destination.path, &times, AT_SYMLINK_NOFOLLOW) == 0 else {
-                throw NativePackageFailure("Cannot set the modification time: \(entry.path)")
+                throw PackageFailure("Cannot set the modification time: \(entry.path)")
             }
         }
     }
@@ -533,7 +533,7 @@ final class PackageFilesystem {
             ensured.remove(url)
             if rmdir(url.path) != 0 {
                 guard errno == ENOTEMPTY || errno == EEXIST else {
-                    throw NativePackageFailure("Cannot remove directory")
+                    throw PackageFailure("Cannot remove directory")
                 }
                 return true
             }
@@ -578,7 +578,7 @@ final class PackageFilesystem {
                 var info = stat()
                 if lstat(destination.path, &info) == 0 {
                     guard info.st_mode & S_IFMT != S_IFDIR else {
-                        throw NativePackageFailure("Recovery cannot replace a directory: \(destination.path)")
+                        throw PackageFailure("Recovery cannot replace a directory: \(destination.path)")
                     }
                     try FileManager.default.removeItem(at: destination)
                 }
@@ -600,10 +600,10 @@ final class PackageFilesystem {
             if lstat(saved.path, &kept) == 0, kept.st_mode & S_IFMT == S_IFREG,
                chmod(temporary.path, kept.st_mode & 0o7777) != 0
             {
-                throw NativePackageFailure("Cannot restore the file's permissions: \(destination.path)")
+                throw PackageFailure("Cannot restore the file's permissions: \(destination.path)")
             }
             guard rename(temporary.path, destination.path) == 0 else {
-                throw NativePackageFailure("Cannot restore file: \(destination.path)")
+                throw PackageFailure("Cannot restore file: \(destination.path)")
             }
         }
         try finish()

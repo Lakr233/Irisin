@@ -51,7 +51,7 @@ final class OperationMonitorTests: XCTestCase {
         XCTAssertEqual(monitor.transcript.count, 8)
         XCTAssertEqual(monitor.lines, [
             "Ready",
-            InstallerPhase.applying.localizedTitle,
+            InstallerEvent.Phase.applying.localizedTitle,
             String(localized: "Removing \("test.old (1)")"),
             String(localized: "Running \("test.old.prerm remove")"),
             "bye",

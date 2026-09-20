@@ -318,7 +318,7 @@ extension PackageController {
     private func render(_ json: [String: Any], tintColor: UIColor) -> UIView? {
         let proxy = DepictionPresentationProxy()
         proxy.parentController = self
-        let view = DepictionBaseView.view(
+        let view = DepictionView.view(
             dictionary: json,
             viewController: proxy,
             tintColor: tintColor,

@@ -12,7 +12,7 @@ public extension RepositoryCenter {
     /// the one the center keeps for the repository and is only ever mutated
     /// there, hence the unchecked conformance.
     struct UpdateNotification: @unchecked Sendable {
-        public let representedRepo: URL
+        public let repository: URL
         public let progress: Progress?
         public let complete: Bool
         public let success: Bool

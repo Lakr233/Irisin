@@ -11,7 +11,7 @@ import Foundation
 extension PackageCenter {
     /// send notification to ui to reload when install or repo record changes
     func dispatchNotification() {
-        notificationThrotte.throttle {
+        notificationThrottle.throttle {
             NotificationCenter.default.post(name: PackageCenter.packageRecordChanged, object: nil)
         }
     }

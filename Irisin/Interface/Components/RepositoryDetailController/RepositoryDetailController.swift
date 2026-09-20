@@ -174,7 +174,7 @@ class RepositoryDetailController: UIViewController {
         // every finished refresh of this repository redraws the counts
         NotificationCenter.default.publisher(for: RepositoryCenter.metadataUpdate)
             .compactMap { $0.object as? RepositoryCenter.UpdateNotification }
-            .filter { [url = repo.url] in $0.representedRepo == url && $0.complete }
+            .filter { [url = repo.url] in $0.repository == url && $0.complete }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.reloadRepository() }
             .store(in: &subscriptions)

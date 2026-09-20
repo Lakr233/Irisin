@@ -15,10 +15,10 @@ final class DaemonLinkTests: XCTestCase {
         } catch {}
         XCTAssertNil(link.backend)
         try await Task.sleep(nanoseconds: 300_000_000)
-        let hello = try await link.hello()
-        XCTAssertEqual(hello.backend, .local)
-        XCTAssertFalse(hello.isPrivileged)
-        XCTAssertEqual(hello.installRoot, "")
+        let backend = try await link.hello()
+        XCTAssertEqual(backend, .local)
+        XCTAssertFalse(backend.isPrivileged)
+        XCTAssertEqual(backend.installRoot, "")
         // Bound for good: a job is refused rather than sent nowhere.
         do {
             _ = try await link.run(.respring)
@@ -43,12 +43,12 @@ final class DaemonLinkTests: XCTestCase {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("irisin-link-\(UUID().uuidString)")
         let bundle = root.appendingPathComponent("Applications/irisin.app")
         try FileManager.default.createDirectory(at: bundle, withIntermediateDirectories: true)
-        XCTAssertFalse(DaemonInstallation.isInstalled(besideBundleAt: bundle))
+        XCTAssertFalse(DaemonLink.daemonIsInstalled(besideBundleAt: bundle))
         let daemon = root.appendingPathComponent("usr/libexec/irisind")
         try FileManager.default.createDirectory(at: daemon.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data().write(to: daemon)
-        XCTAssertTrue(DaemonInstallation.isInstalled(besideBundleAt: bundle))
-        XCTAssertFalse(DaemonInstallation.isInstalled(besideBundleAt: URL(fileURLWithPath: "/tmp/Bundle/Application/x/irisin.app")))
+        XCTAssertTrue(DaemonLink.daemonIsInstalled(besideBundleAt: bundle))
+        XCTAssertFalse(DaemonLink.daemonIsInstalled(besideBundleAt: URL(fileURLWithPath: "/tmp/Bundle/Application/x/irisin.app")))
     }
 
     /// Events arrive framed; a bare line, which no helper of this protocol

@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import UIKit
 
-final class DepictionTableButtonView: DepictionBaseView {
+final class DepictionTableButtonView: DepictionView {
     private let action: String
     private let backupAction: String
     private let openExternal: Bool
@@ -83,7 +83,7 @@ final class DepictionTableButtonView: DepictionBaseView {
             return
         }
         for action in [action, backupAction] {
-            DepictionButton.processAction(
+            DepictionView.processAction(
                 action,
                 parentViewController: parentViewController,
                 openExternal: openExternal
