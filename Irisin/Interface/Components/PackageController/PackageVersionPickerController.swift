@@ -10,11 +10,17 @@ import AptRepository
 import Collections
 import UIKit
 
-/// The choose-version sheet: every version of the package on offer, one
-/// section per repository. The checkmark is on the version the page shows,
-/// so a pick is checked the next time the sheet opens. A tap hands the chosen
-/// package to `onPick` and closes the sheet; the caller decides where it goes.
+/// The choose-version sheet: an optional local-selection header, then every
+/// version of the package on offer, one section per repository. A repository
+/// row is checked only when its repository and version match the page. A tap
+/// hands the chosen package to `onPick` and closes the sheet; the caller
+/// decides where it goes.
 class PackageVersionPickerController: UITableViewController {
+    private nonisolated enum Section: Hashable, Sendable {
+        case localSelectionNotice
+        case repository(URL)
+    }
+
     let current: Package
 
     /// The versions on offer, one section per repository, in the order of
@@ -23,7 +29,7 @@ class PackageVersionPickerController: UITableViewController {
 
     var onPick: ((Package) -> Void)?
 
-    private lazy var dataSource = EditableTableDiffableDataSource<URL, Package>(
+    private lazy var dataSource = EditableTableDiffableDataSource<Section, Package>(
         tableView: tableView
     ) { [unowned self] tableView, indexPath, package in
         let cell = tableView.dequeueReusableCell(withIdentifier: "version", for: indexPath)
@@ -71,25 +77,34 @@ class PackageVersionPickerController: UITableViewController {
 
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "version")
         tableView.dataSource = dataSource
-        dataSource.headerTitle = { url in
-            RepositoryCenter.default.obtainImmutableRepository(withUrl: url)?.nickName
+        dataSource.headerTitle = { section in
+            switch section {
+            case .localSelectionNotice:
+                String(localized: "Current Selection: Local Version")
+            case let .repository(url):
+                RepositoryCenter.default.obtainImmutableRepository(withUrl: url)?.nickName
+            }
         }
 
-        var snapshot = NSDiffableDataSourceSnapshot<URL, Package>()
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Package>()
+        if current.repoRef == nil {
+            snapshot.appendSections([.localSelectionNotice])
+        }
         for (url, packages) in available {
-            snapshot.appendSections([url])
-            snapshot.appendItems(packages.uniqued(), toSection: url)
+            let section = Section.repository(url)
+            snapshot.appendSections([section])
+            snapshot.appendItems(packages.uniqued(), toSection: section)
         }
         dataSource.apply(snapshot, animatingDifferences: false)
     }
 
     /// The same version from the same place as the page shows. Compared by
     /// repository and version, not by value: the repository may have
-    /// re-described the package since the page was opened. A page opened
-    /// from dpkg's row names no repository, so there the version decides.
+    /// re-described the package since the page was opened. A dpkg record or
+    /// local `.deb` names no repository, so no offered version is current.
     private func isCurrent(_ package: Package) -> Bool {
-        guard package.latestVersion == current.latestVersion else { return false }
-        return current.repoRef == nil || package.repoRef == current.repoRef
+        guard let currentRepository = current.repoRef else { return false }
+        return package.repoRef == currentRepository && package.latestVersion == current.latestVersion
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
