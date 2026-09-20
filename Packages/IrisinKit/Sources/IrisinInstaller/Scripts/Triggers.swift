@@ -4,21 +4,21 @@ import IrisinProtocol
 /// Maintains dpkg-compatible interest and pending-trigger records. Scripts may
 /// enqueue Unincorp entries; the installer incorporates them without running
 /// dpkg-trigger itself.
-final class NativeTriggers {
-    let database: NativePackageDatabase
+final class Triggers {
+    let database: PackageDatabase
     let scripts: MaintainerScripts
 
-    init(database: NativePackageDatabase, scripts: MaintainerScripts) {
+    init(database: PackageDatabase, scripts: MaintainerScripts) {
         self.database = database
         self.scripts = scripts
     }
 
     /// dpkg's triggers directory, created if missing, and the record lock on
     /// its `Lock` file; the caller closes the lock.
-    func lockTriggers() throws -> (URL, DpkgFrontendLock) {
+    func lockTriggers() throws -> (URL, DpkgLock) {
         let directory = database.directory.appendingPathComponent("triggers")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let lock = try DpkgFrontendLock(path: directory.appendingPathComponent("Lock").path)
+        let lock = try DpkgLock(path: directory.appendingPathComponent("Lock").path)
         return (directory, lock)
     }
 
@@ -35,7 +35,7 @@ final class NativeTriggers {
             ]
             guard words.count == 2, kinds.contains(words[0]),
                   !words[1].contains(".."), words[1].hasPrefix("/") || !words[1].contains("/")
-            else { throw NativePackageFailure("Invalid trigger directive") }
+            else { throw PackageFailure("Invalid trigger directive") }
             return (words[0], words[1])
         }
     }
@@ -49,24 +49,24 @@ final class NativeTriggers {
         let source = source?.lowercased()
         for (identity, interestedAwait) in try registrations()[trigger] ?? [] {
             guard var fields = database.records[identity],
-                  NativePackageDatabase.isConfigured(fields) else { continue }
+                  PackageDatabase.isConfigured(fields) else { continue }
             var pending = Set((fields["triggers-pending"] ?? "").split(separator: " ").map(String.init))
             let added = pending.insert(trigger).inserted
             fields["triggers-pending"] = pending.sorted().joined(separator: " ")
-            NativePackageDatabase.setState(NativePackageDatabase.configuredState(fields), in: &fields)
+            PackageDatabase.setState(PackageDatabase.configuredState(fields), in: &fields)
             if added {
                 try database.commit(identity, fields)
             }
             if let source, source != identity, awaitCompletion, interestedAwait,
-               var awaiting = database.records[source], NativePackageDatabase.isPresent(awaiting)
+               var awaiting = database.records[source], PackageDatabase.isPresent(awaiting)
             {
                 var names = Set((awaiting["triggers-awaited"] ?? "").split(separator: " ").map(String.init))
                 guard names.insert(identity).inserted else { continue }
                 awaiting["triggers-awaited"] = names.sorted().joined(separator: " ")
-                if NativePackageDatabase.rank(NativePackageDatabase.state(of: awaiting))
-                    > NativePackageDatabase.rank("triggers-awaited")
+                if PackageDatabase.rank(PackageDatabase.state(of: awaiting))
+                    > PackageDatabase.rank("triggers-awaited")
                 {
-                    NativePackageDatabase.setState("triggers-awaited", in: &awaiting)
+                    PackageDatabase.setState("triggers-awaited", in: &awaiting)
                 }
                 try database.commit(source, awaiting)
             }

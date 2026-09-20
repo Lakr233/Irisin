@@ -4,7 +4,7 @@ import Foundation
 /// The package's Conffiles field: each path with the hash of the version the
 /// package last shipped, flagged `obsolete` when no version ships it any
 /// more and `remove-on-upgrade` when the package asked for it to go.
-struct NativeConffiles {
+struct Conffiles {
     var hashes: [String: String] = [:]
     var obsolete = Set<String>()
     var removeOnUpgrade = Set<String>()
@@ -20,7 +20,7 @@ struct NativeConffiles {
                 flags.insert(fields.removeLast())
             }
             guard fields.count >= 2, let hash = fields.popLast() else {
-                throw NativePackageFailure("Invalid Conffiles status record")
+                throw PackageFailure("Invalid Conffiles status record")
             }
             let path = fields.joined(separator: " ")
             hashes[path] = hash
@@ -55,11 +55,11 @@ struct NativeConffiles {
     ) throws -> URL? {
         let previous = hashes[path]
         guard let destination = try Self.dereference(destination, filesystem: filesystem) else {
-            throw NativePackageFailure("Conffile is not a regular file: \(path)")
+            throw PackageFailure("Conffile is not a regular file: \(path)")
         }
         var info = stat()
         let exists = lstat(destination.path, &info) == 0
-        let current = exists ? try NativePackageArchive.digest(destination, md5: true) : nil
+        let current = exists ? try PackageArchive.digest(destination, md5: true) : nil
         let changed = previous != nil ? current != previous : exists && current != incoming
         hashes[path] = incoming
         obsolete.remove(path)
@@ -101,10 +101,10 @@ struct NativeConffiles {
             let text = line.trimmingCharacters(in: .whitespaces)
             if text.hasPrefix("remove-on-upgrade ") {
                 let path = String(text.dropFirst("remove-on-upgrade ".count))
-                guard path.hasPrefix("/") else { throw NativePackageFailure("Invalid obsolete conffile path") }
+                guard path.hasPrefix("/") else { throw PackageFailure("Invalid obsolete conffile path") }
                 remove.insert(path)
             } else {
-                guard text.hasPrefix("/") else { throw NativePackageFailure("Invalid conffile declaration") }
+                guard text.hasPrefix("/") else { throw PackageFailure("Invalid conffile declaration") }
                 keep.insert(text)
             }
         }

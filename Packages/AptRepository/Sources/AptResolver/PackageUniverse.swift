@@ -3,11 +3,11 @@ import AptRepository
 /// Pre-indexed witnesses keep relation translation proportional to actual
 /// providers rather than comparing every relationship with the whole catalogue.
 struct PackageUniverse {
-    let packages: [SolverPackage]
+    let packages: [PoolPackage]
     let providers: [String: [Int]]
     let architecture: String
 
-    init(packages: [SolverPackage], architecture: String) {
+    init(packages: [PoolPackage], architecture: String) {
         self.packages = packages
         self.architecture = architecture
         var providers: [String: [Int]] = [:]
@@ -19,7 +19,7 @@ struct PackageUniverse {
         self.providers = providers
     }
 
-    func witnesses(_ requirement: SolverPackage.Group.Requirement) -> [Int] {
+    func witnesses(_ requirement: PoolPackage.Group.Clause) -> [Int] {
         var seen = Set<Int>()
         return requirement.elements.flatMap { element in
             (providers[element.representPackage] ?? []).filter {
@@ -28,7 +28,7 @@ struct PackageUniverse {
         }
     }
 
-    func satisfied(_ requirement: SolverPackage.Group.Requirement, in selected: Set<Int>) -> Bool {
+    func satisfied(_ requirement: PoolPackage.Group.Clause, in selected: Set<Int>) -> Bool {
         witnesses(requirement).contains { selected.contains($0) }
     }
 
@@ -39,14 +39,14 @@ struct PackageUniverse {
             guard names.insert(package.name).inserted else {
                 throw ResolutionFailure(.ambiguousVersion(package: package.name))
             }
-            for kind in [SolverPackage.Group.RequirementType.depends, .preDepends] {
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
                 for relationship in package.relations[kind] ?? [] where !satisfied(relationship, in: selected) {
                     throw ResolutionFailure(
                         .missingRequirement(package: package.name, requirement: relationship.original)
                     )
                 }
             }
-            for kind in [SolverPackage.Group.RequirementType.conflicts, .breaks] {
+            for kind in [PoolPackage.Group.Kind.conflicts, .breaks] {
                 for relationship in package.relations[kind] ?? []
                     where witnesses(relationship).contains(where: { $0 != index && selected.contains($0) })
                 {

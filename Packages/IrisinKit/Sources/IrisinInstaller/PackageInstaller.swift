@@ -11,7 +11,7 @@ import IrisinProtocol
 /// is in, each package step with a running count, every script it starts and
 /// every line one prints. The app draws a progress bar from the count and
 /// spells the steps in its own language.
-public final class NativePackageInstaller {
+public final class PackageInstaller {
     private let root: URL
     private let layout: BootstrapLayout
     private let databaseDirectory: URL
@@ -39,20 +39,20 @@ public final class NativePackageInstaller {
         // A bootstrap that has not written its database yet gets one; the
         // lock files below are created, not found.
         try FileManager.default.createDirectory(at: databaseDirectory, withIntermediateDirectories: true)
-        let frontend = try DpkgFrontendLock(path: databaseDirectory.appendingPathComponent("lock-frontend").path)
+        let frontend = try DpkgLock(path: databaseDirectory.appendingPathComponent("lock-frontend").path)
         defer { frontend.close() }
-        let backend = try DpkgFrontendLock(path: databaseDirectory.appendingPathComponent("lock").path)
+        let backend = try DpkgLock(path: databaseDirectory.appendingPathComponent("lock").path)
         defer { backend.close() }
         // Missing is empty: the app digests the same absence the same way.
         let status = (try? Data(contentsOf: databaseDirectory.appendingPathComponent("status"))) ?? Data()
-        guard NativePackageArchive.sha256(status) == transaction.statusDigest else {
-            throw NativePackageFailure("Installed state changed. Resolve and confirm the transaction again.")
+        guard PackageArchive.sha256(status) == transaction.statusDigest else {
+            throw PackageFailure("Installed state changed. Resolve and confirm the transaction again.")
         }
         emit(.notice(
             "Database \(databaseDirectory.path), "
                 + "\(transaction.install.count) to install, \(transaction.remove.count) to remove"
         ))
-        let work = try NativePackageTransaction(
+        let work = try PackageTransaction(
             root: root,
             layout: layout,
             databaseDirectory: databaseDirectory,
@@ -85,7 +85,7 @@ public final class NativePackageInstaller {
         try work.execute(transaction.stages, archives: archives)
         let configured = transaction.install.map(\.identity) + transaction.configureExisting
         guard configured.allSatisfy({ work.database.records[$0]?["status"]?.hasSuffix(" installed") == true }) else {
-            throw NativePackageFailure("Some packages still require configuration or trigger processing")
+            throw PackageFailure("Some packages still require configuration or trigger processing")
         }
     }
 
@@ -112,16 +112,16 @@ public final class NativePackageInstaller {
                 guard let name = (try? DebianControl.parse(paragraph))?["package"]?.lowercased(),
                       touched.contains(name)
                 else { return true }
-                return !installing.contains(name) && NativePackageDatabase.isPresent(records[name])
+                return !installing.contains(name) && PackageDatabase.isPresent(records[name])
             }
             let marked = transaction.autoInstalled.compactMap { identity -> String? in
-                guard let fields = records[identity], NativePackageDatabase.isPresent(fields) else { return nil }
+                guard let fields = records[identity], PackageDatabase.isPresent(fields) else { return nil }
                 return "Package: \(identity)\nArchitecture: \(fields["architecture"] ?? "all")\nAuto-Installed: 1"
             }
             guard kept.count != paragraphs.count || !marked.isEmpty else { return }
             let contents = kept + marked
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try NativePackageDatabase.write(
+            try PackageDatabase.write(
                 Data(contents.map { $0 + "\n" }.joined(separator: "\n").utf8),
                 to: url
             )

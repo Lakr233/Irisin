@@ -3,13 +3,13 @@ import IrisinProtocol
 
 /// Resources held for one closed transaction. Stage implementations share the
 /// same database and filesystem journal; neither is recreated between stages.
-final class NativePackageTransaction {
-    let database: NativePackageDatabase
+final class PackageTransaction {
+    let database: PackageDatabase
     let filesystem: PackageFilesystem
     let scripts: MaintainerScripts
-    let triggers: NativeTriggers
+    let triggers: Triggers
     let recoveryMode: Bool
-    var overrides: NativePackageOverrides
+    var overrides: PackageOverrides
     let emit: (InstallerEvent) -> Void
     private let preparedDirectory: URL
 
@@ -22,7 +22,7 @@ final class NativePackageTransaction {
         recoveryMode: Bool,
         emit: @escaping (InstallerEvent) -> Void
     ) throws {
-        database = try NativePackageDatabase(directory: databaseDirectory)
+        database = try PackageDatabase(directory: databaseDirectory)
         filesystem = try PackageFilesystem(root: root, layout: layout, database: databaseDirectory)
         scripts = MaintainerScripts(
             layout: layout,
@@ -32,9 +32,9 @@ final class NativePackageTransaction {
             ignoreScriptFailures: ignoreScriptFailures,
             forgetPaths: { [filesystem] in filesystem.forgetPaths() }
         )
-        triggers = NativeTriggers(database: database, scripts: scripts)
+        triggers = Triggers(database: database, scripts: scripts)
         self.recoveryMode = recoveryMode
-        overrides = try NativePackageOverrides(directory: databaseDirectory)
+        overrides = try PackageOverrides(directory: databaseDirectory)
         self.emit = emit
         preparedDirectory = databaseDirectory.appendingPathComponent("irisin-prepared-" + UUID().uuidString)
     }
@@ -48,8 +48,8 @@ final class NativePackageTransaction {
         try filesystem.noteWritten(path)
     }
 
-    func prepare(_ packages: [InstallerJob.Transaction.Package]) throws -> [String: NativePackageArchive] {
-        var archives: [String: NativePackageArchive] = [:]
+    func prepare(_ packages: [InstallerJob.Transaction.Item]) throws -> [String: PackageArchive] {
+        var archives: [String: PackageArchive] = [:]
         for item in packages {
             emit(.package(.verifying, identity: item.identity, version: ""))
             archives[item.identity] = try PackageStepFailure.attributing(item.identity, .verifying) { try capture(item) }
@@ -57,12 +57,12 @@ final class NativePackageTransaction {
         return archives
     }
 
-    private func capture(_ item: InstallerJob.Transaction.Package) throws -> NativePackageArchive {
-        guard try NativePackageArchive.digest(URL(fileURLWithPath: item.path), md5: false) == item.sha256 else {
-            throw NativePackageFailure("Archive changed: \(item.identity)")
+    private func capture(_ item: InstallerJob.Transaction.Item) throws -> PackageArchive {
+        guard try PackageArchive.digest(URL(fileURLWithPath: item.path), md5: false) == item.sha256 else {
+            throw PackageFailure("Archive changed: \(item.identity)")
         }
         guard let preparedPath = item.preparedPath, let preparedSHA256 = item.preparedSHA256 else {
-            throw NativePackageFailure("Package has not been prepared: \(item.identity)")
+            throw PackageFailure("Package has not been prepared: \(item.identity)")
         }
         // Capture app-owned input in the helper's private directory before
         // verifying it. Later script/file reads cannot race changes by mobile.
@@ -78,16 +78,16 @@ final class NativePackageTransaction {
         let captured = preparedDirectory.appendingPathComponent(item.identity)
         let sourceValues = try source.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
         guard sourceValues.isDirectory == true, sourceValues.isSymbolicLink != true else {
-            throw NativePackageFailure("Prepared package is not a directory: \(item.identity)")
+            throw PackageFailure("Prepared package is not a directory: \(item.identity)")
         }
         // one call for the whole tree, and its blocks are the app's until
         // either side writes: a theme's four thousand blobs were copied
         // byte for byte before a single one had been verified
         try PackageFilesystem.clone(source, to: captured)
-        let archive = try NativePackageArchive(directory: captured, digest: preparedSHA256, identity: item.identity)
+        let archive = try PackageArchive(directory: captured, digest: preparedSHA256, identity: item.identity)
         emit(.notice("Verified \(item.identity) \(archive.version), \(archive.package.entries.count) entries"))
-        _ = try NativeConffiles.declarations(archive.controlText("conffiles"))
-        _ = try NativeTriggers.directives(archive.controlText("triggers") ?? "")
+        _ = try Conffiles.declarations(archive.controlText("conffiles"))
+        _ = try Triggers.directives(archive.controlText("triggers") ?? "")
         for entry in archive.package.entries {
             if entry.kind == .directory, filesystem.isScaffolding("/" + entry.path) {
                 continue
@@ -102,7 +102,7 @@ final class NativePackageTransaction {
 
     /// Every stage in order, with a running count of package steps so the
     /// console can show how far along the transaction is.
-    func execute(_ stages: [InstallerStage], archives: [String: NativePackageArchive]) throws {
+    func execute(_ stages: [InstallerStage], archives: [String: PackageArchive]) throws {
         let total = stages.reduce(0) { $0 + $1.identities.count }
         var completed = 0
         emit(.progress(completed: completed, total: total))
@@ -121,7 +121,7 @@ final class NativePackageTransaction {
                 for identity in identities {
                     try PackageStepFailure.attributing(identity, .unpacking) {
                         guard let archive = archives[identity] else {
-                            throw NativePackageFailure("Missing prepared package: \(identity)")
+                            throw PackageFailure("Missing prepared package: \(identity)")
                         }
                         try unpack(identity, archive: archive)
                     }

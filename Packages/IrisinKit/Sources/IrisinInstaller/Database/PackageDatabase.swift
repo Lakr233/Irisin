@@ -18,7 +18,7 @@ import IrisinProtocol
 /// Config-Version never on installed, triggers-pending or not-installed,
 /// and a package with nothing pending taken out of every other package's
 /// Triggers-Awaited.
-final class NativePackageDatabase {
+final class PackageDatabase {
     let directory: URL
     var records: [String: [String: String]] = [:]
     /// Each record's field names as its stanza or its control file spelled
@@ -59,9 +59,9 @@ final class NativePackageDatabase {
             // underscores. Preserve these records without relaxing new wire jobs.
             guard let identity = fields["package"]?.lowercased(),
                   InstallerJob.isPackageIdentity(identity.replacingOccurrences(of: "_", with: "-"))
-            else { throw NativePackageFailure("Invalid installed package record") }
+            else { throw PackageFailure("Invalid installed package record") }
             guard replacing || records[identity] == nil else {
-                throw NativePackageFailure("Duplicate package identity in installed database: \(identity)")
+                throw PackageFailure("Duplicate package identity in installed database: \(identity)")
             }
             fields["package"] = identity
             records[identity] = fields
@@ -136,7 +136,7 @@ final class NativePackageDatabase {
     /// The records a Pre-Depends may be satisfied by, as dpkg's `depisok`
     /// with `allowunconfigd` accepts them: configured packages, and an
     /// unpacked or half-configured one that has been configured before. For
-    /// the latter `NativePackageRelations.matches` checks the configured
+    /// the latter `PackageRelations.matches` checks the configured
     /// version as well as the unpacked one.
     var predependencyWitnesses: [[String: String]] {
         records.values.filter { fields in

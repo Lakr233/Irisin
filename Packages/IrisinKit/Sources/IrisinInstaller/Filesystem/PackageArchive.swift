@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 import IrisinProtocol
 
-struct NativePackageArchive {
+struct PackageArchive {
     let package: PreparedPackage
     let directory: URL
     let fields: [String: String]
@@ -12,7 +12,7 @@ struct NativePackageArchive {
         self.directory = directory
         let manifest = try Data(contentsOf: directory.appendingPathComponent("manifest.json"))
         guard Self.sha256(manifest) == digest else {
-            throw NativePackageFailure("Prepared manifest changed: \(identity)")
+            throw PackageFailure("Prepared manifest changed: \(identity)")
         }
         package = try JSONDecoder().decode(PreparedPackage.self, from: manifest)
         var control = try DebianControl.parse(package.control, preservingLinesFor: ["description"])
@@ -26,12 +26,12 @@ struct NativePackageArchive {
               let version = control["version"], let canonical = DebianVersion.canonical(version),
               control["architecture"] != nil
         else {
-            throw NativePackageFailure("Invalid prepared package: \(identity)")
+            throw PackageFailure("Invalid prepared package: \(identity)")
         }
         control["package"] = identity
         // the version as dpkg spells it back: no `0:` epoch, no trailing space
         control["version"] = canonical
-        for field in NativePackageDatabase.archiveOnlyFields {
+        for field in PackageDatabase.archiveOnlyFields {
             control.removeValue(forKey: field)
         }
         fields = control
@@ -40,17 +40,17 @@ struct NativePackageArchive {
             guard !entry.path.isEmpty, try PreparedPackage.relativePath(entry.path) == entry.path,
                   paths.insert(entry.path).inserted, entry.mode & ~0o7777 == 0
             else {
-                throw NativePackageFailure("Invalid archive path or permissions")
+                throw PackageFailure("Invalid archive path or permissions")
             }
             if entry.kind == .file {
-                guard let file = entry.file else { throw NativePackageFailure("Missing regular file contents") }
+                guard let file = entry.file else { throw PackageFailure("Missing regular file contents") }
                 try validate(file)
             } else if entry.kind == .symbolicLink || entry.kind == .hardLink {
                 guard let target = entry.linkTarget, !target.isEmpty, !target.utf8.contains(0) else {
-                    throw NativePackageFailure("Invalid link target")
+                    throw PackageFailure("Invalid link target")
                 }
                 if entry.kind == .hardLink, try PreparedPackage.relativePath(target) != target {
-                    throw NativePackageFailure("Invalid hard link target")
+                    throw PackageFailure("Invalid hard link target")
                 }
             }
         }
@@ -60,7 +60,7 @@ struct NativePackageArchive {
             // spell as a path is the only refusal.
             guard !name.isEmpty, name != ".", name != "..", name.count <= 250,
                   !name.utf8.contains(0), !name.utf8.contains(0x2F)
-            else { throw NativePackageFailure("Invalid control member") }
+            else { throw PackageFailure("Invalid control member") }
             try validate(file)
         }
         hardLinkTargets = try Self.resolveHardLinks(package.entries)
@@ -104,7 +104,7 @@ struct NativePackageArchive {
 
     func regularFileTarget(of entry: PreparedEntry) throws -> String {
         guard let target = hardLinkTargets[entry.path] else {
-            throw NativePackageFailure("Missing hard link target: \(entry.path)")
+            throw PackageFailure("Missing hard link target: \(entry.path)")
         }
         return target
     }
@@ -121,11 +121,11 @@ struct NativePackageArchive {
     private func validate(_ file: PreparedFile) throws {
         guard file.name.hasPrefix("blob-"), file.name.count > 5,
               file.name.dropFirst(5).allSatisfy(\.isNumber), file.size >= 0
-        else { throw NativePackageFailure("Invalid prepared file") }
+        else { throw PackageFailure("Invalid prepared file") }
         var info = stat()
         guard lstat(content(file).path, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size == file.size,
               try Self.digests(content(file)) == (file.sha256, file.md5)
-        else { throw NativePackageFailure("Prepared file changed: \(file.name)") }
+        else { throw PackageFailure("Prepared file changed: \(file.name)") }
     }
 
     /// Both digests in one read, as the app computes them while it writes the

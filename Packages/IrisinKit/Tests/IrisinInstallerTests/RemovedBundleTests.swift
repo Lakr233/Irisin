@@ -72,7 +72,7 @@ struct RemovedBundleTests {
         let registrar = RegistrarStandIn(registered: [bundle.path])
         var events: [InstallerEvent] = []
         let runner = registrar.runner(installRoot: fixture.root.path, layout: layout) { events.append($0) }
-        let digest = try NativePackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
+        let digest = try PackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
         #expect(runner.run(.transaction(.init(install: [], remove: [package.identity], statusDigest: digest))) == 0)
         // purged outright, as dpkg does without a postrm or conffiles
         #expect(try fixture.status() == nil)
@@ -132,7 +132,7 @@ struct RemovedBundleTests {
         #expect(registrar.registry == [spelled])
         try FileManager.default.removeItem(at: fixture.root.appendingPathComponent("Applications/Example.app"))
         _ = try makeBundle(fixture)
-        let digest = try NativePackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
+        let digest = try PackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
         #expect(runner.run(.transaction(.init(install: [], remove: [package.identity], statusDigest: digest))) == 0)
         #expect(registrar.requests.contains(.unregister(bundle: spelled)))
         #expect(registrar.registry.isEmpty)

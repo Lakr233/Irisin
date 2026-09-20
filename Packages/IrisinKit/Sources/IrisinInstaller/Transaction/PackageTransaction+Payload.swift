@@ -1,17 +1,17 @@
 import Foundation
 import IrisinProtocol
 
-extension NativePackageTransaction {
+extension PackageTransaction {
     /// The archive's entries, into place. A conffile goes where dpkg would
     /// put it: over an unchanged file, beside a changed one as .dpkg-dist,
     /// nowhere when the administrator deleted it and the package did not
     /// change it.
     func installPayload(
         _ identity: String,
-        archive: NativePackageArchive,
-        conffiles: inout NativeConffiles
+        archive: PackageArchive,
+        conffiles: inout Conffiles
     ) throws {
-        let declarations = try NativeConffiles.declarations(archive.controlText("conffiles"))
+        let declarations = try Conffiles.declarations(archive.controlText("conffiles"))
         let entries = archive.package.entries.sorted { lhs, rhs in
             if lhs.kind == .directory, rhs.kind != .directory {
                 return true
@@ -94,11 +94,11 @@ extension NativePackageTransaction {
     /// Conffiles field. Returns the paths taken away, for the file triggers.
     func removeOldFiles(
         _ identity: String,
-        archive: NativePackageArchive,
+        archive: PackageArchive,
         owners: [String: [String]],
-        conffiles: inout NativeConffiles
+        conffiles: inout Conffiles
     ) throws -> [String] {
-        let declarations = try NativeConffiles.declarations(archive.controlText("conffiles"))
+        let declarations = try Conffiles.declarations(archive.controlText("conffiles"))
         let newPaths = archive.absolutePaths
         var removed: [String] = []
         for path in declarations.remove.sorted() {
@@ -109,10 +109,10 @@ extension NativePackageTransaction {
             // another package's file is not this package's to remove
             guard owners[path] == nil else { continue }
             let location = try filesystem.location(overrides.path(path, owner: identity))
-            guard let target = try NativeConffiles.dereference(location, filesystem: filesystem) else { continue }
+            guard let target = try Conffiles.dereference(location, filesystem: filesystem) else { continue }
             try filesystem.remove(location.appendingPathExtension("dpkg-dist"))
             guard filesystem.exists(target) else { continue }
-            if (try? NativePackageArchive.digest(target, md5: true)) == previous {
+            if (try? PackageArchive.digest(target, md5: true)) == previous {
                 emit(.notice("Removing obsolete conffile \(path)"))
                 try filesystem.remove(target)
             } else {
@@ -121,7 +121,7 @@ extension NativePackageTransaction {
                 try filesystem.backup(saved)
                 try filesystem.backup(target)
                 guard rename(target.path, saved.path) == 0 else {
-                    throw NativePackageFailure("Cannot rename obsolete conffile \(path)")
+                    throw PackageFailure("Cannot rename obsolete conffile \(path)")
                 }
                 try filesystem.noteWritten(saved)
                 try filesystem.noteRemoved(target)

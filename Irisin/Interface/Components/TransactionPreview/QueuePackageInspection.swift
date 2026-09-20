@@ -96,7 +96,7 @@ nonisolated struct QueuePackageInspection: Sendable {
                 script("postrm", ["remove"], member("postrm"), installed: true),
             ]
         } else {
-            // `NativePackageTransaction.unpack` and `configure`, when nothing fails
+            // `PackageTransaction.unpack` and `configure`, when nothing fails
             [
                 current.flatMap { _ in script("prerm", ["upgrade", next], member("prerm"), installed: true) },
                 script(

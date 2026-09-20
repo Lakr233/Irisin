@@ -8,20 +8,20 @@ struct NativeRecoveryTests {
         let fixture = try NativeInstallFixture()
         let identity = "gsc.device-supports-liquid-detection_-corrosion-mitigation"
         let fields = ["package": identity, "version": "1", "architecture": "all", "essential": "yes", "status": "install ok installed"]
-        try Data(NativePackageDatabase.paragraph(fields).utf8).write(to: fixture.database.appendingPathComponent("status"))
-        let database = try NativePackageDatabase(directory: fixture.database)
+        try Data(PackageDatabase.paragraph(fields).utf8).write(to: fixture.database.appendingPathComponent("status"))
+        let database = try PackageDatabase(directory: fixture.database)
         try database.consolidate()
-        #expect(try NativePackageDatabase(directory: fixture.database).records[identity] == fields)
+        #expect(try PackageDatabase(directory: fixture.database).records[identity] == fields)
     }
 
     @Test func statusRewritePreservesMultilineDescription() throws {
         let fixture = try NativeInstallFixture()
         let description = "Summary\nLong description\n.\n  Indented content"
         let fields = ["package": "example", "version": "1", "architecture": "all", "status": "install ok installed", "description": description]
-        try Data(NativePackageDatabase.paragraph(fields).utf8).write(to: fixture.database.appendingPathComponent("status"))
-        let database = try NativePackageDatabase(directory: fixture.database)
+        try Data(PackageDatabase.paragraph(fields).utf8).write(to: fixture.database.appendingPathComponent("status"))
+        let database = try PackageDatabase(directory: fixture.database)
         try database.consolidate()
-        #expect(try NativePackageDatabase(directory: fixture.database).records["example"]?["description"] == description)
+        #expect(try PackageDatabase(directory: fixture.database).records["example"]?["description"] == description)
     }
 
     @Test func interruptedFileChangesRestoreOnNextOpen() throws {
@@ -144,7 +144,7 @@ struct NativeRecoveryTests {
         damaged[0] = UInt8(ascii: "x")
         try damaged.write(to: record)
         let reopened = try PackageFilesystem(root: fixture.root, layout: .init(kind: .none), database: fixture.database)
-        #expect(throws: NativePackageFailure.self) { try reopened.recover() }
+        #expect(throws: PackageFailure.self) { try reopened.recover() }
         #expect(FileManager.default.fileExists(atPath: record.path))
         #expect(try String(contentsOf: first, encoding: .utf8) == "interrupted")
     }
@@ -181,7 +181,7 @@ struct NativeRecoveryTests {
     /// root as dpkg writes it, once, at the head of every list.
     @Test func fileListNeverContainsEmptyOrBareRootEntries() throws {
         let fixture = try NativeInstallFixture()
-        let database = try NativePackageDatabase(directory: fixture.database)
+        let database = try PackageDatabase(directory: fixture.database)
         try database.writeInfo("example", member: "list", text: "\n/\n/.\n")
         #expect(try fixture.text("Library/dpkg/info/example.list") == "/.\n")
         try database.writeInfo("example", member: "list", text: "/usr/share/example\n\n")
@@ -194,11 +194,11 @@ struct NativeRecoveryTests {
         try FileManager.default.createDirectory(at: updates, withIntermediateDirectories: true)
         let record = "Package: example\nVersion: 1\nArchitecture: all\nStatus: install ok unpacked\n\n"
         try Data(record.utf8).write(to: updates.appendingPathComponent("0000"))
-        let database = try NativePackageDatabase(directory: fixture.database)
+        let database = try PackageDatabase(directory: fixture.database)
         #expect(database.records["example"]?["status"] == "install ok unpacked")
         try database.consolidate()
         #expect(!FileManager.default.fileExists(atPath: updates.appendingPathComponent("0000").path))
-        #expect(try NativePackageDatabase(directory: fixture.database).records["example"]?["version"] == "1")
+        #expect(try PackageDatabase(directory: fixture.database).records["example"]?["version"] == "1")
     }
 
     @Test func hardLinkChainUsesNewContentsDuringUpgrade() throws {
@@ -228,7 +228,7 @@ struct NativeRecoveryTests {
 
     @Test func triggerProcessingPreservesHeldSelection() {
         var fields = ["status": "hold ok triggers-pending"]
-        NativePackageDatabase.setState("installed", in: &fields)
+        PackageDatabase.setState("installed", in: &fields)
         #expect(fields["status"] == "hold ok installed")
     }
 }

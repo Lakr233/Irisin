@@ -1,25 +1,25 @@
 import Foundation
 import IrisinProtocol
 
-extension NativePackageTransaction {
+extension PackageTransaction {
     /// The scripts before the files, as dpkg's `process_archive` runs
     /// them: an old version that was configured hears `prerm upgrade` from
     /// half-configured and is unpacked after; the packages the new one
     /// breaks are deconfigured; the record is half-installed and needs
     /// reinstalling before the new preinst runs. Answers whether the old
     /// prerm ran, which a later abort has to undo.
-    func prepareUpgrade(_ archive: NativePackageArchive, old: [String: String]?) throws -> Bool {
+    func prepareUpgrade(_ archive: PackageArchive, old: [String: String]?) throws -> Bool {
         let identity = archive.identity
         let version = archive.version
         let oldVersion = old?["version"] ?? ""
         var prermRan = false
-        if let old, NativePackageDatabase.rank(NativePackageDatabase.state(of: old))
-            >= NativePackageDatabase.rank("half-configured")
+        if let old, PackageDatabase.rank(PackageDatabase.state(of: old))
+            >= PackageDatabase.rank("half-configured")
         {
             var fields = old
-            NativePackageDatabase.setState("half-configured", in: &fields)
+            PackageDatabase.setState("half-configured", in: &fields)
             try database.commit(identity, fields)
-            prermRan = NativePackageDatabase.isConfigured(old)
+            prermRan = PackageDatabase.isConfigured(old)
             do {
                 try scripts.run("prerm", identity: identity, arguments: ["upgrade", version])
             } catch {
@@ -35,49 +35,49 @@ extension NativePackageTransaction {
                 } catch {
                     if prermRan {
                         try? scripts.run("postinst", identity: identity, arguments: ["abort-upgrade", version])
-                        NativePackageDatabase.setState(NativePackageDatabase.configuredState(old), in: &fields)
+                        PackageDatabase.setState(PackageDatabase.configuredState(old), in: &fields)
                         try? database.commit(identity, fields)
                     }
                     throw error
                 }
             }
-            NativePackageDatabase.setState("unpacked", in: &fields)
+            PackageDatabase.setState("unpacked", in: &fields)
             try database.commit(identity, fields)
         }
         try deconfigureBrokenPackages(for: archive)
         // Commit a recoverable state before the preinst can touch anything;
         // only a complete payload and control-file commit advance from it.
         var fields = old ?? ["package": identity, "version": version, "architecture": archive.architecture]
-        fields["config-version"] = old.flatMap(NativePackageDatabase.configuredVersion)
+        fields["config-version"] = old.flatMap(PackageDatabase.configuredVersion)
         fields["status"] = "install reinstreq half-installed"
         try database.commit(identity, fields)
         try runPreinst(archive, old: old, prermRan: prermRan)
         return prermRan
     }
 
-    private func deconfigureBrokenPackages(for archive: NativePackageArchive) throws {
+    private func deconfigureBrokenPackages(for archive: PackageArchive) throws {
         // Breaks permits coexistence only after notifying the configured victim.
         for identity in database.records.keys.sorted() where identity != archive.identity {
-            guard var fields = database.records[identity], NativePackageDatabase.isConfigured(fields) else { continue }
-            let broken = try NativePackageRelations.relates(archive.fields, .breaks, to: fields)
-                || NativePackageRelations.relates(fields, .breaks, to: archive.fields)
+            guard var fields = database.records[identity], PackageDatabase.isConfigured(fields) else { continue }
+            let broken = try PackageRelations.relates(archive.fields, .breaks, to: fields)
+                || PackageRelations.relates(fields, .breaks, to: archive.fields)
             guard broken else { continue }
-            NativePackageDatabase.setState("half-configured", in: &fields)
+            PackageDatabase.setState("half-configured", in: &fields)
             try database.commit(identity, fields)
             try scripts.run(
                 "prerm",
                 identity: identity,
                 arguments: ["deconfigure", "in-favour", archive.identity, archive.version]
             )
-            NativePackageDatabase.setState("unpacked", in: &fields)
+            PackageDatabase.setState("unpacked", in: &fields)
             try database.commit(identity, fields)
         }
     }
 
-    private func runPreinst(_ archive: NativePackageArchive, old: [String: String]?, prermRan: Bool) throws {
+    private func runPreinst(_ archive: PackageArchive, old: [String: String]?, prermRan: Bool) throws {
         guard let preinst = archive.package.controlFiles["preinst"] else { return }
         let oldVersion = old?["version"] ?? ""
-        var arguments = [NativePackageDatabase.isPresent(old) ? "upgrade" : "install"]
+        var arguments = [PackageDatabase.isPresent(old) ? "upgrade" : "install"]
         if !oldVersion.isEmpty {
             arguments += [oldVersion, archive.version]
         }
@@ -99,8 +99,8 @@ extension NativePackageTransaction {
     /// before the old version's leftover files go. When it and the new
     /// postrm's `failed-upgrade` both fail, the old preinst hears
     /// `abort-upgrade` before the unpack is abandoned.
-    func finishUpgrade(_ archive: NativePackageArchive, old: [String: String]?) throws {
-        guard NativePackageDatabase.isPresent(old) else { return }
+    func finishUpgrade(_ archive: PackageArchive, old: [String: String]?) throws {
+        guard PackageDatabase.isPresent(old) else { return }
         do {
             try scripts.run("postrm", identity: archive.identity, arguments: ["upgrade", archive.version])
         } catch {

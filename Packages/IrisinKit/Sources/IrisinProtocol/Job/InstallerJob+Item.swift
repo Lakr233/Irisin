@@ -1,7 +1,9 @@
 import Foundation
 
 public extension InstallerJob.Transaction {
-    struct Package: Codable, Equatable, Sendable {
+    /// One archive the transaction installs: where it is, what it must hash
+    /// to, and the prepared tree the helper is handed.
+    struct Item: Codable, Equatable, Sendable {
         public var identity: String
         /// Kernel path of the original archive, retained for digest verification.
         public var path: String

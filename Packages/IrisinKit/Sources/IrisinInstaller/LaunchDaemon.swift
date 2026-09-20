@@ -6,7 +6,7 @@ import IrisinProtocol
 
 /// The two launchd changes Irisin's own package may make. The plist path is
 /// derived by `InstallerRunner`; neither the app nor a package supplies it.
-struct LaunchDaemonManager {
+struct LaunchDaemon {
     private static let label = "wiki.qaq.irisind"
 
     enum Request: Equatable {

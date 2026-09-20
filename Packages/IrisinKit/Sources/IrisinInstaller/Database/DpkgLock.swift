@@ -2,7 +2,7 @@ import Darwin
 
 /// POSIX record locks are what dpkg/apt use. Never unlink a lock file: doing
 /// so would let another process lock a different inode for the same database.
-final class DpkgFrontendLock {
+final class DpkgLock {
     private var descriptor: Int32
 
     init(path: String) throws {

@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 import IrisinProtocol
 
-extension NativePackageTransaction {
+extension PackageTransaction {
     /// dpkg's `deferred_remove` and `removal_bulk`: a configured package
     /// hears `prerm remove` from half-configured; the files go while the
     /// record is half-installed (and fine: dpkg refuses to touch a
@@ -13,37 +13,37 @@ extension NativePackageTransaction {
     /// is purged.
     func remove(_ identity: String) throws {
         guard var fields = database.records[identity] else {
-            throw NativePackageFailure("Cannot remove absent package")
+            throw PackageFailure("Cannot remove absent package")
         }
         let original = fields
         // a removal that stops halfway still knows what was configured
-        fields["config-version"] = NativePackageDatabase.configuredVersion(original)
-        let state = NativePackageDatabase.state(of: fields)
-        guard state != "not-installed" else { throw NativePackageFailure("Cannot remove absent package") }
+        fields["config-version"] = PackageDatabase.configuredVersion(original)
+        let state = PackageDatabase.state(of: fields)
+        guard state != "not-installed" else { throw PackageFailure("Cannot remove absent package") }
         emit(.package(.removing, identity: identity, version: fields["version"] ?? ""))
         if state == "config-files" {
             return try purge(identity, fields)
         }
         try triggers.changed(identity, paths: [])
-        if NativePackageDatabase.rank(state) >= NativePackageDatabase.rank("half-configured") {
+        if PackageDatabase.rank(state) >= PackageDatabase.rank("half-configured") {
             fields["status"] = "deinstall ok half-configured"
             try database.commit(identity, fields)
             do { try scripts.run("prerm", identity: identity, arguments: ["remove"]) }
             catch {
-                if NativePackageDatabase.isConfigured(original) {
+                if PackageDatabase.isConfigured(original) {
                     try? scripts.run("postinst", identity: identity, arguments: ["abort-remove"])
-                    NativePackageDatabase.setState(NativePackageDatabase.configuredState(original), in: &fields)
+                    PackageDatabase.setState(PackageDatabase.configuredState(original), in: &fields)
                     try? database.commit(identity, fields)
                 }
                 throw error
             }
         }
-        overrides = try NativePackageOverrides(directory: database.directory)
+        overrides = try PackageOverrides(directory: database.directory)
         fields["status"] = "deinstall ok half-installed"
         try database.commit(identity, fields)
 
         let files = try database.files(identity)
-        let conffiles = try NativeConffiles(status: fields["conffiles"])
+        let conffiles = try Conffiles(status: fields["conffiles"])
         var otherFiles = Set<String>()
         for other in database.records.keys where other != identity {
             try otherFiles.formUnion(database.files(other))
@@ -94,7 +94,7 @@ extension NativePackageTransaction {
     /// package is not installed at all.
     private func purge(_ identity: String, _ fields: [String: String]) throws {
         try triggers.changed(identity, paths: [])
-        let conffiles = try NativeConffiles(status: fields["conffiles"])
+        let conffiles = try Conffiles(status: fields["conffiles"])
         var removed: [String] = []
         do {
             for path in conffiles.hashes.keys.sorted(by: { $0.count > $1.count }) {

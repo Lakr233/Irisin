@@ -6,7 +6,7 @@ import IrisinProtocol
 /// roothide. BootstrapLayout owns both conversions.
 struct MaintainerScripts {
     let layout: BootstrapLayout
-    let database: NativePackageDatabase
+    let database: PackageDatabase
     /// Empty on a device: the bootstrap shell already sees its normal root.
     /// An isolated harness can supply a root for scripts that use DPKG_ROOT.
     let scriptRoot: String
@@ -86,7 +86,7 @@ struct MaintainerScripts {
         }
         let words = firstLine.dropFirst(2).split(whereSeparator: \.isWhitespace).map(String.init)
         guard let path = words.first, path.hasPrefix("/"), !path.utf8.contains(0) else {
-            throw NativePackageFailure("Invalid maintainer script interpreter")
+            throw PackageFailure("Invalid maintainer script interpreter")
         }
         return (path, Array(words.dropFirst()))
     }

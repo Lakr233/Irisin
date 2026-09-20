@@ -22,16 +22,16 @@ private func finished<T: Sendable>(within seconds: Double = 10, _ body: @escapin
 /// The resolver's worklists and fixed points, on graphs that go round.
 struct GraphLoopTests {
     @Test func componentsOfAGraphWithRings() {
-        #expect(finished { DependencyComponents.components([:]) } == [])
-        #expect(finished { DependencyComponents.components([1: [1]]) } == [[1]])
-        #expect(finished { DependencyComponents.components([1: [2], 2: [1], 3: [1, 3, 9]]) } == [[1, 2], [3]])
+        #expect(finished { StronglyConnectedComponents.components([:]) } == [])
+        #expect(finished { StronglyConnectedComponents.components([1: [1]]) } == [[1]])
+        #expect(finished { StronglyConnectedComponents.components([1: [2], 2: [1], 3: [1, 3, 9]]) } == [[1, 2], [3]])
         // a ring of a thousand is one component
         var ring: [Int: [Int]] = [:]
         for node in 0 ..< 1000 {
             ring[node] = [(node + 1) % 1000, node]
         }
         let graph = ring
-        #expect(finished { DependencyComponents.components(graph) } == [Set(0 ..< 1000)])
+        #expect(finished { StronglyConnectedComponents.components(graph) } == [Set(0 ..< 1000)])
     }
 
     @Test func removableAmongPackagesThatNeedEachOther() {

@@ -1,7 +1,7 @@
 import Foundation
 
 public extension PackageRequirementGroup {
-    enum RequirementType: String, CaseIterable, Codable, Sendable {
+    enum Kind: String, CaseIterable, Codable, Sendable {
         case depends
         case preDepends = "pre-depends"
         case conflicts

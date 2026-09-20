@@ -17,18 +17,18 @@ package dependency is involved.
 
 ## Where to review
 
-- `NativePackageInstaller.swift`: validation, locks and transaction lifetime.
-- `NativePackageTransaction.swift`: resources shared by one job; captures
+- `PackageInstaller.swift`: validation, locks and transaction lifetime.
+- `PackageTransaction.swift`: resources shared by one job; captures
   app-owned prepared input before verification and execution.
-- `NativePackageTransaction+Unpack.swift`: preflight, upgrade, payload and status
+- `PackageTransaction+Unpack.swift`: preflight, upgrade, payload and status
   commit in their execution order.
-- `NativePackageTransaction+UpgradeScripts.swift`: maintainer script arguments
+- `PackageTransaction+UpgradeScripts.swift`: maintainer script arguments
   and failure callbacks. `+Configure` and `+Remove` own the other stages.
-- `NativePackageTransaction+Payload.swift`: installed files, conffiles, links and
+- `PackageTransaction+Payload.swift`: installed files, conffiles, links and
   obsolete files. `+ControlFiles` owns package metadata replacement.
-- `NativePackageDatabase.swift`: compatible status, updates and info records.
+- `PackageDatabase.swift`: compatible status, updates and info records.
 - `PackageFilesystem.swift`: bootstrap destinations and recoverable file writes.
-- `NativeTriggers.swift` and its extensions: registration, activation and
+- `Triggers.swift` and its extensions: registration, activation and
   processing using compatible trigger records.
 
 Types have their own files. Transaction extensions share resources, avoiding a

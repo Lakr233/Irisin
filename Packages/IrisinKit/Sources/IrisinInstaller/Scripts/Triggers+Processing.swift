@@ -1,6 +1,6 @@
 import Foundation
 
-extension NativeTriggers {
+extension Triggers {
     private func incorporate() throws {
         let (directory, lock) = try lockTriggers()
         defer { lock.close() }
@@ -8,12 +8,12 @@ extension NativeTriggers {
         guard FileManager.default.fileExists(atPath: path.path) else { return }
         for line in try String(contentsOf: path, encoding: .utf8).split(separator: "\n") {
             let words = line.split(whereSeparator: \.isWhitespace).map(String.init)
-            guard words.count >= 2 else { throw NativePackageFailure("Invalid pending trigger record") }
+            guard words.count >= 2 else { throw PackageFailure("Invalid pending trigger record") }
             for source in words.dropFirst() {
                 try activate(words[0], by: source == "-" ? nil : source, awaitCompletion: source != "-")
             }
         }
-        try NativePackageDatabase.write(Data(), to: path)
+        try PackageDatabase.write(Data(), to: path)
     }
 
     /// dpkg's `trigproc`: each package with pending triggers gets one
@@ -27,7 +27,7 @@ extension NativeTriggers {
             try incorporate()
             let pending = database.records.keys.sorted().filter {
                 let fields = database.records[$0]!
-                return fields["triggers-pending"] != nil && NativePackageDatabase.isConfigured(fields)
+                return fields["triggers-pending"] != nil && PackageDatabase.isConfigured(fields)
             }
             if pending.isEmpty {
                 return
@@ -39,14 +39,14 @@ extension NativeTriggers {
                 // half-configured first, which takes the pending triggers with
                 // it: a postinst that fails leaves a package to configure, not
                 // a trigger every later transaction runs into again
-                NativePackageDatabase.setState("half-configured", in: &fields)
+                PackageDatabase.setState("half-configured", in: &fields)
                 try database.commit(identity, fields)
                 fields = database.records[identity] ?? fields
                 try scripts.run("postinst", identity: identity, arguments: ["triggered", names.joined(separator: " ")])
-                NativePackageDatabase.setState(NativePackageDatabase.configuredState(fields), in: &fields)
+                PackageDatabase.setState(PackageDatabase.configuredState(fields), in: &fields)
                 try database.commit(identity, fields)
             }
         }
-        throw NativePackageFailure("Trigger processing did not converge")
+        throw PackageFailure("Trigger processing did not converge")
     }
 }

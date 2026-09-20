@@ -83,7 +83,7 @@ final class InstallerRunnerTests: XCTestCase {
     func testDaemonJobsUseOnlyTheInstalledIrisinPlist() throws {
         let root = try Scratch.installRoot()
         let expected = root + "/Library/LaunchDaemons/wiki.qaq.irisind.plist"
-        var requests: [LaunchDaemonManager.Request] = []
+        var requests: [LaunchDaemon.Request] = []
         var events: [InstallerEvent] = []
         let runner = InstallerRunner(
             installRoot: root,
@@ -133,7 +133,7 @@ final class InstallerRunnerTests: XCTestCase {
         let data = try PropertyListSerialization.data(fromPropertyList: original, format: .xml, options: 0)
         try data.write(to: URL(fileURLWithPath: path))
         let executable = root + IrisinWire.daemonPath
-        try LaunchDaemonManager.preparePlist(at: path, executable: executable)
+        try LaunchDaemon.preparePlist(at: path, executable: executable)
         let result = try XCTUnwrap(NSDictionary(contentsOfFile: path))
         XCTAssertEqual(result["ProgramArguments"] as? [String], [executable])
         XCTAssertEqual(result["MachServices"] as? [String: Bool], ["wiki.qaq.irisin.service": true])

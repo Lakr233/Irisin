@@ -51,7 +51,7 @@ final class InstallerJobTests: XCTestCase {
         let badIdentity = InstallerJob.transaction(.init(install: [], remove: ["rm -rf /"]))
         XCTAssertThrowsError(try badIdentity.validate())
 
-        let tweak = InstallerJob.Transaction.Package(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")
+        let tweak = InstallerJob.Transaction.Item(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")
         let automatic = InstallerJob.transaction(.init(install: [tweak], remove: [], autoInstalled: [tweak.identity]))
         XCTAssertNoThrow(try automatic.validate())
         let markedTwice = InstallerJob.transaction(.init(

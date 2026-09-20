@@ -76,7 +76,7 @@ public enum ArchiveStream {
     }
 
     /// The control members the installer opens by name, and the only ones
-    /// read here: `NativePackageTransaction` runs the four scripts and parses
+    /// read here: `PackageTransaction` runs the four scripts and parses
     /// `conffiles` and `triggers`; anything else (`config`, `extrainst_`,
     /// `md5sums`) it copies into dpkg's info directory unopened. A package
     /// may pack as much of that as it likes, so none of it is held.

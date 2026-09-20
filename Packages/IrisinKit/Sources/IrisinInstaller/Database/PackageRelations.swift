@@ -2,13 +2,13 @@ import IrisinProtocol
 
 /// Validation shared by installation preflight, ownership takeover and stage
 /// checks. The solver chooses packages; the installer verifies its inputs.
-enum NativePackageRelations {
+enum PackageRelations {
     typealias Group = PackageRequirementGroup
 
-    static func groups(_ fields: [String: String], _ kind: Group.RequirementType) throws -> [Group.Requirement] {
+    static func groups(_ fields: [String: String], _ kind: Group.Kind) throws -> [Group.Clause] {
         guard let text = fields[kind.rawValue], !text.isEmpty else { return [] }
         guard let group = Group(value: text, type: kind)
-        else { throw NativePackageFailure("Malformed \(kind.rawValue) in \(fields["package"] ?? "package")") }
+        else { throw PackageFailure("Malformed \(kind.rawValue) in \(fields["package"] ?? "package")") }
         return group.requirements
     }
 
@@ -16,7 +16,7 @@ enum NativePackageRelations {
     /// check alone: a package that is not configured then witnesses only if
     /// the version its postinst last configured satisfies the element too.
     static func matches(
-        _ element: Group.Requirement.RequirementElement,
+        _ element: Group.Clause.Term,
         _ fields: [String: String],
         unconfigured: Bool = false
     ) -> Bool {
@@ -36,7 +36,7 @@ enum NativePackageRelations {
            element.doesThisVersionMatchesRequirement(version: version)
         {
             if unconfigured, let configured = fields["config-version"],
-               !["installed", "triggers-pending"].contains(NativePackageDatabase.state(of: fields)),
+               !["installed", "triggers-pending"].contains(PackageDatabase.state(of: fields)),
                !element.doesThisVersionMatchesRequirement(version: configured)
             {
                 return false
@@ -60,7 +60,7 @@ enum NativePackageRelations {
 
     static func relates(
         _ fields: [String: String],
-        _ kind: Group.RequirementType,
+        _ kind: Group.Kind,
         to other: [String: String]
     ) throws -> Bool {
         try groups(fields, kind).contains { relation in relation.elements.contains { matches($0, other) } }
@@ -68,7 +68,7 @@ enum NativePackageRelations {
 
     static func dependencies(
         _ fields: [String: String],
-        kinds: [Group.RequirementType],
+        kinds: [Group.Kind],
         available: [[String: String]],
         unconfigured: Bool = false
     ) throws {
@@ -78,7 +78,7 @@ enum NativePackageRelations {
                     available.contains { matches(element, $0, unconfigured: unconfigured) }
                 })
             {
-                throw NativePackageFailure(
+                throw PackageFailure(
                     "\(fields["package"] ?? "package"): unsatisfied \(kind.rawValue): \(group.original)"
                 )
             }

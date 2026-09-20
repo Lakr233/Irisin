@@ -1,7 +1,7 @@
 import Foundation
 
-public extension PackageRequirementGroup.Requirement {
-    struct RequirementElement: Codable, Hashable, Sendable {
+public extension PackageRequirementGroup.Clause {
+    struct Term: Codable, Hashable, Sendable {
         public let original: String
         public let representPackage: String
         public let architectureQualifier: String?
@@ -22,8 +22,8 @@ public extension PackageRequirementGroup.Requirement {
                 version = String(constraint.dropFirst(op.count)).trimmingCharacters(in: .whitespaces)
                 guard DebianVersion.isValid(version) else { return nil }
                 switch op {
-                case ">>": relation = .bigger
-                case ">=", ">": relation = .biggerOrEqual
+                case ">>": relation = .greater
+                case ">=", ">": relation = .greaterOrEqual
                 // dpkg accepts a bare parenthesized version as an exact match.
                 case "=", "": relation = .equal
                 case "<<": relation = .smaller
@@ -57,8 +57,8 @@ public extension PackageRequirementGroup.Requirement {
             else { return false }
             let comparison = DebianVersion.compare(version, wanted)
             switch versionType {
-            case .bigger: return comparison > 0
-            case .biggerOrEqual: return comparison >= 0
+            case .greater: return comparison > 0
+            case .greaterOrEqual: return comparison >= 0
             case .equal: return comparison == 0
             case .smaller: return comparison < 0
             case .smallerOrEqual: return comparison <= 0

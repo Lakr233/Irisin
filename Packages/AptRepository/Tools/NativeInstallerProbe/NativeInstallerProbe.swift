@@ -11,7 +11,7 @@ import IrisinProtocol
             NativeProbeInput.self,
             from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
         )
-        var packages: [InstallerJob.Transaction.Package] = []
+        var packages: [InstallerJob.Transaction.Item] = []
         for (identity, path) in input.archives.sorted(by: { $0.key < $1.key }) {
             let archive = URL(fileURLWithPath: path)
             let prepared = URL(fileURLWithPath: input.root).appendingPathComponent("prepared-" + identity)
@@ -36,7 +36,7 @@ import IrisinProtocol
             try print(String(decoding: InstallerJob.transaction(transaction).encoded(), as: UTF8.self))
             return
         }
-        let installer = NativePackageInstaller(
+        let installer = PackageInstaller(
             installRoot: input.root,
             layout: .init(kind: .none),
             databaseDirectory: database,

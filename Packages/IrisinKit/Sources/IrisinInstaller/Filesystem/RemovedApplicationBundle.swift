@@ -11,7 +11,7 @@ enum RemovedApplicationBundle {
 
     static func removeHusk(_ path: String) throws {
         guard try inspect(path, removing: false), try inspect(path, removing: true) else {
-            throw NativePackageFailure("The app bundle still contains files: \(path)")
+            throw PackageFailure("The app bundle still contains files: \(path)")
         }
     }
 

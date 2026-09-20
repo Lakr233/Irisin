@@ -1,6 +1,6 @@
 import Foundation
 
-struct NativePackageOverrides {
+struct PackageOverrides {
     private var diversions: [String: (String, String)] = [:]
     private var overrides: [String: (UInt32, UInt32, UInt32)] = [:]
 
@@ -8,7 +8,7 @@ struct NativePackageOverrides {
         let diversionURL = directory.appendingPathComponent("diversions")
         if FileManager.default.fileExists(atPath: diversionURL.path) {
             let lines = try String(contentsOf: diversionURL, encoding: .utf8).split(separator: "\n").map(String.init)
-            guard lines.count % 3 == 0 else { throw NativePackageFailure("Invalid diversions database") }
+            guard lines.count % 3 == 0 else { throw PackageFailure("Invalid diversions database") }
             for i in stride(from: 0, to: lines.count, by: 3) {
                 diversions[lines[i]] = (lines[i + 1], lines[i + 2])
             }
@@ -18,7 +18,7 @@ struct NativePackageOverrides {
             for line in try String(contentsOf: overrideURL, encoding: .utf8).split(separator: "\n") {
                 let parts = line.split(separator: " ", maxSplits: 3).map(String.init)
                 guard parts.count == 4, let mode = UInt32(parts[2], radix: 8) else {
-                    throw NativePackageFailure("Invalid statoverride database")
+                    throw PackageFailure("Invalid statoverride database")
                 }
                 /// dpkg-statoverride writes an account it could not name as
                 /// `#<id>`; a bare number is what older tools wrote
@@ -27,7 +27,7 @@ struct NativePackageOverrides {
                 }
                 let uid = number(parts[0]) ?? getpwnam(parts[0])?.pointee.pw_uid
                 let gid = number(parts[1]) ?? getgrnam(parts[1])?.pointee.gr_gid
-                guard let uid, let gid else { throw NativePackageFailure("Unknown statoverride account") }
+                guard let uid, let gid else { throw PackageFailure("Unknown statoverride account") }
                 overrides[parts[3]] = (mode, uid, gid)
             }
         }

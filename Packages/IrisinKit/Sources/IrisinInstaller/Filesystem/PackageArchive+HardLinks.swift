@@ -1,6 +1,6 @@
 import IrisinProtocol
 
-extension NativePackageArchive {
+extension PackageArchive {
     /// Each link chain is walked once; resolved suffixes are reused by later
     /// links. Large archives do not rebuild the entry table for every file.
     static func resolveHardLinks(_ entries: [PreparedEntry]) throws -> [String: String] {
@@ -14,7 +14,7 @@ extension NativePackageArchive {
                 guard seen.insert(current.path).inserted, let target = current.linkTarget,
                       let next = byPath[target]
                 else {
-                    throw NativePackageFailure("Missing or cyclic hard link target: \(entry.path)")
+                    throw PackageFailure("Missing or cyclic hard link target: \(entry.path)")
                 }
                 chain.append(current.path)
                 current = next
@@ -25,7 +25,7 @@ extension NativePackageArchive {
             } else if current.kind == .file {
                 target = current.path
             } else {
-                throw NativePackageFailure("Hard link has no regular file target: \(entry.path)")
+                throw PackageFailure("Hard link has no regular file target: \(entry.path)")
             }
             for path in chain {
                 resolved[path] = target

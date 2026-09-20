@@ -1,7 +1,7 @@
 import Foundation
 import IrisinProtocol
 
-struct NativePackageFailure: Error, CustomStringConvertible {
+struct PackageFailure: Error, CustomStringConvertible {
     let description: String
     init(_ description: String) {
         self.description = description

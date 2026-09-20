@@ -1,27 +1,27 @@
 import Foundation
 import IrisinProtocol
 
-extension NativePackageTransaction {
+extension PackageTransaction {
     /// dpkg's `process_archive`, in its order: the Pre-Depends check, the
     /// old prerm, the new preinst, the files, the old postrm, the old
     /// version's leftover files, the ownership changes, then the record.
     /// A failure after the preinst runs the abort scripts dpkg would and
     /// puts the record back where it was.
-    func unpack(_ identity: String, archive: NativePackageArchive) throws {
+    func unpack(_ identity: String, archive: PackageArchive) throws {
         emit(.package(.unpacking, identity: identity, version: archive.version))
         let old = database.records[identity]
-        var conffiles = try NativeConffiles(status: old?["conffiles"])
+        var conffiles = try Conffiles(status: old?["conffiles"])
         if !recoveryMode {
-            try NativePackageRelations.dependencies(
+            try PackageRelations.dependencies(
                 archive.fields,
                 kinds: [.preDepends],
                 available: database.predependencyWitnesses,
                 unconfigured: true
             )
         }
-        let declarations = try NativeConffiles.declarations(archive.controlText("conffiles"))
+        let declarations = try Conffiles.declarations(archive.controlText("conffiles"))
         for entry in archive.package.entries where declarations.remove.contains("/" + entry.path) {
-            throw NativePackageFailure("Obsolete conffile is still in data archive: /\(entry.path)")
+            throw PackageFailure("Obsolete conffile is still in data archive: /\(entry.path)")
         }
         // the activate directives of the old version and of the new one both
         // fire at unpack
@@ -30,7 +30,7 @@ extension NativePackageTransaction {
         let prermRan = try prepareUpgrade(archive, old: old)
         // preinst may use the device's dpkg-divert or dpkg-statoverride.
         // Observe those committed changes before choosing any destination.
-        overrides = try NativePackageOverrides(directory: database.directory)
+        overrides = try PackageOverrides(directory: database.directory)
 
         var removed: [String] = []
         do {
@@ -53,7 +53,7 @@ extension NativePackageTransaction {
             try transferOwnership(to: archive, owners: owners, kept: kept)
             var fields = archive.fields
             fields["conffiles"] = conffiles.hashes.isEmpty ? nil : conffiles.status
-            fields["config-version"] = old.flatMap(NativePackageDatabase.configuredVersion)
+            fields["config-version"] = old.flatMap(PackageDatabase.configuredVersion)
             // what the package still awaits survives its upgrade
             fields["triggers-awaited"] = old?["triggers-awaited"]
             fields["status"] = "install ok unpacked"
@@ -75,7 +75,7 @@ extension NativePackageTransaction {
     /// A path another package's diversion moved its file to is never
     /// overwritten. A link the filesystem keeps a directory for is shared,
     /// like a directory; those paths are returned, as the preinst left them.
-    private func validateOwnership(_ archive: NativePackageArchive, owners: [String: [String]]) throws -> Set<String> {
+    private func validateOwnership(_ archive: PackageArchive, owners: [String: [String]]) throws -> Set<String> {
         var kept = Set<String>()
         for entry in archive.package.entries where entry.kind != .directory {
             let path = "/" + entry.path
@@ -85,7 +85,7 @@ extension NativePackageTransaction {
                 continue
             }
             if actual != path, let others = owners[actual], !others.isEmpty {
-                throw NativePackageFailure(
+                throw PackageFailure(
                     "\(actual) is the diverted version of a file in \(others.joined(separator: ", "))"
                 )
             }
@@ -94,11 +94,11 @@ extension NativePackageTransaction {
                 if let diverter = overrides.diverter(of: path), diverter == owner || diverter == archive.identity {
                     continue
                 }
-                if NativePackageDatabase.state(of: fields) == "config-files" {
+                if PackageDatabase.state(of: fields) == "config-files" {
                     continue
                 }
-                guard try NativePackageRelations.relates(archive.fields, .replaces, to: fields) else {
-                    throw NativePackageFailure("\(path) is owned by \(owner); Replaces is required")
+                guard try PackageRelations.relates(archive.fields, .replaces, to: fields) else {
+                    throw PackageFailure("\(path) is owned by \(owner); Replaces is required")
                 }
             }
         }
@@ -116,7 +116,7 @@ extension NativePackageTransaction {
     }
 
     private func transferOwnership(
-        to archive: NativePackageArchive,
+        to archive: PackageArchive,
         owners: [String: [String]],
         kept: Set<String>
     ) throws {
@@ -143,11 +143,11 @@ extension NativePackageTransaction {
     /// whose own `usr/lib/TweakInject` was taken for shared, disappeared
     /// under the first tweak installed after it, and took its link along
     /// when the tweak went.
-    private func disappearOthers(replacedBy archive: NativePackageArchive, owners: [String: [String]]) throws {
+    private func disappearOthers(replacedBy archive: PackageArchive, owners: [String: [String]]) throws {
         let paths = archive.absolutePaths
         let candidates = Set(paths.flatMap { owners[$0] ?? [] })
         for other in candidates.sorted() {
-            guard let gone = database.records[other], NativePackageDatabase.isPresent(gone) else { continue }
+            guard let gone = database.records[other], PackageDatabase.isPresent(gone) else { continue }
             let files = try database.files(other)
             guard !files.isEmpty, files.allSatisfy({ path in
                 let diverter = overrides.diverter(of: path)
@@ -158,16 +158,16 @@ extension NativePackageTransaction {
             }) else { continue }
             var needed = false
             for (identity, dependent) in database.records
-                where identity != other && NativePackageDatabase.isPresent(dependent)
+                where identity != other && PackageDatabase.isPresent(dependent)
             {
                 let fields = identity == archive.identity ? archive.fields : dependent
                 // Recommends keeps a package as well, for dpkg; the wire has
                 // no kind for it, so its text is read as a Depends would be
                 let recommends = fields["recommends"]
-                    .flatMap { NativePackageRelations.Group(value: $0, type: .depends) }?.requirements ?? []
-                if try NativePackageRelations.relates(fields, .depends, to: gone)
-                    || NativePackageRelations.relates(fields, .preDepends, to: gone)
-                    || recommends.contains(where: { $0.elements.contains { NativePackageRelations.matches($0, gone) } })
+                    .flatMap { PackageRelations.Group(value: $0, type: .depends) }?.requirements ?? []
+                if try PackageRelations.relates(fields, .depends, to: gone)
+                    || PackageRelations.relates(fields, .preDepends, to: gone)
+                    || recommends.contains(where: { $0.elements.contains { PackageRelations.matches($0, gone) } })
                 {
                     needed = true
                     break
@@ -192,9 +192,9 @@ extension NativePackageTransaction {
     /// ran gets its postinst `abort-upgrade` and is installed again. A
     /// cleanup script that fails leaves the record half-installed, and the
     /// package needs reinstalling.
-    func abortUnpack(_ archive: NativePackageArchive, old: [String: String]?, prermRan: Bool) {
+    func abortUnpack(_ archive: PackageArchive, old: [String: String]?, prermRan: Bool) {
         let identity = archive.identity
-        let state = NativePackageDatabase.state(of: old)
+        let state = PackageDatabase.state(of: old)
         var succeeded = true
         if let postrm = archive.package.controlFiles["postrm"] {
             let arguments: [String] = switch state {
@@ -218,14 +218,14 @@ extension NativePackageTransaction {
                     var fields = old
                     // dpkg selected the package for installation when it
                     // started, and an old version that heard prerm is unpacked
-                    let restored = NativePackageDatabase.rank(state) >= NativePackageDatabase.rank("half-configured")
+                    let restored = PackageDatabase.rank(state) >= PackageDatabase.rank("half-configured")
                         ? "unpacked" : state
-                    fields["config-version"] = NativePackageDatabase.configuredVersion(old)
+                    fields["config-version"] = PackageDatabase.configuredVersion(old)
                     fields["status"] = "install ok " + restored
                     try database.commit(identity, fields)
                     if prermRan {
                         try scripts.run("postinst", identity: identity, arguments: ["abort-upgrade", archive.version])
-                        NativePackageDatabase.setState(NativePackageDatabase.configuredState(fields), in: &fields)
+                        PackageDatabase.setState(PackageDatabase.configuredState(fields), in: &fields)
                         try database.commit(identity, fields)
                     }
                 } else {

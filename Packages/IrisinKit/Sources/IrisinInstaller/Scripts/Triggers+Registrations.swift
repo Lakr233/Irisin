@@ -1,6 +1,6 @@
 import Foundation
 
-extension NativeTriggers {
+extension Triggers {
     func registrations() throws -> [String: [(String, Bool)]] {
         var result: [String: [(String, Bool)]] = [:]
         for identity in database.records.keys.sorted() {
@@ -30,7 +30,7 @@ extension NativeTriggers {
             } else {
                 // one interested package per line: dpkg reads each line of
                 // an explicit trigger's file as one package name
-                try NativePackageDatabase.write(
+                try PackageDatabase.write(
                     Data(names.map { $0 + "\n" }.joined().utf8),
                     to: directory.appendingPathComponent(trigger)
                 )
@@ -41,7 +41,7 @@ extension NativeTriggers {
         {
             try FileManager.default.removeItem(at: directory.appendingPathComponent(name))
         }
-        try NativePackageDatabase.write(
+        try PackageDatabase.write(
             Data(files.sorted().map { $0 + "\n" }.joined().utf8),
             to: directory.appendingPathComponent("File")
         )

@@ -1,15 +1,15 @@
 import AptRepository
 import Foundation
 
-struct SolverPackage {
+struct PoolPackage {
     typealias Group = PackageRequirementGroup
-    typealias Element = Group.Requirement.RequirementElement
+    typealias Element = Group.Clause.Term
 
     let package: Package
     let version: String
     let installed: Bool
     let fields: [String: String]
-    let relations: [Group.RequirementType: [Group.Requirement]]
+    let relations: [Group.Kind: [Group.Clause]]
     /// What the solver is told: an adapted package arrives as the
     /// bootstrap's own architecture, and libsolv drops any other.
     let architecture: String
@@ -42,8 +42,8 @@ struct SolverPackage {
         } else {
             fields["architecture"] ?? "all"
         }
-        var relations: [Group.RequirementType: [Group.Requirement]] = [:]
-        for type in Group.RequirementType.allCases {
+        var relations: [Group.Kind: [Group.Clause]] = [:]
+        for type in Group.Kind.allCases {
             guard let value = fields[type.rawValue],
                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else { continue }
@@ -120,7 +120,7 @@ struct SolverPackage {
     /// Recommends and Suggests. The solver never sees them; only the
     /// autoremove mark follows them, as apt does by default. One that does
     /// not parse is ignored rather than failing the plan.
-    var weakDependencies: [Group.Requirement] {
+    var weakDependencies: [Group.Clause] {
         ["recommends", "suggests"].flatMap { key in
             fields[key].flatMap { Group(value: $0, type: .depends) }?.requirements ?? []
         }

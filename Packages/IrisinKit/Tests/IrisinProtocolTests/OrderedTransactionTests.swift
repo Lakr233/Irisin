@@ -4,7 +4,7 @@ import Testing
 
 struct OrderedTransactionTests {
     @Test func configureRequiresPriorUnpack() {
-        let package = InstallerJob.Transaction.Package(identity: "aa", path: "/aa.deb")
+        let package = InstallerJob.Transaction.Item(identity: "aa", path: "/aa.deb")
         let job = InstallerJob.transaction(.init(install: [package], remove: [], stages: [.configure(["aa"]), .unpack(["aa"])]))
         #expect(throws: (any Error).self) { try job.validate() }
     }

@@ -3,7 +3,7 @@ import Foundation
 import IrisinProtocol
 import Testing
 
-struct NativePackageInstallerTests {
+struct PackageInstallerTests {
     @Test func installUpgradeAndRemovePreserveCompatibleDatabase() throws {
         let fixture = try NativeInstallFixture()
         let first = try fixture.package(files: ["usr/share/example": "one"])
@@ -179,7 +179,7 @@ struct NativePackageInstallerTests {
         #expect(layout.resolve("/var/jbx") == "/var/jbx")
         let package = try fixture.package(files: ["var/jb/usr/share/example": "mounted"])
         let runner = InstallerRunner(installRoot: fixture.root.path, layout: layout) { _ in }
-        let transaction = InstallerJob.Transaction(install: [package], remove: [], statusDigest: NativePackageArchive.sha256(Data()))
+        let transaction = InstallerJob.Transaction(install: [package], remove: [], statusDigest: PackageArchive.sha256(Data()))
         #expect(runner.run(.transaction(transaction)) == 0)
         #expect(try fixture.text("usr/share/example") == "mounted")
         #expect(try fixture.status() == "install ok installed")
@@ -199,7 +199,7 @@ struct NativePackageInstallerTests {
     @Test func roothideConffileLinkIsFollowedAsTheKernelFollowsIt() throws {
         let fixture = try NativeInstallFixture()
         let layout = BootstrapLayout(kind: .roothide(jbroot: fixture.root.path))
-        func package(_ version: String) throws -> InstallerJob.Transaction.Package {
+        func package(_ version: String) throws -> InstallerJob.Transaction.Item {
             try fixture.package(version: version, files: ["etc/example": version], controls: ["conffiles": "/etc/example\n"])
         }
         try fixture.run(install: [package("1")], layout: layout)

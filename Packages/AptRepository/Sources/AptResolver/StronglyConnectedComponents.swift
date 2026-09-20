@@ -1,6 +1,6 @@
 /// Iterative Kosaraju traversal: long dependency chains do not consume the
 /// Swift call stack. Returns dependencies before their dependants.
-enum DependencyComponents {
+enum StronglyConnectedComponents {
     static func components(_ graph: [Int: [Int]]) -> [Set<Int>] {
         var visited = Set<Int>()
         var order: [Int] = []
