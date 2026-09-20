@@ -98,6 +98,8 @@ final class DownloadArchiveController: UIViewController {
         }
         let status = center.status(for: url)
         await close()
+        // Cancel may land while the card leaves
+        guard !Task.isCancelled else { return }
         guard let file = status?.file, FileManager.default.fileExists(atPath: file.path) else {
             host?.presentNotice(
                 title: "Download Failed",
@@ -113,7 +115,8 @@ final class DownloadArchiveController: UIViewController {
             host?.presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             return
         }
-        host?.presentShareSheet([copy], anchor: anchor)
+        guard let host else { return }
+        InterfaceBridge.presentShareSheet([copy], anchor: anchor, from: host)
     }
 
     /// A copy under the name dpkg-name would give it, so what lands in

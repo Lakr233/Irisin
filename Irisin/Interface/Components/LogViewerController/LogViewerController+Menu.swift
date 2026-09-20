@@ -131,8 +131,12 @@ extension LogViewerController {
         } else {
             [logText()]
         }
-        // the menu button this came from, not the whole page
-        presentShareSheet(items, anchor: navigationItem.rightBarButtonItem?.customView.map { PopoverAnchor($0) })
+        // the bar button is a custom view, and that view is the anchor
+        InterfaceBridge.presentShareSheet(
+            items,
+            anchor: navigationItem.rightBarButtonItem?.customView.map { PopoverAnchor($0) },
+            from: self
+        )
     }
 
     @objc private func clearLog() {

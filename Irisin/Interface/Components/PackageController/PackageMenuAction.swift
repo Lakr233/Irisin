@@ -139,8 +139,9 @@ class PackageMenuAction {
 
     /// Every package menu in the app — the install button, the navigation
     /// bar, a long press on a cell — is this one.
-    /// `anchor` is the cell of a long press; a button's or a bar button's
-    /// menu names itself as the action's sender.
+    /// `anchor` is the cell of a long press, and wins: a context menu's
+    /// sender may be the whole list. A button's or a bar button's menu
+    /// passes none and names itself as the action's sender.
     static func menuElements(
         for package: Package,
         from host: UIViewController,
@@ -157,7 +158,7 @@ class PackageMenuAction {
                         attributes: destructiveActions.contains(action.descriptor) ? .destructive : []
                     ) { [weak host] chosen in
                         guard let host else { return }
-                        let anchor = PopoverAnchor(sender: chosen.sender) ?? anchor
+                        let anchor = anchor ?? PopoverAnchor(sender: chosen.sender)
                         Task { await action.block(package, host, anchor) }
                     }
                 }

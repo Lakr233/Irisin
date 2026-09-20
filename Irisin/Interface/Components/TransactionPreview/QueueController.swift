@@ -296,11 +296,11 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private func export(_ files: [(Package, URL)]) {
         Task { [weak self] in
             let copies = await Self.namedCopies(of: files)
-            guard let self, view.window != nil else { return }
+            guard let self else { return }
             guard let copies else {
                 return presentNotice(title: "Unable to Export", message: "The file could not be written. Try again.")
             }
-            presentShareSheet(copies, anchor: PopoverAnchor(menuItem))
+            InterfaceBridge.presentShareSheet(copies, anchor: PopoverAnchor(menuItem), from: self)
         }
     }
 
