@@ -390,9 +390,7 @@ a version bump, like icli.
   `MARKETING_VERSION` and a `0` fallback for builds from inside Xcode.
   The build has no warnings, Debug or Release, and a change keeps it that
   way. `run-xcodebuild.sh` shows each one as a `[!]` line (xcbeautify's
-  mark; the raw `warning:` without it). The only
-  ones allowed are dsymutil's about Runestone's prebuilt xcframework (module
-  caches on its own CI machine), which are not ours to fix.
+  mark; the raw `warning:` without it).
 - `make deb` / `make deb-all` — roothide and rootless packages, verified.
 - `make install` — update an installation over `iproxy 2333 22`.
 - `Scripts/prune-xcstrings.py Irisin/Resources/Localizable.xcstrings Irisin Packages`
