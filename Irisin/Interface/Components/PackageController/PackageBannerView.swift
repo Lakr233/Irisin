@@ -52,20 +52,7 @@ class PackageBannerView: UIView {
     private var queueSubscription: AnyCancellable?
 
     init(package: Package) {
-        // Only a dpkg row needs a repository candidate. An explicit file or
-        // repository version must remain the package the user opened.
-        let installInfo = package.identity.isEmpty || package.repoRef != nil || package.localFileURL != nil
-            ? nil
-            : PackageCenter.default.obtainPackageInstallationInfo(with: package.identity)
-        // With no update, the origin stands in for a dpkg row, so a
-        // reinstall takes the same package.
-        let origin = installInfo.flatMap { PackageCenter.default.obtainInstallOrigin(of: $0.identity) }
-        self.package = installInfo.flatMap {
-            PackageCenter.default.newestPackage(
-                of: PackageCenter.default.obtainUpdateForPackage(with: $0.identity, version: $0.version),
-                preferring: origin?.repoRef
-            )
-        } ?? origin ?? package
+        self.package = PackageMenuAction.requestPackage(for: package)
 
         super.init(frame: CGRect())
 

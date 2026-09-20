@@ -81,7 +81,9 @@ extension InstalledController {
             if sortReversed {
                 result = result.reversed()
             }
-            dataSource = result
+            // never no section at all: the layout's footer hangs off the
+            // last one, and a list with none has nowhere to put it
+            dataSource = result.isEmpty ? [.init(key: nil, section: nil, package: [])] : result
         }
         applySnapshot()
     }
@@ -95,7 +97,7 @@ extension InstalledController {
             let identities = await InterfaceBridge.identitiesWithUpdate()
             guard !Task.isCancelled, let self else { return }
             identitiesWithUpdate = identities
-            setupRightButtonItem()
+            setupBarItems()
             // the indicator lives outside the package: repaint the rows
             applySnapshot()
         }

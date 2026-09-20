@@ -63,9 +63,13 @@ extension InterfaceBridge {
             return target
         } actionProvider: { [weak host] _ in
             guard let host else { return nil }
+            // a dpkg row asks as its page would, with the repository's
+            // record. The preview above stays the row's: the package page
+            // finds that record itself, as it does when the row is tapped.
+            let requested = PackageMenuAction.requestPackage(for: package)
             return UIMenu(
                 title: "",
-                children: PackageMenuAction.menuElements(for: package, from: host, anchor: anchor)
+                children: PackageMenuAction.menuElements(for: requested, from: host, anchor: anchor)
             )
         }
     }

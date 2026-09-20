@@ -13,6 +13,10 @@ import Then
 import UIKit
 
 class PackageCell: UIView {
+    /// Between the icon and the text, and between the icon and whatever a
+    /// list puts before it: the Installed page's selection mark.
+    static let iconSpacing: CGFloat = 8
+
     var horizontalPadding: CGFloat = 0 {
         didSet {
             updatePadding()
@@ -133,7 +137,7 @@ class PackageCell: UIView {
             x.width.height.equalTo(0).priority(.high)
         }
         text.snp.makeConstraints { x in
-            x.leading.equalTo(avatar.snp.trailing).offset(8)
+            x.leading.equalTo(avatar.snp.trailing).offset(Self.iconSpacing)
             x.trailing.equalTo(accessory.snp.leading)
             x.centerY.equalTo(contentView.snp.centerY)
             x.top.greaterThanOrEqualToSuperview().offset(6).priority(.high)
@@ -275,6 +279,14 @@ class PackageCell: UIView {
         overrideIcon = (icon, color)
         indicator.tintColor = color
         indicator.image = icon
+    }
+
+    /// Back to the installed record's own badge: a row that is reconfigured
+    /// is not reused, and would keep an arrow its package no longer has.
+    func clearOverrideIndicator() {
+        guard overrideIcon != nil else { return }
+        overrideIcon = nil
+        updateIndicator()
     }
 }
 

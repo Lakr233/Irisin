@@ -182,6 +182,24 @@ class PackageMenuAction {
         return elements
     }
 
+    /// The package a request is made with. Only a dpkg row needs a
+    /// repository candidate: the newest update on offer, or with none the
+    /// install origin, so a reinstall takes the same package. An explicit
+    /// file or repository version stays the package the user opened.
+    static func requestPackage(for package: Package) -> Package {
+        guard !package.identity.isEmpty, package.repoRef == nil, package.localFileURL == nil,
+              let installInfo = PackageCenter.default.obtainPackageInstallationInfo(with: package.identity)
+        else { return package }
+        let origin = PackageCenter.default.obtainInstallOrigin(of: installInfo.identity)
+        return PackageCenter.default.newestPackage(
+            of: PackageCenter.default.obtainUpdateForPackage(
+                with: installInfo.identity,
+                version: installInfo.version
+            ),
+            preferring: origin?.repoRef
+        ) ?? origin ?? package
+    }
+
     /// Every request in the app goes here: the change sheet shows what it
     /// does to the queue and adds it. Returns once the sheet is on its way in.
     static func enqueue(_ actions: [ResolutionAction], from host: UIViewController) async {
