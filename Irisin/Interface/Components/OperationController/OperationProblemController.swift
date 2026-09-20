@@ -70,7 +70,7 @@ final class OperationProblemController: UIViewController {
 
         tableView.backgroundColor = .groupedBackground
         tableView.allowsSelection = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(ListContentCell.self, forCellReuseIdentifier: "cell")
         tableView.dataSource = dataSource
         dataSource.headerTitle = { section in
             switch section {

@@ -164,7 +164,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         super.viewDidLoad()
 
         tableView.backgroundColor = .groupedBackground
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "row")
+        tableView.register(ListContentCell.self, forCellReuseIdentifier: "row")
         tableView.delegate = self
         tableView.dataSource = dataSource
         dataSource.defaultRowAnimation = .fade
@@ -445,8 +445,10 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             let package = proposal?.plan?.snapshot.installed.first { $0.identity == name }
             content.image = UIImage(systemName: (ticked ?? []).contains(name) ? "checkmark.circle.fill" : "circle")
             content.imageProperties.tintColor = blockedBy.isEmpty ? .buttonNormal : .textSubtitle
-            content.text = package.map(self.name(of:)) ?? name
-            content.textProperties.color = blockedBy.isEmpty ? .textTitle : .textSubtitle
+            content.attributedText = plainTitle(
+                package.map(self.name(of:)) ?? name,
+                color: blockedBy.isEmpty ? .textTitle : .textSubtitle
+            )
             var subtitle = [package?.latestVersion ?? ""]
             if !blockedBy.isEmpty {
                 let installed = proposal?.plan?.snapshot.installed ?? []
@@ -467,13 +469,25 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             } else {
                 true
             }
-            content.text = adding && proposal?.plan != nil
-                ? String(localized: "Already in the queue")
-                : String(localized: "No changes")
-            content.textProperties.font = .body
-            content.textProperties.color = .textSubtitle
+            content.attributedText = plainTitle(
+                adding && proposal?.plan != nil
+                    ? String(localized: "Already in the queue")
+                    : String(localized: "No changes"),
+                color: .textSubtitle
+            )
         }
         return content
+    }
+
+    /// A row's text that is not a change's. It says that it is not struck
+    /// through, as a change's does: a label keeps a removal's strikethrough
+    /// through any later text that does not mention one.
+    private func plainTitle(_ text: String, color: UIColor) -> NSAttributedString {
+        NSAttributedString(string: text, attributes: [
+            .font: UIFont.body,
+            .foregroundColor: color,
+            .strikethroughStyle: 0,
+        ])
     }
 
     /// A change row's version, at the trailing edge so the name keeps one
