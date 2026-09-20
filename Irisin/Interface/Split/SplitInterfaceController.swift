@@ -1,5 +1,5 @@
 //
-//  LXSplitController.swift
+//  SplitInterfaceController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -10,16 +10,16 @@ import SnapKit
 import Then
 import UIKit
 
-/// The iPad interface: the panel of cards on the left, the detail navigator
+/// The iPad interface: the sidebar on the left, the detail navigator
 /// on the right. Column style, tiled. iOS 26 still hands the secondary
-/// column the whole window and marks the panel's width as a left safe
+/// column the whole window and marks the sidebar's width as a left safe
 /// area, so the navigator is hosted inside that safe area: every detail
-/// screen then lays out in the visible pane and never under the panel.
-class LXSplitController: UISplitViewController {
+/// screen then lays out in the visible pane and never under the sidebar.
+class SplitInterfaceController: UISplitViewController {
     /// The detail column's stack, where the sidebar opens a repository.
-    let navigator = LXMainNavigator()
-    private let panel = LXSplitPanelController()
-    private lazy var column = LXColumnHostController(content: navigator)
+    let navigator = DetailNavigator()
+    private let sidebar = SidebarController()
+    private lazy var column = ColumnHostController(content: navigator)
 
     init() {
         super.init(style: .doubleColumn)
@@ -39,10 +39,10 @@ class LXSplitController: UISplitViewController {
     }
 
     func makeViewControllers() {
-        panel.dashNavCard.onSelect = { [navigator] page in navigator.show(page) }
-        let sidebar = UINavigationController(rootViewController: panel)
-        sidebar.navigationBar.prefersLargeTitles = true
-        setViewController(sidebar, for: .primary)
+        sidebar.cards.onSelect = { [navigator] page in navigator.show(page) }
+        let primary = UINavigationController(rootViewController: sidebar)
+        primary.navigationBar.prefersLargeTitles = true
+        setViewController(primary, for: .primary)
         // A column that is not a navigation controller gets one from UIKit,
         // bar and all, stacked on the navigator's own. Ours has no bar; the
         // button that brings the sidebar back goes on the navigator's.
@@ -63,7 +63,7 @@ class LXSplitController: UISplitViewController {
 
     /// The Queue card, as a tap on it.
     func showQueue() {
-        panel.dashNavCard.open(.queue)
+        sidebar.cards.open(.queue)
     }
 
     private var isSidebarHidden = false
@@ -99,7 +99,7 @@ class LXSplitController: UISplitViewController {
 
 private final class SidebarToggleItem: UIBarButtonItem {}
 
-extension LXSplitController: UISplitViewControllerDelegate, UINavigationControllerDelegate {
+extension SplitInterfaceController: UISplitViewControllerDelegate, UINavigationControllerDelegate {
     func splitViewController(_: UISplitViewController, willChangeTo displayMode: UISplitViewController.DisplayMode) {
         isSidebarHidden = displayMode == .secondaryOnly
         if let top = navigator.topViewController {
@@ -122,7 +122,7 @@ extension LXSplitController: UISplitViewControllerDelegate, UINavigationControll
 /// that lays out to its view's edges lays out to the visible pane. The
 /// queue's bar floats at the bottom of that pane: the sidebar's Queue card
 /// says as much while it is there, and the sidebar can be hidden.
-final class LXColumnHostController: UIViewController {
+final class ColumnHostController: UIViewController {
     let content: UIViewController
     private var queueBar: QueueBarDock?
 

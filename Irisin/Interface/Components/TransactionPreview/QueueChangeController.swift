@@ -70,7 +70,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     private lazy var openQueueButton = UIBarButtonItem(
         primaryAction: UIAction(title: String(localized: "Open Queue")) { [weak self] _ in
             guard let self else { return }
-            NavigatorEnterViewController.enclosing(self)?.openQueue()
+            InterfaceHostController.enclosing(self)?.openQueue()
         }
     )
     private let spinner = UIActivityIndicatorView(style: .medium)

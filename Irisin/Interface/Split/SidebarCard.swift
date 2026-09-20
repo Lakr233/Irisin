@@ -1,5 +1,5 @@
 //
-//  DashNavCardInstance.swift
+//  SidebarCard.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2020/4/19.
@@ -9,7 +9,7 @@
 import GlyphixTextFx
 import UIKit
 
-class DashNavCardInstance: UIView {
+class SidebarCard: UIView {
     var cardClosure: (() -> Void)?
 
     private var icon = UIImageView()
@@ -59,7 +59,7 @@ class DashNavCardInstance: UIView {
         if defaultSelected {
             select()
         } else {
-            deselecte()
+            deselect()
         }
 
         title.text = text
@@ -111,7 +111,7 @@ class DashNavCardInstance: UIView {
         backgroundColor = selectBackgroundColor
     }
 
-    func deselecte() {
+    func deselect() {
         icon.tintColor = selectBackgroundColor
         title.textColor = unselectTitleColor
         badgeLabel.textColor = title.textColor

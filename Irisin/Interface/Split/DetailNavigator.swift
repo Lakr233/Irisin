@@ -1,5 +1,5 @@
 //
-//  LXMainController.swift
+//  DetailNavigator.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -16,10 +16,10 @@ enum DetailPage {
 /// The detail column. The page a sidebar card picks is the stack's root,
 /// so there is nothing under it to go back to: no back button, no swipe,
 /// and a page that pops itself stops there.
-class LXMainNavigator: UINavigationController {
-    private let dashboard = LXDashboardController()
+class DetailNavigator: UINavigationController {
+    private let dashboard = SplitDashboardController()
     private let setting = SettingController()
-    private let installed = LXInstalledController()
+    private let installed = SplitInstalledController()
     private let queue = QueueController()
 
     override func viewDidLoad() {

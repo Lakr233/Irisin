@@ -44,7 +44,7 @@ class HDRepoNavigator: UINavigationController {
 }
 
 /// The registered repositories, one list, nothing else. The iPad lists them
-/// in its sidebar (`LXSplitPanelController`).
+/// in its sidebar (`SidebarController`).
 class HDRepoController: UIViewController {
     private var subscriptions = Set<AnyCancellable>()
 

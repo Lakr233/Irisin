@@ -1,5 +1,5 @@
 //
-//  LXSplitPanelController.swift
+//  SidebarController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -16,7 +16,7 @@ import UIKit
 /// The iPad sidebar: the four feature cards, then the repositories as an
 /// inset grouped list. Adding is in the navigation bar; pulling the list
 /// refreshes every repository, and one is refreshed from its own row.
-class LXSplitPanelController: UIViewController {
+class SidebarController: UIViewController {
     private nonisolated enum Section: Hashable {
         case features
         case repositories
@@ -32,7 +32,7 @@ class LXSplitPanelController: UIViewController {
 
     private var subscriptions = Set<AnyCancellable>()
 
-    let dashNavCard = DashNavCard()
+    let cards = SidebarCards()
 
     private let refreshControl = SettlingRefreshControl()
 
@@ -69,9 +69,9 @@ class LXSplitPanelController: UIViewController {
 
     private lazy var dataSource: UICollectionViewDiffableDataSource<Section, Item> = {
         let features = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [unowned self] cell, _, _ in
-            guard dashNavCard.superview !== cell.contentView else { return }
-            cell.contentView.addSubview(dashNavCard)
-            dashNavCard.snp.remakeConstraints { x in
+            guard cards.superview !== cell.contentView else { return }
+            cell.contentView.addSubview(cards)
+            cards.snp.remakeConstraints { x in
                 x.edges.equalToSuperview()
                 x.height.equalTo(210).priority(999)
             }
@@ -191,7 +191,7 @@ class LXSplitPanelController: UIViewController {
 
     /// Where a repository opens: the detail column, never this one.
     private var detailNavigator: UINavigationController? {
-        (splitViewController as? LXSplitController)?.navigator
+        (splitViewController as? SplitInterfaceController)?.navigator
     }
 
     /// The spinner stays until the last repository has finished.
@@ -287,7 +287,7 @@ class LXSplitPanelController: UIViewController {
     }
 }
 
-extension LXSplitPanelController: UICollectionViewDelegate {
+extension SidebarController: UICollectionViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         refreshControl.listDidScroll(scrollView)
     }

@@ -36,7 +36,7 @@ extension PackageBannerView {
         }
         guard let action = obtainQuickAction() else {
             if opensQueue {
-                NavigatorEnterViewController.enclosing(host)?.openQueue()
+                InterfaceHostController.enclosing(host)?.openQueue()
             }
             return
         }

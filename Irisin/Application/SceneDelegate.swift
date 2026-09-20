@@ -81,9 +81,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     /// The interface once setup has put it on screen, however long that takes.
-    private func interface() async -> NavigatorEnterViewController {
+    private func interface() async -> InterfaceHostController {
         while true {
-            if let interface = window?.rootViewController?.presentedViewController as? NavigatorEnterViewController,
+            if let interface = window?.rootViewController?.presentedViewController as? InterfaceHostController,
                interface.current != nil
             {
                 return interface

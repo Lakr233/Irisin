@@ -56,7 +56,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
                 withReuseIdentifier: generalHeaderID,
                 for: indexPath
             )
-            if let view = view as? LXDashboardSupplementHeaderCell,
+            if let view = view as? DashboardSectionHeader,
                let section = section(at: indexPath.section)
             {
                 view.loadSection(data: section)
@@ -120,7 +120,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         collectionView.alwaysBounceVertical = true
         collectionView.backgroundColor = .clear
         collectionView.register(
-            LXDashboardSupplementHeaderCell.self,
+            DashboardSectionHeader.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: generalHeaderID
         )

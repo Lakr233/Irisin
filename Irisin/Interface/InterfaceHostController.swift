@@ -1,5 +1,5 @@
 //
-//  NavigatorEnterViewController.swift
+//  InterfaceHostController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/8.
@@ -15,26 +15,26 @@ import UIKit
 /// controller, not a tab bar controller: on iPadOS 18 a tab bar controller
 /// puts its bar at the top of the screen and keeps that space even when the
 /// bar is hidden.
-class NavigatorEnterViewController: UIViewController {
-    private var hdMain: HandyTabBarController?
-    private var lxMain: LXSplitController?
+class InterfaceHostController: UIViewController {
+    private var tabs: HandyTabBarController?
+    private var split: SplitInterfaceController?
     /// The layout on screen right now.
     private(set) var current: UIViewController?
 
     /// Where a page opened from outside the interface goes: the detail
     /// column on the iPad, the selected tab's stack elsewhere.
     var pageStack: UINavigationController? {
-        if let split = current as? LXSplitController {
+        if let split = current as? SplitInterfaceController {
             return split.navigator
         }
         return (current as? UITabBarController)?.selectedViewController as? UINavigationController
     }
 
     /// The interface `controller` is in, or is presented over.
-    static func enclosing(_ controller: UIViewController) -> NavigatorEnterViewController? {
+    static func enclosing(_ controller: UIViewController) -> InterfaceHostController? {
         var node: UIViewController? = controller
         while let current = node {
-            if let interface = current as? NavigatorEnterViewController {
+            if let interface = current as? InterfaceHostController {
                 return interface
             }
             node = current.parent ?? current.presentingViewController
@@ -48,7 +48,7 @@ class NavigatorEnterViewController: UIViewController {
         if presentedViewController != nil {
             dismiss(animated: true)
         }
-        (current as? LXSplitController)?.showQueue()
+        (current as? SplitInterfaceController)?.showQueue()
         (current as? HandyTabBarController)?.showQueue()
     }
 
@@ -67,9 +67,9 @@ class NavigatorEnterViewController: UIViewController {
     func prepare(filling bounds: CGRect, within budget: Duration) async {
         loadViewIfNeeded()
         view.frame = bounds
-        setExceptedRootViewController()
+        installRootIfNeeded()
         view.layoutIfNeeded()
-        await lxMain?.prepare(within: budget)
+        await split?.prepare(within: budget)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -83,7 +83,7 @@ class NavigatorEnterViewController: UIViewController {
 
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        setExceptedRootViewController()
+        installRootIfNeeded()
     }
 
     override var childForStatusBarStyle: UIViewController? {
@@ -94,21 +94,21 @@ class NavigatorEnterViewController: UIViewController {
         current
     }
 
-    func setExceptedRootViewController() {
+    func installRootIfNeeded() {
         let target: UIViewController
-        if shouldUseLargeUI() {
-            let controller = lxMain ?? LXSplitController()
-            lxMain = controller
+        if usesSplitLayout {
+            let controller = split ?? SplitInterfaceController()
+            split = controller
             target = controller
         } else {
-            let controller = hdMain ?? HandyTabBarController()
-            hdMain = controller
+            let controller = tabs ?? HandyTabBarController()
+            tabs = controller
             target = controller
         }
         guard target !== current else { return }
         Dog.shared.join(
             "Interface",
-            "loading the \(target is LXSplitController ? "split" : "tab bar") interface",
+            "loading the \(target is SplitInterfaceController ? "split" : "tab bar") interface",
             level: .info
         )
 
@@ -125,13 +125,7 @@ class NavigatorEnterViewController: UIViewController {
         current = target
     }
 
-    func shouldUseLargeUI() -> Bool {
-        if UIDevice.current.userInterfaceIdiom != .pad {
-            return false
-        }
-        if !(view.frame.width > 700 && view.frame.height > 700) {
-            return false
-        }
-        return true
+    var usesSplitLayout: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad && view.frame.width > 700 && view.frame.height > 700
     }
 }

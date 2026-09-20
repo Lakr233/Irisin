@@ -262,7 +262,7 @@ end.
   (`.panelBackground`) is the lowest ground, the detail column
   (`.pageBackground`) a step brighter, a card (`.cardBackground`) a step
   above whatever it sits on, in both modes. In the dark that step is the
-  system's elevated level: `LXColumnHostController` marks the detail
+  system's elevated level: `ColumnHostController` marks the detail
   column elevated, so a page's ground there is `#111111`, not black, and
   its cards the elevated `#2C2C2E`. A page picks its ground from
   `.pageBackground`, `.plainBackground` (rows on the ground itself) or

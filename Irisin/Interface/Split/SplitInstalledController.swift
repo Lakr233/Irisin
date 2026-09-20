@@ -1,5 +1,5 @@
 //
-//  LXInstalledController.swift
+//  SplitInstalledController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/8/10.
@@ -9,7 +9,7 @@
 import AptRepository
 import UIKit
 
-class LXInstalledController: InstalledController {
+class SplitInstalledController: InstalledController {
     override var placesBarItemsLeading: Bool {
         true
     }

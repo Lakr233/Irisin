@@ -1,5 +1,5 @@
 //
-//  LXDashboardController.swift
+//  SplitDashboardController.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/9/15.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-class LXDashboardController: DashboardController {
+class SplitDashboardController: DashboardController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = String(localized: "Dashboard")

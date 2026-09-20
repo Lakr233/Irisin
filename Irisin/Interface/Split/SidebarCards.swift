@@ -1,5 +1,5 @@
 //
-//  DashNavCard.swift
+//  SidebarCards.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2020/4/18.
@@ -10,29 +10,29 @@ import AptRepository
 import Combine
 import UIKit
 
-class DashNavCard: UIView {
+class SidebarCards: UIView {
     private var subscriptions = Set<AnyCancellable>()
     private var updateCountTask: Task<Void, Never>?
 
-    private let dashCard = DashNavCardInstance(
+    private let dashboardCard = SidebarCard(
         text: String(localized: "Dashboard"),
         symbol: "square.grid.2x2.fill",
         defaultSelected: true
     )
 
-    private let settCard = DashNavCardInstance(
+    private let settingsCard = SidebarCard(
         text: String(localized: "Settings"),
         symbol: "gearshape.fill",
         defaultSelected: false
     )
 
-    private let queueCard = DashNavCardInstance(
+    private let queueCard = SidebarCard(
         text: String(localized: "Queue"),
         symbol: "tray.full.fill",
         defaultSelected: false
     )
 
-    private let instCard = DashNavCardInstance(
+    private let installedCard = SidebarCard(
         text: String(localized: "Installed"),
         symbol: "shippingbox.fill",
         defaultSelected: false
@@ -49,18 +49,18 @@ class DashNavCard: UIView {
     required init() {
         super.init(frame: CGRect())
 
-        addSubview(dashCard)
-        dashCard.cardClosure = { [weak self] in self?.open(.dashboard) }
-        dashCard.snp.makeConstraints { x in
+        addSubview(dashboardCard)
+        dashboardCard.cardClosure = { [weak self] in self?.open(.dashboard) }
+        dashboardCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.top).offset(8)
             x.leading.equalTo(self.snp.leading)
             x.bottom.equalTo(self.snp.centerY).offset(-8)
             x.trailing.equalTo(self.snp.centerX).offset(-8)
         }
 
-        addSubview(settCard)
-        settCard.cardClosure = { [weak self] in self?.open(.settings) }
-        settCard.snp.makeConstraints { x in
+        addSubview(settingsCard)
+        settingsCard.cardClosure = { [weak self] in self?.open(.settings) }
+        settingsCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.top).offset(8)
             x.leading.equalTo(self.snp.centerX).offset(8)
             x.bottom.equalTo(self.snp.centerY).offset(-8)
@@ -76,9 +76,9 @@ class DashNavCard: UIView {
             x.trailing.equalTo(self.snp.centerX).offset(-8)
         }
 
-        addSubview(instCard)
-        instCard.cardClosure = { [weak self] in self?.open(.installed) }
-        instCard.snp.makeConstraints { x in
+        addSubview(installedCard)
+        installedCard.cardClosure = { [weak self] in self?.open(.installed) }
+        installedCard.snp.makeConstraints { x in
             x.top.equalTo(self.snp.centerY).offset(8)
             x.leading.equalTo(self.snp.centerX).offset(8)
             x.bottom.equalTo(self.snp.bottom).offset(-8)
@@ -104,17 +104,17 @@ class DashNavCard: UIView {
     /// What a tap on a card does.
     func open(_ page: DetailPage) {
         switch page {
-        case .dashboard: select(dashCard)
-        case .settings: select(settCard)
-        case .installed: select(instCard)
+        case .dashboard: select(dashboardCard)
+        case .settings: select(settingsCard)
+        case .installed: select(installedCard)
         case .queue: select(queueCard)
         }
         onSelect?(page)
     }
 
-    private func select(_ card: DashNavCardInstance) {
-        for other in [dashCard, settCard, queueCard, instCard] where other !== card {
-            other.deselecte()
+    private func select(_ card: SidebarCard) {
+        for other in [dashboardCard, settingsCard, queueCard, installedCard] where other !== card {
+            other.deselect()
         }
         card.select()
     }
@@ -124,7 +124,7 @@ class DashNavCard: UIView {
         updateCountTask = Task { [weak self] in
             let count = await Self.updateCount(in: PackageCenter.default.index)
             guard !Task.isCancelled, let self else { return }
-            instCard.badgeText = count > 0 ? String(count) : "" // empty for animation
+            installedCard.badgeText = count > 0 ? String(count) : "" // empty for animation
         }
     }
 

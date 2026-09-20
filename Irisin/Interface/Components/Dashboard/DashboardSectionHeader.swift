@@ -1,5 +1,5 @@
 //
-//  LXDashboardSupplementHeaderCell.swift
+//  DashboardSectionHeader.swift
 //  Irisin
 //
 //  Created by Lakr Aream on 2021/9/14.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-class LXDashboardSupplementHeaderCell: UICollectionReusableView {
+class DashboardSectionHeader: UICollectionReusableView {
     let label = UILabel()
     let button = UIButton()
     var overrideButtonAction: (@MainActor @Sendable (UIViewController?) -> Void)?

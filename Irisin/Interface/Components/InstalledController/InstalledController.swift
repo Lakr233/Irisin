@@ -520,7 +520,7 @@ class InstalledController: UICollectionViewController {
     /// field inline at the trailing end of the bar, which leaves the title
     /// little room as it is: there the items lead, the update button first
     /// and the ellipsis after it. The compact interface is another
-    /// controller (`NavigatorEnterViewController` swaps the two), so an
+    /// controller (`InterfaceHostController` swaps the two), so an
     /// item never changes sides while it is on screen.
     var placesBarItemsLeading: Bool {
         false
@@ -541,7 +541,7 @@ class InstalledController: UICollectionViewController {
 
     /// Puts the page's items on the bar and leaves the rest alone: the split
     /// view keeps its Show Sidebar item first on the leading side
-    /// (`LXSplitController.syncSidebarToggle`), and the page's follow it.
+    /// (`SplitInterfaceController.syncSidebarToggle`), and the page's follow it.
     func placeBarItems(
         leading: [UIBarButtonItem],
         trailing: [UIBarButtonItem],
