@@ -54,7 +54,7 @@ class RepositoryDetailController: UIViewController {
         // room under the last footer, clear of the floating tab bar
         $0.contentInset.bottom = 128
         $0.delegate = self
-        $0.register(RepoDetailHostCell.self, forCellWithReuseIdentifier: "host")
+        $0.register(RepositoryDetailHostCell.self, forCellWithReuseIdentifier: "host")
         $0.register(UICollectionViewListCell.self, forCellWithReuseIdentifier: "filter")
         for kind in [UICollectionView.elementKindSectionHeader, UICollectionView.elementKindSectionFooter] {
             $0.register(UICollectionViewListCell.self, forSupplementaryViewOfKind: kind, withReuseIdentifier: kind)
@@ -67,7 +67,7 @@ class RepositoryDetailController: UIViewController {
         switch item {
         case let .banner(index):
             let cell = collectionView
-                .dequeueReusableCell(withReuseIdentifier: "host", for: indexPath) as! RepoDetailHostCell
+                .dequeueReusableCell(withReuseIdentifier: "host", for: indexPath) as! RepositoryDetailHostCell
             if let banner = bannerViews[index] ?? FeaturedBanner(banner: banners[index], inside: repo) {
                 bannerViews[index] = banner
                 cell.host(banner)
@@ -399,7 +399,7 @@ extension RepositoryDetailController: UICollectionViewDelegate {
 // MARK: - CELLS
 
 /// A cell around a view that draws and handles itself: a featured banner.
-final class RepoDetailHostCell: UICollectionViewCell {
+final class RepositoryDetailHostCell: UICollectionViewCell {
     func host(_ view: UIView) {
         contentView.subviews.forEach { $0.removeFromSuperview() }
         contentView.addSubview(view)

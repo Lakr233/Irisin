@@ -81,7 +81,11 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
         case let .package(_, package):
             let cell = collectionView
                 .dequeueReusableCell(withReuseIdentifier: packageCellID, for: indexPath)
-                as! DashboardPackageCell
+                as! PackageCollectionCell
+            // no card behind a dashboard row, so its icon starts at the cell's
+            // edge, where the section title starts: PackageListRow holds it 4
+            // in, for rows on a card
+            cell.horizontalPadding = -4
             cell.loadValue(package: package)
             return cell
         }
@@ -130,7 +134,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             withReuseIdentifier: footerID
         )
         collectionView.register(
-            DashboardPackageCell.self,
+            PackageCollectionCell.self,
             forCellWithReuseIdentifier: packageCellID
         )
 
@@ -152,20 +156,5 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             Task { await self?.reload(animated: true) }
         }
         .store(in: &subscriptions)
-    }
-}
-
-/// A package on the dashboard: no card behind it, so its icon starts at the
-/// cell's edge, where the section title above it starts.
-private final class DashboardPackageCell: PackageCollectionCell {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        // PackageListRow holds its icon 4 in from the edge, for rows on a card
-        horizontalPadding = -4
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
     }
 }

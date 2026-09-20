@@ -12,7 +12,8 @@ import SDWebImage
 import SPIndicator
 import UIKit
 
-class PackageUpdateTableCell: PackageTableCell {
+class PackageUpdateTableCell: UITableViewCell {
+    let originalCell = PackageListRow()
     let button = UIButton()
     var padding: CGFloat = 0 {
         didSet {
@@ -57,7 +58,16 @@ class PackageUpdateTableCell: PackageTableCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        originalCell.prepareForReuse()
         updateCandidate = nil
+    }
+
+    func loadValue(package: Package) {
+        originalCell.loadValue(package: package)
+    }
+
+    func overrideIndicator(with icon: UIImage, and color: UIColor) {
+        originalCell.overrideIndicator(with: icon, and: color)
     }
 
     @available(*, unavailable)
@@ -66,16 +76,16 @@ class PackageUpdateTableCell: PackageTableCell {
     }
 
     func loadUpdateValue(package: Package) {
-        guard let privPackage = originalCell.represent else {
+        guard let installed = originalCell.represent else {
             return
         }
 
         updateCandidate = package
 
         let unknownVersion = String(localized: "Unknown")
-        let privVersion = privPackage.latestVersion ?? unknownVersion
+        let installedVersion = installed.latestVersion ?? unknownVersion
         let newVersion = package.latestVersion ?? unknownVersion
-        let newVersionString = "\(privVersion) → \(newVersion)"
+        let newVersionString = "\(installedVersion) → \(newVersion)"
         originalCell.subtitle.text = newVersionString
         originalCell.subtitle.highlight(text: newVersion, font: nil, color: .versionHighlight)
 

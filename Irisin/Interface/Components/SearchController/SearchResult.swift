@@ -50,7 +50,7 @@ nonisolated struct SearchResult: Hashable, Sendable {
 /// Walks a copy of the package index and the repositories for a key. Runs on
 /// the concurrent pool and stops as soon as the task that asked is cancelled,
 /// which a newer keystroke does.
-nonisolated enum SearchEngine {
+nonisolated extension SearchResult {
     @concurrent
     static func search(
         key: String,

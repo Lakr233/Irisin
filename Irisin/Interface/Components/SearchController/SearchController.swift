@@ -310,7 +310,7 @@ extension SearchController: UISearchControllerDelegate, UISearchResultsUpdating,
         let index = PackageCenter.default.index
         let repositories = RepositoryCenter.default.repositories
         searchTask = Task {
-            let results = await SearchEngine.search(
+            let results = await SearchResult.search(
                 key: text,
                 in: index,
                 repositories: repositories
