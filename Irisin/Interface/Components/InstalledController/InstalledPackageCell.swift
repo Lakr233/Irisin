@@ -20,19 +20,9 @@ final class InstalledPackageCell: UICollectionViewListCell {
     let originalCell = PackageListRow()
     private let selectionMark = SelectionMarkView()
 
-    /// A row is as tall as `PackageListRow` at the text size in use, which is
-    /// the app's and not a view's: `PackageListRow` takes its fonts from there.
-    /// Measured once per text size: a list section asks every row.
-    private static var heights: [UIContentSizeCategory: CGFloat] = [:]
-
+    /// A row is as tall as `PackageListRow` at the text size in use.
     static var rowHeight: CGFloat {
-        let category = UIApplication.shared.preferredContentSizeCategory
-        if let known = heights[category] {
-            return known
-        }
-        let height = max(PackageListRow.rowHeight, PackageListRow.minimumSize.height)
-        heights[category] = height
-        return height
+        max(PackageListRow.rowHeight, PackageListRow.minimumSize.height)
     }
 
     /// How far the row moves in to make room for the mark.

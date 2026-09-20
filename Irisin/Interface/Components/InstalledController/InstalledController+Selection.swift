@@ -60,7 +60,7 @@ extension InstalledController {
     func updateSelectionItems() {
         guard isEditing else { return }
         let selected = selectedPackages
-        removeSelectedItem.isEnabled = PackageMenu.removal(ofInstalled: selected).request != nil
+        removeSelectedItem.isEnabled = PackageMenu.canRemove(anyOfInstalled: selected)
         updateSelectedItem.isEnabled = selected.contains {
             identitiesWithUpdate.contains($0.identity) && PackageMenu.updateRequest(forInstalled: $0) != nil
         }

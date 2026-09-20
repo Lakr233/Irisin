@@ -81,14 +81,23 @@ class PackageListRow: UIView {
 
     /// The row's height at the current text size, for the collection grids
     /// that lay rows out by number. A table row sizes itself from the same
-    /// constraints and needs no number.
+    /// constraints and needs no number. Measured once per text size, which
+    /// is the app's and not a view's: a layout asks for every section.
     static var rowHeight: CGFloat {
+        let category = UIApplication.shared.preferredContentSizeCategory
+        if let known = heights[category] {
+            return known
+        }
         let cell = PackageListRow()
         cell.title.text = "X"
         cell.subtitle.text = "X"
         cell.describe.text = "X"
-        return cell.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+        let height = cell.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+        heights[category] = height
+        return height
     }
+
+    private static var heights: [UIContentSizeCategory: CGFloat] = [:]
 
     init() {
         super.init(frame: CGRect())

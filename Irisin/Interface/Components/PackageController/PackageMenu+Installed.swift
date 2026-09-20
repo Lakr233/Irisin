@@ -75,4 +75,14 @@ extension PackageMenu {
         }
         return (nil, leftOut)
     }
+
+    /// Whether `removal(ofInstalled:)` has a request for these rows, asked
+    /// at every change of a selection: it stops at the first row that says
+    /// yes, where the request itself reads every row.
+    static func canRemove(anyOfInstalled rows: [Package]) -> Bool {
+        if rows.contains(where: { eligibleActions(for: requestPackage(for: $0)).contains { $0.descriptor == .remove } }) {
+            return true
+        }
+        return rows.count == 1 && PackageQueue.shared.isQueued(rows[0].identity)
+    }
 }

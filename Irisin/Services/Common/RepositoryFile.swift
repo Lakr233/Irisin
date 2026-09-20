@@ -53,13 +53,21 @@ nonisolated struct RepositoryListFile: Codable {
     ///
     /// A source the address parser would not accept is dropped, not refused:
     /// a list with one bad line still has the rest.
+    /// The two fields of a `RepositoryFile` an import reads: decoding the
+    /// whole file would build its catalogue, every package of it, to be
+    /// thrown away.
+    private struct Address: Decodable {
+        var format: Int
+        var source: RepositorySource
+    }
+
     static func sources(in data: Data) throws -> [RepositorySource] {
         let decoder = PropertyListDecoder()
         if let list = try? decoder.decode(RepositoryListFile.self, from: data) {
             guard list.format == currentRepositoryFileFormat else { throw RepositoryFileFailure.unsupportedFormat }
             return list.sources.filter(\.isValid).uniqued()
         }
-        if let one = try? decoder.decode(RepositoryFile.self, from: data) {
+        if let one = try? decoder.decode(Address.self, from: data) {
             guard one.format == currentRepositoryFileFormat else { throw RepositoryFileFailure.unsupportedFormat }
             return [one.source].filter(\.isValid)
         }
