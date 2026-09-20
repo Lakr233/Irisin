@@ -65,6 +65,14 @@ class RepoAddViewController: UITableViewController {
         action: #selector(confirm)
     )
 
+    /// Beside Add: a repository list or a repository this app exported.
+    private lazy var importButton = UIBarButtonItem(
+        title: String(localized: "Import"),
+        style: .plain,
+        target: self,
+        action: #selector(openImport)
+    )
+
     private lazy var dataSource = EditableTableDiffableDataSource<Section, Row>(
         tableView: tableView
     ) { [unowned self] tableView, indexPath, row in
@@ -127,7 +135,7 @@ class RepoAddViewController: UITableViewController {
             target: self,
             action: #selector(cancel)
         )
-        navigationItem.rightBarButtonItem = addButton
+        navigationItem.rightBarButtonItems = [addButton, importButton]
         // nothing typed yet: Add waits for a probed source
         updateAddButton()
 
@@ -294,6 +302,42 @@ class RepoAddViewController: UITableViewController {
         candidateOrigin = .clipboard
         applySnapshot(animatingDifferences: true)
         SPIndicator.present(title: String(localized: "Repositories found: \(found.count)"), preset: .done)
+    }
+
+    // MARK: - IMPORT
+
+    /// Only our own files: a repository list, or one repository whole.
+    @objc
+    private func openImport() {
+        let picker = UIDocumentPickerViewController(
+            forOpeningContentTypes: [.irisinRepositoryList, .irisinRepository],
+            asCopy: true
+        )
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    /// The file's addresses become a section to pick from, as the
+    /// clipboard's do: an import takes the addresses and nothing else.
+    private func importSources(from file: URL) {
+        guard let data = try? Data(contentsOf: file),
+              let sources = try? RepositoryListFile.sources(in: data)
+        else {
+            presentNotice(title: "Unable to Import", message: "This file could not be read. Choose another file.")
+            return
+        }
+        let fresh = sources.map(\.line).filter { !isRegistered($0) }
+        guard !fresh.isEmpty else {
+            presentNotice(
+                title: "Nothing to Import",
+                message: "This file has no new repositories to add."
+            )
+            return
+        }
+        candidates = fresh
+        candidateOrigin = .file
+        applySnapshot(animatingDifferences: true)
+        SPIndicator.present(title: String(localized: "Repositories found: \(fresh.count)"), preset: .done)
     }
 
     // MARK: - INPUT
@@ -501,5 +545,12 @@ final class RepoAddInputCell: UITableViewCell {
     @objc
     private func returned() {
         onReturn?()
+    }
+}
+
+extension RepoAddViewController: UIDocumentPickerDelegate {
+    func documentPicker(_: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let file = urls.first else { return }
+        importSources(from: file)
     }
 }
