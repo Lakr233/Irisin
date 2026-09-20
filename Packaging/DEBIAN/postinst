@@ -3,6 +3,15 @@
 # roothide (whose dpkg relocates rootful paths into the randomized bootstrap
 # root) and /var/jb for rootless.
 
+# The app runs as mobile and keeps its state here. Some bootstraps leave
+# Documents owned by root, where mobile cannot make the directory itself and
+# the app stops at launch (issue 124). The path is the same on both flavors:
+# roothide's sh reads it inside the bootstrap, as the app does.
+data=/var/mobile/Documents/wiki.qaq.irisin
+mkdir -p "$data" && chown 501:501 "$data" || {
+    echo "warning: $data could not be prepared for Irisin." >&2
+}
+
 helper=@PREFIX@/usr/libexec/irisin-install
 if [ -x "$helper" ]; then
     echo '{"bootstrapIrisinDaemon":{}}' | "$helper" >/dev/null || {

@@ -37,11 +37,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let reset = resetApplicationDataIfRequested()
         do {
-            try? FileManager.default.createDirectory(at: documentsDirectory, withIntermediateDirectories: true)
+            let created = Result {
+                try FileManager.default.createDirectory(at: documentsDirectory, withIntermediateDirectories: true)
+            }
             var isDir = ObjCBool(false)
             let exists = FileManager.default.fileExists(atPath: documentsDirectory.path, isDirectory: &isDir)
             guard exists, isDir.boolValue else {
-                fatalError("Broken Document Permission")
+                // the crash log is all a user can send: say the path and the reason
+                fatalError("Broken Document Permission at \(documentsDirectory.path): \(created)")
             }
         }
 
