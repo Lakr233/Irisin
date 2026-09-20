@@ -17,13 +17,13 @@ nonisolated enum AptRepositoryBootstrap {
             workingLocation: documentsDirectory,
             dpkgStatusLocation: JailbreakRoot.path("/Library/dpkg/status"),
             aptExtendedStatesLocation: JailbreakRoot.path("/var/lib/apt/extended_states"),
-            deviceArchitecture: { EnvironmentDetector.architecture },
+            deviceArchitecture: { PackagedArchitecture.architecture },
             installableArchitectures: { installableArchitectures },
             indexFallbacks: { BootstrapArchitecture.probeOrder.map(\.rawValue) },
             adaptedManifestPreview: {
                 PackageAdapters.installed.resolveAdaptedPackageManifestPreview(
                     control: $0,
-                    on: EnvironmentDetector.architecture
+                    on: PackagedArchitecture.architecture
                 )
             },
             storage: SettingStore(),
@@ -31,14 +31,10 @@ nonisolated enum AptRepositoryBootstrap {
         )
     }
 
-    static var deviceArchitecture: String {
-        EnvironmentDetector.architecture
-    }
-
     /// The device's own architecture plus what the shipped adapters rewrite
     /// into it. Both inputs are constants, so this is one.
     static let installableArchitectures: Set<String> =
-        PackageAdapters.installed.installable(on: EnvironmentDetector.architecture)
+        PackageAdapters.installed.installable(on: PackagedArchitecture.architecture)
 }
 
 private nonisolated struct DogLogger: AptLogger {

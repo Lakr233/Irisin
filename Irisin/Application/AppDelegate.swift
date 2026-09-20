@@ -103,7 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             Location:
                 [*] \(Bundle.main.bundleURL.path)
                 [*] \(documentsDirectory.path)
-            Jailbreak: \(JailbreakRoot.prefix) roothide=\(JailbreakRoot.isRoothide) arch=\(AptRepositoryBootstrap.deviceArchitecture)
+            Jailbreak: \(JailbreakRoot.prefix) roothide=\(JailbreakRoot.isRoothide) arch=\(PackagedArchitecture.architecture)
             Environment: uid \(getuid()) gid \(getgid())
             """,
             level: .info

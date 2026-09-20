@@ -305,7 +305,7 @@ final class SettingsFooterView: UIView {
         let info = Bundle.main.infoDictionary
         let appVersion = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "0"
-        let architecture = EnvironmentDetector.architecture
+        let architecture = PackagedArchitecture.architecture
         let layout = JailbreakRoot.isRoothide ? "roothide" : "rootless"
         var lines = [
             "\(Bundle.main.bundleIdentifier ?? "wiki.qaq.irisin") \(appVersion) (\(build))",

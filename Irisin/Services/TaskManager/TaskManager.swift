@@ -269,7 +269,7 @@ final class TaskManager {
             var digest = try ArchiveStream.prepareDebianPackage(at: file, in: directory)
             if let adapted = try PackageAdapters.installed.adapt(
                 preparedPackageAt: directory,
-                on: EnvironmentDetector.architecture
+                on: PackagedArchitecture.architecture
             ) {
                 digest = adapted
             }

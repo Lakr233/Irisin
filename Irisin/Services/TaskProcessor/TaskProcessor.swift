@@ -203,11 +203,11 @@ final class TaskProcessor {
                 // this attempt's reason and no transaction starts
                 if let adapted = try PackageAdapters.installed.adapt(
                     preparedPackageAt: prepared,
-                    on: EnvironmentDetector.architecture
+                    on: PackagedArchitecture.architecture
                 ) {
                     Dog.shared.join(
                         "TaskProcessor",
-                        "adapted \(package.identity) for \(EnvironmentDetector.architecture)",
+                        "adapted \(package.identity) for \(PackagedArchitecture.architecture)",
                         level: .info
                     )
                     manifestDigest = adapted

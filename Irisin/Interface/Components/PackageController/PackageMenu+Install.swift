@@ -14,7 +14,7 @@ extension PackageMenu {
     static func presentUnsupportedArchitecture(of package: Package, from host: UIViewController) {
         host.presentNotice(
             title: "Unsupported Architecture",
-            message: String(localized: "This package is built for \(package.architectures.joined(separator: ", ")). This device uses \(EnvironmentDetector.architecture). Choose a compatible package.")
+            message: String(localized: "This package is built for \(package.architectures.joined(separator: ", ")). This device uses \(PackagedArchitecture.architecture). Choose a compatible package.")
         )
     }
 

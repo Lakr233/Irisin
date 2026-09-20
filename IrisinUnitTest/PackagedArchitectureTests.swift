@@ -2,7 +2,7 @@ import Foundation
 @testable import irisin
 import Testing
 
-struct EnvironmentDetectorTests {
+struct PackagedArchitectureTests {
     @Test func runtimeRootfsAPIIdentifiesRelocatedBootstrapsWithoutASymlink() {
         #expect(!JailbreakRoot.isRoothide(
             prefix: "/private/preboot/dopamine/procursus",
@@ -42,8 +42,8 @@ struct EnvironmentDetectorTests {
         ("all", "iphoneos-arm64"),
     ])
     func convertedIrisinRequiresTheMatchingOfficialPackage(packaged: String, detected: String) throws {
-        let message = try #require(EnvironmentDetector.incompatibilityMessage(
-            packagedArchitecture: packaged, detectedArchitecture: detected
+        let message = try #require(PackagedArchitecture.incompatibilityMessage(
+            packaged: packaged, detected: detected
         ))
         #expect(message.contains(packaged))
         #expect(message.contains(detected))
@@ -51,11 +51,11 @@ struct EnvironmentDetectorTests {
 
     @Test(arguments: ["iphoneos-arm64", "iphoneos-arm64e"])
     func nativePackagesAndUnpackagedDevelopmentBuildsCanStart(architecture: String) {
-        #expect(EnvironmentDetector.incompatibilityMessage(
-            packagedArchitecture: architecture, detectedArchitecture: architecture
+        #expect(PackagedArchitecture.incompatibilityMessage(
+            packaged: architecture, detected: architecture
         ) == nil)
-        #expect(EnvironmentDetector.incompatibilityMessage(
-            packagedArchitecture: nil, detectedArchitecture: architecture
+        #expect(PackagedArchitecture.incompatibilityMessage(
+            packaged: nil, detected: architecture
         ) == nil)
     }
 }

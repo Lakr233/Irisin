@@ -231,7 +231,7 @@ final class PaymentManager {
 
         let request = Self.jsonRequest(endpoint, token: userInfo.token, payload: [
             "payment_secret": userInfo.secret,
-            "architecture": EnvironmentDetector.architecture,
+            "architecture": PackagedArchitecture.architecture,
         ])
         // status 0 is a purchase that already went through: no page to open
         guard let json = await Self.jsonReply(for: request),
@@ -274,7 +274,7 @@ final class PaymentManager {
             "version": package.latestVersion,
             "repo": represent.absoluteString,
             "payment_secret": userInfo.secret,
-            "architecture": package.architectures.first { $0 != "all" } ?? EnvironmentDetector.architecture,
+            "architecture": package.architectures.first { $0 != "all" } ?? PackagedArchitecture.architecture,
         ])
         guard let json = await Self.jsonReply(for: request),
               let value = json["url"] as? String,
