@@ -242,7 +242,10 @@ end.
   changes by applying a snapshot (`reconfigureItems(survivingFrom:)` for
   rows that stay). No `UITableViewDataSource` or `UICollectionViewDataSource`
   conformance, no `numberOfRowsInSection`, no `reloadData()`; `make check`
-  greps for all of them.
+  greps for all of them. Rows measured again are a snapshot that
+  reconfigures them, never `performBatchUpdates(nil)` or
+  `beginUpdates()`: iOS 16 throws from it on the package page's table
+  (issue 125), and `make check` greps for those too.
 - **Fonts and colors are design tokens.** `Interface/DesignTokens/` owns
   the type ramp (`TypeSize.swift`: `TypeSize`, `UIFont.rounded(.body,
   emphasized:)`, `.type`, `.monospaced`) and the named colors by purpose:

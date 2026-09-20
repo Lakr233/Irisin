@@ -178,9 +178,19 @@ class PackageController: UIViewController {
             guard let self else { return }
             rowHeightsAreStale = false
             UIView.performWithoutAnimation {
-                self.tableView.performBatchUpdates(nil)
+                self.measureRows(animated: false)
             }
         }
+    }
+
+    /// Has the table measure every row again, through a snapshot like every
+    /// other change to the list. iOS 16 throws from `performBatchUpdates`
+    /// on this table, whose rows are a diffable data source's, the first
+    /// time the page is laid out (issue 125).
+    private func measureRows(animated: Bool) {
+        var snapshot = dataSource.snapshot()
+        snapshot.reconfigureItems(snapshot.itemIdentifiers)
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     private func footerText() -> String {
@@ -364,7 +374,7 @@ class PackageController: UIViewController {
         artworkHeight?.update(offset: preferredBannerHeight)
         guard hasAppeared else {
             UIView.performWithoutAnimation {
-                tableView.performBatchUpdates(nil)
+                measureRows(animated: false)
                 tableView.layoutIfNeeded()
             }
             return
@@ -377,7 +387,7 @@ class PackageController: UIViewController {
             initialSpringVelocity: 0.8,
             options: [.curveEaseInOut, .allowUserInteraction],
             animations: { [self] in
-                tableView.performBatchUpdates(nil)
+                measureRows(animated: true)
                 tableView.layoutIfNeeded()
                 bannerArtwork.carryHandwriting(from: artworkSize)
             }
