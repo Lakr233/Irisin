@@ -9,5 +9,5 @@
 // project.pbxproj silently shadows these and ships the wrong build number;
 // `make check` rejects that.
 
-MARKETING_VERSION = 4.3.6
+MARKETING_VERSION = 4.3.7
 CURRENT_PROJECT_VERSION = 0

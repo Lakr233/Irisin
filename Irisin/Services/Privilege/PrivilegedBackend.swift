@@ -67,15 +67,16 @@ nonisolated enum PrivilegedBackend {
                         "backend \(backend) root \(backend.installRoot)",
                         level: .info
                     )
-                    // libroot spells the prefix as it was given it, the daemon
-                    // resolves its own executable's path: `/var` and
-                    // `/private/var` are the same jbroot, so compare resolved.
+                    // The app's prefix is spelled as its bundle path or libroot
+                    // gave it, the daemon resolves its own executable's path:
+                    // `/var` and `/private/var` are the same jbroot, so
+                    // compare resolved.
                     if backend.isPrivileged,
                        backend.installRoot != ProcessPath.canonical(JailbreakRoot.prefix)
                     {
                         Dog.shared.join(
                             "PrivilegedBackend",
-                            "daemon root \(backend.installRoot) differs from libroot \(JailbreakRoot.prefix)",
+                            "daemon root \(backend.installRoot) differs from the app's \(JailbreakRoot.prefix)",
                             level: .warning
                         )
                     }

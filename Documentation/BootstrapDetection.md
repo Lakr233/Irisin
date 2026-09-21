@@ -24,6 +24,19 @@ describe the runtime's filesystem conventions.
 
 ## Runtime evidence
 
+0. The app's own bundle path. A bundle under a directory named
+   `.jbroot-` and sixteen hex digits (the last byte the xor of the seven
+   before it) is inside a roothide bootstrap, and that directory is the
+   root. It is libroothide's own method: its
+   [`init.c`](https://github.com/roothide/libroothide/blob/master/init.c)
+   reads the root off its image path and checks the name with
+   `is_jbroot_name`. It comes first because the `.jbroot` link the next
+   step loads through is, by
+   [RootHide's account](https://github.com/roothide/Developer/blob/main/roothide.md),
+   made by its dpkg hook or by the jailbreak when it loads a binary, and
+   is not promised: without it a roothide device fell through to the
+   rootless default and the arm64e package was refused as mismatched
+   (4.3.6, iOS 16.1 roothide).
 1. A successful call to `jbroot("/")` in the app-adjacent
    `libroothide.dylib` supplies both the roothide root and its identity.
    RootHide documents the generated `.jbroot` links and its distinct
@@ -53,7 +66,8 @@ interface, refresh packages, or process incoming links and imports.
 The stamp is a compatibility contract, not tamper-proof attestation:
 deliberately rewriting or removing it is outside this check's guarantee.
 
-`PackagedArchitectureTests` covers relocated rootless paths, the rootfs API
+`PackagedArchitectureTests` covers a bundle path inside a roothide root and
+the names that only look like one, relocated rootless paths, the rootfs API
 without a symlink, roothide with a compatibility alias, both directions of
 package mismatch, and matching/unpackaged builds. `PackageAdaptersTests`
 checks that refusing Irisin leaves the prepared manifest unchanged and

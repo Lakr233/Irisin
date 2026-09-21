@@ -36,6 +36,30 @@ struct PackagedArchitectureTests {
         #expect(!JailbreakRoot.isRoothide(prefix: link.path, rootlessPrefix: link.path))
     }
 
+    @Test func bundlePathIdentifiesRoothideWithoutTheJBRootLink() {
+        let parent = "/var/containers/Bundle/Application"
+        #expect(JailbreakRoot.roothideRoot(
+            ofBundleAt: parent + "/.jbroot-0123456789ABCDEF/Applications/irisin.app"
+        ) == parent + "/.jbroot-0123456789ABCDEF")
+        #expect(JailbreakRoot.roothideRoot(
+            ofBundleAt: parent + "/.jbroot-0123456789abcdef/Applications/irisin.app"
+        ) == parent + "/.jbroot-0123456789abcdef")
+    }
+
+    /// libroothide's own rule for the name, checksum included: a looser
+    /// match would take the `.jbroot` link inside a bundle for a bootstrap.
+    @Test(arguments: [
+        "/var/jb/Applications/irisin.app",
+        "/private/preboot/dopamine/procursus/Applications/irisin.app",
+        "/var/containers/Bundle/Application/.jbroot-0123456789ABCDEE/Applications/irisin.app",
+        "/var/containers/Bundle/Application/.jbroot-test/Applications/irisin.app",
+        "/var/jb/Applications/irisin.app/.jbroot/Applications/irisin.app",
+        "/var/containers/Bundle/Application/.jbroot-+123456789ABCDEF/Applications/irisin.app",
+    ])
+    func bundlePathOutsideARoothideRootIsNotRoothide(path: String) {
+        #expect(JailbreakRoot.roothideRoot(ofBundleAt: path) == nil)
+    }
+
     @Test(arguments: [
         ("iphoneos-arm64", "iphoneos-arm64e"),
         ("iphoneos-arm64e", "iphoneos-arm64"),
