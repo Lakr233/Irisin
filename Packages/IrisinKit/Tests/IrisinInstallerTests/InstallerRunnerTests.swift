@@ -138,6 +138,8 @@ final class InstallerRunnerTests: XCTestCase {
         XCTAssertEqual(result["ProgramArguments"] as? [String], [executable])
         XCTAssertEqual(result["MachServices"] as? [String: Bool], ["wiki.qaq.irisin.service": true])
         XCTAssertEqual(result["AbandonProcessGroup"] as? Bool, true)
+        // RootHide's launchctl doubles the root of a kernel path without it.
+        XCTAssertEqual(result["__Patched"] as? Bool, true)
     }
 
     func testMalformedJobIsRefused() throws {

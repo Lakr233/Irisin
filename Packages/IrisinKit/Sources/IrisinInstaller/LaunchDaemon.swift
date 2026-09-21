@@ -18,6 +18,13 @@ struct LaunchDaemon {
 
     /// launchd reads kernel paths; unlike the bootstrap's launchctl, IcliKit
     /// does not translate rootful program paths for RootHide.
+    ///
+    /// RootHide renames the bootstrap root at every jailbreak and its
+    /// launchctl then rewrites each plist here (`plistpatch.m`): one marked
+    /// `__Patched` has the old root taken off its paths before the new one is
+    /// put on, one without the mark only gets the new root in front. A kernel
+    /// path written without the mark comes out as new root + old root and the
+    /// daemon never starts again. launchd itself ignores the key.
     static func preparePlist(at path: String, executable: String) throws {
         let url = URL(fileURLWithPath: path)
         let data = try Data(contentsOf: url)
@@ -25,6 +32,7 @@ struct LaunchDaemon {
             throw CocoaError(.propertyListReadCorrupt)
         }
         plist["ProgramArguments"] = [executable]
+        plist["__Patched"] = true
         let updated = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
         try updated.write(to: url, options: .atomic)
     }

@@ -476,6 +476,17 @@ is `/var/jb/var/log/irisin-install.log`.
 - **launchd may print the daemon under `user/501` even though it is a system
   daemon.** IcliKit reads both the system proxy and foreground-user record;
   trust the helper transcript and the app's journal.
+- **RootHide renames the bootstrap root at every jailbreak and rewrites the
+  daemon plists to match.** Its launchctl patches each file in
+  `Library/LaunchDaemons` in place: one marked `__Patched` has the old root
+  taken off `ProgramArguments[0]` before the new one goes on, one without
+  only gets the new root in front. The helper writes the kernel path (IcliKit
+  translates nothing), so `LaunchDaemon.preparePlist` writes the mark with
+  it. Through 4.3.5 it did not: after the next jailbreak the program was new
+  root + old root, launchd answered `78: EX_CONFIG` once and left the job at
+  `spawn scheduled`, and the app, which never falls back beside a daemon
+  plist, said Waiting for good. `launchctl print system/wiki.qaq.irisind`
+  shows the doubled `program`; installing the package again repairs it.
 - **The vphone loses its `/var/jb` symlink** after some boots because the
   first-boot script exits early on its done marker. Recreate it:
   `ln -sf /private/preboot/<hash>/jb-vphone/procursus /private/var/jb`.
