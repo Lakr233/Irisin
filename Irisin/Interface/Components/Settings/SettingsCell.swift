@@ -98,6 +98,9 @@ class SettingsCell: UITableViewCell {
         self.item = item
         iconView.image = UIImage(systemName: item.icon)
         titleLabel.text = item.title
+        // the button covering the row is the control a reader lands on, and
+        // it draws nothing of its own to be named by
+        menuButton.accessibilityLabel = item.title
         if let menu = item.menu {
             menuButton.isHidden = false
             menuButton.menu = UIMenu(children: [
@@ -160,7 +163,12 @@ final class SettingsValueCell: SettingsCell {
     }
 
     override func refresh() {
-        valueLabel.text = item?.value?() ?? ""
+        // read once: a value can be as dear as walking the downloads folder
+        let value = item?.value?()
+        valueLabel.text = value ?? ""
+        // the value is drawn text a reader never reaches; the row's button
+        // carries it instead
+        menuButton.accessibilityValue = value
     }
 }
 

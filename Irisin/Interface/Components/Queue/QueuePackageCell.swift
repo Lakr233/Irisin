@@ -130,6 +130,9 @@ final class QueuePackageCell: UITableViewCell {
         chevron.isHidden = !opens
         status.frame.size.width = (download == nil ? 0 : Self.statusWidth) + Self.chevronWidth
         accessoryView = download == nil && !opens ? nil : status
+        // the chevron is the only sign that the row opens, and the trailing
+        // word is drawn text a reader never reaches
+        accessibilityTraits = opens ? .button : .staticText
         setNeedsLayout()
         label.disablesAnimations = true
         show("")
@@ -169,6 +172,7 @@ final class QueuePackageCell: UITableViewCell {
     /// The poll that drives this comes four times a second, so only a
     /// change gets through.
     private func show(_ text: String) {
+        accessibilityValue = text.isEmpty ? nil : text
         if label.text != text {
             label.text = text
         }

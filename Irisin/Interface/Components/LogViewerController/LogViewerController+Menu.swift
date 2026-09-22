@@ -11,6 +11,8 @@ extension LogViewerController {
         let menuButton = UIButton(type: .system)
         menuButton.setImage(UIImage(systemName: "ellipsis"), for: .normal)
         menuButton.tintColor = .textTitle
+        // the bar item is only a wrapper; the button is what a reader lands on
+        menuButton.accessibilityLabel = String(localized: "More")
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in

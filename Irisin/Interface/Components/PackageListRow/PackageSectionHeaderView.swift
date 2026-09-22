@@ -21,6 +21,7 @@ class PackageSectionHeaderView: UICollectionReusableView {
         super.init(frame: CGRect())
         label.font = .rounded(.caption, emphasized: true)
         label.textColor = .textMuted
+        label.accessibilityTraits = .header
         addSubview(label)
         updateSnapKitConstraints()
     }

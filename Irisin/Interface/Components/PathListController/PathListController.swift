@@ -244,5 +244,11 @@ private final class PathCell: UITableViewCell {
             }
         }
         label.attributedText = text
+        // the row draws the last component alone, at the indent its depth
+        // gives it: read out, a name on its own says nothing about where
+        // it sits, so the row is read as the whole path
+        isAccessibilityElement = true
+        accessibilityLabel = path
+        accessibilityTraits = .staticText
     }
 }

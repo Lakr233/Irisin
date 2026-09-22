@@ -30,6 +30,8 @@ final class RepositoryUpdateFill: UIView {
     init() {
         super.init(frame: .zero)
         isUserInteractionEnabled = false
+        // progress drawn behind the row; the row itself says what it is
+        accessibilityElementsHidden = true
         addSubview(fill)
         fill.snp.makeConstraints { x in
             x.leading.top.bottom.equalToSuperview()

@@ -50,7 +50,7 @@ final class TextReaderController: UIViewController {
             UIBarButtonItem(
                 image: UIImage(systemName: "square.and.arrow.up"),
                 primaryAction: UIAction { [weak self] _ in self?.share() }
-            ),
+            ).then { $0.accessibilityLabel = String(localized: "Share") },
             wrap,
         ]
 

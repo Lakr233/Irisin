@@ -18,7 +18,10 @@ final class EmptyStateView: UIView {
 
     var text: String? {
         get { caption.text }
-        set { caption.text = newValue }
+        set {
+            caption.text = newValue
+            accessibilityLabel = newValue
+        }
     }
 
     init(icon image: FluentIcon? = nil, text: String? = nil) {
@@ -34,6 +37,10 @@ final class EmptyStateView: UIView {
         caption.textAlignment = .center
         caption.numberOfLines = 0
         caption.text = text
+        // the line is the whole of it; the icon above says the same again
+        isAccessibilityElement = true
+        accessibilityTraits = .staticText
+        accessibilityLabel = text
         let stack = UIStackView(arrangedSubviews: [icon, caption])
         stack.axis = .vertical
         stack.alignment = .center

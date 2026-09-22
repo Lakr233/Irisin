@@ -198,11 +198,14 @@ class RepositoriesController: UIViewController {
                     style: .plain,
                     target: self,
                     action: #selector(openAdd)
-                ),
+                ).then { $0.accessibilityLabel = String(localized: "Add Repository") },
                 UIBarButtonItem(
                     image: UIImage(systemName: "ellipsis"),
                     menu: moreMenu
-                ).then { $0.tintColor = .textTitle },
+                ).then {
+                    $0.tintColor = .textTitle
+                    $0.accessibilityLabel = String(localized: "More")
+                },
             ], animated: animated)
         }
         updateSelectionItems()
@@ -222,7 +225,9 @@ class RepositoriesController: UIViewController {
         style: .plain,
         target: self,
         action: #selector(refreshSelected)
-    )
+    ).then {
+        $0.accessibilityLabel = String(localized: "Refresh")
+    }
 
     private var selectedUrls: [URL] {
         (tableView.indexPathsForSelectedRows ?? []).compactMap { url(at: $0) }

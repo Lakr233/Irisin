@@ -305,7 +305,10 @@ class PackageController: UIViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
             menu: bannerPackageView.actionMenu
-        ).then { $0.tintColor = .textTitle }
+        ).then {
+            $0.tintColor = .textTitle
+            $0.accessibilityLabel = String(localized: "More")
+        }
 
         view.addSubview(tableView)
         tableView.snp.makeConstraints { x in

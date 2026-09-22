@@ -26,8 +26,10 @@ class DashboardSectionHeader: UICollectionReusableView {
     override init(frame _: CGRect) {
         super.init(frame: CGRect())
         label.font = .headline
+        label.accessibilityTraits = .header
         addSubview(label)
         button.setImage(.fluent(.arrowRightCircle24Filled), for: .normal)
+        button.accessibilityLabel = String(localized: "See All")
         button.addTarget(self, action: #selector(presentFullPackage), for: .touchUpInside)
         addSubview(button)
         updateLayout()

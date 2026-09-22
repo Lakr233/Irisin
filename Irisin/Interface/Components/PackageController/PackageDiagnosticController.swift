@@ -51,12 +51,14 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
         navigationItem.largeTitleDisplayMode = .never
         // the sheet's ground, whether the page is its root or pushed in it
         view.backgroundColor = .groupedBackground
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let share = UIBarButtonItem(
             image: .fluent(.shareIos24Filled),
             style: .plain,
             target: self,
             action: #selector(shareReport)
         )
+        share.accessibilityLabel = String(localized: "Share")
+        navigationItem.rightBarButtonItem = share
         if closesSheet {
             navigationItem.leftBarButtonItem = UIBarButtonItem(
                 systemItem: .close,

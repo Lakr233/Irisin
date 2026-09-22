@@ -96,7 +96,7 @@ class SettingsController: UITableViewController {
                     },
                 ]),
             ])
-        )
+        ).then { $0.accessibilityLabel = String(localized: "More") }
         // the grouped ground: the page and the cards match every other
         // inset grouped list in the app
         view.backgroundColor = .groupedBackground

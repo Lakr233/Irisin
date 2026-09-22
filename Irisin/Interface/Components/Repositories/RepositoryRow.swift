@@ -131,6 +131,11 @@ class RepositoryRow: UIView {
         let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: withUrl)
         title.text = repo?.nickName ?? ""
         subtitle.text = repo.map(Self.summary(of:)) ?? ""
+        // one stop per repository, opened as a button; the arrow and the
+        // state dot are drawn, not read
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+        accessibilityLabel = describe()
         if let data = repo?.avatar,
            let image = UIImage(data: data)
         {
@@ -156,6 +161,18 @@ class RepositoryRow: UIView {
         title.text = String(localized: "No repositories")
         subtitle.text = String(localized: "Use the add button above to add a repository.")
         icon.image = UIImage.fluent(.bookCompass24Filled)
+        // the hint opens nothing: read as one line, not as a button
+        isAccessibilityElement = true
+        accessibilityTraits = .staticText
+        accessibilityLabel = describe()
+    }
+
+    /// The row's two lines as one label, the way a cell reads elsewhere.
+    private func describe() -> String {
+        [title, subtitle]
+            .compactMap(\.text)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
     }
 
     /// What the repository says about itself; its address without the

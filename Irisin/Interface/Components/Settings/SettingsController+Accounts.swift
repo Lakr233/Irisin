@@ -49,6 +49,9 @@ final class SettingsAccountCell: SettingsCell {
         self.repo = repo
         iconView.image = UIImage(data: repo.avatar) ?? UIImage(named: "RepositoryTableCell.Missing")
         titleLabel.text = repo.nickName
+        // the row's own configure never runs here: the button covering a
+        // signed-in row takes its name from the repository
+        menuButton.accessibilityLabel = repo.nickName
         menuButton.menu = UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in
                 completion(VendorAccount.shared.accountMenu(for: repo) { self?.parentViewController })

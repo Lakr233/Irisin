@@ -34,12 +34,14 @@ class TabDashboardController: DashboardController {
         view.backgroundColor = .plainBackground
         title = String(localized: "Dashboard")
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let settings = UIBarButtonItem(
             image: .fluent(.settings24Regular),
             style: .plain,
             target: self,
             action: #selector(rightButtonCall)
         )
+        settings.accessibilityLabel = String(localized: "Settings")
+        navigationItem.rightBarButtonItem = settings
 
         refreshControl.alpha = 0
     }

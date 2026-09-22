@@ -14,12 +14,14 @@ class BlockUpdateController: PackageCollectionController {
     override func viewDidLoad() {
         title = String(localized: "Blocked Updates")
         super.viewDidLoad()
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let clearItem = UIBarButtonItem(
             image: .fluent(.delete24Filled),
             style: .plain,
             target: self,
             action: #selector(clearBlock)
         )
+        clearItem.accessibilityLabel = String(localized: "Clear")
+        navigationItem.rightBarButtonItem = clearItem
     }
 
     override func viewWillAppear(_ animated: Bool) {
