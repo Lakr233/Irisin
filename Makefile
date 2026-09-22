@@ -215,6 +215,17 @@ check:
 		"$(PACKAGE_DIR)/Sources" \
 		"$(ROOT_DIR)/Packages/AptRepository/Sources" \
 		"$(ROOT_DIR)/Packages/PackageDepiction/Sources"
+	@# Xcode writes `extractionState: stale` into a catalog during an
+	@# ordinary build, in a file too large to read, and it rides into a
+	@# commit as one green line otherwise. `manual` is deliberate here and
+	@# is left alone; only what Xcode reaped by itself is refused. The fix
+	@# is Scripts/prune-xcstrings.py, by hand, with Xcode closed.
+	@test -x "$(ROOT_DIR)/Scripts/check-stale-strings.py" || { echo "error: check-stale-strings.py is not executable" >&2; exit 66; }
+	@"$(ROOT_DIR)/Scripts/check-stale-strings.py" \
+		"$(ROOT_DIR)/Irisin" \
+		"$(ROOT_DIR)/IrisinDaemon" \
+		"$(ROOT_DIR)/IrisinInstall" \
+		"$(ROOT_DIR)/Packages"
 
 # The IrisinKit and AptRepository tests on the Mac. This is where a
 # malformed job that reaches an argv, a mis-spelled bootstrap path, a
