@@ -48,6 +48,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private let executeButton = UIBarButtonItem()
     private let busyItem: UIBarButtonItem = {
         let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.isAccessibilityElement = true
+        spinner.accessibilityLabel = String(localized: "Operation in Progress")
         spinner.startAnimating()
         return UIBarButtonItem(customView: spinner)
     }()
@@ -168,6 +170,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         if #available(iOS 26.0, *) {
             executeButton.style = .prominent
         }
+        menuItem.accessibilityLabel = String(localized: "More")
         navigationItem.rightBarButtonItems = [executeButton, busyItem, menuItem]
         updateBar()
 

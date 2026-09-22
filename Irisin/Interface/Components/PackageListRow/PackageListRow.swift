@@ -121,6 +121,11 @@ class PackageListRow: UIView {
         backgroundColor = .clear
         contentView.backgroundColor = .clear
 
+        // the row is one stop, its lines read together: the icon and the
+        // badge are drawn from what the lines already say
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+
         avatar.snp.makeConstraints { x in
             x.centerY.equalTo(contentView.snp.centerY)
             x.leading.equalTo(contentView.snp.leading).offset(4 + horizontalPadding)
@@ -189,6 +194,17 @@ class PackageListRow: UIView {
         title.textColor = .textTitle
         subtitle.textColor = .textSubtitle
         describe.textColor = .textSubtitle
+        updateAccessibilityLabel()
+    }
+
+    /// What the row reads as: its three lines joined, the way the Installed
+    /// page's cell joins them while the list is edited. A list that writes
+    /// the lines itself says so afterwards.
+    func updateAccessibilityLabel() {
+        accessibilityLabel = [title, subtitle, describe]
+            .compactMap(\.text)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
     }
 
     func clearIndicator() {
@@ -235,6 +251,7 @@ class PackageListRow: UIView {
 
         subtitle.text = package.latestVersion
         describe.text = PackageCenter.default.description(of: package)
+        updateAccessibilityLabel()
 
         updateIndicator()
     }

@@ -19,6 +19,8 @@ class SidebarCard: UIView {
     var badgeText: String? {
         set {
             badgeLabel.text = newValue
+            // the count beside the name, read as the card's value
+            button.accessibilityValue = (newValue?.isEmpty ?? true) ? nil : newValue
         }
         get {
             badgeLabel.text
@@ -66,6 +68,11 @@ class SidebarCard: UIView {
         title.font = .headline
         title.textAlignment = .left
 
+        // the whole card is the button: it takes the name, and the label
+        // under it is not read a second time
+        button.accessibilityLabel = text
+        title.isAccessibilityElement = false
+
         badgeLabel.textAlignment = .trailing
         badgeLabel.font = UIFont.rounded(.caption, emphasized: true).monospacedDigitFont
 
@@ -109,6 +116,8 @@ class SidebarCard: UIView {
         title.textColor = selectTitleColor
         badgeLabel.textColor = title.textColor
         backgroundColor = selectBackgroundColor
+        // the fill says which card is open; the trait says it as well
+        button.accessibilityTraits = [.button, .selected]
     }
 
     func deselect() {
@@ -116,5 +125,6 @@ class SidebarCard: UIView {
         title.textColor = unselectTitleColor
         badgeLabel.textColor = title.textColor
         backgroundColor = unselectBackgroundColor
+        button.accessibilityTraits = .button
     }
 }

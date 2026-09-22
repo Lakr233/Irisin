@@ -141,6 +141,10 @@ final class RepositoryAddCandidateCell: UITableViewCell {
         } else {
             configuration.title = String(localized: "Add")
         }
+        // the checkmark carries no title of its own
+        button.accessibilityLabel = added
+            ? String(localized: "Already Added")
+            : String(localized: "Add")
         button.configuration = configuration
         button.isUserInteractionEnabled = !added
     }

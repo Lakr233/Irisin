@@ -66,6 +66,10 @@ final class DepictionButtonView: DepictionView {
         if let content {
             content.isUserInteractionEnabled = false
             button.depictionView = content
+            // a button that wraps a view has no title of its own, and the
+            // words inside it are not read through it: its name is the text
+            // the view it wraps was written with
+            button.accessibilityLabel = (dictionary["view"] as? [String: Any])?["text"] as? String
             button.addSubview(content)
             content.snp.makeConstraints { x in
                 x.edges.equalToSuperview()

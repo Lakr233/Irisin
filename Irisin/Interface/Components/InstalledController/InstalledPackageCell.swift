@@ -75,8 +75,8 @@ final class InstalledPackageCell: UICollectionViewListCell {
         super.updateConfiguration(using: state)
         backgroundConfiguration = .clear()
         selectionMark.isOn = state.isEditing && state.isSelected
-        // edited, the row is one element that says whether it is selected;
-        // otherwise its labels are read as they are
+        // edited, the cell is one element that says whether it is selected;
+        // otherwise the row inside is the stop, reading its own lines
         isAccessibilityElement = state.isEditing
         accessibilityLabel = [originalCell.title, originalCell.subtitle, originalCell.describe]
             .compactMap(\.text)

@@ -52,6 +52,10 @@ class SearchCell: UITableViewCell {
         backgroundColor = .clear
         contentView.backgroundColor = .clear
 
+        // one stop a row, its lines read together; what it is, and whether
+        // it opens anything, is said by whichever row it is drawn as
+        isAccessibilityElement = true
+
         image.snp.makeConstraints { x in
             x.centerY.equalTo(contentView.snp.centerY)
             // the dashboard's edge, as on every package list
@@ -89,12 +93,23 @@ class SearchCell: UITableViewCell {
         describe.textColor = .textSubtitle
     }
 
+    /// The row's three lines joined: what a list reads at this stop.
+    private func updateAccessibilityLabel() {
+        accessibilityLabel = [title, subtitle, describe]
+            .compactMap(\.text)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+
     func makeEmptyHinter() {
         clearText()
         image.showIcon(.fluent(.documentNone24Regular))
         title.text = String(localized: "No results found")
         subtitle.text = String(localized: "Try a different search or refresh your repositories.")
         describe.text = ""
+        // nothing to open: the row is what it says
+        accessibilityTraits = .staticText
+        updateAccessibilityLabel()
     }
 
     func insertValue(with result: SearchResult) {
@@ -120,6 +135,8 @@ class SearchCell: UITableViewCell {
                 image.showIcon(.fluent(.documentNone24Regular))
                 title.text = identity
                 subtitle.text = String(localized: "No longer available in this repository")
+                accessibilityTraits = .button
+                updateAccessibilityLabel()
                 return
             }
             insertPackageValue(package)
@@ -144,6 +161,10 @@ class SearchCell: UITableViewCell {
             .first
         describe.text = description
         describe.limitedLeadingHighlight(text: result.underKey, color: .buttonNormal)
+
+        // every result opens a page of its own
+        accessibilityTraits = .button
+        updateAccessibilityLabel()
     }
 
     private func insertPackageValue(_ package: Package) {

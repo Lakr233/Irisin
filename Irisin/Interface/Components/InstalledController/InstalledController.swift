@@ -283,6 +283,7 @@ class InstalledController: UICollectionViewController {
         $0.tintColor = .textTitle
         $0.showsMenuAsPrimaryAction = true
         $0.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        $0.accessibilityLabel = String(localized: "More")
     }
 
     lazy var moreItem = UIBarButtonItem(customView: moreButton)
@@ -566,14 +567,19 @@ class InstalledController: UICollectionViewController {
     func setupBarItems(animated: Bool = false) {
         // the bar is the selection's while the list is edited
         guard !isEditing else { return }
+        // one name in both states; the tick is the item saying there is
+        // nothing to update, which is a value and not another button
+        statusItem.accessibilityLabel = String(localized: "Updates")
         if updateFound {
             statusItem.image = .fluent(.arrowUpCircle24Filled)
             statusItem.action = #selector(sendUpdate)
             statusItem.tintColor = nil
+            statusItem.accessibilityValue = nil
         } else {
             statusItem.image = .fluent(.checkmarkCircle24Filled)
             statusItem.action = #selector(showAllUpdateToDate)
             statusItem.tintColor = .upToDate
+            statusItem.accessibilityValue = String(localized: "All packages are up to date")
         }
         if placesBarItemsLeading {
             placeBarItems(leading: [statusItem, moreItem], trailing: [], animated: animated)

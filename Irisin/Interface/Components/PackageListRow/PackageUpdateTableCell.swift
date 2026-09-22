@@ -26,6 +26,7 @@ class PackageUpdateTableCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         button.setImage(.fluent(.arrowUpCircle24Filled), for: .normal)
+        button.accessibilityLabel = String(localized: "Update")
         button.addTarget(self, action: #selector(sendUpdate), for: .touchUpInside)
         contentView.addSubview(button)
         contentView.addSubview(originalCell)
@@ -96,5 +97,7 @@ class PackageUpdateTableCell: UITableViewCell {
             .nickName ?? String(localized: "Unknown")
         let newDescription = "[\(newRepoName)] \(newPackageDescription)"
         originalCell.describe.text = newDescription
+        // the row's lines are this screen's, not the package's
+        originalCell.updateAccessibilityLabel()
     }
 }

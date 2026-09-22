@@ -110,7 +110,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: .fluent(.shareIos24Filled),
             primaryAction: UIAction { [weak self] _ in self?.exportPackageList() }
-        )
+        ).then { $0.accessibilityLabel = String(localized: "Share") }
 
         searchController.searchBar.placeholder = String(localized: "Search")
         searchController.searchBar.setValue(

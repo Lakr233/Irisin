@@ -60,6 +60,10 @@ final class FeaturedBanner: UIView {
         }
 
         name.text = title
+        // the button covers the banner and has no title of its own; the
+        // caption under it is the same words, read once
+        button.accessibilityLabel = title
+        name.isAccessibilityElement = false
         name.font = .captionEmphasized
         name.alpha = 0.5
         name.textAlignment = .center

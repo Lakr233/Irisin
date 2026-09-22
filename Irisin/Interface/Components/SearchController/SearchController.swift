@@ -163,6 +163,7 @@ class SearchController: UITableViewController {
         let label = UILabel()
         label.font = .captionEmphasized
         label.textColor = .sectionCaption
+        label.accessibilityTraits = .header
         box.addSubview(label)
         label.snp.makeConstraints { x in
             x.leading.equalToSuperview().offset(20)

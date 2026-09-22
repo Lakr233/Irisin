@@ -206,6 +206,8 @@ class WelcomeController: UIViewController {
             $0.numberOfLines = 0
             $0.textAlignment = .left
             $0.attributedText = titleText
+            // the page has no navigation title: this is its heading
+            $0.accessibilityTraits = .header
         })
 
         stackView.addArrangedSubview(UILabel().then {

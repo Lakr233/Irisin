@@ -84,6 +84,14 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         case let .cleanup(name): blockers(of: name).isEmpty ? .default : .none
         default: .none
         }
+        // a cleanup row's tick is an icon in its own content and nothing
+        // else says it: the trait carries it, and a blocked row says that
+        // it cannot be ticked at all
+        cell.accessibilityTraits = switch row {
+        case let .cleanup(name) where !blockers(of: name).isEmpty: .notEnabled
+        case let .cleanup(name): (ticked ?? []).contains(name) ? [.button, .selected] : .button
+        default: .staticText
+        }
         cell.accessoryView = versionLabel(for: row, reusing: cell.accessoryView as? UILabel)
         return cell
     }
