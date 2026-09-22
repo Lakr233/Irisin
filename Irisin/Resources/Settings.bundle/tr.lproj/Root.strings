@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "Bir Sonraki Başlatmada Sıfırla";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "Irisin bir sonraki açılışında depolarını, indirmelerini, günlüklerini (log) ve ayarlarını siler, ardından bu seçeneği kapatır. Yüklü paketler korunur. Irisin hala çalışıyorsa, önce Uygulama Değiştirici'den kapatın.";
