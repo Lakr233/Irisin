@@ -14,6 +14,11 @@ final class OperationPackageCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         ring.frame = CGRect(origin: .zero, size: ring.intrinsicContentSize)
         accessoryView = ring
+        // One stop a row: the name, then the step under it as the row's
+        // value. Nothing inside answers a press — the ring is drawn, and a
+        // row with a problem opens its account through the row's own
+        // selection — so the cell reads for all of it.
+        isAccessibilityElement = true
     }
 
     @available(*, unavailable)
@@ -69,6 +74,10 @@ final class OperationPackageCell: UITableViewCell {
         }
         ring.set(appearance, animated: animated)
 
+        // the name is drawn attributed, so it is `attributedText` the row
+        // reads as; a strikethrough is not spoken and the kind is in the line
+        // under it
+        accessibilityLabel = content.attributedText?.string
         accessibilityValue = content.secondaryText
         accessibilityTraits = state.hasProblem ? .button : .staticText
         accessibilityHint = state.hasProblem ? String(localized: "Shows what went wrong.") : nil

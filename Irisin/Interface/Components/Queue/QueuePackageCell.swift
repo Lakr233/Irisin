@@ -97,6 +97,13 @@ final class QueuePackageCell: UITableViewCell {
         spinner.autoresizingMask = [.flexibleLeftMargin, .flexibleTopMargin, .flexibleBottomMargin]
         chevron.frame = CGRect(x: Self.statusWidth, y: 0, width: Self.chevronWidth, height: 24)
         chevron.autoresizingMask = [.flexibleLeftMargin, .flexibleHeight]
+
+        // One stop a row: the name and what is queued for it, with the
+        // download's word as the row's value. The trailing edge holds no
+        // control — a drawn word, a spinner and a chevron — and the page a
+        // row opens is opened by the row itself, so the cell reads for all
+        // of it.
+        isAccessibilityElement = true
     }
 
     @available(*, unavailable)
@@ -133,6 +140,12 @@ final class QueuePackageCell: UITableViewCell {
         // the chevron is the only sign that the row opens, and the trailing
         // word is drawn text a reader never reaches
         accessibilityTraits = opens ? .button : .staticText
+        // the name is drawn attributed for a removal, the lines under it
+        // plain: whichever the configuration carries, read together
+        accessibilityLabel = [configuration.attributedText?.string ?? configuration.text, configuration.secondaryText]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
         setNeedsLayout()
         label.disablesAnimations = true
         show("")
