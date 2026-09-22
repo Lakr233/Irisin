@@ -101,11 +101,17 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
                 cell.contentConfiguration = content
                 cell.backgroundColor = .cardBackground
                 cell.selectionStyle = .default
+                // the row is the control: one stop, activated by the row's
+                // own selection, with nothing inside it to reach
+                cell.isAccessibilityElement = true
                 cell.accessibilityTraits = .button
                 cell.accessibilityLabel = content.text
                 return cell
             }
             cell.selectionStyle = .none
+            // the requirement and what was found are one sentence, and the
+            // mark beside them is drawn from what that sentence says
+            cell.isAccessibilityElement = true
             cell.accessibilityTraits = .staticText
             let isSummary = check.package.isEmpty && check.requirement == summary
             let detail = isSummary ? "" : check.detailText

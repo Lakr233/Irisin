@@ -205,6 +205,16 @@ check:
 	@# the string catalog is renamed nowhere else on its own.
 	@test -x "$(ROOT_DIR)/Scripts/check-manual.py" || { echo "error: check-manual.py is not executable" >&2; exit 66; }
 	@"$(ROOT_DIR)/Scripts/check-manual.py" "$(ROOT_DIR)"
+	@# A cell or a view is read for its subviews unless it is an
+	@# accessibility element itself, and the sentence it assembled is then
+	@# never spoken. Only the sources that ship are searched: a package's
+	@# Tests and its .build checkouts are nobody's interface.
+	@test -x "$(ROOT_DIR)/Scripts/check-accessibility.py" || { echo "error: check-accessibility.py is not executable" >&2; exit 66; }
+	@"$(ROOT_DIR)/Scripts/check-accessibility.py" \
+		"$(ROOT_DIR)/Irisin" \
+		"$(PACKAGE_DIR)/Sources" \
+		"$(ROOT_DIR)/Packages/AptRepository/Sources" \
+		"$(ROOT_DIR)/Packages/PackageDepiction/Sources"
 
 # The IrisinKit and AptRepository tests on the Mac. This is where a
 # malformed job that reaches an argv, a mis-spelled bootstrap path, a
