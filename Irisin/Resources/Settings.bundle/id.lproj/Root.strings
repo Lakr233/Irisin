@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "Atur Ulang pada Peluncuran Berikutnya";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "Saat Irisin dibuka lagi, Irisin akan menghapus repositori, unduhan, log, dan pengaturannya, lalu menonaktifkan opsi ini. Paket yang terinstal tetap dipertahankan. Jika Irisin masih berjalan, tutup dulu di Pengalih App.";

@@ -37,6 +37,12 @@
             "value" : "حزمة Debian"
           }
         },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debian প্যাকেজ"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -59,6 +65,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paquet Debian"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debian पैकेज"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket Debian"
           }
         },
         "it" : {
@@ -91,10 +109,28 @@
             "value" : "Пакет Debian"
           }
         },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kifurushi cha Debian"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debian Paketi"
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gói Debian"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pákéèjì Debian"
           }
         },
         "zh-Hans" : {
@@ -121,6 +157,12 @@
             "value" : "مستودع Irisin"
           }
         },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin রিপোজিটরি"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -143,6 +185,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dépôt Irisin"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin रिपॉज़िटरी"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositori Irisin"
           }
         },
         "it" : {
@@ -175,10 +229,28 @@
             "value" : "Репозиторий Irisin"
           }
         },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazina ya Irisin"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin Deposu"
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nguồn Irisin"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ibi Ìpamọ́ Irisin"
           }
         },
         "zh-Hans" : {
@@ -205,6 +277,12 @@
             "value" : "قائمة مستودعات Irisin"
           }
         },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin রিপোজিটরি তালিকা"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
@@ -227,6 +305,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Liste de dépôts Irisin"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin रिपॉज़िटरी सूची"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daftar Repositori Irisin"
           }
         },
         "it" : {
@@ -259,10 +349,28 @@
             "value" : "Список репозиториев Irisin"
           }
         },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orodha ya Hazina za Irisin"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin Depo Listesi"
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Danh sách nguồn Irisin"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Àtòjọ Ibi Ìpamọ́ Irisin"
           }
         },
         "zh-Hans" : {

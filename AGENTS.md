@@ -400,7 +400,11 @@ a version bump, like icli.
   rest are removed. Run it instead of letting Xcode delete translations on
   its own schedule.
 - `Scripts/localize.py extract <dir>` then `merge <dir>` — the locales Fila,
-  iGhostVT and CocoaInspector ship. `extract` writes one job per locale
+  iGhostVT and CocoaInspector ship, and the six Irisin was asked for on its
+  own (Bengali, Hindi, Indonesian, Swahili, Turkish, Yoruba). A locale is
+  added there and in the project's `knownRegions`, nowhere else: the
+  catalogs and `Settings.bundle/<locale>.lproj` are `merge`'s to write.
+  `extract` writes one job per locale
   with only the strings it is missing (catalogs and `Settings.bundle`);
   one translator per locale answers in `<locale>.out.json`; `merge`
   writes them back and refuses an answer whose format specifiers differ.

@@ -15,7 +15,9 @@ others, as Xcode writes it) or into `Settings.bundle/<locale>.lproj`. An
 answer whose format specifiers differ from the source is refused and named;
 running `extract` again shows what is still missing.
 
-The locales are the ones Fila, iGhostVT and CocoaInspector ship.
+The locales are the ones Fila, iGhostVT and CocoaInspector ship, and the six
+Irisin was asked for on its own: Bengali, Hindi, Indonesian, Swahili, Turkish
+and Yoruba.
 """
 
 import json
@@ -32,7 +34,26 @@ CATALOGS = {
 SETTINGS = os.path.join(RESOURCES, "Settings.bundle")
 SETTINGS_TABLE = "Root"
 REFERENCE = "zh-Hans"
-LOCALES = ["ar", "de", "es", "fr", "it", "ja", "ko", "pt-BR", "ru", "vi", "zh-Hans", "zh-Hant"]
+LOCALES = [
+    "ar",
+    "bn",
+    "de",
+    "es",
+    "fr",
+    "hi",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "pt-BR",
+    "ru",
+    "sw",
+    "tr",
+    "vi",
+    "yo",
+    "zh-Hans",
+    "zh-Hant",
+]
 
 STRINGS_LINE = re.compile(r'^"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)";\s*$')
 SPECIFIER = re.compile(r"%(?:(\d+)\$)?(lld|ld|d|@|%)")

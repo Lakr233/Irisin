@@ -18,7 +18,8 @@ import sys
 from pathlib import Path
 
 FORBIDDEN = re.compile(
-    r"jailbr|越狱|越獄|脱獄|탈옥|джейлбрейк|جيلبريك|كسر الحماية|bẻ khóa",
+    r"jailbr|越狱|越獄|脱獄|탈옥|джейлбрейк|جيلبريك|كسر الحماية|bẻ khóa"
+    r"|जेल\s*ब्रेक|জেল\s*ব্রেক",
     re.IGNORECASE,
 )
 

@@ -1,0 +1,2 @@
+"Reset on Next Launch" = "अगली बार खोलने पर रीसेट करें";
+"The next time Irisin opens, it deletes its repositories, downloads, logs and settings, then turns this off. Installed packages are kept. If Irisin is still running, close it in the App Switcher first." = "अगली बार जब Irisin खुलेगा, तो यह अपनी रिपॉज़िटरी, डाउनलोड, लॉग और सेटिंग्ज़ डिलीट कर देगा, फिर इसे बंद कर देगा। इंस्टॉल किए गए पैकेज रखे जाएँगे। यदि Irisin अभी भी चल रहा है, तो पहले उसे ऐप स्विचर में बंद करें।";

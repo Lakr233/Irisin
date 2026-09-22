@@ -18,7 +18,7 @@ Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 16 
 - On roothide, install rootless packages in Compatibility Mode, which refuses a package it cannot convert safely
 - Rebuild icons and reload the Home Screen from Settings
 - Update Irisin from inside Irisin
-- Available in 13 languages
+- Available in 19 languages
 - Open source under the MIT License
 
 ## Installation
