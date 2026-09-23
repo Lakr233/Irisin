@@ -8,6 +8,10 @@ SHELL := /bin/bash
 
 ROOT_DIR            := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 PROJECT             := $(ROOT_DIR)/Irisin.xcodeproj
+# Every build goes through the workspace: it holds the project and each
+# package under Packages/, and a package there stands in for a remote one of
+# the same name anywhere in the graph (Runestone, MarkdownView: vendored).
+WORKSPACE           := $(ROOT_DIR)/Irisin.xcworkspace
 SCHEME              := Irisin
 CONFIGURATION       ?= Release
 # Not under /tmp: Xcode spells that /tmp while FileManager resolves it to
@@ -74,7 +78,7 @@ LAUNCH_DAEMON       := $(ROOT_DIR)/Packaging/wiki.qaq.irisind.plist
 INFO_PLIST_SUPPLEMENT := $(ROOT_DIR)/Packaging/Irisin-Info.plist
 
 XCODEBUILD_BASE := $(XCODEBUILD_WRAPPER) \
-	-project "$(PROJECT)" \
+	-workspace "$(WORKSPACE)" \
 	-derivedDataPath "$(DERIVED_DATA)" \
 	-skipMacroValidation \
 	-skipPackagePluginValidation \
@@ -136,6 +140,12 @@ check:
 	@command -v ldid >/dev/null || { echo "error: ldid is required" >&2; exit 69; }
 	@command -v dpkg-deb >/dev/null || { echo "error: dpkg-deb is required" >&2; exit 69; }
 	@test -d "$(PROJECT)" || { echo "error: Irisin.xcodeproj is missing" >&2; exit 66; }
+	@test -f "$(WORKSPACE)/contents.xcworkspacedata" || { echo "error: Irisin.xcworkspace is missing" >&2; exit 66; }
+	@for package in "$(ROOT_DIR)"/Packages/*/Package.swift; do \
+		name="$$(basename "$$(dirname "$$package")")"; \
+		grep -qF "location = \"group:Packages/$$name\"" "$(WORKSPACE)/contents.xcworkspacedata" \
+			|| { echo "error: Packages/$$name is not in Irisin.xcworkspace; the build would take the remote package of that name" >&2; exit 65; }; \
+	done
 	@test -f "$(CONTROL_TEMPLATE)" || { echo "error: Debian control template is missing" >&2; exit 66; }
 	@test -f "$(PACKAGE_DIR)/Package.swift" || { echo "error: Packages/IrisinKit/Package.swift is missing" >&2; exit 66; }
 	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \

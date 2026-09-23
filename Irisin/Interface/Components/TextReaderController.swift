@@ -6,8 +6,7 @@
 //  Copyright © 2026 Lakr Aream. All rights reserved.
 //
 
-import RunestoneEditor
-import RunestoneLanguageSupport
+import Runestone
 import RunestoneThemeSupport
 import SnapKit
 import Then

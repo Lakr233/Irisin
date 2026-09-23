@@ -7,6 +7,7 @@
 //
 
 import AptRepository
+import Runestone
 import RunestoneLanguageSupport
 import UIKit
 
@@ -225,24 +226,23 @@ final class QueuePackageController: UIViewController, UITableViewDelegate {
         }
     }
 
-    /// The interpreter the script's first line names. A maintainer script is
-    /// a shell script unless it says otherwise, so that is also what no first
-    /// line means; a grammar forced onto Perl would colour it wrong.
-    private static func language(of text: String) -> TreeSitterLanguage {
+    /// Shells the bash grammar reads well enough to colour.
+    private static let shells: Set<Substring> = ["sh", "bash", "dash", "ash", "zsh", "ksh"]
+
+    /// The bash grammar for a shell script, and nothing for any other
+    /// interpreter the first line names: the app carries no other grammar,
+    /// and bash's forced onto Perl would colour it wrong. A maintainer script
+    /// is a shell script unless it says otherwise, so that is also what no
+    /// first line means.
+    private static func language(of text: String) -> TreeSitterLanguage? {
         let first = text.prefix(256).prefix { $0 != "\n" && $0 != "\r" }
         guard first.hasPrefix("#!") else { return .bash }
-        if first.contains("perl") {
-            return .perl
+        // `#!/bin/sh -e`, `#!/usr/bin/env bash`: the program, or what env runs
+        let words = first.dropFirst(2).split(whereSeparator: \.isWhitespace)
+        guard var program = words.first?.split(separator: "/").last else { return .bash }
+        if program == "env", words.count > 1 {
+            program = words[1]
         }
-        if first.contains("python") {
-            return .python
-        }
-        if first.contains("ruby") {
-            return .ruby
-        }
-        if first.contains("lua") {
-            return .lua
-        }
-        return .bash
+        return shells.contains(program) ? .bash : nil
     }
 }

@@ -1,13 +1,13 @@
 {
-  "originHash" : "a1cedcd3b603376d84aa9c86a758fb7fedd6aeab5ba28a6bceddf6f77e16acad",
+  "originHash" : "13d0513cc45680162828c463591d33bfe7808dfaf2758b205fc5d4a6621bbd11",
   "pins" : [
     {
       "identity" : "icli",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/owngoal-dev/icli.git",
       "state" : {
-        "revision" : "955757ae03685bc8fdfcc6e080cac47e080837d3",
-        "version" : "0.4.1"
+        "revision" : "c3407df5f160919b5eb7d2fefb5a5c21351314fb",
+        "version" : "0.6.1"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/libsolv.xcframework",
       "state" : {
-        "revision" : "801dc1891ed4e580b9d58f4ecae6183778b72f3d",
-        "version" : "0.1.0"
+        "revision" : "7104b85bfb0d63eeeaff1af1b917e5938b8a7eb4",
+        "version" : "0.1.1"
       }
     },
     {
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/p-x9/swift-fileio.git",
       "state" : {
-        "revision" : "e581ae04d4079c675042fa62aeabc5ba7480d3df",
-        "version" : "0.14.0"
+        "revision" : "13a83389fb4844f279b43012c4b8d7a3f95773bf",
+        "version" : "0.15.1"
       }
     },
     {
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/p-x9/swift-fileio-extra.git",
       "state" : {
-        "revision" : "8d83506dd4dff737807d90dbf2264096ed98c7a7",
-        "version" : "0.2.2"
+        "revision" : "eccf765a9d90b82db55cacd260490d2fcae000fb",
+        "version" : "0.3.0"
       }
     },
     {

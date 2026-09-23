@@ -210,6 +210,11 @@ end.
   hand-written, `objectVersion = 77`, file-system-synchronized groups: a file
   under `Irisin/`, `IrisinDaemon/` or `IrisinInstall/` joins its target by
   existing. `make check` fails if Xcode rewrites `objectVersion`.
+- **Everything builds through `Irisin.xcworkspace`.** It holds the project
+  and every package under `Packages/`, and a package there stands in for a
+  remote one of the same name anywhere in the graph. The Makefile passes
+  `-workspace`, and `make check` fails on a package under `Packages/` the
+  workspace does not list. Open the workspace in Xcode, not the project.
 - **No Swift file names the SDK's XPC constant macros.** They come from
   `CIrisinXPC` through `IrisinXPC`; naming them in Swift links
   `libswiftXPC.dylib`, which iOS 15 does not have. `make check` greps for
@@ -339,7 +344,11 @@ end.
   (`PackageAdapter`, `PackageAdapters`, `BootstrapArchitecture`), each with
   `swift test`.
 - `Packages/<Name>/` — in-house or locally modified libraries
-  (AptRepository, PackageDepiction, ...).
+  (AptRepository, PackageDepiction, ...). Runestone and MarkdownView are
+  vendored and cut down for size, and each README says from what and how:
+  Runestone keeps the bash and JSON grammars alone, and MarkdownView is
+  UIKit only, with no math and no code highlighting. A grammar or a feature
+  put back is paid for in the app's binary.
   Every local package declares iOS 16, the app's own floor and what
   `IcliKit` asks of IrisinKit and everything above it. PackageDepiction's views are
   laid out with SnapKit and configured with Then, like the app: a depiction

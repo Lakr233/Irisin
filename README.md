@@ -40,7 +40,7 @@ If Irisin crashes or an installation fails, include the log from View Logs in Se
 
 ## Build from Source
 
-Open `Irisin.xcodeproj` in Xcode. To build the packages:
+Open `Irisin.xcworkspace` in Xcode. To build the packages:
 
 ```sh
 make harness      # run the tests on the Mac

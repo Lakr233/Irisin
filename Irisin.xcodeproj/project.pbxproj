@@ -21,7 +21,7 @@
 		CA1000000000000000000290 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000291 /* SPIndicator */; };
 		CA10000000000000000002A0 /* GlyphixTextFx in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002A1 /* GlyphixTextFx */; };
 		CA10000000000000000002E0 /* AlertController in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002E1 /* AlertController */; };
-		CA10000000000000000002F0 /* RunestoneEditor in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002F1 /* RunestoneEditor */; };
+		CA10000000000000000002F0 /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002F1 /* Runestone */; };
 		CA1000000000000000000300 /* RunestoneLanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000301 /* RunestoneLanguageSupport */; };
 		CA1000000000000000000310 /* RunestoneThemeSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000311 /* RunestoneThemeSupport */; };
 		CA1000000000000000000320 /* ScribbleLetter in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000321 /* ScribbleLetter */; };
@@ -113,7 +113,7 @@
 				CA1000000000000000000290 /* SPIndicator in Frameworks */,
 				CA10000000000000000002A0 /* GlyphixTextFx in Frameworks */,
 				CA10000000000000000002E0 /* AlertController in Frameworks */,
-				CA10000000000000000002F0 /* RunestoneEditor in Frameworks */,
+				CA10000000000000000002F0 /* Runestone in Frameworks */,
 				CA1000000000000000000300 /* RunestoneLanguageSupport in Frameworks */,
 				CA1000000000000000000310 /* RunestoneThemeSupport in Frameworks */,
 			);
@@ -198,7 +198,7 @@
 				CA1000000000000000000291 /* SPIndicator */,
 				CA10000000000000000002A1 /* GlyphixTextFx */,
 				CA10000000000000000002E1 /* AlertController */,
-				CA10000000000000000002F1 /* RunestoneEditor */,
+				CA10000000000000000002F1 /* Runestone */,
 				CA1000000000000000000301 /* RunestoneLanguageSupport */,
 				CA1000000000000000000311 /* RunestoneThemeSupport */,
 				502F2D43304EBFBC006C2087 /* Then */,
@@ -327,13 +327,13 @@
 				CA5000000000000000000001 /* XCLocalSwiftPackageReference "Packages/IrisinKit" */,
 				CA5000000000000000000002 /* XCLocalSwiftPackageReference "Packages/AptRepository" */,
 				CA5000000000000000000006 /* XCLocalSwiftPackageReference "Packages/PackageDepiction" */,
+				CA5000000000000000000007 /* XCLocalSwiftPackageReference "Packages/Runestone" */,
 				CA6000000000000000000001 /* XCRemoteSwiftPackageReference "SnapKit" */,
 				CA6000000000000000000002 /* XCRemoteSwiftPackageReference "SDWebImage" */,
 				CA6000000000000000000003 /* XCRemoteSwiftPackageReference "SPIndicator" */,
 				CA6000000000000000000004 /* XCRemoteSwiftPackageReference "GlyphixTextFx" */,
 				CA6000000000000000000009 /* XCRemoteSwiftPackageReference "Dog" */,
 				CA600000000000000000000A /* XCRemoteSwiftPackageReference "AlertController" */,
-				CA600000000000000000000B /* XCRemoteSwiftPackageReference "Runestone.xcframework" */,
 				502F2D42304EBFBC006C2087 /* XCRemoteSwiftPackageReference "Then" */,
 				502F639B304F1353006C2087 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */,
@@ -745,6 +745,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PackageDepiction;
 		};
+		CA5000000000000000000007 /* XCLocalSwiftPackageReference "Packages/Runestone" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Runestone;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -761,7 +765,7 @@
 			repositoryURL = "https://github.com/apple/swift-collections.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.6.0;
+				minimumVersion = 1.7.0;
 			};
 		};
 		CA6000000000000000000001 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
@@ -812,20 +816,12 @@
 				minimumVersion = 2.2.3;
 			};
 		};
-		CA600000000000000000000B /* XCRemoteSwiftPackageReference "Runestone.xcframework" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Lakr233/Runestone.xcframework.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.2;
-			};
-		};
 		CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/yellowplushq/ScribbleLetterView";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 0.1.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -895,19 +891,16 @@
 			package = CA600000000000000000000A /* XCRemoteSwiftPackageReference "AlertController" */;
 			productName = AlertController;
 		};
-		CA10000000000000000002F1 /* RunestoneEditor */ = {
+		CA10000000000000000002F1 /* Runestone */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CA600000000000000000000B /* XCRemoteSwiftPackageReference "Runestone.xcframework" */;
-			productName = RunestoneEditor;
+			productName = Runestone;
 		};
 		CA1000000000000000000301 /* RunestoneLanguageSupport */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CA600000000000000000000B /* XCRemoteSwiftPackageReference "Runestone.xcframework" */;
 			productName = RunestoneLanguageSupport;
 		};
 		CA1000000000000000000311 /* RunestoneThemeSupport */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CA600000000000000000000B /* XCRemoteSwiftPackageReference "Runestone.xcframework" */;
 			productName = RunestoneThemeSupport;
 		};
 		CA1000000000000000000321 /* ScribbleLetter */ = {

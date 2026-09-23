@@ -10,14 +10,16 @@ hand-kept copy that drifts (adapted from iGhostVT's and Fila's):
   2. code copied into the app's own targets — a Swift file whose header
      comment names a license (FluentIcon.swift, from Microsoft's Fluent UI
      System Icons) ships that header;
-  3. the local packages under Packages/ that carry a LICENSE;
+  3. the local packages under Packages/ that carry a LICENSE, and the
+     notices nested in them for what they vendor (Runestone carries
+     Tree-sitter's and each grammar's);
   4. every package pinned in Package.resolved — its checkout under
      SourcePackages, and its binary artifacts beside it, are walked for
      LICENSE / COPYING / NOTICE files and whatever sits in a Licenses
-     folder, at the root and nested (Runestone.xcframework carries
-     TreeSitter's notice, libsolv.xcframework the upstream BSD terms, the
-     WCDB binaries their own). A checkout with no such file ships the
-     copyright header of its sources instead (ktiays/With has only that).
+     folder, at the root and nested (libsolv.xcframework carries the
+     upstream BSD terms, the WCDB binaries their own). A checkout with no
+     such file ships the copyright header of its sources instead
+     (ktiays/With has only that).
 
 A pin whose checkout is missing, or whose checkout has neither a license
 file nor a copyright header, fails the build: the list would be incomplete
@@ -139,9 +141,16 @@ def local_entries(project, homepage):
     root = os.path.join(project, "Packages")
     entries = []
     for package in sorted(os.listdir(root)):
-        path = os.path.join(root, package, "LICENSE")
-        if os.path.isfile(path):
-            entries.append(entry(package, None, f"{homepage}/tree/main/Packages/{package}", read(path)))
+        directory = os.path.join(root, package)
+        if not os.path.isfile(os.path.join(directory, "LICENSE")):
+            continue
+        url = f"{homepage}/tree/main/Packages/{package}"
+        # a vendored package names what it vendors beside it:
+        # Runestone/Sources/TreeSitter/LICENSE
+        for path in license_files(directory):
+            parent = os.path.dirname(path)
+            name = package if parent == directory else os.path.basename(parent)
+            entries.append(entry(name, None, url, read(path)))
     return entries
 
 
@@ -170,9 +179,13 @@ def source_copyright(checkout):
 
 
 def package_entries(project, source_packages):
-    resolved_path = os.path.join(
-        project, "Irisin.xcodeproj", "project.xcworkspace", "xcshareddata", "swiftpm", "Package.resolved"
-    )
+    # Irisin.xcworkspace is what builds, and it keeps its own pins; the
+    # project's are there only when someone opened the project by itself.
+    resolved_path = os.path.join(project, "Irisin.xcworkspace", "xcshareddata", "swiftpm", "Package.resolved")
+    if not os.path.isfile(resolved_path):
+        resolved_path = os.path.join(
+            project, "Irisin.xcodeproj", "project.xcworkspace", "xcshareddata", "swiftpm", "Package.resolved"
+        )
     resolved = json.load(open(resolved_path, encoding="utf-8"))
     entries = []
     for pin in sorted(resolved["pins"], key=lambda pin: pin["identity"]):

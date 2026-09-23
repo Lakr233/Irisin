@@ -15,7 +15,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/SDWebImage/SDWebImage", from: "5.21.7"),
-        .package(url: "https://github.com/Lakr233/MarkdownView", from: "4.3.2"),
+        .package(path: "../MarkdownView"),
         .package(url: "https://github.com/SnapKit/SnapKit", from: "6.0.0"),
         .package(url: "https://github.com/devxoul/Then", from: "3.0.0"),
     ],
