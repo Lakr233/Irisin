@@ -30217,6 +30217,124 @@
         }
       }
     },
+    "Partly available" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متاح جزئيًا"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আংশিক উপলব্ধ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilweise verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partly available"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parcialmente disponible"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partiellement disponible"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आंशिक रूप से उपलब्ध"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tersedia sebagian"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parzialmente disponibile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部利用可能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 사용 가능"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parcialmente disponível"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Частично доступен"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inapatikana kwa sehemu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısmen kullanılabilir"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khả dụng một phần"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ó wà lápá kan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分可用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分可用"
+          }
+        }
+      }
+    },
     "Preparing the app update. The app will exit when it finishes." : {
       "localizations" : {
         "ar" : {
@@ -44261,6 +44379,124 @@
         }
       }
     },
+    "The last refresh, on %@, could not reach the server." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر الوصول إلى الخادم في آخر تحديث، بتاريخ %@."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@-এ শেষবার রিফ্রেশের সময় সার্ভারে পৌঁছানো যায়নি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der letzten Aktualisierung am %@ war der Server nicht erreichbar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The last refresh, on %@, could not reach the server."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La última actualización, el %@, no ha podido conectar con el servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lors de la dernière actualisation, le %@, le serveur était inaccessible."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ को पिछली बार रीफ़्रेश करते समय सर्वर तक नहीं पहुँचा जा सका।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penyegaran terakhir, pada %@, tidak dapat menjangkau server."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’ultimo aggiornamento, il %@, non è riuscito a raggiungere il server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回の更新（%@）では、サーバに接続できませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막 새로 고침(%@) 때 서버에 연결할 수 없었습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A última atualização, em %@, não conseguiu acessar o servidor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При последнем обновлении (%@) не удалось подключиться к серверу."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuonyesha upya kwa mwisho, mnamo %@, hakukuweza kufikia seva."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tarihindeki son yenileme sunucuya ulaşamadı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lần làm mới gần nhất, vào %@, không thể kết nối tới máy chủ."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ìsọdọ̀tun tó kẹ́yìn, ní %@, kò lè dé ọ̀dọ̀ sáfà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次刷新（%@）时无法连接到服务器。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次重新整理（%@）時無法連線至伺服器。"
+          }
+        }
+      }
+    },
     "The operation keeps running in the background." : {
       "localizations" : {
         "ar" : {
@@ -45559,6 +45795,478 @@
         }
       }
     },
+    "The server has no package list for this device." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد على الخادم قائمة حزم لهذا الجهاز."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সার্ভারে এই ডিভাইসের জন্য কোনো প্যাকেজ তালিকা নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat keine Paketliste für dieses Gerät."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server has no package list for this device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no tiene una lista de paquetes para este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur ne propose aucune liste de paquets pour cet appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सर्वर पर इस डिवाइस के लिए कोई पैकेज सूची नहीं है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server tidak memiliki daftar paket untuk perangkat ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server non ha un elenco dei pacchetti per questo dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバにこのデバイス用のパッケージリストがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버에 이 기기용 패키지 목록이 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor não tem uma lista de pacotes para este dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На сервере нет списка пакетов для этого устройства."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seva haina orodha ya vifurushi kwa ajili ya kifaa hiki."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucuda bu aygıt için paket listesi yok."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ không có danh sách gói cho thiết bị này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sáfà kò ní àkójọ pákéèjì fún ẹ̀rọ yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器没有适用于此设备的软件包列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "伺服器沒有適用於此裝置的套件列表。"
+          }
+        }
+      }
+    },
+    "The server returned an error (HTTP %lld) during the last refresh." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعاد الخادم خطأً (HTTP %lld) أثناء آخر تحديث."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "শেষবার রিফ্রেশের সময় সার্ভার একটি ত্রুটি (HTTP %lld) ফেরত দিয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat bei der letzten Aktualisierung einen Fehler (HTTP %lld) zurückgegeben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server returned an error (HTTP %lld) during the last refresh."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor ha devuelto un error (HTTP %lld) durante la última actualización."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a renvoyé une erreur (HTTP %lld) lors de la dernière actualisation."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछली बार रीफ़्रेश करते समय सर्वर ने एक त्रुटि (HTTP %lld) लौटाई।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server mengembalikan kesalahan (HTTP %lld) saat penyegaran terakhir."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server ha restituito un errore (HTTP %lld) durante l’ultimo aggiornamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回の更新時に、サーバがエラー（HTTP %lld）を返しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막 새로 고침 중 서버가 오류(HTTP %lld)를 반환했습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor retornou um erro (HTTP %lld) durante a última atualização."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При последнем обновлении сервер вернул ошибку (HTTP %lld)."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seva ilirejesha hitilafu (HTTP %lld) wakati wa kuonyesha upya kwa mwisho."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son yenileme sırasında sunucu bir hata (HTTP %lld) döndürdü."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ đã trả về lỗi (HTTP %lld) trong lần làm mới gần nhất."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sáfà dá àṣìṣe (HTTP %lld) padà nígbà ìsọdọ̀tun tó kẹ́yìn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次刷新时，服务器返回了错误（HTTP %lld）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次重新整理時，伺服器傳回了錯誤（HTTP %lld）。"
+          }
+        }
+      }
+    },
+    "The server returned an older Release file than the one on this device, so it was ignored." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعاد الخادم ملف Release أقدم من الملف الموجود على هذا الجهاز، لذا تم تجاهله."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সার্ভার এই ডিভাইসে থাকা Release ফাইলের চেয়ে পুরোনো একটি Release ফাইল ফেরত দিয়েছে, তাই সেটি উপেক্ষা করা হয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat eine ältere Release-Datei als die auf diesem Gerät zurückgegeben, daher wurde sie ignoriert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server returned an older Release file than the one on this device, so it was ignored."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor ha devuelto un archivo Release más antiguo que el de este dispositivo, así que se ha ignorado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a renvoyé un fichier Release plus ancien que celui de cet appareil ; il a donc été ignoré."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सर्वर ने इस डिवाइस पर मौजूद Release फ़ाइल से पुरानी Release फ़ाइल लौटाई, इसलिए उसे अनदेखा कर दिया गया।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server mengembalikan file Release yang lebih lama daripada yang ada di perangkat ini, sehingga file tersebut diabaikan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server ha restituito un file Release più vecchio di quello presente su questo dispositivo, quindi è stato ignorato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがこのデバイス上のものより古いReleaseファイルを返したため、無視しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버가 이 기기에 있는 것보다 오래된 Release 파일을 반환하여 무시했습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor retornou um arquivo Release mais antigo que o deste dispositivo, por isso ele foi ignorado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер вернул более старый файл Release, чем на этом устройстве, поэтому он был проигнорирован."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seva ilirejesha faili ya Release ya zamani kuliko iliyo kwenye kifaa hiki, kwa hivyo ilipuuzwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sunucu bu aygıttakinden daha eski bir Release dosyası döndürdü, bu nedenle dosya yok sayıldı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ đã trả về tệp Release cũ hơn tệp trên thiết bị này nên tệp đó đã bị bỏ qua."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sáfà dá fáìlì Release tó ti pẹ́ ju èyí tó wà lórí ẹ̀rọ yìí padà, nítorí náà a fojú fò ó."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器返回的 Release 文件比此设备上的更旧，已忽略。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "伺服器傳回的 Release 檔案比此裝置上的更舊，已忽略。"
+          }
+        }
+      }
+    },
+    "The server stopped responding during the last refresh." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "توقف الخادم عن الاستجابة أثناء آخر تحديث."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "শেষবার রিফ্রেশের সময় সার্ভার সাড়া দেওয়া বন্ধ করে দিয়েছিল।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat bei der letzten Aktualisierung nicht mehr geantwortet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server stopped responding during the last refresh."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor ha dejado de responder durante la última actualización."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a cessé de répondre lors de la dernière actualisation."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछली बार रीफ़्रेश करते समय सर्वर ने जवाब देना बंद कर दिया।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server berhenti merespons saat penyegaran terakhir."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server ha smesso di rispondere durante l’ultimo aggiornamento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回の更新時に、サーバが応答しなくなりました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막 새로 고침 중 서버가 응답을 멈췄습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor parou de responder durante a última atualização."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При последнем обновлении сервер перестал отвечать."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seva iliacha kujibu wakati wa kuonyesha upya kwa mwisho."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son yenileme sırasında sunucu yanıt vermeyi bıraktı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy chủ đã ngừng phản hồi trong lần làm mới gần nhất."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sáfà dẹ́kun láti dáhùn nígbà ìsọdọ̀tun tó kẹ́yìn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次刷新时，服务器停止了响应。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次重新整理時，伺服器停止了回應。"
+          }
+        }
+      }
+    },
     "The system is translating this page." : {
       "localizations" : {
         "ar" : {
@@ -45791,6 +46499,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "廠商沒有回應。請再試一次。"
+          }
+        }
+      }
+    },
+    "These packages are from %@." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم جلب هذه الحزم في %@."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই প্যাকেজগুলি %@-এ আনা হয়েছিল।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Pakete wurden am %@ abgerufen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These packages are from %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estos paquetes se obtuvieron el %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces paquets ont été récupérés le %@."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ये पैकेज %@ को प्राप्त किए गए थे।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket-paket ini diambil pada %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questi pacchetti sono stati recuperati il %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これらのパッケージは%@に取得されました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 패키지는 %@에 가져온 것입니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estes pacotes foram obtidos em %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти пакеты получены %@."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vifurushi hivi vilipatikana mnamo %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu paketler %@ tarihinde alındı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các gói này được lấy vào %@."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ní %@ ni a gba àwọn pákéèjì yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些软件包获取于 %@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些套件取得於 %@。"
           }
         }
       }
@@ -48624,6 +49450,242 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此軟體源已在列表中。"
+          }
+        }
+      }
+    },
+    "This repository's Release file does not list its package list, so the list cannot be verified." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يذكر ملف Release الخاص بهذا المستودع قائمة حزمه، لذا يتعذر التحقق من القائمة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই রিপোজিটরির Release ফাইলে এর প্যাকেজ তালিকার উল্লেখ নেই, তাই তালিকাটি যাচাই করা যাচ্ছে না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Release-Datei dieser Quelle führt ihre Paketliste nicht auf, daher kann die Liste nicht überprüft werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository's Release file does not list its package list, so the list cannot be verified."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo Release de este repositorio no incluye su lista de paquetes, así que no se puede verificar la lista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier Release de ce dépôt ne répertorie pas sa liste de paquets ; la liste ne peut donc pas être vérifiée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस रिपॉज़िटरी की Release फ़ाइल में इसकी पैकेज सूची शामिल नहीं है, इसलिए सूची को सत्यापित नहीं किया जा सकता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Release repositori ini tidak mencantumkan daftar paketnya, sehingga daftar tersebut tidak dapat diverifikasi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il file Release di questo repository non include il suo elenco dei pacchetti, quindi non è possibile verificare l’elenco."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリポジトリのReleaseファイルにパッケージリストが記載されていないため、リストを検証できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 소스의 Release 파일에 패키지 목록이 나와 있지 않아 목록을 검증할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O arquivo Release deste repositório não inclui sua lista de pacotes, por isso não é possível validar a lista."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В файле Release этого репозитория не указан его список пакетов, поэтому список нельзя проверить."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faili ya Release ya hazina hii haitaji orodha yake ya vifurushi, kwa hivyo orodha hiyo haiwezi kuthibitishwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu deponun Release dosyası paket listesini içermiyor, bu nedenle liste doğrulanamıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp Release của nguồn này không liệt kê danh sách gói của nguồn nên không thể xác minh danh sách."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fáìlì Release ibi ìpamọ́ yìí kò dárúkọ àkójọ pákéèjì rẹ̀, nítorí náà a kò lè ṣèdánilójú àkójọ náà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此软件源的 Release 文件没有列出其软件包列表，因此无法校验该列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此軟體源的 Release 檔案沒有列出其套件列表，因此無法驗證該列表。"
+          }
+        }
+      }
+    },
+    "This repository's Release file is missing or cannot be read, so its package lists cannot be verified." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ملف Release الخاص بهذا المستودع مفقود أو تتعذر قراءته، لذا يتعذر التحقق من قوائم حزمه."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই রিপোজিটরির Release ফাইলটি নেই বা পড়া যাচ্ছে না, তাই এর প্যাকেজ তালিকাগুলি যাচাই করা যাচ্ছে না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Release-Datei dieser Quelle fehlt oder kann nicht gelesen werden, daher können ihre Paketlisten nicht überprüft werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository's Release file is missing or cannot be read, so its package lists cannot be verified."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo Release de este repositorio falta o no se puede leer, así que no se pueden verificar sus listas de paquetes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier Release de ce dépôt est absent ou illisible ; ses listes de paquets ne peuvent donc pas être vérifiées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस रिपॉज़िटरी की Release फ़ाइल मौजूद नहीं है या पढ़ी नहीं जा सकती, इसलिए इसकी पैकेज सूचियों को सत्यापित नहीं किया जा सकता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Release repositori ini tidak ada atau tidak dapat dibaca, sehingga daftar paketnya tidak dapat diverifikasi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il file Release di questo repository è mancante o illeggibile, quindi non è possibile verificarne gli elenchi dei pacchetti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリポジトリのReleaseファイルが見つからないか読み取れないため、パッケージリストを検証できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 소스의 Release 파일이 없거나 읽을 수 없어 패키지 목록을 검증할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O arquivo Release deste repositório está ausente ou não pode ser lido, por isso não é possível validar suas listas de pacotes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл Release этого репозитория отсутствует или не читается, поэтому его списки пакетов нельзя проверить."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faili ya Release ya hazina hii haipo au haiwezi kusomwa, kwa hivyo orodha zake za vifurushi haziwezi kuthibitishwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu deponun Release dosyası eksik veya okunamıyor, bu nedenle paket listeleri doğrulanamıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp Release của nguồn này bị thiếu hoặc không đọc được nên không thể xác minh các danh sách gói của nguồn."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fáìlì Release ibi ìpamọ́ yìí kò sí tàbí a kò lè kà á, nítorí náà a kò lè ṣèdánilójú àwọn àkójọ pákéèjì rẹ̀."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此软件源的 Release 文件缺失或无法读取，因此无法校验其软件包列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此軟體源的 Release 檔案遺失或無法讀取，因此無法驗證其套件列表。"
           }
         }
       }
@@ -52282,6 +53344,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法驗證 %@：%@"
+          }
+        }
+      }
+    },
+    "Unavailable" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير متاح"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অনুপলব্ধ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verfügbar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponible"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उपलब्ध नहीं"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak tersedia"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non disponibile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "利用不可"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용할 수 없음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponível"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недоступен"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haipatikani"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanılamıyor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không khả dụng"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不可用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法使用"
           }
         }
       }

@@ -131,11 +131,12 @@ class RepositoryRow: UIView {
         let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: withUrl)
         title.text = repo?.nickName ?? ""
         subtitle.text = repo.map(Self.summary(of:)) ?? ""
-        // one stop per repository, opened as a button; the arrow and the
-        // state dot are drawn, not read
+        // one stop per repository, opened as a button; the arrow is drawn,
+        // not read, and the dot is read as words
+        let health = RepositoryCenter.default.refreshHealth(withUrl: withUrl)
         isAccessibilityElement = true
         accessibilityTraits = .button
-        accessibilityLabel = describe()
+        accessibilityLabel = describe(health)
         if let data = repo?.avatar,
            let image = UIImage(data: data)
         {
@@ -143,14 +144,12 @@ class RepositoryRow: UIView {
         } else {
             icon.image = UIImage.fluent(.bookCompass24Filled)
         }
-        guard let ready = RepositoryCenter.default.isRepositoryReadyForUse(withUrl: withUrl) else {
-            indicator.backgroundColor = .clear
-            return
-        }
-        if RepositoryCenter.default.isRepositoryPreparedForUpdate(withUrl: withUrl) {
-            indicator.backgroundColor = .repositoryPending
-        } else {
-            indicator.backgroundColor = ready ? .repositoryReady : .repositoryFailed
+        indicator.backgroundColor = switch health {
+        case .pending: .repositoryPending
+        case .ready: .repositoryReady
+        case .degraded: .repositoryDegraded
+        case .failed: .repositoryFailed
+        case nil: .clear
         }
     }
 
@@ -167,10 +166,16 @@ class RepositoryRow: UIView {
         accessibilityLabel = describe()
     }
 
-    /// The row's two lines as one label, the way a cell reads elsewhere.
-    private func describe() -> String {
-        [title, subtitle]
-            .compactMap(\.text)
+    /// The row's two lines as one label, the way a cell reads elsewhere,
+    /// and what the dot says when it says something is wrong.
+    private func describe(_ health: RepositoryHealth? = nil) -> String {
+        let state: String? = switch health {
+        case .degraded: String(localized: "Partly available")
+        case .failed: String(localized: "Unavailable")
+        case .pending, .ready, nil: nil
+        }
+        return ([title.text, subtitle.text, state] as [String?])
+            .compactMap(\.self)
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
     }

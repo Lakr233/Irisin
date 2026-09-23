@@ -296,13 +296,55 @@ class RepositoryDetailController: UIViewController {
             let updated = repo.lastUpdatePackage.timeIntervalSince1970 > 0
                 ? formatter.string(from: repo.lastUpdatePackage)
                 : String(localized: "Never")
-            return [
+            return ([
                 String(localized: "Packages: \(repo.packageCount) · Sections: \(sections.count)"),
                 String(localized: "Last updated: \(updated)"),
-            ].joined(separator: "\n")
+            ] + [refreshExplanation(formatter)].compactMap(\.self)).joined(separator: "\n")
         case .featured, nil:
             return nil
         }
+    }
+
+    /// Why the last refresh left the repository as it is, a sentence for
+    /// each thing that went wrong, under the counts; nil when it went
+    /// through. On an empty page too, which otherwise says only "0".
+    private func refreshExplanation(_ formatter: DateFormatter) -> String? {
+        guard let report = repo.refreshReport, !report.issues.isEmpty else { return nil }
+        let refreshed = formatter.string(from: report.date)
+        var sentences = [String]()
+        func say(_ sentence: String) {
+            if !sentences.contains(sentence) {
+                sentences.append(sentence)
+            }
+        }
+        for issue in report.issues {
+            switch issue {
+            case .unreachable:
+                say(String(localized: "The last refresh, on \(refreshed), could not reach the server."))
+            case .stalled:
+                say(String(localized: "The server stopped responding during the last refresh."))
+            case let .serverError(code):
+                say(String(localized: "The server returned an error (HTTP \(code)) during the last refresh."))
+            case .releaseMissing, .releaseMalformed:
+                say(String(
+                    localized: "This repository's Release file is missing or cannot be read, so its package lists cannot be verified."
+                ))
+            case .releaseOutdated:
+                say(String(
+                    localized: "The server returned an older Release file than the one on this device, so it was ignored."
+                ))
+            case .indexUnverified:
+                say(String(
+                    localized: "This repository's Release file does not list its package list, so the list cannot be verified."
+                ))
+            case .noIndex:
+                say(String(localized: "The server has no package list for this device."))
+            }
+        }
+        if report.didNotConnect, repo.packageCount > 0, repo.lastUpdatePackage.timeIntervalSince1970 > 0 {
+            say(String(localized: "These packages are from \(formatter.string(from: repo.lastUpdatePackage))."))
+        }
+        return "\n" + sentences.joined(separator: " ")
     }
 
     // MARK: - SHARE

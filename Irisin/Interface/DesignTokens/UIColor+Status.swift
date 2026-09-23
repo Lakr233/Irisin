@@ -61,6 +61,10 @@ extension UIColor {
     static let repositoryFailed = UIColor.systemRed
     static let repositoryPending = UIColor.cyan
 
+    /// A repository's dot when it has packages but its last refresh had
+    /// trouble, or was over a day ago: usable, not current.
+    static let repositoryDegraded = UIColor.systemOrange
+
     /// A repository whose store account the user is signed in to.
     static let signedIn = UIColor.systemGreen
 
