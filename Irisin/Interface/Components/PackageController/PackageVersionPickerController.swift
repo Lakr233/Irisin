@@ -7,7 +7,7 @@
 //
 
 import AptRepository
-import Collections
+import OrderedCollections
 import UIKit
 
 /// The choose-version sheet: an optional local-selection header, then every

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		502F2D44304EBFBC006C2087 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 502F2D43304EBFBC006C2087 /* Then */; };
-		502F639D304F1353006C2087 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 502F639C304F1353006C2087 /* Collections */; };
+		502F639D304F1353006C2087 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 502F639C304F1353006C2087 /* OrderedCollections */; };
 		A9B601A1DEFA4A3CAE324060 /* AptResolver in Frameworks */ = {isa = PBXBuildFile; productRef = A9B601A1DEFA4A3CAE324061 /* AptResolver */; };
 		CA10000000000000000001A0 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001A1 /* IrisinProtocol */; };
 		CA10000000000000000001B0 /* IrisinClient in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001B1 /* IrisinClient */; };
@@ -109,7 +109,7 @@
 				CA1000000000000000000200 /* PackageDepiction in Frameworks */,
 				CA1000000000000000000270 /* SnapKit in Frameworks */,
 				CA1000000000000000000280 /* SDWebImage in Frameworks */,
-				502F639D304F1353006C2087 /* Collections in Frameworks */,
+				502F639D304F1353006C2087 /* OrderedCollections in Frameworks */,
 				CA1000000000000000000290 /* SPIndicator in Frameworks */,
 				CA10000000000000000002A0 /* GlyphixTextFx in Frameworks */,
 				CA10000000000000000002E0 /* AlertController in Frameworks */,
@@ -202,7 +202,7 @@
 				CA1000000000000000000301 /* RunestoneLanguageSupport */,
 				CA1000000000000000000311 /* RunestoneThemeSupport */,
 				502F2D43304EBFBC006C2087 /* Then */,
-				502F639C304F1353006C2087 /* Collections */,
+				502F639C304F1353006C2087 /* OrderedCollections */,
 				CA1000000000000000000321 /* ScribbleLetter */,
 			);
 			productName = irisin;
@@ -831,10 +831,10 @@
 			package = 502F2D42304EBFBC006C2087 /* XCRemoteSwiftPackageReference "Then" */;
 			productName = Then;
 		};
-		502F639C304F1353006C2087 /* Collections */ = {
+		502F639C304F1353006C2087 /* OrderedCollections */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 502F639B304F1353006C2087 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = Collections;
+			productName = OrderedCollections;
 		};
 		A9B601A1DEFA4A3CAE324061 /* AptResolver */ = {
 			isa = XCSwiftPackageProductDependency;

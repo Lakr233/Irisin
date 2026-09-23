@@ -6,7 +6,7 @@
 //  Copyright © 2026 Lakr Aream. All rights reserved.
 //
 
-import Collections
+import OrderedCollections
 import UIKit
 
 extension NSDiffableDataSourceSnapshot {

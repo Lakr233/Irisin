@@ -410,6 +410,13 @@ a version bump, like icli.
   The build has no warnings, Debug or Release, and a change keeps it that
   way. `run-xcodebuild.sh` shows each one as a `[!]` line (xcbeautify's
   mark; the raw `warning:` without it).
+  Release is built for size: `Configuration/Size.xcconfig` (`-Osize`,
+  clang `-Oz`) reaches the project through `Release.xcconfig` and the
+  packages through the Makefile's `-xcconfig`, since a package never reads
+  the project's configuration files, and the executables export no symbols
+  (`LD_EXPORT_SYMBOLS = NO`). A product is linked by its narrowest module
+  (`OrderedCollections`, never the `Collections` umbrella): a Swift module
+  linked in stays in the binary whole, used or not.
 - `make deb` / `make deb-all` — roothide and rootless packages, verified.
 - `make install` — update an installation over `iproxy 2333 22`.
 - `Scripts/prune-xcstrings.py Irisin/Resources/Localizable.xcstrings Irisin Packages`

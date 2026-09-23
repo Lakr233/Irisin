@@ -1,0 +1,9 @@
+// Release is optimised for size: the app is downloaded over a phone's
+// connection and nothing in it is compute-bound in Swift (the solver and the
+// archive reader are C). About 1.3 MB of the installed binaries.
+//
+// Release.xcconfig includes this for the project's own targets, and the
+// Makefile passes it to xcodebuild with -xcconfig so the Swift packages,
+// which never read the project's configuration files, are built the same way.
+SWIFT_OPTIMIZATION_LEVEL = -Osize
+GCC_OPTIMIZATION_LEVEL = z

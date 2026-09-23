@@ -7,7 +7,7 @@
 //
 
 import AptRepository
-import Collections
+import OrderedCollections
 import Combine
 import SPIndicator
 import Then

@@ -1,6 +1,12 @@
 #include "Base.xcconfig"
+#include "Size.xcconfig"
 #include? "Developer.xcconfig"
 #include? "DeveloperRelease.xcconfig"
 
 // Device helpers run outside a test runner and must not write LLVM profiles.
 ENABLE_CODE_COVERAGE = NO
+
+// The executables export nothing: no plugin or test bundle links against a
+// Release build, and every public symbol of every package linked in was
+// otherwise listed in the export table (1.8 MB of the app alone).
+LD_EXPORT_SYMBOLS = NO

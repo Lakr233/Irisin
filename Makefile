@@ -50,6 +50,7 @@ PACKAGE_DIR         := $(ROOT_DIR)/Packages/IrisinKit
 CONFIG_DIR          := $(ROOT_DIR)/Configuration
 VERSION_CONFIG      := $(CONFIG_DIR)/Version.xcconfig
 BASE_CONFIG         := $(CONFIG_DIR)/Base.xcconfig
+SIZE_CONFIG         := $(CONFIG_DIR)/Size.xcconfig
 xcconfig_setting     = $(strip $(shell awk -F= '$$1 ~ /^[[:space:]]*$(1)[[:space:]]*$$/ { gsub(/[[:space:]]/, "", $$2); print $$2; exit }' "$(VERSION_CONFIG)"))
 base_xcconfig_setting = $(strip $(shell awk -F= '$$1 ~ /^[[:space:]]*$(1)[[:space:]]*$$/ { gsub(/[[:space:]]/, "", $$2); print $$2; exit }' "$(BASE_CONFIG)"))
 APP_VERSION         := $(call xcconfig_setting,MARKETING_VERSION)
@@ -151,7 +152,7 @@ check:
 	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
 		test -x "$$script" || { echo "error: $$script is not executable" >&2; exit 66; }; \
 	done
-	@for xcconfig in Version Base Development Release; do \
+	@for xcconfig in Version Base Size Development Release; do \
 		test -f "$(CONFIG_DIR)/$$xcconfig.xcconfig" || { echo "error: Configuration/$$xcconfig.xcconfig is missing" >&2; exit 66; }; \
 	done
 	@[[ "$(APP_VERSION)" =~ ^[0-9]+\.[0-9]+\.[0-9]+$$ ]] || { echo "error: MARKETING_VERSION must look like 4.0.0, got '$(APP_VERSION)'" >&2; exit 65; }
@@ -274,6 +275,7 @@ compile: check
 _build-ios:
 	@echo "==> build $(BUILD_NUMBER)"
 	XCBUILD_LABEL=build-ios $(XCODEBUILD) \
+		$(if $(filter Release,$(CONFIGURATION)),-xcconfig "$(SIZE_CONFIG)") \
 		-configuration "$(CONFIGURATION)" \
 		-scheme "$(SCHEME)" \
 		-destination "generic/platform=iOS" \
