@@ -32,7 +32,11 @@ public enum PackageResolver {
             actions[action.identity] = action
         }
         var records: [PoolPackage] = []
-        var diagnostics: [ResolutionFailure.Reason] = []
+        // Every repository entry that does not parse, and why. Only those
+        // this plan touches become its diagnostics, below: one broken
+        // paragraph in one of a hundred repositories is not every
+        // transaction's business.
+        var unreadable: [Package: ResolutionFailure.Reason] = [:]
         for package in snapshot.installed.sorted(by: { $0.identity < $1.identity }) {
             try records.append(PoolPackage(package, installed: true, action: actions[package.identity], in: snapshot))
         }
@@ -76,7 +80,7 @@ public enum PackageResolver {
                     adapted.insert(records.count - 1)
                 }
             } catch {
-                diagnostics.append((error as? ResolutionFailure)?.reason ?? .unknown)
+                unreadable[record] = (error as? ResolutionFailure)?.reason ?? .unknown
             }
         }
         let universe = PackageUniverse(packages: records, architecture: snapshot.architecture)
@@ -150,7 +154,8 @@ public enum PackageResolver {
                 guard let index = records.indices.first(where: {
                     !records[$0].installed && records[$0].package == requested
                 }) else {
-                    throw ResolutionFailure(.versionUnavailable(package: name))
+                    // the version is offered and does not parse: say so
+                    throw ResolutionFailure(unreadable[requested] ?? .versionUnavailable(package: name))
                 }
                 explicitInstall.insert(index)
                 jobs.append(Job(.install, .package(ids[index])))
@@ -334,6 +339,24 @@ public enum PackageResolver {
                         requiredBy[records[witness].name, default: []].insert(record.name)
                     }
                 }
+            }
+        }
+        // an entry left out concerns this plan when it is another version of
+        // a package the plan installs, one an addition's Depends or
+        // Pre-Depends names, or an update the update of everything skipped
+        var involved = Set(additions.map { records[$0].name })
+        for index in additions {
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
+                involved.formUnion((records[index].relations[kind] ?? []).flatMap(\.elements).map(\.representPackage))
+            }
+        }
+        if request.updateAll {
+            involved.formUnion(installedNames)
+        }
+        var diagnostics: [ResolutionFailure.Reason] = []
+        for record in candidates where involved.contains(record.identity) {
+            if let reason = unreadable[record], !diagnostics.contains(reason) {
+                diagnostics.append(reason)
             }
         }
         return ResolutionPlan(

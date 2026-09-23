@@ -10,7 +10,9 @@ public struct ResolutionPlan: Sendable {
     public let finalPackages: [Package]
     public let stages: [InstallerStage]
     public let heldBack: [String]
-    /// Repository entries the plan had to leave out, and why.
+    /// Repository entries the plan had to leave out, and why: those of a
+    /// package it installs, one those depend on, or, updating everything,
+    /// one installed. An unreadable entry nothing here looks at is not listed.
     public let diagnostics: [ResolutionFailure.Reason]
     /// Why a package is in the plan: for each identity the plan installs,
     /// the names of the packages in the final set whose Depends or
