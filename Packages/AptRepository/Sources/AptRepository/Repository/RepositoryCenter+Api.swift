@@ -169,6 +169,9 @@ public extension RepositoryCenter {
 
     /// send everything to update queue
     func dispatchForceUpdateRequestOnAll() {
+        // asked for by the user: a host that did not answer earlier in this
+        // round gets asked again
+        refreshRound?.unreachableHosts.removeAll()
         repositories
             .values
             .filter { !currentlyInUpdate.contains($0.url) }
@@ -186,6 +189,9 @@ public extension RepositoryCenter {
         }
         // asked for again while it is being fetched: that fetch is the answer
         guard !currentlyInUpdate.contains(url) else { return }
+        if let host = url.host {
+            refreshRound?.unreachableHosts.remove(host)
+        }
         pendingUpdateRequest.insert(url)
         dispatchUpdateOnCurrentCenter()
     }

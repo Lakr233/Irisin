@@ -14,6 +14,8 @@ final class StubServer: URLProtocol, @unchecked Sendable {
         case stallAfter(Data)
         /// no answer at all, as a connection that never completes
         case hang
+        /// no answer, for this reason
+        case fail(URLError.Code)
     }
 
     private static let lock = NSLock()
@@ -87,6 +89,8 @@ final class StubServer: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didLoad: data)
         case .hang:
             break
+        case let .fail(code):
+            client?.urlProtocol(self, didFailWithError: URLError(code))
         case nil:
             respond(url, body == nil ? 404 : 200)
             client?.urlProtocol(self, didLoad: body ?? Data())

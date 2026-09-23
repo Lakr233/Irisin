@@ -36,8 +36,9 @@ extension RepositoryCenter {
         /// that is not 200)
         case serverError(Int)
         /// no answer: the host was not found, the connection or its TLS
-        /// failed, or it timed out or dropped; the reason, for the log
-        case unreachable(String)
+        /// failed, or it timed out or dropped; nil for a failure that is
+        /// not URL loading's own
+        case unreachable(URLError.Code?)
         /// cancelled because the update made no progress
         case stalled
 
@@ -53,13 +54,23 @@ extension RepositoryCenter {
             }
         }
 
+        var isStalled: Bool {
+            if case .stalled = self { true } else { false }
+        }
+
+        /// No answer because this device has no network: nothing said
+        /// about the host.
+        var deviceOffline: Bool {
+            if case .unreachable(.notConnectedToInternet) = self { true } else { false }
+        }
+
         /// For a log line: `unreachable (timed out)`.
         var summary: String {
             switch self {
             case .data: "ok"
             case .absent: "absent"
             case let .serverError(code): "server error (HTTP \(code))"
-            case let .unreachable(reason): "unreachable (\(reason))"
+            case let .unreachable(code): "unreachable (\(RepositoryCenter.reason(for: code)))"
             case .stalled: "stalled"
             }
         }
@@ -117,9 +128,10 @@ extension RepositoryCenter {
             if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
                 return .stalled
             }
-            let reason = Self.reason(for: error)
+            let code = (error as? URLError)?.code
+            let reason = code.map(Self.reason(for:)) ?? String(describing: error)
             aptLog(Self.self, "request to \(fromUrl.absoluteString) failed: \(reason)", level: .error)
-            return .unreachable(reason)
+            return .unreachable(code)
         }
     }
 
@@ -155,9 +167,9 @@ extension RepositoryCenter {
     }
 
     /// A few words on why a request got no answer, for the log.
-    private nonisolated static func reason(for error: any Error) -> String {
-        guard let error = error as? URLError else { return String(describing: error) }
-        return switch error.code {
+    nonisolated static func reason(for code: URLError.Code?) -> String {
+        guard let code else { return "failed" }
+        return switch code {
         case .timedOut: "timed out"
         case .cannotFindHost, .dnsLookupFailed: "host not found"
         case .cannotConnectToHost: "cannot connect"
@@ -166,7 +178,7 @@ extension RepositoryCenter {
         case .secureConnectionFailed, .serverCertificateUntrusted, .serverCertificateHasBadDate,
              .serverCertificateNotYetValid, .serverCertificateHasUnknownRoot, .clientCertificateRejected:
             "TLS failed"
-        default: error.localizedDescription
+        default: "URL error \(code.rawValue)"
         }
     }
 

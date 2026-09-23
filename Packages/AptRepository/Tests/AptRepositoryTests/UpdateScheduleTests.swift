@@ -15,23 +15,19 @@ struct UpdateScheduleTests {
         .init(url: url(name), started: now - age, lastActivity: now - idle)
     }
 
-    private func pending(_ count: Int) -> [URL] {
-        (0 ..< count).map { url("p\($0)") }
-    }
-
     @Test func freeSlotsFillInOrder() {
-        let decision = UpdateSchedule.decide(inFlight: [flight("a")], pending: pending(5), now: now)
+        let decision = UpdateSchedule.decide(inFlight: [flight("a")], now: now)
         #expect(decision.limit == 4)
-        #expect(decision.dispatch == Array(pending(3)))
+        #expect(decision.slots == 3)
         #expect(decision.kill.isEmpty)
     }
 
     @Test func stalledUpdateGivesAwayItsSlot() {
         let inFlight = [flight("a"), flight("b"), flight("c"), flight("d", idle: 9)]
-        let decision = UpdateSchedule.decide(inFlight: inFlight, pending: pending(5), now: now)
+        let decision = UpdateSchedule.decide(inFlight: inFlight, now: now)
         #expect(decision.stalled == [url("d")])
         #expect(decision.limit == 5)
-        #expect(decision.dispatch == [url("p0")])
+        #expect(decision.slots == 1)
         #expect(decision.kill.isEmpty)
     }
 
@@ -39,18 +35,18 @@ struct UpdateScheduleTests {
     /// to keep, since nothing here touches the catalogue.
     @Test func silentUpdateIsGivenUp() {
         let inFlight = [flight("a"), flight("b"), flight("c"), flight("d", idle: 25)]
-        let decision = UpdateSchedule.decide(inFlight: inFlight, pending: pending(5), now: now)
+        let decision = UpdateSchedule.decide(inFlight: inFlight, now: now)
         #expect(decision.kill == [url("d")])
         #expect(decision.stalled.isEmpty)
-        #expect(decision.dispatch == [url("p0")])
+        #expect(decision.slots == 1)
     }
 
     @Test func ageAloneNeverStopsADownloadThatIsMoving() {
-        let moving = UpdateSchedule.decide(inFlight: [flight("a", age: 300, idle: 2)], pending: [], now: now)
+        let moving = UpdateSchedule.decide(inFlight: [flight("a", age: 300, idle: 2)], now: now)
         #expect(moving.kill.isEmpty)
-        let stalled = UpdateSchedule.decide(inFlight: [flight("a", age: 95, idle: 9)], pending: [], now: now)
+        let stalled = UpdateSchedule.decide(inFlight: [flight("a", age: 95, idle: 9)], now: now)
         #expect(stalled.kill == [url("a")])
-        let young = UpdateSchedule.decide(inFlight: [flight("a", age: 30, idle: 9)], pending: [], now: now)
+        let young = UpdateSchedule.decide(inFlight: [flight("a", age: 30, idle: 9)], now: now)
         #expect(young.kill.isEmpty)
         #expect(young.stalled == [url("a")])
     }
@@ -59,18 +55,18 @@ struct UpdateScheduleTests {
     /// sources are started into the silence.
     @Test func everythingStalledHoldsTheLimit() {
         let inFlight = (0 ..< 4).map { flight("s\($0)", idle: 10) }
-        let decision = UpdateSchedule.decide(inFlight: inFlight, pending: pending(5), now: now)
+        let decision = UpdateSchedule.decide(inFlight: inFlight, now: now)
         #expect(decision.heldBack)
         #expect(decision.limit == 4)
-        #expect(decision.dispatch.isEmpty)
+        #expect(decision.slots == 0)
     }
 
     @Test func limitStopsAtTheHardMaximum() {
         let inFlight = (0 ..< 10).map { flight("s\($0)", idle: 10) } + [flight("a"), flight("b")]
-        let decision = UpdateSchedule.decide(inFlight: inFlight, pending: pending(5), now: now)
+        let decision = UpdateSchedule.decide(inFlight: inFlight, now: now)
         #expect(!decision.heldBack)
         #expect(decision.limit == 12)
-        #expect(decision.dispatch.isEmpty)
+        #expect(decision.slots == 0)
     }
 
     @Test func healthyAndFastGoFirstAndFailuresLast() {

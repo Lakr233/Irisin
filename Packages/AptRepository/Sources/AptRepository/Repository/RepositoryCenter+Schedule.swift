@@ -43,10 +43,7 @@ extension RepositoryCenter {
             }
         }
         let waiting = pendingUpdateRequest.subtracting(currentlyInUpdate)
-        let order = UpdateSchedule.order(waiting, reports: waiting.reduce(into: [:]) { reports, url in
-            reports[url] = repositories[url]?.refreshReport
-        })
-        let decision = UpdateSchedule.decide(inFlight: flights, pending: order, now: now, limits: updateLimits)
+        let decision = UpdateSchedule.decide(inFlight: flights, now: now, limits: updateLimits)
 
         for url in decision.kill {
             giveUp(url, now: now)
@@ -79,7 +76,12 @@ extension RepositoryCenter {
             updateLimit = decision.limit
         }
 
-        guard !decision.dispatch.isEmpty else { return }
+        // ordered only with a slot to fill: the reports are decoded for it,
+        // and an import calls this once per repository it adds
+        guard decision.slots > 0, !waiting.isEmpty else { return }
+        let order = UpdateSchedule.order(waiting, reports: waiting.reduce(into: [:]) { reports, url in
+            reports[url] = repositories[url]?.refreshReport
+        })
         if refreshRound == nil {
             refreshRound = RefreshRound(started: now)
         }
@@ -91,7 +93,7 @@ extension RepositoryCenter {
         // started after the loop: finishing one starts the next, and the
         // queue has to be what this decision left before that happens
         var notAttempted = [UpdateOutcome]()
-        for url in decision.dispatch {
+        for url in order.prefix(decision.slots) {
             pendingUpdateRequest.remove(url)
             guard let request = updateRequest(for: url) else {
                 aptLog(self, "the repository being dispatch to update was not found or broken", level: .error)
@@ -111,8 +113,10 @@ extension RepositoryCenter {
             }
             start(request, now: now)
         }
+        // all in the queue before the first is finished, or that one would
+        // find the queue empty and close the round without the rest
+        currentlyInUpdate.formUnion(notAttempted.map(\.url))
         for outcome in notAttempted {
-            currentlyInUpdate.insert(outcome.url)
             finishUpdate(outcome)
         }
     }

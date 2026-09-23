@@ -290,6 +290,43 @@ extension RepositoryCenter {
         return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
+    /// An entry's indexes read and compiled into packages, nil when that
+    /// comes to nothing (a captive portal's page under HTTP 200 is no
+    /// catalogue). `networking.activity` beats once a second meanwhile:
+    /// decompressing and parsing a large index is progress too, and the
+    /// refresh queue hears only what it is told.
+    nonisolated static func compilePackageIndexes(
+        _ indexes: [FetchedIndex],
+        of bases: [URL],
+        suffix: String,
+        digests: IndexDigests?,
+        fromRepo: URL,
+        networking: NetworkingConfiguration
+    ) -> [String: Package]? {
+        let heartbeat = Task {
+            while (try? await Task.sleep(for: .seconds(1))) != nil {
+                networking.activity()
+            }
+        }
+        defer { heartbeat.cancel() }
+        guard let body = readPackageIndexes(indexes, of: bases, suffix: suffix, digests: digests) else { return nil }
+        let packages = invokePackages(withContext: body, fromRepo: fromRepo)
+        return packages.isEmpty ? nil : packages
+    }
+
+    /// The spellings among `searchPaths` the Release lists for any of
+    /// `bases`, in the order given; none without a Release or its digests.
+    nonisolated static func listedSearchPaths(
+        _ searchPaths: [String],
+        of bases: [URL],
+        digests: IndexDigests?
+    ) -> [String] {
+        guard let digests, digests.listsAnything else { return [] }
+        return searchPaths.filter { suffix in
+            bases.contains { digests.lists($0.appendingPathExtension(suffix)) }
+        }
+    }
+
     /// Every suffix of one entry's indexes at once: the first that
     /// is what the Release lists and compiles to a non-empty index, or nil
     /// when none does.
@@ -311,15 +348,15 @@ extension RepositoryCenter {
                         suffix: searchPath,
                         networking: networking
                     ))
-                    guard let body = readPackageIndexes(
+                    guard let packages = compilePackageIndexes(
                         indexes,
                         of: baseUrls,
                         suffix: searchPath,
-                        digests: digests
+                        digests: digests,
+                        fromRepo: fromRepo,
+                        networking: networking
                     )
                     else { return nil }
-                    let packages = invokePackages(withContext: body, fromRepo: fromRepo)
-                    guard packages.count > 0 else { return nil }
                     return SearchPathProbe(suffix: searchPath, packages: packages, read: indexes.map(\.url))
                 }
             }
@@ -518,11 +555,10 @@ extension RepositoryCenter {
         case let .serverError(code):
             issues.append(.serverError(code))
         case .unreachable, .stalled:
-            // the index may yet come; with no answer at all the whole
-            // update says so below
-            if !noAnswer {
-                issues.append(.releaseMissing)
-            }
+            // not the Release's fault: with the index in, a hiccup that
+            // leaves the Release kept as it was; without, the verdict on
+            // the whole update below says what the connection did
+            break
         }
         // A CDN can as well have the old Release beside new indexes. Held
         // to that one every index would differ and the refresh fail, so a
@@ -545,19 +581,23 @@ extension RepositoryCenter {
         let preferredIsStale = preferredIndexes.contains {
             digests?.verdict(of: $0.data, at: $0.url) == .differs
         }
+        // A Release that lists other spellings of the entry than the
+        // preferred one vouches for those and not for it: stage 3 reads one
+        // it lists, and that one is remembered.
+        let listed = listedSearchPaths(request.availableSearchPath, of: request.packageCandidates.first ?? [], digests: digests)
+        let preferredIsUnlisted = !listed.isEmpty && !listed.contains(request.preferredSearchPath)
         // the index files the catalogue was read from, to ask the Release
         // whether it vouches for them
         var readFrom = [URL]()
-        if let package = readPackageIndexes(
+        if !preferredIsUnlisted, let packages = compilePackageIndexes(
             preferredIndexes,
             of: request.packageCandidates.first ?? [],
             suffix: request.preferredSearchPath,
-            digests: digests
+            digests: digests,
+            fromRepo: request.url,
+            networking: networking
         ) {
-            // An answer that compiles to nothing (a captive portal's page
-            // under HTTP 200) is no catalogue: nil, so nothing is replaced.
-            let packages = invokePackages(withContext: package, fromRepo: request.url)
-            outcome.packages = packages.isEmpty ? nil : packages
+            outcome.packages = packages
             readFrom = preferredIndexes.map(\.url)
         }
         do {
@@ -599,13 +639,21 @@ extension RepositoryCenter {
                     if Task.isCancelled {
                         break
                     }
-                    let winner = await probeSearchPaths(
-                        request.availableSearchPath,
-                        of: baseUrls,
-                        fromRepo: request.url,
-                        digests: digests,
-                        networking: networking
-                    )
+                    // the spellings the Release lists first, so what is read
+                    // is what it vouches for whenever the server has it
+                    let listed = listedSearchPaths(request.availableSearchPath, of: baseUrls, digests: digests)
+                    var winner: SearchPathProbe?
+                    for searchPaths in [listed, request.availableSearchPath.filter { !listed.contains($0) }]
+                        where winner == nil && !searchPaths.isEmpty && !Task.isCancelled
+                    {
+                        winner = await probeSearchPaths(
+                            searchPaths,
+                            of: baseUrls,
+                            fromRepo: request.url,
+                            digests: digests,
+                            networking: networking
+                        )
+                    }
                     networking.activity()
                     guard let winner else { continue }
                     if baseUrls != request.packageCandidates.first {
@@ -631,15 +679,24 @@ extension RepositoryCenter {
                 // given up by the refresh queue for making no progress
                 issues = [.stalled]
             } else if noAnswer {
-                let stalled = [releaseDownload] + preferredDownloads.values
-                issues = [stalled.contains { if case .stalled = $0 { true } else { false } } ? .stalled : .unreachable]
-                outcome.hostUnreachable = issues == [.unreachable]
-            } else {
+                let downloads = [releaseDownload] + preferredDownloads.values
+                issues = [downloads.contains(where: \.isStalled) ? .stalled : .unreachable]
+                // a device with no network says nothing about the host
+                outcome.hostUnreachable = issues == [.unreachable] && !downloads.contains(where: \.deviceOffline)
+            } else if !issues.contains(where: { if case .serverError = $0 { true } else { false } }) {
+                // the server answered something; what became of the index
+                // is what the report says: its own error, the connection
+                // dropping on it, or that there is none for this device
+                let unanswered = preferredDownloads.values.first { !$0.reachedServer }
                 let serverError = preferredDownloads.values.lazy.compactMap { download -> Int? in
                     if case let .serverError(code) = download { code } else { nil }
                 }.first
-                if !issues.contains(where: { if case .serverError = $0 { true } else { false } }) {
-                    issues.append(serverError.map { .serverError($0) } ?? .noIndex)
+                if let serverError {
+                    issues.append(.serverError(serverError))
+                } else if let unanswered {
+                    issues.append(unanswered.isStalled ? .stalled : .unreachable)
+                } else {
+                    issues.append(.noIndex)
                 }
             }
         } else if let digests, digests.listsAnything, readFrom.contains(where: { !digests.lists($0) }) {

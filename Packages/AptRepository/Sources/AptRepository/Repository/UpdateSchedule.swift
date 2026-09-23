@@ -1,9 +1,10 @@
 import Foundation
 
 /// The refresh queue's decisions as a pure function of the clock: which
-/// updates in flight are stalled, which are given up, and which pending
-/// ones go next. `RepositoryCenter` feeds it its state once a second and
-/// whenever the queue moves, and carries out what comes back.
+/// updates in flight are stalled, which are given up, and how many pending
+/// ones go next (`order` says which). `RepositoryCenter` feeds it its state
+/// once a second and whenever the queue moves, and carries out what comes
+/// back.
 ///
 /// A source is judged by progress, not by how long it takes: Procursus
 /// downloading megabytes steadily is fine however long it runs, a server
@@ -42,16 +43,13 @@ enum UpdateSchedule {
         /// every update in flight is stalled: likely the device is offline,
         /// so the limit stays at `base`
         var heldBack = false
-        /// pending updates to start now, in order
-        var dispatch: [URL] = []
+        /// how many pending updates may start now
+        var slots = 0
     }
 
-    /// - Parameters:
-    ///   - inFlight: updates running, less any already given up
-    ///   - pending: waiting in the order they should go, none in flight
+    /// - Parameter inFlight: updates running, less any already given up
     static func decide(
         inFlight: [Flight],
-        pending: [URL],
         now: Date,
         limits: Limits = Limits()
     ) -> Decision {
@@ -75,8 +73,7 @@ enum UpdateSchedule {
         } else {
             decision.limit = min(limits.base + decision.stalled.count, limits.hardMax)
         }
-        let slots = max(0, decision.limit - remaining.count)
-        decision.dispatch = Array(pending.prefix(slots))
+        decision.slots = max(0, decision.limit - remaining.count)
         return decision
     }
 

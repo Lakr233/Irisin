@@ -23,7 +23,7 @@ import Testing
             Issue.record("503 is the server's own failure")
             return
         }
-        guard case .unreachable("cannot connect") = await download("https://refused.test/file") else {
+        guard case .unreachable(.cannotConnectToHost) = await download("https://refused.test/file") else {
             Issue.record("a refused connection never reached the server")
             return
         }
@@ -69,7 +69,7 @@ import Testing
                         )
                     }
             }
-            let decision = UpdateSchedule.decide(inFlight: flights, pending: [], now: Date(), limits: limits)
+            let decision = UpdateSchedule.decide(inFlight: flights, now: Date(), limits: limits)
             for url in decision.kill {
                 let path = url.lastPathComponent
                 await MainActor.run { _ = watch.killed.insert(path) }

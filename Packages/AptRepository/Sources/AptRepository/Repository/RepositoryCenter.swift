@@ -87,9 +87,10 @@ public final class RepositoryCenter {
     /// when updating repository property, set by application to user default, not here
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingHeaders", defaultValue: [:])
     public var networkingHeaders: [String: String]
-    /// Seconds a request may go without hearing from the server. The
-    /// refresh queue's watchdog usually gives up on the update first.
-    public let networkingTimeout = 25
+    /// Seconds a request may go without hearing from the server. Under
+    /// the watchdog's 25, so a silent host always ends as a timed-out
+    /// request, unreachable, and never as whichever of the two fired first.
+    public let networkingTimeout = 20
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingVerboseLogging", defaultValue: false)
     public var networkingVerboseLogging: Bool
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingRedirect", defaultValue: Data())

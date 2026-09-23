@@ -181,6 +181,9 @@ import Testing
         }
         StubServer.fail(host: "offline.test")
         let offline = await update(host: "offline.test", serving: [:])
+        // a device with no network says nothing about the host
+        #expect(offline.report?.issues == [.unreachable])
+        #expect(!offline.hostUnreachable)
         guard case .unanswered = offline.paymentEndpoint, case .unanswered = offline.featured else {
             Issue.record("a request that failed says nothing about what the repository has")
             return
@@ -278,5 +281,52 @@ import Testing
             Issue.record("a part given up on is unanswered, and what was remembered stays")
             return
         }
+    }
+
+    /// The Release lists `Packages` and `Packages.bz2`; the preferred `.xz`
+    /// is there too, and not what it vouches for. A listed spelling is read
+    /// and remembered, and the refresh has nothing to report.
+    @Test func spellingTheReleaseListsIsPreferred() async {
+        let digest = SHA256.hash(data: Self.current).map { String(format: "%02x", $0) }.joined()
+        let release = Data("""
+        Origin: Example
+        SHA256:
+         \(digest) \(Self.current.count) Packages
+         \(digest) \(Self.current.count) Packages.bz2
+
+        """.utf8)
+        let outcome = await update(host: "old-tool.test", serving: [
+            "/Release": release, "/Packages.xz": Self.current, "/Packages.bz2": Self.current, "/Packages": Self.current,
+        ])
+        #expect(outcome.succeeded)
+        #expect(outcome.searchPath == "bz2" || outcome.searchPath == "")
+        #expect(outcome.report?.issues == [])
+    }
+
+    /// The Release answered and the index timed out: the connection, not a
+    /// server with nothing for this device.
+    @Test func indexThatTimedOutIsNotMissing() async {
+        let outcome = await update(host: "slow-index.test", serving: [
+            "/Release": Self.release(of: Self.current, date: Self.evening),
+        ], behaving: [
+            "/Packages.xz": .fail(.timedOut), "/Packages.bz2": .fail(.timedOut),
+            "/Packages": .fail(.timedOut), "/Packages.gz": .fail(.timedOut),
+        ])
+        #expect(outcome.packages == nil)
+        #expect(outcome.report?.issues == [.unreachable])
+        #expect(!outcome.hostUnreachable)
+    }
+
+    /// The index came and the Release timed out: a hiccup, the Release kept
+    /// is kept, and nothing is reported missing.
+    @Test func releaseThatTimedOutBesideAnIndexIsNoIssue() async {
+        let outcome = await update(
+            host: "slow-release.test",
+            serving: ["/Packages.xz": Self.current],
+            behaving: ["/Release": .fail(.timedOut)]
+        )
+        #expect(outcome.succeeded)
+        #expect(outcome.release == nil)
+        #expect(outcome.report?.issues == [])
     }
 }
