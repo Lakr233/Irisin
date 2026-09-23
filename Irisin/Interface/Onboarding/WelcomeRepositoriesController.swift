@@ -3,14 +3,14 @@
 //  Irisin
 //
 //  The second page of onboarding: the repositories most people start from
-//  on this bootstrap, each with its own Add, as on the add sheet, and a row
+//  on this bootstrap (`RecommendedRepositories`, none when the bundle has
+//  no list), each with its own Add, as on the add sheet, and a row
 //  that opens the add sheet for any other. Its button leads to the caution
 //  page, which finishes.
 //
 
 import AptRepository
 import Dog
-import IrisinAdapter
 import SnapKit
 import Then
 import UIKit
@@ -28,46 +28,10 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         case addMore
     }
 
-    /// Rootless and roothide get separate lists, never mixed. Havoc,
-    /// Chariz and BigBoss publish rootless packages only, which roothide
-    /// installs through the adapter; ElleKit is rootless alone, since
-    /// roothide brings its own injector. BigBoss is a suite and plain
-    /// HTTP: a bare address has no Release, and its certificate expired.
-    private static var recommendedSources: [String] {
-        if PackagedArchitecture.architecture == BootstrapArchitecture.roothide.rawValue {
-            return [
-                "https://roothide.github.io",
-                // roothide's own Procursus build: 1800 is iOS 15, below the
-                // app's floor, and iOS 17 and later use 1900 too
-                "deb https://roothide.github.io/procursus iphoneos-arm64e/1900 main",
-                "https://havoc.app",
-                "https://repo.chariz.com",
-                "deb http://apt.thebigboss.org/repofiles/cydia stable main",
-                "https://apt.owngoal.dev",
-            ]
-        }
-        return [
-            "deb https://apt.procurs.us \(procursusSuite) main",
-            "https://havoc.app",
-            "https://repo.chariz.com",
-            "deb http://apt.thebigboss.org/repofiles/cydia stable main",
-            "https://ellekit.space",
-            "https://apt.owngoal.dev",
-        ]
-    }
-
-    /// Procursus has one rootless suite per iOS release, named after
-    /// CoreFoundation's version; iOS 18 was 3000, and nothing newer exists.
-    private static var procursusSuite: String {
-        switch ProcessInfo.processInfo.operatingSystemVersion.majorVersion {
-        case ..<17: "1900"
-        case 17: "2000"
-        default: "3000"
-        }
-    }
-
     private let onFinish: () -> Void
-    private let lines = WelcomeRepositoriesController.recommendedSources
+    /// Empty when the bundle has no list for this bootstrap, and then the
+    /// page has no recommended section.
+    private let lines = RecommendedRepositories.lines
     private var previews: [String: RepositoryAddCandidateCell.Preview] = [:]
     private var registered = Set(RepositoryCenter.default.obtainRepositoryUrls())
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -130,8 +94,12 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
         tableView.delegate = self
 
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
-        snapshot.appendSections([.notice, .recommended, .more])
-        snapshot.appendItems(lines.map { .source($0) }, toSection: .recommended)
+        snapshot.appendSections([.notice])
+        if !lines.isEmpty {
+            snapshot.appendSections([.recommended])
+            snapshot.appendItems(lines.map { .source($0) }, toSection: .recommended)
+        }
+        snapshot.appendSections([.more])
         snapshot.appendItems([.addMore], toSection: .more)
         dataSource.apply(snapshot, animatingDifferences: false)
 

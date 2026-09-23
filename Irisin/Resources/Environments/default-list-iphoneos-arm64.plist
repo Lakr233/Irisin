@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The repositories onboarding recommends on rootless. Havoc, Chariz and
+  BigBoss publish rootless packages; ElleKit is the injector here. BigBoss
+  is a suite and plain HTTP: a bare address has no Release, and its
+  certificate expired.
+-->
+<plist version="1.0">
+<array>
+	<!--
+	  Procursus has one rootless suite per iOS release, named after
+	  CoreFoundation's version; iOS 18 was 3000, and nothing newer exists.
+	-->
+	<dict>
+		<key>source</key>
+		<string>deb https://apt.procurs.us 1900 main</string>
+		<key>maximumSystemVersion</key>
+		<integer>16</integer>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>deb https://apt.procurs.us 2000 main</string>
+		<key>minimumSystemVersion</key>
+		<integer>17</integer>
+		<key>maximumSystemVersion</key>
+		<integer>17</integer>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>deb https://apt.procurs.us 3000 main</string>
+		<key>minimumSystemVersion</key>
+		<integer>18</integer>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://havoc.app</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://repo.chariz.com</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>deb http://apt.thebigboss.org/repofiles/cydia stable main</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://ellekit.space</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://apt.owngoal.dev</string>
+	</dict>
+</array>
+</plist>

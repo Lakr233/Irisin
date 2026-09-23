@@ -279,6 +279,16 @@ end.
   controller; `make check` greps for both.
 - **One asset catalog.** Everything the app draws from a file is in
   `Resources/Assets.xcassets`.
+- **Onboarding's recommended repositories are data, not code.**
+  `Resources/Environments/default-list-<architecture>.plist`, one per
+  bootstrap, and `default-list-managed.plist`, shipped empty for the
+  jailbreak to overwrite: with any entry it is the list, whatever the
+  architecture (`RecommendedRepositories`). No list recommends nothing, and
+  the page has no such section. Each entry is a source line with optional
+  inclusive iOS major bounds, which is how Procursus's per-release suite
+  is picked. `package-deb.sh` keeps the flavor's own list and the managed
+  one and `verify-deb.sh` checks it; `PLIST_FILE_OUTPUT_FORMAT` keeps them
+  XML, so the managed file's instructions reach the device.
 - **Swift 6 language mode, everywhere.** `SWIFT_VERSION = 6.0` on every
   target; concurrency diagnostics are errors, not warnings to be silenced.
   The app defaults to main-actor isolation (`SWIFT_DEFAULT_ACTOR_ISOLATION`).

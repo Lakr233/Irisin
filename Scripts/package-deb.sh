@@ -98,6 +98,19 @@ mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")
 # and startup refuses a copy installed on a different bootstrap.
 /usr/libexec/PlistBuddy -c "Add :IrisinCurrentArchitecture string $architecture" "$installed_app/Info.plist" 2>/dev/null \
     || /usr/libexec/PlistBuddy -c "Set :IrisinCurrentArchitecture $architecture" "$installed_app/Info.plist"
+# The build carries every flavor's recommended repositories
+# (Irisin/Resources/Environments); this copy keeps its own and the empty
+# managed list the jailbreak may fill (RecommendedRepositories).
+[[ -f "$installed_app/default-list-$architecture.plist" && -f "$installed_app/default-list-managed.plist" ]] || {
+    echo "error: app bundle is missing default-list-$architecture.plist or default-list-managed.plist" >&2
+    exit 65
+}
+for list in "$installed_app"/default-list-*.plist; do
+    case "$(basename "$list")" in
+    "default-list-$architecture.plist" | default-list-managed.plist) ;;
+    *) rm -f "$list" ;;
+    esac
+done
 /usr/bin/ditto "$daemon_binary" "$installed_daemon"
 /usr/bin/ditto "$helper_binary" "$installed_helper"
 sed -e "s|@PREFIX@|$install_prefix|g" "$launch_plist" >"$installed_plist"

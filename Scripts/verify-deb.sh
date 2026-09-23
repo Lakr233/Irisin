@@ -84,6 +84,9 @@ expect "LaunchDaemon user" \
 expect "App architecture key" \
     "$(/usr/libexec/PlistBuddy -c 'Print :IrisinCurrentArchitecture' "$app_info_plist" 2>/dev/null || true)" \
     "$architecture"
+expect "Recommended repository lists" \
+    "$(cd "$installed/Applications/irisin.app" && ls default-list-*.plist | sort | tr '\n' ' ')" \
+    "$(printf '%s\n' "default-list-$architecture.plist" default-list-managed.plist | sort | tr '\n' ' ')"
 expect "App icon" \
     "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$app_info_plist" 2>/dev/null || true)" \
     "AppIcon"

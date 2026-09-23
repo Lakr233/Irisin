@@ -12,6 +12,12 @@ MACOSX_DEPLOYMENT_TARGET = 13.0
 
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 
+// Copied property lists stay as written: the recommended repository lists
+// (Resources/Environments) are XML with comments, and
+// default-list-managed.plist is a file the jailbreak and people edit on the
+// device. Info.plist has its own INFOPLIST_OUTPUT_FORMAT.
+PLIST_FILE_OUTPUT_FORMAT = same-as-input
+
 // `#file` in Swift 5 mode is the absolute path of the source, so every
 // `fatalError` and `precondition` would otherwise ship the build machine's
 // home directory; SE-0274 makes it `Module/File.swift` instead. The prefix

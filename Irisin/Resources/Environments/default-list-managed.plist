@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The repositories onboarding recommends, as the jailbreak sets them. Empty
+  as shipped; a jailbreak may overwrite this file, and when it lists any
+  entry, onboarding recommends this list in place of
+  default-list-<architecture>.plist. Each entry is a dictionary:
+
+    source                a source line: an address, or
+                          "deb <url> <suite> <components>"
+    minimumSystemVersion  optional, the lowest iOS major version it is for
+    maximumSystemVersion  optional, the highest iOS major version it is for
+
+  For example:
+
+	<dict>
+		<key>source</key>
+		<string>https://apt.owngoal.dev</string>
+	</dict>
+-->
+<plist version="1.0">
+<array/>
+</plist>

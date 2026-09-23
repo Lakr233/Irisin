@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The repositories onboarding recommends on roothide. Havoc, Chariz and
+  BigBoss publish rootless packages only, which roothide installs through
+  the adapter; there is no ElleKit, since roothide brings its own injector.
+  BigBoss is a suite and plain HTTP: a bare address has no Release, and its
+  certificate expired.
+-->
+<plist version="1.0">
+<array>
+	<dict>
+		<key>source</key>
+		<string>https://roothide.github.io</string>
+	</dict>
+	<!--
+	  roothide's own Procursus build: 1800 is iOS 15, below the app's floor,
+	  and iOS 17 and later use 1900 too.
+	-->
+	<dict>
+		<key>source</key>
+		<string>deb https://roothide.github.io/procursus iphoneos-arm64e/1900 main</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://havoc.app</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://repo.chariz.com</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>deb http://apt.thebigboss.org/repofiles/cydia stable main</string>
+	</dict>
+	<dict>
+		<key>source</key>
+		<string>https://apt.owngoal.dev</string>
+	</dict>
+</array>
+</plist>
