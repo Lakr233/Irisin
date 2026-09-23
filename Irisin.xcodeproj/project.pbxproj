@@ -339,7 +339,6 @@
 				CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = CA0000000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
