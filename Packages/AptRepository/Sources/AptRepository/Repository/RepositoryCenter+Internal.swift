@@ -42,6 +42,12 @@ extension RepositoryCenter {
         /// the bootstrap's index directories and what installs on it
         var architectures = AptEnvironment.current.indexArchitectures
         var installable = AptEnvironment.current.installableArchitectures
+        /// How long the icon, the payment endpoint and the featured banners
+        /// may take in all, and how much longer than the Release and the
+        /// index they are waited for. What they bring is optional; the
+        /// catalogue is not held up for it.
+        var optionalBudget: TimeInterval = 10
+        var optionalGrace: TimeInterval = 3
 
         /// The index paths as the given Release describes them.
         func packageCandidates(release: [String: String]) -> [[URL]] {
@@ -65,14 +71,22 @@ extension RepositoryCenter {
         var searchPath: String?
         var paymentEndpoint = Detected<URL>.unanswered
         var featured = Detected<String>.unanswered
+        /// what went wrong, kept with the repository; nil when nothing was
+        /// attempted for want of the repository itself
+        var report: RefreshReport?
+        /// neither the Release nor the index got any answer: the rest of
+        /// this round leaves the host alone
+        var hostUnreachable = false
 
         var succeeded: Bool {
             (packages?.count ?? 0) > 0
         }
     }
 
-    private func updateRequest(for url: URL) -> UpdateRequest? {
+    func updateRequest(for url: URL) -> UpdateRequest? {
         guard let repo = repositories[url] else { return nil }
+        var networking = networkingConfiguration
+        networking.activity = { Task { @MainActor in self.noteActivity(of: url) } }
         return UpdateRequest(
             url: url,
             avatarUrls: repo.avatarUrls,
@@ -81,51 +95,11 @@ extension RepositoryCenter {
             preferredSearchPath: repo.preferredSearchPath,
             availableSearchPath: repo.availableSearchPath,
             storedRelease: repo.metaRelease,
-            networking: networkingConfiguration,
+            networking: networking,
             suiteUrl: repo.suiteUrl,
             distribution: repo.distribution,
             components: repo.components
         )
-    }
-
-    /// The update system: moves what fits under the concurrency limit from
-    /// pending to in-flight and starts each download off the main actor.
-    func dispatchUpdateOnCurrentCenter() {
-        updateDispatchThrottle.throttle { [self] in
-            // One update per repository at a time: two would share a
-            // progress, the first to finish would call the repository idle,
-            // and the older fetch could land its rows last. A request for
-            // one in flight (deleted and added again, say) waits its turn.
-            var dispatchContainer = [URL]()
-            for url in pendingUpdateRequest where !currentlyInUpdate.contains(url) {
-                guard dispatchContainer.count + currentlyInUpdate.count < updateConcurrencyLimit else { break }
-                dispatchContainer.append(url)
-            }
-            pendingUpdateRequest.subtract(dispatchContainer)
-
-            for url in dispatchContainer {
-                currentlyInUpdate.insert(url)
-                currentUpdateProgress[url] = Progress(totalUnitCount: 100)
-                guard let request = updateRequest(for: url) else {
-                    aptLog(self, "the repository being dispatch to update was not found or broken", level: .error)
-                    finishUpdate(UpdateOutcome(url: url))
-                    continue
-                }
-                advanceUpdate(of: url)
-                let db = AptDatabase.shared
-                Task.detached(priority: .utility) {
-                    let outcome = await Self.performUpdate(request) { units, absolute in
-                        await self.advanceUpdate(of: url, by: units, to: absolute)
-                    }
-                    // the heavy write, still off the main actor; an update
-                    // that read nothing leaves the rows that are there
-                    if outcome.succeeded, let packages = outcome.packages {
-                        db.replacePackages(of: url, with: packages)
-                    }
-                    await self.finishUpdate(outcome)
-                }
-            }
-        }
     }
 
     /// Moves the repository's progress and tells the interface.
@@ -148,8 +122,9 @@ extension RepositoryCenter {
     }
 
     /// Writes what the update brought back into the repository, takes it out
-    /// of the queue and tells the package center and the interface. The
-    /// packages themselves are already in the database.
+    /// of the queue, tells the package center and the interface, and
+    /// starts the next one at once. The packages themselves are already in
+    /// the database.
     func finishUpdate(_ outcome: UpdateOutcome) {
         let url = outcome.url
         var printName = url.absoluteString
@@ -179,6 +154,9 @@ extension RepositoryCenter {
                 builder.packageCount = package.count
                 builder.lastUpdatePackage = Date()
             }
+            if let report = outcome.report {
+                builder.setRefreshReport(report)
+            }
             printName = builder.regenerateNickName(apply: true)
             if let description = builder.repositoryDescription {
                 printDescription = description
@@ -203,15 +181,23 @@ extension RepositoryCenter {
             }
         }
 
+        let givenUp = givenUpUpdates.contains(url)
         currentlyInUpdate.remove(url)
         currentUpdateProgress.removeValue(forKey: url)
+        updateTasks.removeValue(forKey: url)
+        updateStarted.removeValue(forKey: url)
+        lastActivity.removeValue(forKey: url)
+        stalledUpdates.remove(url)
+        givenUpUpdates.remove(url)
 
+        let issues = outcome.report?.issues ?? []
         let finalLog = """
         \(outcome.succeeded ? "Complete" : "Failed") update on \(url.absoluteString)
         ===>
             Repository [\(printName)] \(printDescription)
             * Release: \(outcome.release?.keys.count ?? 0)
             * Package: \(outcome.packages?.keys.count ?? 0)
+            * Issues: \(issues.isEmpty ? "none" : issues.map { "\($0)" }.joined(separator: ", "))
         ===>
         """
         // A refresh that fetched nothing used to read exactly like one that
@@ -221,6 +207,7 @@ extension RepositoryCenter {
             self,
             "update engine reported \(pendingUpdateRequest.count) pending and \(currentlyInUpdate.count) in queue"
         )
+        recordInRound(outcome, givenUp: givenUp)
 
         PackageCenter.default.repositoryDidChange()
         let object = UpdateNotification(
@@ -231,28 +218,37 @@ extension RepositoryCenter {
             queueLeft: currentlyInUpdate.count + pendingUpdateRequest.count
         )
         NotificationCenter.default.post(name: RepositoryCenter.metadataUpdate, object: object)
+
+        // the slot is free now, not at the next tick
+        dispatchUpdateOnCurrentCenter()
     }
 
-    /// Every index of one entry under one suffix, fetched at once and kept
-    /// as served: one that does not answer is left out.
+    /// Every index of one entry under one suffix, fetched at once, each
+    /// with what asking for it came to, by the address asked.
     nonisolated static func downloadPackageIndexes(
         _ bases: [URL],
         suffix: String,
         networking: NetworkingConfiguration
-    ) async -> [FetchedIndex] {
-        await withTaskGroup(of: FetchedIndex?.self, returning: [FetchedIndex].self) { group in
+    ) async -> [URL: Download] {
+        await withTaskGroup(of: (URL, Download).self, returning: [URL: Download].self) { group in
             for base in bases {
+                let url = base.appendingPathExtension(suffix)
                 group.addTask {
-                    await downloadUpdatePackage(withBaseUrl: base, suffix: suffix, networking: networking)
+                    await (url, download(fromUrl: url, networking: networking))
                 }
             }
-            var parts = [FetchedIndex]()
-            for await part in group {
-                if let part {
-                    parts.append(part)
-                }
+            var downloads = [URL: Download]()
+            for await (url, download) in group {
+                downloads[url] = download
             }
-            return parts
+            return downloads
+        }
+    }
+
+    /// The indexes that arrived, as served; the rest are left out.
+    nonisolated static func fetchedIndexes(_ downloads: [URL: Download]) -> [FetchedIndex] {
+        downloads.compactMap { url, download in
+            download.data.map { FetchedIndex(url: url, data: $0) }
         }
     }
 
@@ -310,11 +306,11 @@ extension RepositoryCenter {
         ) { group in
             for searchPath in searchPaths {
                 group.addTask {
-                    let indexes = await downloadPackageIndexes(
+                    let indexes = await fetchedIndexes(downloadPackageIndexes(
                         baseUrls,
                         suffix: searchPath,
                         networking: networking
-                    )
+                    ))
                     guard let body = readPackageIndexes(
                         indexes,
                         of: baseUrls,
@@ -324,7 +320,7 @@ extension RepositoryCenter {
                     else { return nil }
                     let packages = invokePackages(withContext: body, fromRepo: fromRepo)
                     guard packages.count > 0 else { return nil }
-                    return SearchPathProbe(suffix: searchPath, packages: packages)
+                    return SearchPathProbe(suffix: searchPath, packages: packages, read: indexes.map(\.url))
                 }
             }
             for await result in group {
@@ -337,21 +333,114 @@ extension RepositoryCenter {
         }
     }
 
-    /// The icon from the first address that has one.
+    /// The icon from whichever address has one first, asked all at once.
     nonisolated static func downloadAvatar(
         from urls: [URL],
         networking: NetworkingConfiguration
     ) async -> Data? {
-        for url in urls {
-            if let data = await downloadData(fromUrl: url, networking: networking) {
-                return data
+        await withTaskGroup(of: Data?.self, returning: Data?.self) { group in
+            for url in urls {
+                group.addTask { await downloadData(fromUrl: url, networking: networking) }
             }
+            for await data in group {
+                if let data {
+                    group.cancelAll()
+                    return data
+                }
+            }
+            return nil
         }
-        return nil
+    }
+
+    /// What a repository offers besides its catalogue.
+    struct OptionalParts: Sendable {
+        var avatar: Data?
+        var paymentEndpoint = Detected<URL>.unanswered
+        var featured = Detected<String>.unanswered
+    }
+
+    /// The icon, the payment endpoint and the featured banners, each given
+    /// up once `request.optionalBudget` has passed or `cutoff` says the
+    /// catalogue's own files are in and its grace has run out; what was not
+    /// in by then is `unanswered`, and what the repository had stays.
+    /// - Parameter cutoff: yields once, the grace to allow from then on
+    nonisolated static func fetchOptionalParts(
+        _ request: UpdateRequest,
+        cutoff: AsyncStream<TimeInterval>,
+        progress: @escaping @Sendable (Int64, Int64?) async -> Void
+    ) async -> OptionalParts {
+        enum Part: Sendable {
+            case avatar(Data?)
+            case paymentEndpoint(Detected<URL>)
+            case featured(Detected<String>)
+            case cutoff
+        }
+        let networking = request.networking
+        let started = Date()
+        return await withTaskGroup(of: Part.self, returning: OptionalParts.self) { group in
+            group.addTask {
+                let value = await downloadAvatar(from: request.avatarUrls, networking: networking)
+                await progress(10, nil)
+                return .avatar(value)
+            }
+            group.addTask {
+                let value = await detectPaymentEndpoint(withUrl: request.url, networking: networking)
+                await progress(10, nil)
+                return .paymentEndpoint(value)
+            }
+            group.addTask {
+                let value = await detectFeaturedMetadata(withUrl: request.url, networking: networking)
+                await progress(10, nil)
+                return .featured(value)
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(request.optionalBudget))
+                return .cutoff
+            }
+            group.addTask {
+                for await grace in cutoff {
+                    try? await Task.sleep(for: .seconds(grace))
+                    return .cutoff
+                }
+                // the catalogue's files never came: the budget decides
+                try? await Task.sleep(for: .seconds(request.optionalBudget))
+                return .cutoff
+            }
+            var parts = OptionalParts()
+            var waiting: Set<String> = ["avatar", "payment_endpoint", "sileo-featured"]
+            for await part in group {
+                switch part {
+                case let .avatar(value):
+                    parts.avatar = value
+                    waiting.remove("avatar")
+                case let .paymentEndpoint(value):
+                    parts.paymentEndpoint = value
+                    waiting.remove("payment_endpoint")
+                case let .featured(value):
+                    parts.featured = value
+                    waiting.remove("sileo-featured")
+                case .cutoff:
+                    let waited = String(format: "%.1f", Date().timeIntervalSince(started))
+                    aptLog(
+                        Self.self,
+                        "update \(request.url.absoluteString) gave up waiting for \(waiting.sorted().joined(separator: ", ")) after \(waited)s; keeping the old ones",
+                        level: .verbose
+                    )
+                    waiting.removeAll()
+                }
+                if waiting.isEmpty {
+                    group.cancelAll()
+                    break
+                }
+            }
+            return parts
+        }
     }
 
     /// Downloads and compiles one repository. Off the main actor throughout;
-    /// `progress` is the only way back in until the outcome is committed.
+    /// `progress` and `networking.activity` are the only ways back in until
+    /// the outcome is committed. Cancelled, it stops asking and says the
+    /// server stalled.
     /// - Parameters:
     ///   - request: what to fetch and how
     ///   - progress: units to add, or an absolute value, out of 100
@@ -363,6 +452,7 @@ extension RepositoryCenter {
         let id = request.url.absoluteString
         let networking = request.networking
         var outcome = UpdateOutcome(url: request.url)
+        var issues = [RefreshReport.Issue]()
 
         // measuring
         let updateStart = Date()
@@ -371,21 +461,20 @@ extension RepositoryCenter {
 
         // STAGE 1 [try preferred search path]
         //
-        // Five requests at once. Each carries `networkingTimeout` on its own
-        // URLRequest, which is what actually bounds this stage.
+        // The Release and the preferred index, with the optional parts
+        // beside them on a budget of their own. Each request carries
+        // `networkingTimeout`; the refresh queue's watchdog gives up on the
+        // whole update sooner when nothing arrives at all.
         aptLog(Self.self, "update \(id) enter stage 1", level: .verbose)
 
-        async let avatarTask: Data? = {
-            let value = await downloadAvatar(from: request.avatarUrls, networking: networking)
+        let (catalogueArrived, announceCatalogue) = AsyncStream<TimeInterval>.makeStream()
+        async let optionalTask = fetchOptionalParts(request, cutoff: catalogueArrived, progress: progress)
+        async let releaseTask: Download = {
+            let value = await download(fromUrl: request.releaseUrl, networking: networking)
             await progress(10, nil)
             return value
         }()
-        async let releaseTask: String? = {
-            let value = await downloadUpdateRelease(withUrl: request.releaseUrl, networking: networking)
-            await progress(10, nil)
-            return value
-        }()
-        async let packageTask: [FetchedIndex] = {
+        async let packageTask: [URL: Download] = {
             let value = await downloadPackageIndexes(
                 request.packageCandidates.first ?? [],
                 suffix: request.preferredSearchPath,
@@ -394,30 +483,46 @@ extension RepositoryCenter {
             await progress(10, nil)
             return value
         }()
-        async let paymentTask: Detected<URL> = {
-            let value = await detectPaymentEndpoint(withUrl: request.url, networking: networking)
-            await progress(10, nil)
-            return value
-        }()
-        async let featuredTask: Detected<String> = {
-            let value = await detectFeaturedMetadata(withUrl: request.url, networking: networking)
-            await progress(10, nil)
-            return value
-        }()
 
-        outcome.avatar = await avatarTask
-        let releaseStr = await releaseTask
-        let preferredIndexes = await packageTask
-        outcome.paymentEndpoint = await paymentTask
-        outcome.featured = await featuredTask
+        let releaseDownload = await releaseTask
+        let preferredDownloads = await packageTask
+        // Neither the Release nor the index had any answer: the host is
+        // down, or the path to it is. Every other spelling in stage 3 would
+        // wait out the same silence, once per entry.
+        let noAnswer = !releaseDownload.reachedServer && !preferredDownloads.values.contains { $0.reachedServer }
+        announceCatalogue.yield(noAnswer ? 0 : request.optionalGrace)
+        announceCatalogue.finish()
+        networking.activity()
 
         // MARK: - STAGE 2
 
         // STAGE 2 [compile data]
         aptLog(Self.self, "update \(id) enter stage 2", level: .verbose)
         let compileStart = Date()
-        if let release = releaseStr {
-            outcome.release = try? DebianControl.parse(release)
+        switch releaseDownload {
+        case let .data(data):
+            // a Release is read leniently: its name and architectures are
+            // worth having even when its digests are not
+            if let reading = ReleaseFile.read(IndexText.decode(data)) {
+                outcome.release = reading.fields
+                if reading.digestsDuplicated {
+                    aptLog(Self.self, "update \(id) has a Release that lists its digests twice; none is used", level: .error)
+                    issues.append(.releaseMalformed)
+                }
+            } else {
+                aptLog(Self.self, "update \(id) has a Release that cannot be read", level: .error)
+                issues.append(.releaseMalformed)
+            }
+        case .absent:
+            issues.append(.releaseMissing)
+        case let .serverError(code):
+            issues.append(.serverError(code))
+        case .unreachable, .stalled:
+            // the index may yet come; with no answer at all the whole
+            // update says so below
+            if !noAnswer {
+                issues.append(.releaseMissing)
+            }
         }
         // A CDN can as well have the old Release beside new indexes. Held
         // to that one every index would differ and the refresh fail, so a
@@ -429,15 +534,20 @@ extension RepositoryCenter {
         {
             aptLog(Self.self, "update \(id) was served a Release older than the one it has", level: .error)
             outcome.release = nil
+            issues.append(.releaseOutdated)
         }
         // The index came down beside the Release, not after it, so it is
         // held to the Release here. One that differs is dropped, and stage
         // 3 asks for every spelling: a CDN that still has yesterday's
         // `Packages.xz` has usually let go of yesterday's `Packages`.
         let digests = outcome.release.map { IndexDigests(release: $0, releaseUrl: request.releaseUrl) }
+        let preferredIndexes = fetchedIndexes(preferredDownloads)
         let preferredIsStale = preferredIndexes.contains {
             digests?.verdict(of: $0.data, at: $0.url) == .differs
         }
+        // the index files the catalogue was read from, to ask the Release
+        // whether it vouches for them
+        var readFrom = [URL]()
         if let package = readPackageIndexes(
             preferredIndexes,
             of: request.packageCandidates.first ?? [],
@@ -448,6 +558,7 @@ extension RepositoryCenter {
             // under HTTP 200) is no catalogue: nil, so nothing is replaced.
             let packages = invokePackages(withContext: package, fromRepo: request.url)
             outcome.packages = packages.isEmpty ? nil : packages
+            readFrom = preferredIndexes.map(\.url)
         }
         do {
             let compileInterval = Date().timeIntervalSince(compileStart)
@@ -456,6 +567,7 @@ extension RepositoryCenter {
         }
 
         await progress(20, nil)
+        networking.activity()
 
         // MARK: - STAGE 3
 
@@ -464,42 +576,90 @@ extension RepositoryCenter {
         // One entry at a time, in order: what installs here first, then the
         // other bootstraps' indexes one by one. Within one, knock on
         // every compression suffix and keep the first that compiles to a
-        // non-empty index; cancelling the group stops the rest.
+        // non-empty index; cancelling the group stops the rest. Only worth
+        // it when the server answered and the file name or its compression
+        // was wrong.
         aptLog(Self.self, "update \(id) enter stage 3", level: .verbose)
 
         if outcome.packages?.count ?? 0 < 1 {
-            // a Release fetched just now may name other index directories
-            // than the stored one did (or an empty one, on a repository
-            // added a moment ago): the probes read the fresh one
-            let candidates = outcome.release.map { request.packageCandidates(release: $0) }
-                ?? request.packageCandidates
-            for baseUrls in candidates {
-                guard let winner = await probeSearchPaths(
-                    request.availableSearchPath,
-                    of: baseUrls,
-                    fromRepo: request.url,
-                    digests: digests,
-                    networking: networking
-                ) else { continue }
-                if baseUrls != request.packageCandidates.first {
-                    aptLog(Self.self, "update \(id) moves to \(baseUrls.map(\.absoluteString))", level: .info)
+            if noAnswer, !Task.isCancelled {
+                let index = preferredDownloads.values.first?.summary ?? "none"
+                aptLog(
+                    Self.self,
+                    "update \(id) skips probing: Release \(releaseDownload.summary), index \(index)",
+                    level: .error
+                )
+            } else if !Task.isCancelled {
+                // a Release fetched just now may name other index directories
+                // than the stored one did (or an empty one, on a repository
+                // added a moment ago): the probes read the fresh one
+                let candidates = outcome.release.map { request.packageCandidates(release: $0) }
+                    ?? request.packageCandidates
+                for baseUrls in candidates {
+                    if Task.isCancelled {
+                        break
+                    }
+                    let winner = await probeSearchPaths(
+                        request.availableSearchPath,
+                        of: baseUrls,
+                        fromRepo: request.url,
+                        digests: digests,
+                        networking: networking
+                    )
+                    networking.activity()
+                    guard let winner else { continue }
+                    if baseUrls != request.packageCandidates.first {
+                        aptLog(Self.self, "update \(id) moves to \(baseUrls.map(\.absoluteString))", level: .info)
+                    }
+                    outcome.packages = winner.packages
+                    readFrom = winner.read
+                    // a spelling that stood in for a stale one is not the one
+                    // to remember: the preferred is back with the CDN's next
+                    // fetch, and the stand-in may be the uncompressed index
+                    if !(preferredIsStale && baseUrls == request.packageCandidates.first) {
+                        outcome.searchPath = winner.suffix
+                    }
+                    break
                 }
-                outcome.packages = winner.packages
-                // a spelling that stood in for a stale one is not the one
-                // to remember: the preferred is back with the CDN's next
-                // fetch, and the stand-in may be the uncompressed index
-                if !(preferredIsStale && baseUrls == request.packageCandidates.first) {
-                    outcome.searchPath = winner.suffix
-                }
-                break
             }
         } else {
             outcome.searchPath = request.preferredSearchPath
         }
 
+        if !outcome.succeeded {
+            if Task.isCancelled {
+                // given up by the refresh queue for making no progress
+                issues = [.stalled]
+            } else if noAnswer {
+                let stalled = [releaseDownload] + preferredDownloads.values
+                issues = [stalled.contains { if case .stalled = $0 { true } else { false } } ? .stalled : .unreachable]
+                outcome.hostUnreachable = issues == [.unreachable]
+            } else {
+                let serverError = preferredDownloads.values.lazy.compactMap { download -> Int? in
+                    if case let .serverError(code) = download { code } else { nil }
+                }.first
+                if !issues.contains(where: { if case .serverError = $0 { true } else { false } }) {
+                    issues.append(serverError.map { .serverError($0) } ?? .noIndex)
+                }
+            }
+        } else if let digests, digests.listsAnything, readFrom.contains(where: { !digests.lists($0) }) {
+            aptLog(Self.self, "update \(id) read an index its Release does not list", level: .error)
+            issues.append(.indexUnverified)
+        }
+
+        let optional = await optionalTask
+        outcome.avatar = optional.avatar
+        outcome.paymentEndpoint = optional.paymentEndpoint
+        outcome.featured = optional.featured
+
         await progress(0, 90)
 
         let completeInterval = Date().timeIntervalSince(updateStart)
+        var unique = [RefreshReport.Issue]()
+        for issue in issues where !unique.contains(issue) {
+            unique.append(issue)
+        }
+        outcome.report = RefreshReport(date: Date(), duration: completeInterval, issues: unique)
         aptLog(Self.self, String(format: "update \(id) fetched in %.2f seconds", completeInterval), level: .info)
         return outcome
     }
@@ -517,4 +677,6 @@ extension RepositoryCenter {
 private struct SearchPathProbe: Sendable {
     let suffix: String
     let packages: [String: Package]
+    /// the index files it was read from
+    let read: [URL]
 }

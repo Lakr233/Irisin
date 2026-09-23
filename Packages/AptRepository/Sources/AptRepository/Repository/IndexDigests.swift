@@ -46,6 +46,12 @@ struct IndexDigests: Sendable {
         self.directory = directory.hasSuffix("/") ? directory : directory + "/"
     }
 
+    /// The Release lists any digest at all: one that lists none vouches for
+    /// nothing, and no index is the worse for it.
+    var listsAnything: Bool {
+        !sha256.isEmpty
+    }
+
     /// Whether the Release lists the file at `url` at all: one it lists and
     /// the server does not hand over is missing, not merely never offered.
     func lists(_ url: URL) -> Bool {

@@ -228,6 +228,10 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
          tag for tracing, not set means true [for backward capability]
          */
         case initialInstall
+        /**
+         the last refresh's `RefreshReport`, as JSON
+         */
+        case refreshReport
     }
 
     public internal(set) var paymentInfo: [PaymentInfo: String] = [:]

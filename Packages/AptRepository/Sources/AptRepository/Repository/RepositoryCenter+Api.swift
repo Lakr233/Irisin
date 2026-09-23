@@ -66,21 +66,28 @@ public extension RepositoryCenter {
         return .idle
     }
 
-    /// indicates if this repo is good enough, update to data, and reliable
-    /// - Parameter url: the url of repository
-    /// - Returns: if it is
-    func isRepositoryReadyForUse(withUrl url: URL) -> Bool? {
+    /// How the repository stands, for its dot; nil when there is none.
+    /// Packages from a refresh that had trouble, or from over a day ago,
+    /// are still packages: degraded, not failed.
+    func refreshHealth(withUrl url: URL) -> RepositoryHealth? {
         guard let repo = repositories[url] else {
             aptLog(self, "requested repository \(url.absoluteString) was not found")
             return nil
         }
-        if repo.packageCount < 1 || repo.metaRelease.count < 1 {
-            return false
+        if isRepositoryPreparedForUpdate(withUrl: url) {
+            return .pending
         }
-        if repositoryeligibleForSmartUpdate(target: repo) {
-            return false
+        if repo.packageCount < 1 {
+            return .failed
         }
-        return true
+        if Date().timeIntervalSince(repo.lastUpdatePackage) > Double(smartUpdateTimeInterval) {
+            return .degraded
+        }
+        guard let report = repo.refreshReport else {
+            // refreshed before reports were kept: the next refresh says
+            return repo.metaRelease.isEmpty ? .degraded : .ready
+        }
+        return report.issues.isEmpty ? .ready : .degraded
     }
 
     /// indicates if this repo is in update queue, both pending and current

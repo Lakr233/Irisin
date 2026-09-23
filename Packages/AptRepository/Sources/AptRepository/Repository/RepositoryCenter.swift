@@ -49,8 +49,6 @@ public final class RepositoryCenter {
     /// A repository older than this is refreshed on launch: one day.
     public let smartUpdateTimeInterval = 86400
 
-    /// used to control update engine
-    lazy var updateDispatchThrottle = Throttler(minimumDelay: 1)
     /// used to present notification to user interface
     lazy var notificationThrottle = Throttler(minimumDelay: 0.5)
 
@@ -60,8 +58,9 @@ public final class RepositoryCenter {
     )
     public nonisolated static let metadataUpdate = Notification.Name("\(kRepositoryCenterIdentity).metadataUpdate")
 
-    /// How many repositories the update engine refreshes at once.
-    public let updateConcurrencyLimit = 4
+    /// How the update engine paces itself: how many at once, and when an
+    /// update is stalled or given up (`UpdateSchedule`).
+    let updateLimits = UpdateSchedule.Limits()
 
     /// update queue
     var pendingUpdateRequest: Set<URL> = []
@@ -69,11 +68,28 @@ public final class RepositoryCenter {
     var currentUpdateProgress: [URL: Progress] = [:]
     private var updateLoop: Task<Void, Never>?
 
+    /// Each update in flight: its task, to give it up by, when it started,
+    /// and when it last heard from the server.
+    var updateTasks: [URL: Task<Void, Never>] = [:]
+    var updateStarted: [URL: Date] = [:]
+    var lastActivity: [URL: Date] = [:]
+    /// in flight and out of their slots for making no progress
+    var stalledUpdates: Set<URL> = []
+    /// cancelled for making no progress, and not finished yet
+    var givenUpUpdates: Set<URL> = []
+    /// the limit the last decision came to, and whether it was held back,
+    /// to log a change once
+    var updateLimit = 4
+    var updateLimitHeldBack = false
+    /// from the queue's first dispatch until it is empty again
+    var refreshRound: RefreshRound?
+
     /// when updating repository property, set by application to user default, not here
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingHeaders", defaultValue: [:])
     public var networkingHeaders: [String: String]
-    /// Seconds a single request may take.
-    public let networkingTimeout = 60
+    /// Seconds a request may go without hearing from the server. The
+    /// refresh queue's watchdog usually gives up on the update first.
+    public let networkingTimeout = 25
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingVerboseLogging", defaultValue: false)
     public var networkingVerboseLogging: Bool
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingRedirect", defaultValue: Data())
@@ -115,8 +131,8 @@ public final class RepositoryCenter {
         // a page built before this read has an empty list to replace
         NotificationCenter.default.post(name: RepositoryCenter.registrationUpdate, object: nil)
 
-        // Give the app a moment to finish booting, then keep draining the
-        // update queue once a second.
+        // Give the app a moment to finish booting, then look over the
+        // update queue once a second: the watchdog runs on this tick.
         updateLoop = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 3 * NSEC_PER_SEC)
             self?.dispatchSmartUpdateRequestOnAll()

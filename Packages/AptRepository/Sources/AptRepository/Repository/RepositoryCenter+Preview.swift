@@ -34,8 +34,8 @@ public extension RepositoryCenter {
         networking: NetworkingConfiguration
     ) async -> RepositoryPreview? {
         async let avatar = downloadAvatar(from: avatarUrls, networking: networking)
-        guard let release = await downloadUpdateRelease(withUrl: releaseUrl, networking: networking),
-              let meta = try? DebianControl.parse(release)
+        guard let release = await downloadData(fromUrl: releaseUrl, networking: networking),
+              let meta = ReleaseFile.read(IndexText.decode(release))?.fields
         else {
             return nil
         }

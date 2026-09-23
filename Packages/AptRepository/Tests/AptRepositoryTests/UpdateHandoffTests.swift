@@ -30,10 +30,12 @@ import Testing
         serving files: [String: Data],
         storedRelease: [String: String] = [:],
         indexes: [[String]] = [["Packages"]],
-        suite: (distribution: String, components: [String], architectures: [String], installable: Set<String>)? = nil
+        behaving: [String: StubServer.Behavior] = [:],
+        suite: (distribution: String, components: [String], architectures: [String], installable: Set<String>)? = nil,
+        configure: (inout RepositoryCenter.UpdateRequest) -> Void = { _ in }
     ) async -> RepositoryCenter.UpdateOutcome {
         _ = TestEnvironment.root
-        StubServer.serve(files, on: host)
+        StubServer.serve(files, on: host, behaving: behaving)
         let url = URL(string: "https://\(host)")!
         var request = RepositoryCenter.UpdateRequest(
             url: url,
@@ -52,6 +54,7 @@ import Testing
             request.architectures = suite.architectures
             request.installable = suite.installable
         }
+        configure(&request)
         return await RepositoryCenter.performUpdate(request) { _, _ in }
     }
 
@@ -183,52 +186,97 @@ import Testing
             return
         }
     }
-}
 
-/// Answers `URLSession.shared` for the hosts it was given: a file, 404 for
-/// anything else, or no answer at all.
-final class StubServer: URLProtocol, @unchecked Sendable {
-    private static let lock = NSLock()
-    private nonisolated(unsafe) static var files = [String: [String: Data]]()
-    private nonisolated(unsafe) static var failing = Set<String>()
-    private nonisolated(unsafe) static var registered = false
+    /// A host that answers nothing costs the Release and the preferred index
+    /// and nothing else: no other spelling or entry is knocked on, and the
+    /// optional parts are let go at once.
+    @Test func unreachableHostSkipsProbing() async {
+        StubServer.fail(host: "blackhole.test", with: .timedOut)
+        let started = Date()
+        let outcome = await update(
+            host: "blackhole.test",
+            serving: [:],
+            indexes: [["Packages"], ["other/Packages"]]
+        )
+        #expect(Date().timeIntervalSince(started) < 3)
+        #expect(outcome.packages == nil)
+        #expect(outcome.report?.issues == [.unreachable])
+        #expect(outcome.hostUnreachable)
+        let asked = StubServer.requests(to: "blackhole.test")
+        #expect(asked.contains("/Release"))
+        #expect(asked.contains("/Packages.xz"))
+        #expect(!asked.contains { $0.hasPrefix("/other") || $0 == "/Packages.bz2" || $0 == "/Packages" })
+    }
 
-    static func serve(_ served: [String: Data], on host: String) {
-        lock.withLock {
-            // `fail(host:)` comes first for a host that is to stay silent
-            files[host] = served
-            if !registered {
-                registered = true
-                URLProtocol.registerClass(StubServer.self)
-            }
+    /// mtac.app: a Release with its digests listed over and over. Its name
+    /// is read, its packages are, and the report says the Release is bad.
+    @Test func releaseWithDuplicatedDigestsStillNamesTheRepository() async throws {
+        let outcome = await update(host: "mtac.test", serving: [
+            "/Release": Data(try TestEnvironment.fixture("mtac-release").utf8),
+            "/Packages.xz": Self.current,
+        ])
+        #expect(outcome.release?["label"] == "MTAC's Repo")
+        #expect(outcome.packages?.values.first?.latestVersion == "2")
+        #expect(outcome.report?.issues == [.releaseMalformed])
+    }
+
+    @Test func healthyRefreshHasNoIssues() async {
+        let outcome = await update(host: "healthy.test", serving: [
+            "/Release": Self.release(of: Self.current, date: Self.evening),
+            "/Packages.xz": Self.current,
+        ])
+        #expect(outcome.succeeded)
+        #expect(outcome.report?.issues == [])
+    }
+
+    @Test func brokenServerIsTheServersError() async {
+        let outcome = await update(host: "broken.test", serving: [:], behaving: [
+            "/Release": .status(503), "/Packages.xz": .status(503),
+        ])
+        #expect(outcome.packages == nil)
+        #expect(outcome.report?.issues == [.serverError(503)])
+        #expect(!outcome.hostUnreachable)
+    }
+
+    @Test func serverWithNothingForThisDevice() async {
+        let outcome = await update(host: "empty.test", serving: [
+            "/Release": Self.release(of: Self.current, date: Self.evening),
+        ])
+        #expect(outcome.report?.issues == [.noIndex])
+    }
+
+    @Test func indexTheReleaseDoesNotListIsUnverified() async {
+        let digest = String(repeating: "a", count: 64)
+        let outcome = await update(host: "unlisted.test", serving: [
+            "/Release": Data("Origin: Example\nSHA256:\n \(digest) 12 Packages.bz2\n".utf8),
+            "/Packages.xz": Self.current,
+        ])
+        #expect(outcome.succeeded)
+        #expect(outcome.report?.issues == [.indexUnverified])
+        let silent = await update(host: "no-digests.test", serving: [
+            "/Release": Data("Origin: Example\n".utf8),
+            "/Packages.xz": Self.current,
+        ])
+        #expect(silent.report?.issues == [])
+    }
+
+    /// An icon or a payment endpoint that never answers does not hold the
+    /// catalogue up past its grace, and what the repository had stays.
+    @Test func optionalPartsDoNotHoldTheCatalogue() async {
+        let started = Date()
+        let outcome = await update(
+            host: "slow-extras.test",
+            serving: ["/Packages.xz": Self.current],
+            behaving: ["/payment_endpoint": .hang, "/sileo-featured.json": .hang]
+        ) { request in
+            request.optionalGrace = 0.3
+            request.optionalBudget = 5
         }
-    }
-
-    static func fail(host: String) {
-        lock.withLock { _ = failing.insert(host) }
-    }
-
-    override class func canInit(with request: URLRequest) -> Bool {
-        guard let host = request.url?.host else { return false }
-        return lock.withLock { files[host] != nil || failing.contains(host) }
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        guard let url = request.url, let host = url.host else { return }
-        let (body, fails) = Self.lock.withLock { (Self.files[host]?[url.path], Self.failing.contains(host)) }
-        if fails {
-            client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet))
+        #expect(Date().timeIntervalSince(started) < 2)
+        #expect(outcome.succeeded)
+        guard case .unanswered = outcome.paymentEndpoint, case .unanswered = outcome.featured else {
+            Issue.record("a part given up on is unanswered, and what was remembered stays")
             return
         }
-        let response = HTTPURLResponse(url: url, statusCode: body == nil ? 404 : 200, httpVersion: "HTTP/1.1", headerFields: nil)!
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: body ?? Data())
-        client?.urlProtocolDidFinishLoading(self)
     }
-
-    override func stopLoading() {}
 }
