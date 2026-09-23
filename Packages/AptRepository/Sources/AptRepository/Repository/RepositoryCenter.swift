@@ -118,6 +118,11 @@ public final class RepositoryCenter {
     /// thread, and the work waits for `load()`.
     private nonisolated init() {}
 
+    /// The launch's refresh of what is out of date has been queued, or found
+    /// nothing to do. Until then an empty queue says nothing about whether
+    /// the catalogue is about to move.
+    public private(set) var hasQueuedLaunchRefresh = false
+
     /// Reads the repositories and starts the update engine. Once per
     /// process, after `PackageCenter.load()`.
     public func load() async {
@@ -137,6 +142,7 @@ public final class RepositoryCenter {
         updateLoop = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 3 * NSEC_PER_SEC)
             self?.dispatchSmartUpdateRequestOnAll()
+            self?.hasQueuedLaunchRefresh = true
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: NSEC_PER_SEC)
                 self?.dispatchUpdateOnCurrentCenter()

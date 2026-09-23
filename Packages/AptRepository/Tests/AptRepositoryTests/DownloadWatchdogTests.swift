@@ -86,6 +86,41 @@ import Testing
     }
 }
 
+extension DownloadWatchdogTests {
+    /// The icon of the first address that has one, however much quicker a
+    /// later one answers: the root's over the suite's, as before.
+    @Test func iconFollowsTheOrderNotTheRace() async {
+        _ = TestEnvironment.root
+        let root = Data(repeating: 1, count: 300)
+        StubServer.serve(["/suite/CydiaIcon.png": Data(repeating: 2, count: 10)], on: "icons.test", behaving: [
+            "/CydiaIcon.png": .trickle(chunk: root, every: 0.2, chunks: 2),
+        ])
+        let urls = ["https://icons.test/CydiaIcon.png", "https://icons.test/suite/CydiaIcon.png"].map { URL(string: $0)! }
+        #expect(await RepositoryCenter.downloadAvatar(from: urls, networking: Self.networking) == root + root)
+        StubServer.serve(["/suite/CydiaIcon.png": Data(repeating: 2, count: 10)], on: "icons-missing.test")
+        let fallback = ["https://icons-missing.test/CydiaIcon.png", "https://icons-missing.test/suite/CydiaIcon.png"]
+            .map { URL(string: $0)! }
+        #expect(await RepositoryCenter.downloadAvatar(from: fallback, networking: Self.networking) == Data(repeating: 2, count: 10))
+    }
+
+    /// Work that holds its thread still beats: the beat is a dispatch
+    /// timer's, not a task's that would wait for a thread.
+    @Test func longWorkStillBeats() {
+        let beats = Beats()
+        RepositoryCenter.beating({ beats.add() }) {
+            Thread.sleep(forTimeInterval: 2.3)
+        }
+        #expect(beats.count >= 2)
+    }
+}
+
+private final class Beats: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+    var count: Int { lock.withLock { value } }
+    func add() { lock.withLock { value += 1 } }
+}
+
 @MainActor private final class Watch {
     var lastActivity = [String: Date]()
     var finished = Set<String>()

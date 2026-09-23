@@ -87,7 +87,7 @@ extension RepositoryCenter {
         guard let repo = repositories[url] else { return nil }
         var networking = networkingConfiguration
         networking.activity = { Task { @MainActor in self.noteActivity(of: url) } }
-        return UpdateRequest(
+        var request = UpdateRequest(
             url: url,
             avatarUrls: repo.avatarUrls,
             releaseUrl: repo.metaReleaseUrl,
@@ -100,6 +100,12 @@ extension RepositoryCenter {
             distribution: repo.distribution,
             components: repo.components
         )
+        // nothing remembered to keep: a repository refreshed for the first
+        // time waits the whole budget for its icon and payment endpoint
+        if repo.lastUpdatePackage.timeIntervalSince1970 == 0 {
+            request.optionalGrace = request.optionalBudget
+        }
+        return request
     }
 
     /// Moves the repository's progress and tells the interface.
@@ -290,11 +296,24 @@ extension RepositoryCenter {
         return parts.isEmpty ? nil : parts.joined(separator: "\n\n")
     }
 
+    /// Runs `work`, calling `activity` once a second until it returns: a
+    /// long decompress, parse or database write is progress too, and the
+    /// refresh queue hears only what it is told. The beat comes from a
+    /// dispatch timer, not a task: `work` holds a thread of the
+    /// cooperative pool, and with several such at once a task would wait
+    /// for a thread until the work was done.
+    nonisolated static func beating<T>(_ activity: @escaping @Sendable () -> Void, _ work: () throws -> T) rethrows -> T {
+        let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+        timer.schedule(deadline: .now() + 1, repeating: 1)
+        timer.setEventHandler(handler: activity)
+        timer.resume()
+        defer { timer.cancel() }
+        return try work()
+    }
+
     /// An entry's indexes read and compiled into packages, nil when that
     /// comes to nothing (a captive portal's page under HTTP 200 is no
-    /// catalogue). `networking.activity` beats once a second meanwhile:
-    /// decompressing and parsing a large index is progress too, and the
-    /// refresh queue hears only what it is told.
+    /// catalogue), with the refresh queue told it is still moving.
     nonisolated static func compilePackageIndexes(
         _ indexes: [FetchedIndex],
         of bases: [URL],
@@ -303,15 +322,11 @@ extension RepositoryCenter {
         fromRepo: URL,
         networking: NetworkingConfiguration
     ) -> [String: Package]? {
-        let heartbeat = Task {
-            while (try? await Task.sleep(for: .seconds(1))) != nil {
-                networking.activity()
-            }
+        beating(networking.activity) {
+            guard let body = readPackageIndexes(indexes, of: bases, suffix: suffix, digests: digests) else { return nil }
+            let packages = invokePackages(withContext: body, fromRepo: fromRepo)
+            return packages.isEmpty ? nil : packages
         }
-        defer { heartbeat.cancel() }
-        guard let body = readPackageIndexes(indexes, of: bases, suffix: suffix, digests: digests) else { return nil }
-        let packages = invokePackages(withContext: body, fromRepo: fromRepo)
-        return packages.isEmpty ? nil : packages
     }
 
     /// The spellings among `searchPaths` the Release lists for any of
@@ -370,19 +385,28 @@ extension RepositoryCenter {
         }
     }
 
-    /// The icon from whichever address has one first, asked all at once.
+    /// The icon from the first address in `urls` that has one, all asked at
+    /// once: a later address that answers first waits only for the earlier
+    /// ones to say they have none, so which icon wins never depends on
+    /// which server was quicker.
     nonisolated static func downloadAvatar(
         from urls: [URL],
         networking: NetworkingConfiguration
     ) async -> Data? {
-        await withTaskGroup(of: Data?.self, returning: Data?.self) { group in
-            for url in urls {
-                group.addTask { await downloadData(fromUrl: url, networking: networking) }
+        await withTaskGroup(of: (Int, Data?).self, returning: Data?.self) { group in
+            for (position, url) in urls.enumerated() {
+                group.addTask { await (position, downloadData(fromUrl: url, networking: networking)) }
             }
-            for await data in group {
-                if let data {
-                    group.cancelAll()
-                    return data
+            var answers = [Int: Data?]()
+            for await (position, data) in group {
+                answers[position] = data
+                // the earliest address not yet known to have none
+                for earlier in urls.indices {
+                    guard let answer = answers[earlier] else { break }
+                    if let answer {
+                        group.cancelAll()
+                        return answer
+                    }
                 }
             }
             return nil

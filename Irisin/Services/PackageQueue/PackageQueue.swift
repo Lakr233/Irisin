@@ -78,7 +78,7 @@ final class PackageQueue {
     private var pool: (generation: Int, value: ResolutionPool)?
     /// The preflight's read in flight: a solve waits for it rather than
     /// reading the same pool again.
-    private var poolRead: (generation: Int, task: Task<ResolutionPool?, Never>)?
+    private var poolRead: (generation: Int, task: Task<ResolutionPool?, Never>, awaited: Bool)?
     /// The packages moved and the preflight waits for them to settle.
     private var preflightDelay: Task<Void, Never>?
     private var generations = 0
@@ -550,10 +550,23 @@ final class PackageQueue {
     /// moves them again when it ends. Also called once the engines are up.
     func schedulePreflight() {
         preflightDelay?.cancel()
+        // a read already going is of packages that have moved since: it
+        // would only be thrown away, after seconds of work. One a solve
+        // waits on goes on; the solve would only read it again.
+        if let read = poolRead, !read.awaited {
+            read.task.cancel()
+            poolRead = nil
+        }
         preflightDelay = Task { [weak self] in
             do {
                 try await Task.sleep(for: Self.settleDelay)
-                while RepositoryCenter.default.obtainUpdateRemain() > 0 || Installer.shared.inProcessingQueue {
+                // at launch the refresh of what is out of date is queued a
+                // moment after the engines are up: not reading until then
+                // keeps a pool that refresh would make stale at once
+                while !RepositoryCenter.default.hasQueuedLaunchRefresh
+                    || RepositoryCenter.default.obtainUpdateRemain() > 0
+                    || Installer.shared.inProcessingQueue
+                {
                     try await Task.sleep(for: Self.settleDelay)
                 }
             } catch {
@@ -586,7 +599,7 @@ final class PackageQueue {
             }
             return read
         }
-        poolRead = (generation, task)
+        poolRead = (generation, task, false)
         return task
     }
 
@@ -600,6 +613,7 @@ final class PackageQueue {
         }
         // a read the packages moving cancelled has a newer one after it
         while let current = poolRead {
+            poolRead?.awaited = true
             if let read = await current.task.value {
                 return read
             }

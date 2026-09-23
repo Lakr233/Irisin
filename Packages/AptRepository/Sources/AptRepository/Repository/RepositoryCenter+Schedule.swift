@@ -106,9 +106,9 @@ extension RepositoryCenter {
                     "update \(url.absoluteString) not attempted: host \(host) was unreachable earlier in this refresh",
                     level: .error
                 )
-                var outcome = UpdateOutcome(url: url)
-                outcome.report = RefreshReport(date: now, duration: 0, issues: [.unreachable])
-                notAttempted.append(outcome)
+                // never asked, so nothing is said about it: the report of
+                // its last refresh stays
+                notAttempted.append(UpdateOutcome(url: url))
                 continue
             }
             start(request, now: now)
@@ -134,10 +134,13 @@ extension RepositoryCenter {
             let outcome = await Self.performUpdate(request) { units, absolute in
                 await self.advanceUpdate(of: url, by: units, to: absolute)
             }
-            // the heavy write, still off the main actor; an update
-            // that read nothing leaves the rows that are there
+            // the heavy write, still off the main actor and still progress
+            // to the watchdog; an update that read nothing leaves the rows
+            // that are there
             if outcome.succeeded, let packages = outcome.packages {
-                db.replacePackages(of: url, with: packages)
+                Self.beating(request.networking.activity) {
+                    db.replacePackages(of: url, with: packages)
+                }
             }
             await self.finishUpdate(outcome)
         }
