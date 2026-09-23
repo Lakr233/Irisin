@@ -2,7 +2,7 @@ import AptRepository
 
 /// Pre-indexed witnesses keep relation translation proportional to actual
 /// providers rather than comparing every relationship with the whole catalogue.
-struct PackageUniverse {
+struct PackageUniverse: Sendable {
     let packages: [PoolPackage]
     let providers: [String: [Int]]
     let architecture: String

@@ -69,8 +69,14 @@ let package = Package(
         .testTarget(
             name: "AptRepositoryTests",
             // the adapter only for `AdapterConformanceTests`, which needs both
-            // halves: a package prepared here, then adapted there
-            dependencies: ["AptRepository", .product(name: "IrisinAdapter", package: "IrisinKit")],
+            // halves: a package prepared here, then adapted there; the
+            // resolver for `ResolutionPoolDatabaseTests`, a pool read from a
+            // database and the database written under it
+            dependencies: [
+                "AptRepository",
+                "AptResolver",
+                .product(name: "IrisinAdapter", package: "IrisinKit"),
+            ],
             // a Debian machine's dpkg status file and a version list sorted
             // by apt itself, for the parser and the comparison
             resources: [.copy("Fixtures")]

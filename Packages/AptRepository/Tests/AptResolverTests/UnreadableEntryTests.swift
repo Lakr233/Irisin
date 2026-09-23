@@ -68,7 +68,7 @@ struct UnreadableEntryTests {
             architecture: Self.roothide,
             installableArchitectures: [Self.roothide, "iphoneos-arm64"]
         )
-        return try PackageResolver.resolve(request: .init(actions: actions, updateAll: update), snapshot: snapshot)
+        return try resolveBothWays(request: .init(actions: actions, updateAll: update), snapshot: snapshot)
     }
 
     /// dpkg refuses both spellings in a .deb and in its status file, so the

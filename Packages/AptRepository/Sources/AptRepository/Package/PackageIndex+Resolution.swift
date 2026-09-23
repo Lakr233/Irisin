@@ -1,11 +1,22 @@
 import Foundation
 
 public extension PackageIndex {
-    func resolutionSnapshot() throws -> ResolutionSnapshot {
+    /// The catalogue and dpkg's status as they are now. The catalogue is
+    /// the expensive half, every package of every repository decoded:
+    /// `previous`'s is taken instead when the database has not been written
+    /// since it was read, which the revision says in one query.
+    func resolutionSnapshot(reusingCatalogueOf previous: ResolutionSnapshot? = nil) throws -> ResolutionSnapshot {
         let environment = AptEnvironment.current
         let statusURL = URL(fileURLWithPath: environment.dpkgStatusLocation)
         let status = try Self.statusContents(at: statusURL)
-        let catalogue = try db.resolutionCatalogue()
+        var unchanged: (packages: [Package], revision: Int64)?
+        if let previous, previous.catalogueIdentity == db.identity {
+            let revision = try db.resolutionRevision()
+            if revision == previous.catalogueRevision {
+                unchanged = (previous.packages, revision)
+            }
+        }
+        let catalogue = try unchanged ?? db.resolutionCatalogue()
         guard try status == Self.statusContents(at: statusURL) else {
             throw CocoaError(.fileReadUnknown)
         }
@@ -31,7 +42,8 @@ public extension PackageIndex {
                 .flatMap { FileManager.default.contents(atPath: $0) }
                 .map(Self.autoInstalled(in:)) ?? [],
             statusDigest: ResolutionSnapshot.digest(status),
-            catalogueRevision: catalogue.revision
+            catalogueRevision: catalogue.revision,
+            catalogueIdentity: db.identity
         )
     }
 

@@ -23,4 +23,12 @@ public struct ResolutionRequest: Sendable {
         self.autoremove = autoremove
         self.allowSystemRemoval = allowSystemRemoval
     }
+
+    /// The packages the request installs, in the order asked.
+    var installs: [Package] {
+        actions.compactMap { action in
+            guard case let .install(package) = action else { return nil }
+            return package
+        }
+    }
 }

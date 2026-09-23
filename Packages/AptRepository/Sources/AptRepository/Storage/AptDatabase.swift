@@ -32,6 +32,11 @@ final class AptDatabase: @unchecked Sendable {
 
     private let database: Database
 
+    /// This handle, for this process: a resolution snapshot names the
+    /// database its catalogue came from, and a revision is only ever
+    /// compared with another of the same database.
+    let identity = UUID()
+
     init(at url: URL) {
         database = Database(at: url)
         database.add(tokenizer: BuiltinTokenizer.Verbatim)

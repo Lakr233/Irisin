@@ -9,7 +9,7 @@ struct ResolutionDiagnosticTests {
         let versions = (1 ... 40).map { pkg("library", String($0), ["architecture": "iphoneos-arm"]) }
         let snapshot = ResolutionSnapshot(packages: [app] + versions, installed: [], architecture: "iphoneos-arm64")
         do {
-            _ = try PackageResolver.resolve(request: .init(actions: [.install(app)]), snapshot: snapshot)
+            _ = try resolveBothWays(request: .init(actions: [.install(app)]), snapshot: snapshot)
             Issue.record("A different architecture cannot satisfy the request")
         } catch let failure as ResolutionFailure {
             let check = try #require(failure.checks.first { $0.requirement == "library" })
@@ -50,7 +50,7 @@ struct ResolutionDiagnosticTests {
         let firmware = pkg("firmware", "26.6.1", ["architecture": "all"], installed: true)
         let snapshot = ResolutionSnapshot(packages: [app, substrate], installed: [firmware], architecture: "iphoneos-arm64")
         do {
-            _ = try PackageResolver.resolve(request: .init(actions: [.install(app)]), snapshot: snapshot)
+            _ = try resolveBothWays(request: .init(actions: [.install(app)]), snapshot: snapshot)
             Issue.record("A rootful provider must not satisfy a rootless install")
         } catch let failure as ResolutionFailure {
             #expect(failure.checks.contains { $0.requirement == "mobilesubstrate (>= 0.9.5000)" && $0.outcome == .incompatibleArchitecture })

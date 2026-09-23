@@ -1,7 +1,7 @@
 import AptRepository
 import Foundation
 
-struct PoolPackage {
+struct PoolPackage: Sendable {
     typealias Group = PackageRequirementGroup
     typealias Element = Group.Clause.Term
 
@@ -23,6 +23,16 @@ struct PoolPackage {
     /// the snapshot's architecture, and the control paragraph the adapter
     /// wrote, or its preview of one while the file is not adapted yet.
     init(_ package: Package, installed: Bool, action: ResolutionAction? = nil, in snapshot: ResolutionSnapshot) throws {
+        try self.init(reading: package, installed: installed, in: snapshot)
+        if installed {
+            try admit(action)
+        }
+    }
+
+    /// The record as its control paragraph describes it, before an action
+    /// is held up against an installed one's state: what a
+    /// `ResolutionPool` keeps for every request.
+    init(reading package: Package, installed: Bool, in snapshot: ResolutionSnapshot) throws {
         guard package.payload.count == 1, let version = package.latestVersion,
               DebianVersion.isValid(version), var fields = package.latestMetadata
         else {
@@ -52,21 +62,24 @@ struct PoolPackage {
             }
             relations[type] = group.requirements
         }
-        if installed {
-            let state = (fields["status"] ?? "install ok installed").split(separator: " ")
-            let ok = state.count == 3 && state[1] == "ok"
-            let allowed = switch action {
-            case .install: true
-            case .remove: ok
-            case nil: ok && state[2] != "half-installed"
-            }
-            guard allowed else { throw ResolutionFailure(.unfinishedInstall(package: package.identity)) }
-        }
         self.package = package
         self.version = version
         self.installed = installed
         self.fields = fields
         self.relations = relations
+    }
+
+    /// Throws unless an installed record's state lets a plan with this
+    /// `action` for it go ahead: see `init`.
+    func admit(_ action: ResolutionAction?) throws {
+        let state = (fields["status"] ?? "install ok installed").split(separator: " ")
+        let ok = state.count == 3 && state[1] == "ok"
+        let allowed = switch action {
+        case .install: true
+        case .remove: ok
+        case nil: ok && state[2] != "half-installed"
+        }
+        guard allowed else { throw ResolutionFailure(.unfinishedInstall(package: package.identity)) }
     }
 
     var name: String {

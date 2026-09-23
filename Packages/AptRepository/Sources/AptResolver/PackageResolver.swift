@@ -4,9 +4,20 @@ import IrisinProtocol
 import LibSolv
 
 public enum PackageResolver {
-    public static func resolve(request: ResolutionRequest, snapshot: ResolutionSnapshot) throws -> ResolutionPlan {
+    /// The plan for `request` against `snapshot`. `pool` is the one read
+    /// ahead of the request (`ResolutionPool`): used when it serves the
+    /// snapshot, read again when it does not, and a plan is the same
+    /// either way.
+    public static func resolve(
+        request: ResolutionRequest,
+        snapshot: ResolutionSnapshot,
+        pool: ResolutionPool? = nil
+    ) throws -> ResolutionPlan {
         do {
-            return try solve(request: request, snapshot: snapshot)
+            return try solve(request: request, snapshot: snapshot, pool: pool)
+        } catch is CancellationError {
+            // no one is waiting for this plan, nor for why it failed
+            throw CancellationError()
         } catch {
             // the failure's own evidence first: it names what went wrong
             let checks = ((error as? ResolutionFailure)?.checks ?? [])
@@ -26,64 +37,52 @@ public enum PackageResolver {
         }
     }
 
-    private static func solve(request: ResolutionRequest, snapshot: ResolutionSnapshot) throws -> ResolutionPlan {
+    /// The plan for `request` against `snapshot`, with the pool the caller
+    /// keeps between requests: used while it serves the snapshot, and read
+    /// again into `pool` when it does not, for the next request. A request
+    /// for a package no pool read ahead would hold (a `.deb` on disk,
+    /// another repository's copy of an installed package) is solved with a
+    /// pool of its own and leaves a stale `pool` as it was: read now, it
+    /// would be read twice.
+    public static func resolve(
+        request: ResolutionRequest,
+        snapshot: ResolutionSnapshot,
+        keeping pool: inout ResolutionPool?
+    ) throws -> ResolutionPlan {
+        let foreign = request.installs.contains { package in
+            package.repoRef == nil || snapshot.origins[package.identity].map { $0 != package.repoRef } == true
+        }
+        if pool?.serves(snapshot) != true, !foreign {
+            pool = try ResolutionPool(snapshot: snapshot)
+        }
+        return try resolve(request: request, snapshot: snapshot, pool: pool)
+    }
+
+    private static func solve(
+        request: ResolutionRequest,
+        snapshot: ResolutionSnapshot,
+        pool prepared: ResolutionPool?
+    ) throws -> ResolutionPlan {
         var actions: [String: ResolutionAction] = [:]
         for action in request.actions {
             actions[action.identity] = action
         }
-        var records: [PoolPackage] = []
-        // Every repository entry that does not parse, and why. Only those
-        // this plan touches become its diagnostics, below: one broken
-        // paragraph in one of a hundred repositories is not every
-        // transaction's business.
-        var unreadable: [Package: ResolutionFailure.Reason] = [:]
-        for package in snapshot.installed.sorted(by: { $0.identity < $1.identity }) {
-            try records.append(PoolPackage(package, installed: true, action: actions[package.identity], in: snapshot))
+        // a pool read for other inputs is never used; one the request would
+        // add a candidate to is read again with it, for this request alone
+        let pool = if let prepared, prepared.serves(snapshot), prepared.offers(request) {
+            prepared
+        } else {
+            try ResolutionPool(snapshot: snapshot, requested: ResolutionRequest(actions: Array(actions.values)).installs)
         }
-        // an installed identity follows the repository it came from: the
-        // other repositories' copies are not candidates for it, unless the
-        // user asked for one of them by name, which is the explicit action
-        // appended below
-        var available = snapshot.packages.filter { package in
-            snapshot.origins[package.identity].map { $0 == package.repoRef } ?? true
+        for entry in pool.installed {
+            let index = try entry.get()
+            try pool.records[index].admit(actions[pool.records[index].name])
         }
-        for action in actions.values {
-            if case let .install(package) = action {
-                available.append(package)
-            }
-        }
-        available.sort {
-            ($0.repoRef?.absoluteString ?? "", $0.identity) < ($1.repoRef?.absoluteString ?? "", $1.identity)
-        }
-        var seen = Set<Package>()
-        var candidates: [Package] = []
-        for package in available {
-            for version in package.payload.keys.sorted(by: { DebianVersion.compare($0, $1) > 0 }) {
-                let record = Package(
-                    identity: package.identity,
-                    payload: [version: package.payload[version]!],
-                    repoRef: package.repoRef
-                )
-                guard record.supports(anyOf: snapshot.installableArchitectures),
-                      seen.insert(record).inserted
-                else { continue }
-                candidates.append(record)
-            }
-        }
+        let records = pool.records
         // Which records an adapter would have to rewrite, by their index in
         // `records`: they go to a repository of their own below.
-        var adapted = Set<Int>()
-        for record in candidates {
-            do {
-                try records.append(PoolPackage(record, installed: false, in: snapshot))
-                if snapshot.adapts(record) {
-                    adapted.insert(records.count - 1)
-                }
-            } catch {
-                unreadable[record] = (error as? ResolutionFailure)?.reason ?? .unknown
-            }
-        }
-        let universe = PackageUniverse(packages: records, architecture: snapshot.architecture)
+        let adapted = pool.adapted
+        let universe = pool.universe
         let environment = try SolverEnvironment(distribution: .debian, architecture: snapshot.architecture)
         let installedRepository = try environment.addRepository(name: "installed")
         let availableRepository = try environment.addRepository(name: "available")
@@ -96,38 +95,10 @@ public enum PackageResolver {
         let adaptedRepository = try environment.addRepository(name: "adapted", priority: -1)
         try environment.setInstalledRepository(installedRepository)
         var ids: [PackageID] = []
+        ids.reserveCapacity(records.count)
         let installed = Set(records.indices.filter { records[$0].installed })
         let installedByName = Dictionary(uniqueKeysWithValues: installed.map { (records[$0].name, $0) })
         for (index, record) in records.enumerated() {
-            var definition = PackageDefinition(
-                name: record.name,
-                version: PoolPackage.solvVersion(record.version),
-                architecture: record.architecture
-            )
-            definition.provides = [.named(token(index))]
-            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
-                let dependencies = (record.relations[kind] ?? []).map { relation -> Dependency in
-                    let witnesses = universe.witnesses(relation)
-                    return disjunction(
-                        witnesses.map { .named(token($0)) },
-                        missing: "missing:\(record.name):\(relation.original)"
-                    )
-                }
-                if kind == .depends {
-                    definition.requires = dependencies
-                } else {
-                    definition.prerequisites = dependencies
-                }
-            }
-            // Breaks restricts the final configured set. Its weaker unpack-time
-            // semantics are preserved separately by TransactionPlanner.
-            for kind in [PoolPackage.Group.Kind.conflicts, .breaks] {
-                for relation in record.relations[kind] ?? [] {
-                    definition.conflicts += universe.witnesses(relation)
-                        .filter { $0 != index }
-                        .map { .named(token($0)) }
-                }
-            }
             let repository = if record.installed {
                 installedRepository
             } else if adapted.contains(index) {
@@ -135,7 +106,7 @@ public enum PackageResolver {
             } else {
                 availableRepository
             }
-            try ids.append(environment.addPackage(definition, to: repository))
+            try ids.append(environment.addPackage(pool.definition(of: index), to: repository))
         }
         var jobs: [Job] = []
         var explicitInstall = Set<Int>()
@@ -151,11 +122,12 @@ public enum PackageResolver {
                     payload: [version: metadata],
                     repoRef: package.repoRef
                 )
-                guard let index = records.indices.first(where: {
-                    !records[$0].installed && records[$0].package == requested
-                }) else {
-                    // the version is offered and does not parse: say so
-                    throw ResolutionFailure(unreadable[requested] ?? .versionUnavailable(package: name))
+                let index: Int
+                switch pool.offer(of: requested) {
+                case let .record(found): index = found
+                // the version is offered and does not parse: say so
+                case let .unreadable(reason): throw ResolutionFailure(reason)
+                case nil: throw ResolutionFailure(.versionUnavailable(package: name))
                 }
                 explicitInstall.insert(index)
                 jobs.append(Job(.install, .package(ids[index])))
@@ -220,7 +192,7 @@ public enum PackageResolver {
                 var detail = problem
                 for index in records.indices.reversed() {
                     detail = detail.replacingOccurrences(
-                        of: token(index),
+                        of: ResolutionPool.token(index),
                         with: "\(records[index].name) (\(records[index].version))"
                     )
                 }
@@ -310,15 +282,15 @@ public enum PackageResolver {
         }
         let stages = try TransactionPlanner.plan(universe: universe, selected: selected)
         let selectedByName = Dictionary(uniqueKeysWithValues: selected.map { (records[$0].name, $0) })
-        var newestAvailable: [String: String] = [:]
-        // a frozen version is not one the update left behind
-        for (index, record) in records.enumerated() where !record.installed && !frozen.contains(index) {
-            if newestAvailable[record.name].map({ DebianVersion.compare(record.version, $0) > 0 }) ?? true {
-                newestAvailable[record.name] = record.version
-            }
-        }
         var heldBack: [String] = []
         if request.updateAll {
+            var newestAvailable: [String: String] = [:]
+            // a frozen version is not one the update left behind
+            for (index, record) in records.enumerated() where !record.installed && !frozen.contains(index) {
+                if newestAvailable[record.name].map({ DebianVersion.compare(record.version, $0) > 0 }) ?? true {
+                    newestAvailable[record.name] = record.version
+                }
+            }
             for index in installed.sorted() {
                 let name = records[index].name
                 if let current = selectedByName[name], let newest = newestAvailable[name],
@@ -354,8 +326,8 @@ public enum PackageResolver {
             involved.formUnion(installedNames)
         }
         var diagnostics: [ResolutionFailure.Reason] = []
-        for record in candidates where involved.contains(record.identity) {
-            if let reason = unreadable[record], !diagnostics.contains(reason) {
+        for (record, reason) in pool.unreadableInOrder where involved.contains(record.identity) {
+            if !diagnostics.contains(reason) {
                 diagnostics.append(reason)
             }
         }
@@ -452,14 +424,5 @@ public enum PackageResolver {
             }
         }
         return dependents
-    }
-
-    private static func token(_ index: Int) -> String {
-        "irisin-record:\(index)"
-    }
-
-    private static func disjunction(_ values: [Dependency], missing: String) -> Dependency {
-        guard let first = values.first else { return .named(missing) }
-        return values.dropFirst().reduce(first) { .anyOf($0, $1) }
     }
 }

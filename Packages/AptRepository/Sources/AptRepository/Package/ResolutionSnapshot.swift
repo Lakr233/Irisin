@@ -37,6 +37,11 @@ public struct ResolutionSnapshot: Sendable {
     public let autoInstalled: Set<String>
     public let statusDigest: String
     public let catalogueRevision: Int64
+    /// The database the catalogue was read from, nil for a snapshot made
+    /// by hand. Two snapshots of one database at one revision hold the same
+    /// packages: every write to them moves the revision in its own
+    /// transaction.
+    public let catalogueIdentity: UUID?
 
     public init(
         packages: [Package],
@@ -49,7 +54,8 @@ public struct ResolutionSnapshot: Sendable {
         origins: [String: URL] = [:],
         autoInstalled: Set<String> = [],
         statusDigest: String = "",
-        catalogueRevision: Int64 = 0
+        catalogueRevision: Int64 = 0,
+        catalogueIdentity: UUID? = nil
     ) {
         self.packages = packages
         self.installed = installed
@@ -62,6 +68,15 @@ public struct ResolutionSnapshot: Sendable {
         self.autoInstalled = autoInstalled
         self.statusDigest = statusDigest
         self.catalogueRevision = catalogueRevision
+        self.catalogueIdentity = catalogueIdentity
+    }
+
+    /// Whether `other` was read from the same database at the same
+    /// revision, and so holds the same packages. Never for a snapshot made
+    /// by hand.
+    public func sharesCatalogue(with other: ResolutionSnapshot) -> Bool {
+        catalogueIdentity != nil && catalogueIdentity == other.catalogueIdentity
+            && catalogueRevision == other.catalogueRevision
     }
 
     /// Whether `package` reaches this bootstrap through an adapter: accepted,
