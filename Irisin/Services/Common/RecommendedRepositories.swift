@@ -60,7 +60,14 @@ nonisolated enum RecommendedRepositories {
             let entries = try PropertyListDecoder().decode([Entry].self, from: Data(contentsOf: list))
             return entries.isEmpty ? nil : entries
         } catch {
-            Dog.shared.join("Repository", "recommended list \(list.lastPathComponent) does not read: \(error)", level: .error)
+            // the description, not the error's dump: its "Underlying error:"
+            // reads as a compiler error to the build log's scan, and a test
+            // feeds this a broken list on purpose
+            Dog.shared.join(
+                "Repository",
+                "recommended list \(list.lastPathComponent) does not read: \(error.localizedDescription)",
+                level: .error
+            )
             return nil
         }
     }
