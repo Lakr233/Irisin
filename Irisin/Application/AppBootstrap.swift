@@ -34,6 +34,9 @@ enum AppBootstrap {
             await PackageCenter.default.load()
             await RepositoryCenter.default.load()
 
+            // the first tap on Install finds the catalogue already read
+            PackageQueue.shared.schedulePreflight()
+
             // MARK: - PRIVILEGED BACKEND
 
             PrivilegedBackend.start()

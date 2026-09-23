@@ -321,6 +321,22 @@ end.
   `Select` past the statement that made it. `Repository` keeps only its
   source, Release metadata and `packageCount`; the packages are in the
   database, never on the struct.
+- **The resolver reads the catalogue ahead, and never solves with a stale
+  read.** What a solve does for every request alike (the catalogue
+  decoded, every candidate's relations parsed and matched against every
+  provider) is a `ResolutionPool`, read off the main actor by
+  `PackageQueue`'s preflight once the packages settle (two quiet seconds,
+  no refresh or operation running) and kept on the main actor; a tap
+  solves only its own jobs against it, a tenth of the time. A pool
+  answers only a snapshot of the same database at the same catalogue
+  revision, with the same installed list, origins, architectures and
+  adapted paragraphs (`serves`), and a request for a package it does not
+  hold gets a pool of its own: anything else is read again, so a pool
+  kept too long costs time, never a plan. It is the one place the
+  catalogue stays in memory between solves, and a memory warning drops
+  it. `ResolverProbe bench` and `golden` measure and check it against real
+  repositories (`Scripts/fetch-repository-indexes.py`); every resolver
+  test solves both ways (`resolveBothWays`).
 
 ## Layout
 

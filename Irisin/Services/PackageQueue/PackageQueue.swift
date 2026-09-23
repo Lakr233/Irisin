@@ -12,6 +12,7 @@ import Combine
 import Dog
 import Foundation
 import IrisinAdapter
+import UIKit
 
 nonisolated extension Notification.Name {
     /// The queue, its plan or its revision changed. Posted on the main actor.
@@ -25,6 +26,12 @@ nonisolated extension Notification.Name {
 /// index off the main actor. The revision tells a proposal made against an
 /// older queue, or older packages, from a current one; nothing changes the
 /// queue while an operation stages or runs.
+///
+/// What a solve does for every request alike, reading the catalogue and
+/// matching every relation in it (`ResolutionPool`), is done ahead, off the
+/// main actor, once the packages stop moving, so a tap solves only its own
+/// jobs. A pool read from anything but the packages as they are is never
+/// solved with: the resolver checks it against the snapshot of each solve.
 final class PackageQueue {
     static let shared = PackageQueue()
 
@@ -63,13 +70,29 @@ final class PackageQueue {
 
     private let allowSystemRemovalStore = Stored(key: "package.allowSystemRemoval", defaultValue: false)
 
-    private var subscription: AnyCancellable?
+    private var subscriptions = Set<AnyCancellable>()
     private var refreshTask: Task<Void, Never>?
 
+    /// The last pool read, and the generation of the read: a read started
+    /// later replaces it, one started earlier never does.
+    private var pool: (generation: Int, value: ResolutionPool)?
+    /// The preflight's read in flight: a solve waits for it rather than
+    /// reading the same pool again.
+    private var poolRead: (generation: Int, task: Task<ResolutionPool?, Never>)?
+    /// The packages moved and the preflight waits for them to settle.
+    private var preflightDelay: Task<Void, Never>?
+    private var generations = 0
+
     private init() {
-        subscription = NotificationCenter.default.publisher(for: PackageCenter.packageRecordChanged)
+        NotificationCenter.default.publisher(for: PackageCenter.packageRecordChanged)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.packagesChanged() }
+            .store(in: &subscriptions)
+        // the pool holds the whole catalogue: the next solve reads it again
+        NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.dropPool() }
+            .store(in: &subscriptions)
     }
 
     /// A change, solved and not yet in the queue.
@@ -413,6 +436,7 @@ final class PackageQueue {
 
     private func packagesChanged() {
         changed()
+        schedulePreflight()
         guard plan != nil else { return }
         refreshTask?.cancel()
         refreshTask = Task { await refresh() }
@@ -477,15 +501,24 @@ final class PackageQueue {
 
     private func solve(_ request: ResolutionRequest) async -> Result<ResolutionPlan, ResolutionFailure> {
         guard !Installer.shared.inProcessingQueue else { return .failure(Self.busy) }
+        let prepared = await preparedPool()
+        // the wait is for the pool, and the pool is kept: whoever asked
+        // and left since is not solved for
+        guard !Task.isCancelled else { return .failure(ResolutionFailure(.unknown)) }
+        // read after the wait: the index carries the update settings
         let index = PackageCenter.default.index
         var request = request
         request.allowSystemRemoval = allowSystemRemoval
+        generations += 1
+        let generation = generations
         do {
-            let plan = try await Self.resolve(
+            let (plan, read) = try await Self.resolve(
                 request: request,
                 index: index,
-                adaptedManifests: patched.mapValues(\.control)
+                adaptedManifests: patched.mapValues(\.control),
+                pool: prepared
             )
+            adopt(read, generation: generation)
             guard !Installer.shared.inProcessingQueue,
                   try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
                   // Revalidate actor-owned facts after the asynchronous status check.
@@ -497,10 +530,95 @@ final class PackageQueue {
                 throw Self.moved
             }
             return .success(plan)
+        } catch is CancellationError {
+            // whoever asked has gone and reads nothing of this
+            return .failure(ResolutionFailure(.unknown))
         } catch {
             Dog.shared.join(self, String(describing: error), level: .error)
             return .failure(error as? ResolutionFailure ?? ResolutionFailure(.unknown))
         }
+    }
+
+    // MARK: - Preflight
+
+    /// How long the packages stay still before the pool is read again: a
+    /// refresh writes one repository after another.
+    private static let settleDelay: Duration = .seconds(2)
+
+    /// The packages moved: the pool is read again once they stop, and not
+    /// while a refresh is still writing them or an operation runs, which
+    /// moves them again when it ends. Also called once the engines are up.
+    func schedulePreflight() {
+        preflightDelay?.cancel()
+        preflightDelay = Task { [weak self] in
+            do {
+                try await Task.sleep(for: Self.settleDelay)
+                while RepositoryCenter.default.obtainUpdateRemain() > 0 || Installer.shared.inProcessingQueue {
+                    try await Task.sleep(for: Self.settleDelay)
+                }
+            } catch {
+                return
+            }
+            self?.readPool()
+        }
+    }
+
+    /// Starts reading the pool now, in place of any read already going: the
+    /// packages it was started for have moved since.
+    @discardableResult
+    private func readPool() -> Task<ResolutionPool?, Never> {
+        preflightDelay?.cancel()
+        preflightDelay = nil
+        poolRead?.task.cancel()
+        generations += 1
+        let generation = generations
+        let index = PackageCenter.default.index
+        let manifests = patched.mapValues(\.control)
+        let previous = pool?.value
+        // nobody waits for it yet; a solve that does raises it to its own
+        let task = Task(priority: .utility) { [weak self] () -> ResolutionPool? in
+            let read = await Self.readPool(index: index, adaptedManifests: manifests, previous: previous)
+            if let self {
+                adopt(read, generation: generation)
+                if poolRead?.generation == generation {
+                    poolRead = nil
+                }
+            }
+            return read
+        }
+        poolRead = (generation, task)
+        return task
+    }
+
+    /// The pool a solve starts from: the read in flight, started now if the
+    /// packages moved and the preflight is still waiting, or else the last
+    /// one read. It may be out of date all the same (the dpkg status can
+    /// change without a word); the solve then reads the one it needs.
+    private func preparedPool() async -> ResolutionPool? {
+        if preflightDelay != nil, !Installer.shared.inProcessingQueue {
+            readPool()
+        }
+        // a read the packages moving cancelled has a newer one after it
+        while let current = poolRead {
+            if let read = await current.task.value {
+                return read
+            }
+            guard poolRead.map({ $0.generation != current.generation }) == true else { break }
+        }
+        return pool?.value
+    }
+
+    private func adopt(_ read: ResolutionPool?, generation: Int) {
+        guard let read, generation > pool?.generation ?? 0 else { return }
+        pool = (generation, read)
+    }
+
+    private func dropPool() {
+        preflightDelay?.cancel()
+        preflightDelay = nil
+        poolRead?.task.cancel()
+        poolRead = nil
+        pool = nil
     }
 
     private static let busy = ResolutionFailure(
@@ -525,15 +643,44 @@ final class PackageQueue {
         NotificationCenter.default.post(name: .PackageQueueChanged, object: nil)
     }
 
+    /// The plan, and the pool this solve read when `pool` did not serve the
+    /// packages as they are: the queue keeps it for the next.
     @concurrent
     private nonisolated static func resolve(
         request: ResolutionRequest,
         index: PackageIndex,
-        adaptedManifests: [Package: [String: String]]
-    ) async throws -> ResolutionPlan {
-        var snapshot = try index.resolutionSnapshot()
+        adaptedManifests: [Package: [String: String]],
+        pool: ResolutionPool?
+    ) async throws -> (ResolutionPlan, ResolutionPool?) {
+        var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: pool?.snapshot)
         snapshot.adaptedManifests = adaptedManifests
-        return try PackageResolver.resolve(request: request, snapshot: snapshot)
+        let served = pool?.serves(snapshot) == true
+        var kept = pool
+        let plan = try PackageResolver.resolve(request: request, snapshot: snapshot, keeping: &kept)
+        // a request for a package outside the catalogue leaves a stale pool
+        // as it was, and a stale pool is nothing to keep
+        return (plan, !served && kept?.serves(snapshot) == true ? kept : nil)
+    }
+
+    /// The pool of the packages as they are, or `previous` when it still
+    /// serves them; nil when the read was cancelled or failed, and the next
+    /// solve reads it then.
+    @concurrent
+    private nonisolated static func readPool(
+        index: PackageIndex,
+        adaptedManifests: [Package: [String: String]],
+        previous: ResolutionPool?
+    ) async -> ResolutionPool? {
+        do {
+            var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: previous?.snapshot)
+            snapshot.adaptedManifests = adaptedManifests
+            if let previous, previous.serves(snapshot) {
+                return previous
+            }
+            return try ResolutionPool(snapshot: snapshot)
+        } catch {
+            return nil
+        }
     }
 
     @concurrent
