@@ -2,10 +2,35 @@ import AptRepository
 import AptResolver
 import Foundation
 
+/// Two tools in one. With a JSON file, the oracle comparison: solve what
+/// the file describes and print the plan. With a subcommand, the
+/// catalogue benchmark (`CatalogueBench`): `catalogue`, `bench` and
+/// `golden` against real repositories' indexes on disk.
 @main
 struct ResolverProbe {
-    static func main() throws {
-        let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
+    static func main() async throws {
+        // a line at a time, into a pipe too: a long run shows its progress
+        setvbuf(stdout, nil, _IOLBF, 0)
+        let arguments = Array(CommandLine.arguments.dropFirst())
+        switch arguments.first {
+        case "catalogue", "bench", "golden":
+            try await CatalogueBench.run(arguments)
+        case let path?:
+            try oracle(path)
+        case nil:
+            FileHandle.standardError.write(Data("""
+            usage: ResolverProbe <input.json>
+                   ResolverProbe catalogue <fixture>
+                   ResolverProbe bench <fixture> [iterations]
+                   ResolverProbe golden <fixture> <output.json>
+
+            """.utf8))
+            exit(64)
+        }
+    }
+
+    static func oracle(_ path: String) throws {
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
         let input = try JSONDecoder().decode(ProbeInput.self, from: data)
         let start = Date()
         let packages = input.available.map { input.package($0, installed: false) }

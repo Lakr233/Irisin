@@ -56,7 +56,13 @@ let package = Package(
                 .product(name: "IrisinProtocol", package: "IrisinKit"),
             ]
         ),
-        .executableTarget(name: "ResolverProbe", dependencies: ["AptResolver"], path: "Tools/ResolverProbe"),
+        // the catalogue benchmark solves with the shipped adapters' preview,
+        // as the app does
+        .executableTarget(
+            name: "ResolverProbe",
+            dependencies: ["AptResolver", .product(name: "IrisinAdapter", package: "IrisinKit")],
+            path: "Tools/ResolverProbe"
+        ),
         .executableTarget(
             name: "NativeInstallerProbe",
             dependencies: [
