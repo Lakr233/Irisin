@@ -30,6 +30,16 @@ public struct Package: Codable, Hashable, Identifiable, Sendable {
 
     public let latestVersion: String?
 
+    /// What names the package, not what it says: a list's snapshot hashes
+    /// every row, and the synthesized hash walked each version's control
+    /// fields. Equality still compares everything, so a package whose
+    /// fields changed is still a different value.
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(identity)
+        hasher.combine(repoRef)
+        hasher.combine(latestVersion)
+    }
+
     // MARK: - Init
 
     public init(
