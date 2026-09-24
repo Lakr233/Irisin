@@ -15,7 +15,8 @@ import UIKit
 
 /// The add-repository sheet. Add in the bar registers the source in the
 /// field. The clipboard, read on request, and History offer sources, each
-/// with its own Add that registers it on the spot. A source is a bare
+/// with its own Add that registers it on the spot, after which the bar
+/// offers Done in Add's place until the field is typed in again. A source is a bare
 /// address or a sources.list line (`deb URL suite components`); the last
 /// row hands over to the advanced sheet for typing the latter piecewise.
 class RepositoryAddController: UITableViewController {
@@ -57,12 +58,22 @@ class RepositoryAddController: UITableViewController {
     private var candidateOrigin: Origin = .clipboard
     private var history: [String] = []
     private var previews: [String: RepositoryAddCandidateCell.Preview] = [:]
+    /// A row's own Add has registered a source since the field was last
+    /// typed in: the bar offers Done, not Add.
+    private var offersDone = false
 
     private lazy var addButton = UIBarButtonItem(
         title: String(localized: "Add"),
         style: .done,
         target: self,
         action: #selector(confirm)
+    )
+
+    /// In Add's place once a row has registered its source.
+    private lazy var doneButton = UIBarButtonItem(
+        barButtonSystemItem: .done,
+        target: self,
+        action: #selector(close)
     )
 
     /// Beside Add: a repository list or a repository this app exported.
@@ -133,9 +144,8 @@ class RepositoryAddController: UITableViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
-            action: #selector(cancel)
+            action: #selector(close)
         )
-        navigationItem.rightBarButtonItems = [addButton, importButton]
         // nothing typed yet: Add waits for a probed source
         updateAddButton()
 
@@ -265,6 +275,8 @@ class RepositoryAddController: UITableViewController {
         registered.insert(source.url)
         reconfigure(line)
         updateCandidatesHeader()
+        offersDone = true
+        updateAddButton()
     }
 
     /// Add All, in the header over the offered sources: every one of them
@@ -371,11 +383,19 @@ class RepositoryAddController: UITableViewController {
 
     private func updateAddButton() {
         addButton.isEnabled = readySource != nil
+        let trailing = offersDone ? doneButton : addButton
+        guard navigationItem.rightBarButtonItems?.first !== trailing else { return }
+        navigationItem.rightBarButtonItems = [trailing, importButton]
     }
 
     /// Typing pauses for a moment before the source is looked up, so a
     /// half-typed host is not fetched.
     private func inputChanged(_ text: String) {
+        // typing in the field brings Add back
+        if text != inputText, offersDone {
+            offersDone = false
+            updateAddButton()
+        }
         inputText = text
         probeTask?.cancel()
         let target = Self.sources(in: text).first?.line
@@ -427,8 +447,9 @@ class RepositoryAddController: UITableViewController {
         dismiss(animated: true)
     }
 
+    /// Cancel, and Done once a row has registered its source.
     @objc
-    private func cancel() {
+    private func close() {
         dismiss(animated: true)
     }
 
