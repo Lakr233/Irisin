@@ -37,11 +37,19 @@ final class RepositoryUpdateFill: UIView {
             x.leading.top.bottom.equalToSuperview()
             fillWidth = x.width.equalToSuperview().multipliedBy(0.001).constraint
         }
+        // Every repository's download ticks through metadataUpdate: a row
+        // moves for its own, and for the queue, which names none.
         Publishers.MergeMany([RepositoryCenter.metadataUpdate, .RepositoryQueueChanged].map {
             NotificationCenter.default.publisher(for: $0)
         })
         .receive(on: DispatchQueue.main)
-        .sink { [weak self] _ in self?.update(animated: true) }
+        .sink { [weak self] notification in
+            guard let self else { return }
+            if let update = notification.object as? RepositoryCenter.UpdateNotification,
+               update.repository != url
+            { return }
+            update(animated: true)
+        }
         .store(in: &subscriptions)
     }
 

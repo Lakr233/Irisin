@@ -137,13 +137,7 @@ class RepositoryRow: UIView {
         isAccessibilityElement = true
         accessibilityTraits = .button
         accessibilityLabel = describe(health)
-        if let data = repo?.avatar,
-           let image = UIImage(data: data)
-        {
-            icon.image = image
-        } else {
-            icon.image = UIImage.fluent(.bookCompass24Filled)
-        }
+        showAvatar(repo?.avatar ?? Data(), of: withUrl)
         indicator.backgroundColor = switch health {
         case .pending: .repositoryPending
         case .ready: .repositoryReady
@@ -153,13 +147,47 @@ class RepositoryRow: UIView {
         }
     }
 
+    /// The repository whose avatar `icon` shows, nil for the stand-in.
+    private var iconUrl: URL?
+    private var iconTask: Task<Void, Never>?
+
+    /// A row redrawn for its own repository keeps its picture while a new
+    /// avatar is made; one reused for another shows the stand-in until then.
+    private func showAvatar(_ data: Data, of url: URL) {
+        iconTask?.cancel()
+        iconTask = nil
+        if let icon = data.isEmpty ? .some(nil) : RepositoryAvatar.cached(for: url, data: data) {
+            setIcon(icon, of: url)
+            return
+        }
+        if iconUrl != url {
+            setIcon(nil, of: nil)
+        }
+        iconTask = Task { [weak self] in
+            let icon = await RepositoryAvatar.icon(for: url, data: data)
+            guard !Task.isCancelled, let self, repoUrl == url else { return }
+            setIcon(icon, of: url)
+        }
+    }
+
+    private func setIcon(_ image: UIImage?, of url: URL?) {
+        let image = image ?? UIImage.fluent(.bookCompass24Filled)
+        iconUrl = url
+        // the same picture handed back is not a new one to commit
+        if icon.image !== image {
+            icon.image = image
+        }
+    }
+
     func setNoRepoAvailable() {
         repoUrl = nil
         indicator.backgroundColor = .clear
         arrow.isHidden = true
         title.text = String(localized: "No repositories")
         subtitle.text = String(localized: "Use the add button above to add a repository.")
-        icon.image = UIImage.fluent(.bookCompass24Filled)
+        iconTask?.cancel()
+        iconTask = nil
+        setIcon(nil, of: nil)
         // the hint opens nothing: read as one line, not as a button
         isAccessibilityElement = true
         accessibilityTraits = .staticText
