@@ -38,7 +38,8 @@ nonisolated extension Notification.Name {
 /// read, the queue is not solved again for each write, and an open sheet
 /// is not either. The plan says which catalogue it was solved with, and
 /// `currency(of:)` holds it against the one there is when the user
-/// confirms and when the plan stages. dpkg's status is never held.
+/// confirms and when the plan stages. An operation finishing is never
+/// held.
 final class PackageQueue {
     static let shared = PackageQueue()
 
@@ -89,9 +90,10 @@ final class PackageQueue {
     /// The packages moved and the preflight waits for them to settle.
     private var preflightDelay: Task<Void, Never>?
     private var generations = 0
-    /// A repository was written while the repositories refreshed, and the
-    /// queue has not been solved again for it yet.
-    private var heldChange = false
+    /// A repository was written while the repositories refreshed and the
+    /// queue has not been solved again for it: this waits out the refresh
+    /// and solves it then, unless word of the last write does first.
+    private var heldChange: Task<Void, Never>?
 
     private init() {
         NotificationCenter.default.publisher(for: PackageCenter.packageRecordChanged)
@@ -444,25 +446,49 @@ final class PackageQueue {
 
     // MARK: - Solving
 
-    /// The packages moved. A repository written while the repositories
-    /// refresh is held until the last is written, then the queue and an
-    /// open sheet solve once; the preflight that waits out the refresh
-    /// catches up a hold nothing else released. `installed`, dpkg's status
-    /// moving, is never held.
+    /// The packages moved. A write while the repositories refresh is held
+    /// until the last is written, then the queue and an open sheet solve
+    /// once. `installed`, an operation that finished, is never held; dpkg's
+    /// status moved some other way is caught when Confirm or staging checks
+    /// the plan (`currency(of:)`).
     private func packagesChanged(installed: Bool = false) {
         schedulePreflight()
         if Self.isRefreshing {
-            guard installed else {
-                heldChange = true
-                return
-            }
+            guard installed else { return hold() }
         } else {
-            heldChange = false
+            heldChange?.cancel()
+            heldChange = nil
         }
         changed()
         guard plan != nil else { return }
         refreshTask?.cancel()
         refreshTask = Task { await refresh() }
+    }
+
+    private func hold() {
+        guard heldChange == nil else { return }
+        heldChange = Task { [weak self] in
+            do {
+                while Self.isRefreshing {
+                    try await Task.sleep(for: Self.settleDelay)
+                }
+            } catch {
+                return
+            }
+            guard let self else { return }
+            heldChange = nil
+            packagesChanged()
+        }
+    }
+
+    /// Staging found the plan out of date: the queue is solved again now,
+    /// against the catalogue as it is even while the repositories refresh,
+    /// so Retry stages what that gives and not the same plan again.
+    func solveAgainNow() {
+        if Self.isRefreshing {
+            readPool(awaited: true)
+        }
+        packagesChanged(installed: true)
     }
 
     /// The packages moved: solve the original requests again. A missing
@@ -522,12 +548,26 @@ final class PackageQueue {
         }
     }
 
+    /// A refusal from the catalogue kept through a refresh is not the last
+    /// word: what the request needs may be in a repository written since,
+    /// so it is solved once more against the catalogue as it is now.
     private func solve(_ request: ResolutionRequest) async -> Result<ResolutionPlan, ResolutionFailure> {
-        guard !Installer.shared.inProcessingQueue else { return .failure(Self.busy) }
+        let first = await solveOnce(request)
+        guard first.refusedPinned, !Task.isCancelled else { return first.result }
+        readPool(awaited: true)
+        return await solveOnce(request).result
+    }
+
+    /// `refusedPinned` when the solver refused the request against a
+    /// catalogue kept through a refresh.
+    private func solveOnce(
+        _ request: ResolutionRequest
+    ) async -> (result: Result<ResolutionPlan, ResolutionFailure>, refusedPinned: Bool) {
+        guard !Installer.shared.inProcessingQueue else { return (.failure(Self.busy), false) }
         let (prepared, pinned) = await startingPool()
         // the wait is for the pool, and the pool is kept: whoever asked
         // and left since is not solved for
-        guard !Task.isCancelled else { return .failure(ResolutionFailure(.unknown)) }
+        guard !Task.isCancelled else { return (.failure(ResolutionFailure(.unknown)), false) }
         // read after the wait: the index carries the update settings
         let index = PackageCenter.default.index
         var request = request
@@ -549,21 +589,21 @@ final class PackageQueue {
             guard !Installer.shared.inProcessingQueue,
                   try await Self.changes(since: plan, index: PackageCenter.default.index)
                       .isDisjoint(with: [.installed, .settings]),
-                  // Revalidate actor-owned facts after the asynchronous status check.
-                  !Installer.shared.inProcessingQueue,
-                  plan.snapshot.blockedUpdates == Set(PackageCenter.default.blockedUpdateTable),
-                  plan.snapshot.architecture == AptEnvironment.current.deviceArchitecture,
-                  plan.snapshot.installableArchitectures == AptEnvironment.current.installableArchitectures
+                  // an operation may have begun during the status check
+                  !Installer.shared.inProcessingQueue
             else {
-                throw Self.moved
+                return (.failure(Self.moved), false)
             }
-            return .success(plan)
+            return (.success(plan), false)
         } catch is CancellationError {
             // whoever asked has gone and reads nothing of this
-            return .failure(ResolutionFailure(.unknown))
+            return (.failure(ResolutionFailure(.unknown)), false)
+        } catch let refusal as ResolutionFailure {
+            Dog.shared.join(self, String(describing: refusal), level: .error)
+            return (.failure(refusal), pinned)
         } catch {
             Dog.shared.join(self, String(describing: error), level: .error)
-            return .failure(error as? ResolutionFailure ?? ResolutionFailure(.unknown))
+            return (.failure(ResolutionFailure(.unknown)), false)
         }
     }
 
@@ -600,14 +640,7 @@ final class PackageQueue {
             } catch {
                 return
             }
-            guard let self else { return }
-            // a write held while the repositories refreshed, and no word
-            // came after the last: the queue solves once, and the
-            // preflight that follows reads the pool
-            if heldChange {
-                return packagesChanged()
-            }
-            readPool()
+            self?.readPool()
         }
     }
 

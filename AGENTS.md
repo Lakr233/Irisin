@@ -342,13 +342,17 @@ end.
   middle is stale before it ends. While `obtainUpdateRemain()` is above
   zero, a solve takes the pool last read (`resolutionSnapshot(evenIfWritten:)`),
   and a repository written does not solve the queue or an open sheet
-  again; the queue solves once when the last is written. dpkg's status is
-  never held. A plan so solved is checked, never trusted:
+  again; the queue solves once when the last is written. An operation
+  finishing is never held, and a refusal from the kept catalogue is solved
+  once more against the one there is. A plan so solved is checked, never
+  trusted:
   `PackageQueue.currency(of:)` is current when the installed packages and
   settings are as they were and every package it installs is still
   offered as it was (`PackageIndex.withdrawn`). The sheet's Confirm and
-  staging both ask; a withdrawn package on Confirm is an alert with
-  Check Again, which reads the catalogue now.
+  staging both ask (an install origin still counts as offered); a
+  withdrawn package on Confirm is an alert with Check Again, which reads
+  the catalogue now, and a plan staging refuses is solved again at once
+  (`solveAgainNow`).
 
 ## Layout
 

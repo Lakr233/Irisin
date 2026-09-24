@@ -18,12 +18,10 @@ public extension PackageIndex {
         let statusURL = URL(fileURLWithPath: environment.dpkgStatusLocation)
         let status = try Self.statusContents(at: statusURL)
         var unchanged: (packages: [Package], revision: Int64)?
-        if let previous, previous.catalogueIdentity == db.identity {
-            if evenIfWritten {
-                unchanged = (previous.packages, previous.catalogueRevision)
-            } else if try db.resolutionRevision() == previous.catalogueRevision {
-                unchanged = (previous.packages, previous.catalogueRevision)
-            }
+        if let previous, previous.catalogueIdentity == db.identity,
+           try evenIfWritten || db.resolutionRevision() == previous.catalogueRevision
+        {
+            unchanged = (previous.packages, previous.catalogueRevision)
         }
         let catalogue = try unchanged ?? db.resolutionCatalogue()
         guard try status == Self.statusContents(at: statusURL) else {
@@ -84,12 +82,18 @@ public extension PackageIndex {
     /// The packages of `packages` their repository no longer offers as
     /// they are here: gone from it, or listed with other fields (a new
     /// file, a new hash). One with no repository, a file the user opened,
-    /// is never withdrawn.
+    /// is never withdrawn, and neither is the install origin of what is
+    /// installed: a reinstall needs no repository to still list it.
     func withdrawn(_ packages: [Package]) -> [Package] {
         packages.filter { package in
             guard let repository = package.repoRef, package.localFileURL == nil else { return false }
-            guard let offered = db.package(identity: package.identity, repo: repository) else { return true }
-            return package.payload.contains { version, metadata in offered.payload[version] != metadata }
+            let records = [
+                db.package(identity: package.identity, repo: repository),
+                db.installOrigin(identity: package.identity),
+            ].compactMap { $0 }.filter { $0.repoRef == repository }
+            return package.payload.contains { version, metadata in
+                !records.contains { $0.payload[version] == metadata }
+            }
         }
     }
 

@@ -96,6 +96,13 @@ final class ResolutionPoolDatabaseTests: XCTestCase {
 
         let file = Package(identity: "com.example.file", payload: ["1": ["package": "com.example.file", "version": "1"]])
         XCTAssertEqual(index.withdrawn([file]), [])
+
+        // the installed version, reinstalled from its origin after the
+        // repository moved on
+        offer([app, package("com.example.library", "2")])
+        XCTAssertEqual(index.withdrawn([library]), [library])
+        db.replaceInstalled([library.identity: library], installedFrom: [library])
+        XCTAssertEqual(index.withdrawn([library]), [])
     }
 
     /// Two databases written as often stand at the same revision.

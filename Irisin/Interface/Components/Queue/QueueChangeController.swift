@@ -347,6 +347,13 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             let currency = await PackageQueue.shared.currency(of: proposal)
             guard let self else { return }
             confirming = nil
+            // a tick or a queue that moved during the check: Confirm takes
+            // what the sheet shows now
+            guard work == nil, self.proposal?.plan?.id == proposal.plan?.id,
+                  self.proposal?.cleanup == proposal.cleanup
+            else {
+                return commit(confirmed: confirmed)
+            }
             switch currency {
             case .current:
                 take(proposal)

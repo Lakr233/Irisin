@@ -50,6 +50,7 @@ final class Installer {
                 // read again, so the queue is solved against what moved and
                 // Retry stages that plan, not this one again
                 await PackageCenter.default.reloadLocalPackages()
+                PackageQueue.shared.solveAgainNow()
                 throw ResolutionFailure(message: String(localized: "Packages changed. Review the changes and try again."))
             }
             for package in plan.install {
@@ -66,6 +67,7 @@ final class Installer {
             // checked again after the await: staging takes a while
             guard try await PackageQueue.currency(of: plan, index: PackageCenter.default.index) == .current else {
                 await PackageCenter.default.reloadLocalPackages()
+                PackageQueue.shared.solveAgainNow()
                 throw ResolutionFailure(
                     message: String(localized: "Packages changed while preparing the installation. Try again.")
                 )
