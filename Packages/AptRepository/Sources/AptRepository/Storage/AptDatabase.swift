@@ -122,6 +122,8 @@ final class AptDatabase: @unchecked Sendable {
     // MARK: - Packages
 
     /// One transaction: the repository's old rows go, the new ones come.
+    /// Every other write waits on it, the ones the main actor asks for
+    /// included, so it holds the lock for as little as it can.
     func replacePackages(of url: URL, with packages: [String: Package]) {
         let repo = url.absoluteString
         var rows = [PackageRow]()
@@ -138,9 +140,13 @@ final class AptDatabase: @unchecked Sendable {
         }
         write(resolutionChanged: true) { handle in
             try Self.deletePackages(of: repo, on: handle)
+            // the search rows first, so every package row keeps the rowid
+            // its search row was given
+            for (offset, rowid) in try Self.insertSearchRows(searches, on: handle).enumerated() {
+                rows[offset].searchRowid = rowid
+            }
             try handle.insert(rows, intoTable: Table.package)
             try handle.insert(virtuals, intoTable: Table.virtual)
-            try handle.insert(searches, intoTable: Table.search)
         }
     }
 
@@ -150,9 +156,53 @@ final class AptDatabase: @unchecked Sendable {
     }
 
     private static func deletePackages(of repo: String, on handle: Handle) throws {
+        // the search rows by the rowids the package rows keep, while they
+        // are still there: `repo` is no index to FTS5, and a delete by it
+        // read the whole search table, every repository's, for each refresh
+        let searchRowids = try handle.getColumn(
+            on: PackageRow.Properties.searchRowid,
+            fromTable: Table.package,
+            where: PackageRow.Properties.repo == repo
+        )
+        if searchRowids.contains(where: { $0.type == .null }) {
+            // written before rows kept their search rowid: the scan, once,
+            // and the rows written next keep theirs
+            try handle.delete(fromTable: Table.search, where: SearchRow.Properties.repo == repo)
+        } else if !searchRowids.isEmpty {
+            try handle.prepare(
+                StatementDelete()
+                    .delete(from: Table.search)
+                    .where(Column.rowid() == BindParameter(1))
+            )
+            defer { handle.finalize() }
+            for rowid in searchRowids {
+                handle.bind(rowid.int64Value, toIndex: 1)
+                try handle.step()
+                handle.reset()
+            }
+        }
         try handle.delete(fromTable: Table.package, where: PackageRow.Properties.repo == repo)
         try handle.delete(fromTable: Table.virtual, where: VirtualRow.Properties.repo == repo)
-        try handle.delete(fromTable: Table.search, where: SearchRow.Properties.repo == repo)
+    }
+
+    /// One statement stepped for each row; the rowid each was given, in order.
+    private static func insertSearchRows(_ searches: [SearchRow], on handle: Handle) throws -> [Int64] {
+        try handle.prepare(
+            StatementInsert()
+                .insert(intoTable: Table.search)
+                .columns(SearchRow.Properties.all)
+                .values(BindParameter.bindParameters(SearchRow.Properties.all.count))
+        )
+        defer { handle.finalize() }
+        var rowids = [Int64]()
+        rowids.reserveCapacity(searches.count)
+        for search in searches {
+            try handle.bind(SearchRow.Properties.all, of: search)
+            try handle.step()
+            rowids.append(handle.lastInsertedRowID)
+            handle.reset()
+        }
+        return rowids
     }
 
     func packages(identity: String) -> [Package] {
@@ -182,13 +232,19 @@ final class AptDatabase: @unchecked Sendable {
     func packages(identities: [String], in repo: URL) -> [Package] {
         guard !identities.isEmpty else { return [] }
         return read([]) {
-            let rows: [PackageRow] = try database.getObjects(
-                on: PackageRow.Properties.all,
-                fromTable: Table.package,
-                where: PackageRow.Properties.identity.in(identities)
-                    && PackageRow.Properties.repo == repo.absoluteString
-            )
-            return rows.map(\.package)
+            // a statement has a limit on its length, and a repository's
+            // recent updates can be all of it
+            var packages = [Package]()
+            for start in stride(from: 0, to: identities.count, by: 500) {
+                let rows: [PackageRow] = try database.getObjects(
+                    on: PackageRow.Properties.all,
+                    fromTable: Table.package,
+                    where: PackageRow.Properties.identity.in(Array(identities[start ..< min(start + 500, identities.count)]))
+                        && PackageRow.Properties.repo == repo.absoluteString
+                )
+                packages.append(contentsOf: rows.map(\.package))
+            }
+            return packages
         }
     }
 
@@ -465,10 +521,14 @@ struct PackageRow: TableCodable {
     var author = ""
     var section = ""
     var payload: [String: [String: String]] = [:]
+    /// The rowid of the package's row in `packageSearch`, which has no other
+    /// index: a refresh drops a repository's search rows by it. Nil on a
+    /// row written before the column was, and on an installed one.
+    var searchRowid: Int64?
 
     enum CodingKeys: String, CodingTableKey {
         typealias Root = PackageRow
-        case repo, identity, version, name, author, section, payload
+        case repo, identity, version, name, author, section, payload, searchRowid
 
         nonisolated(unsafe) static let objectRelationalMapping = TableBinding(CodingKeys.self) {
             BindIndex(identity, namedWith: "_identity")
@@ -579,7 +639,9 @@ struct TraceRow: TableCodable {
 
 /// The FTS5 side of `package`. WCDB's `Verbatim` tokenizer makes every CJK
 /// character its own token, so a two-character Chinese key is a two-token
-/// phrase; `repo` is stored, not indexed, so a refresh can drop its rows.
+/// phrase. `repo` is stored, not indexed: FTS5 finds a row by its rowid
+/// alone, so a repository's rows are dropped by the rowids its package rows
+/// keep (`PackageRow.searchRowid`), never by a scan of the whole table.
 struct SearchRow: TableCodable {
     var identity = ""
     var repo = ""

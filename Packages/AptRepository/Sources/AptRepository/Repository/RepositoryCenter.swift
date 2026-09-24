@@ -13,10 +13,12 @@ let kRepositoryCenterIdentity = "wiki.qaq.irisin.RepositoryCenter"
 /// Repository Center manages every software distribution source.
 ///
 /// Main-actor state and no locks: registering, looking up and queueing a
-/// repository are dictionary operations that finish well inside a frame,
-/// and each commit is one row written to the database. Anything slower —
-/// downloading and compiling an index, writing its packages — runs off the
-/// main actor and commits its result here.
+/// repository are dictionary operations that finish well inside a frame.
+/// Nothing here writes the database on the main actor: a write waits for
+/// SQLite's lock, which a refresh holds while it writes a repository's
+/// packages, so each commit's row is written after it (`write(_:then:)`).
+/// Anything slower — downloading and compiling an index, writing its
+/// packages — runs off the main actor and commits its result here.
 ///
 /// Everything it needs from the outside — where the database lives, which
 /// package flavour this device takes, where settings live, where logs go —
@@ -86,6 +88,9 @@ public final class RepositoryCenter {
     var updateLimitHeldBack = false
     /// from the queue's first dispatch until it is empty again
     var refreshRound: RefreshRound?
+    /// The last database write asked for on the main actor; each one runs
+    /// after the one before it, off the main actor (`write(_:then:)`).
+    var lastWrite: Task<Void, Never>?
 
     /// when updating repository property, set by application to user default, not here
     @AptSetting(key: "\(kRepositoryCenterIdentity).networkingHeaders", defaultValue: [:])

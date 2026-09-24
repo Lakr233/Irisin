@@ -138,7 +138,9 @@ extension RepositoryCenter {
         // at the same address, whose own refresh waits for this one.
         let deleted = deletedUpdates.remove(url) != nil
         if deleted, outcome.packages != nil {
-            AptDatabase.shared.deletePackages(of: url)
+            write { $0.deletePackages(of: url) } then: {
+                PackageCenter.default.repositoryDidChange()
+            }
         }
         if !deleted {
             apply(outcome)

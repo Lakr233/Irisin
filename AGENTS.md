@@ -318,7 +318,15 @@ end.
   every `obtain*` is a query; a repository refresh replaces its rows in one
   transaction. WCDB's `Database` pools a handle per thread, so a query runs
   from any actor without a lock; nothing keeps a `Handle`, `Insert` or
-  `Select` past the statement that made it. `Repository` keeps only its
+  `Select` past the statement that made it. **The main actor reads and
+  never writes.** SQLite has one writer, and a refresh holds the lock for
+  as long as a repository's packages take, so a write asked for there
+  waited up to a second (4.5.5's hangs): `RepositoryCenter.write(_:then:)`
+  runs it off the main actor after every write asked before it, and a
+  refresh writes its packages after every write asked before it began.
+  FTS5 indexes nothing but its rowid, so a refresh drops a repository's
+  search rows by the rowids its package rows keep (`searchRowid`), never
+  by `repo`, which read every repository's rows. `Repository` keeps only its
   source, Release metadata and `packageCount`; the packages are in the
   database, never on the struct. Two things a list row asks for are never
   a query on the main actor. What dpkg reports installed and the install

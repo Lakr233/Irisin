@@ -145,6 +145,9 @@ extension RepositoryCenter {
         lastActivity[url] = now
         advanceUpdate(of: url)
         let db = AptDatabase.shared
+        // the writes asked for before this began, a delete of the
+        // repository it refreshes again among them
+        let written = lastWrite
         updateTasks[url] = Task.detached(priority: .utility) {
             var outcome = await Self.performUpdate(request) { units, absolute in
                 await self.advanceUpdate(of: url, by: units, to: absolute)
@@ -158,6 +161,7 @@ extension RepositoryCenter {
             // to the watchdog; an update that read nothing leaves the rows
             // that are there
             if outcome.succeeded, let packages = outcome.packages {
+                await written?.value
                 Self.beating(request.networking.activity) {
                     db.replacePackages(of: url, with: packages)
                 }

@@ -75,6 +75,33 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    /// A repository added, changed or deleted a moment ago is written behind
+    /// whatever refresh holds the database: the app stays up until it is,
+    /// or the next launch reads the repositories as they were.
+    func sceneDidEnterBackground(_: UIScene) {
+        let application = UIApplication.shared
+        let background = BackgroundTask()
+        background.identifier = application.beginBackgroundTask(withName: "RepositoryWrites") {
+            background.end()
+        }
+        Task {
+            await RepositoryCenter.default.writesLanded()
+            background.end()
+        }
+    }
+
+    /// One background task's identifier, ended once whichever of the work
+    /// and the system's deadline comes first.
+    private final class BackgroundTask {
+        var identifier = UIBackgroundTaskIdentifier.invalid
+
+        func end() {
+            guard identifier != .invalid else { return }
+            UIApplication.shared.endBackgroundTask(identifier)
+            identifier = .invalid
+        }
+    }
+
     func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard PackagedArchitecture.incompatibilityMessage == nil else { return }
         for item in URLContexts {

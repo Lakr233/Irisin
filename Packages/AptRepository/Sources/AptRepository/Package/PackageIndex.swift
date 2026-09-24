@@ -54,6 +54,14 @@ public struct PackageIndex: Sendable {
         db.package(identity: identity, repo: repository)
     }
 
+    /// what one repository offers under each of `identities`, in one read
+    /// for all of them; an identity it does not offer is left out
+    public func obtainPackages(with identities: [String], in repository: URL) -> [String: Package] {
+        Dictionary(
+            db.packages(identities: identities, in: repository).map { ($0.identity, $0) }
+        ) { first, _ in first }
+    }
+
     /// every package a repository offers, or those under one of its sections
     public func obtainPackageList(in repository: URL, section: String? = nil) -> [Package] {
         db.packages(in: repository, section: section)

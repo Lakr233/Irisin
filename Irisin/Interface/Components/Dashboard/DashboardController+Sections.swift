@@ -123,12 +123,19 @@ extension DashboardController {
         guard list.count > 0 else {
             return nil
         }
+        // one read per repository for every package the list names, not
+        // one per package: a first refresh names the whole repository
+        var offered = [URL: [String: Package]]()
+        for (url, entries) in Dictionary(grouping: list.values.joined(), by: \.1) {
+            guard let url else { continue }
+            offered[url] = index.obtainPackages(with: entries.map(\.0), in: url)
+        }
         var builder = [Package]()
         for key in list.keys.sorted(by: { $0 > $1 }) {
             let compiler = list[key, default: []]
                 .compactMap { identity, repoUrl -> Package? in
                     if let url = repoUrl,
-                       let package = index.obtainPackage(with: identity, in: url)
+                       let package = offered[url]?[identity]
                     {
                         package
                     } else {

@@ -150,11 +150,15 @@ public extension RepositoryCenter {
             return nil
         }
         historyRecords.insert(deleted.source.line)
-        // in line, so a re-added repository's refresh cannot land its
-        // rows before this delete runs
-        AptDatabase.shared.delete(repository: withUrl)
-        AptDatabase.shared.deletePackages(of: withUrl)
-        PackageCenter.default.repositoryDidChange()
+        // in order, so a re-added repository's refresh, which writes after
+        // every write asked before it began, cannot land its rows before
+        // this delete runs; the packages are gone once it has
+        write { db in
+            db.delete(repository: withUrl)
+            db.deletePackages(of: withUrl)
+        } then: {
+            PackageCenter.default.repositoryDidChange()
+        }
         return deleted
     }
 
@@ -226,10 +230,34 @@ public extension RepositoryCenter {
 }
 
 extension RepositoryCenter {
-    /// The repository as the center now knows it, in memory and on disk.
-    /// One row; the write finishes inside a frame.
+    /// The repository as the center now knows it: in memory now, and on
+    /// disk once the writes before it are.
     func commit(_ repository: Repository) {
         repositories[repository.url] = repository
-        AptDatabase.shared.save(repository)
+        write { $0.save(repository) }
+    }
+
+    /// Returns once every write asked for so far has run.
+    public func writesLanded() async {
+        await lastWrite?.value
+    }
+
+    /// Runs `body` off the main actor once every write asked for before it
+    /// has run, then `landed` back on it. The main actor never waits on the
+    /// database's lock: a refresh writing a repository's packages holds it
+    /// for as long as that takes.
+    func write(
+        _ body: @escaping @Sendable (AptDatabase) -> Void,
+        then landed: (@MainActor @Sendable () -> Void)? = nil
+    ) {
+        let before = lastWrite
+        let db = AptDatabase.shared
+        lastWrite = Task.detached(priority: .userInitiated) {
+            await before?.value
+            body(db)
+            if let landed {
+                await landed()
+            }
+        }
     }
 }
