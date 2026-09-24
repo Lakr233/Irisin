@@ -142,10 +142,15 @@ class SidebarController: UIViewController {
         dataSource.apply(snapshot, animatingDifferences: false)
         rebuild(animated: false)
 
-        // a refresh changes the package count in the footer
-        Publishers.MergeMany([RepositoryCenter.registrationUpdate, RepositoryCenter.metadataUpdate].map {
+        // a refresh changes the package count in the footer and the queue in the header
+        Publishers.MergeMany([
+            RepositoryCenter.registrationUpdate,
+            RepositoryCenter.metadataUpdate,
+            .RepositoryQueueChanged,
+        ].map {
             NotificationCenter.default.publisher(for: $0)
         })
+        .filter { !$0.isRepositoryProgress }
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in self?.rebuild(animated: true) }
         .store(in: &subscriptions)
@@ -188,8 +193,11 @@ class SidebarController: UIViewController {
         var content = UIListContentConfiguration.sidebarHeader()
         content.text = String(localized: "Repositories")
         cell.contentConfiguration = content
+        // while a refresh runs: what is left of it over the whole list
+        let total = RepositoryCenter.default.obtainRepositoryCount()
+        let remain = RepositoryCenter.default.obtainUpdateRemain()
         cell.accessories = [
-            .label(text: String(RepositoryCenter.default.obtainRepositoryCount())),
+            .label(text: remain > 0 ? "\(remain)/\(total)" : String(total)),
             .outlineDisclosure(options: .init(style: .header)),
         ]
     }

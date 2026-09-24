@@ -142,6 +142,7 @@ class SettingsController: UITableViewController {
         ].map {
             NotificationCenter.default.publisher(for: $0)
         })
+        .filter { !$0.isRepositoryProgress }
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in self?.applySnapshot(animatingDifferences: true) }

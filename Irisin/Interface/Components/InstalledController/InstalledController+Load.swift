@@ -58,7 +58,7 @@ extension InstalledController {
 
         justReload()
 
-        // Repository ticks and package records share one rebuild per second.
+        // Finished refreshes and package records share one rebuild per second.
         Publishers.MergeMany([
             RepositoryCenter.metadataUpdate,
             RepositoryCenter.registrationUpdate,
@@ -66,6 +66,7 @@ extension InstalledController {
         ].map {
             NotificationCenter.default.publisher(for: $0)
         })
+        .filter { !$0.isRepositoryProgress }
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in self?.justReload() }
         .store(in: &subscriptions)

@@ -107,6 +107,7 @@ class RepositoriesController: UIViewController {
         Publishers.MergeMany([RepositoryCenter.registrationUpdate, RepositoryCenter.metadataUpdate].map {
             NotificationCenter.default.publisher(for: $0)
         })
+        .filter { !$0.isRepositoryProgress }
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in self?.reloadDataSource() }
         .store(in: &subscriptions)
