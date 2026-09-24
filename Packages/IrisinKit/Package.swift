@@ -23,7 +23,7 @@ let package = Package(
     dependencies: [
         // Our own LaunchServices and SpringBoard code, linked into the helper
         // as a library: app registration and the graceful respring. iOS only.
-        .package(url: "https://github.com/owngoal-dev/icli.git", exact: "0.6.1"),
+        .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.6.8"),
         // Reads Mach-O for the adapter, as it does for Fila's inspector: where
         // a load command is, how long, what it says. It writes nothing; the
         // adapter's own code rewrites and signs. The adapter's alone.

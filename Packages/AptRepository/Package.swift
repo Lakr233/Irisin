@@ -15,8 +15,8 @@ let package = Package(
         .executable(name: "NativeInstallerProbe", targets: ["NativeInstallerProbe"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Lakr233/libsolv.xcframework", exact: "0.1.1"),
-        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", exact: "0.1.1"),
+        .package(url: "https://github.com/Lakr233/libsolv.xcframework", from: "0.1.1"),
+        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.0"),
         .package(path: "../IrisinKit"),
         // Prebuilt WCDB (sqlite + sqlcipher + the C++ core in one dynamic
         // framework). The catalogue lives in its database; see Storage/.
@@ -26,27 +26,16 @@ let package = Package(
         .package(url: "https://github.com/nicklockwood/LRUCache", from: "1.3.0"),
     ],
     targets: [
-        // Every compression filter a repository index or a .deb can carry,
-        // including zstd, plus the ar and tar containers, in one static
-        // binary. It comes through the package rather than a binary target of
-        // our own because icli, linked into the helper, brings the same
-        // package into the graph, and two targets named `libarchive` do not
-        // resolve. No Swift file imports it: the package's Swift wrapper is
-        // `LibArchive` and its binary module `libarchive`, and on a
-        // case-insensitive volume a Swift compiler asked for the second
-        // opens the first's `.swiftmodule` and refuses it. CAptArchive
-        // declares what the sources call, as C, where no `.swiftmodule` is
-        // ever looked for.
-        .target(
-            name: "CAptArchive",
-            dependencies: [
-                .product(name: "LibArchive", package: "libarchive.xcframework"),
-            ]
-        ),
         .target(
             name: "AptRepository",
             dependencies: [
-                "CAptArchive",
+                // Every compression filter a repository index or a .deb can
+                // carry, including zstd, plus the ar and tar containers, in
+                // one static binary. It comes through the package rather than
+                // a binary target of our own because icli, linked into the
+                // helper, brings the same package into the graph, and two
+                // targets named `libarchive` do not resolve.
+                .product(name: "ArchiveKit", package: "libarchive.xcframework"),
                 .product(name: "IrisinProtocol", package: "IrisinKit"),
                 .product(name: "WCDBSwift", package: "wcdb.xcframework"),
                 "LRUCache",

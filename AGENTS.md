@@ -80,7 +80,7 @@ end.
 - **No tool is spawned for the home screen, and no icli ships.** `uicache`,
   `sbreload` and `killall` are gone and `uikittools` is not a dependency.
   icli is our own repository and is linked into `irisin-install` as the
-  `IcliKit` library (`Packages/IrisinKit/Package.swift`, an exact version,
+  `IcliKit` library (`Packages/IrisinKit/Package.swift`, a minimum version,
   iOS only), never copied into this tree and never packaged as an executable:
   a second icli on the device that the user did not install is a question
   they should not have to ask. `ApplicationRegistrar` makes one of four closed
@@ -521,23 +521,16 @@ is `/var/jb/var/log/irisin-install.log`.
 
 ## Gotchas that bit us
 
-- **One libarchive in the package graph, and no Swift file imports it.**
-  icli depends on the libarchive.xcframework package, whose binary target is
-  named `libarchive`; a second binary target of that name in
+- **One libarchive in the package graph.** icli depends on the
+  libarchive.xcframework package, whose binary target is named
+  `libarchive`; a second binary target of that name in
   `Packages/AptRepository` fails resolution ("multiple packages declare
   targets with a conflicting name"), so AptRepository takes the package's
-  `LibArchive` product too. That product is a Swift wrapper, `LibArchive`,
-  around the binary module `libarchive`: the names differ by case alone,
-  `xcodebuild` puts `LibArchive.swiftmodule` in one flat Products directory,
-  and on a case-insensitive volume Xcode 26's compiler, asked for
-  `libarchive`, opens that file and refuses it — "cannot load module
-  'LibArchive' as 'libarchive'". Importing the wrapper asks the same
-  question through its `@_exported import`. So nothing in Swift imports
-  either: `CAptArchive`, a C target, declares the functions `ArchiveStream`
-  calls, and its `.c` file includes libarchive's own headers so a prototype
-  that drifts stops the build. icli reaches libarchive from Objective-C and
-  never had the problem. If the error comes back, a Swift file has imported
-  `LibArchive` again.
+  `ArchiveKit` product too, at a version icli accepts. Before 1.0.0
+  that product was `LibArchive`, a name that differed from the binary
+  module's by case alone, and on a case-insensitive volume the compiler
+  refused it: "cannot load module 'LibArchive' as 'libarchive'". Swift
+  imports `ArchiveKit` now; the C shim that worked around that is gone.
 - **The project is built with Xcode 27 and CI has 26.6.** The runner image
   has no Xcode 27, so one thing is a workaround and comes out the day it
   does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and
