@@ -7,6 +7,7 @@
 //
 
 import AptRepository
+import Combine
 import Then
 import UIKit
 
@@ -37,8 +38,26 @@ class SearchCell: UITableViewCell {
         $0.textColor = .textSubtitle
     }
 
+    /// The result the row shows, drawn again when its package arrives.
+    private var shown: SearchResult?
+
+    private var subscriptions = Set<AnyCancellable>()
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+        // a package the row asked for and had to wait on
+        NotificationCenter.default.publisher(for: PackageLookupCache.loaded)
+            .receive(on: DispatchQueue.main)
+            .compactMap { $0.userInfo?[PackageLookupCache.keysKey] as? Set<PackageLookupCache.Key> }
+            .sink { [weak self] keys in
+                guard let self, let shown,
+                      case let .package(identity, repository) = shown.associatedValue,
+                      keys.contains(.init(identity: identity, repository: repository))
+                else { return }
+                insertValue(with: shown)
+            }
+            .store(in: &subscriptions)
 
         selectionStyle = .gray
 
@@ -78,6 +97,7 @@ class SearchCell: UITableViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        shown = nil
         image.showIcon(nil)
     }
 
@@ -102,6 +122,7 @@ class SearchCell: UITableViewCell {
     }
 
     func makeEmptyHinter() {
+        shown = nil
         clearText()
         image.showIcon(.fluent(.documentNone24Regular))
         title.text = String(localized: "No results found")
@@ -113,6 +134,7 @@ class SearchCell: UITableViewCell {
     }
 
     func insertValue(with result: SearchResult) {
+        shown = result
         clearText()
         switch result.associatedValue {
         // MARK: - AUTHOR
@@ -130,7 +152,16 @@ class SearchCell: UITableViewCell {
         // MARK: - PACKAGE
 
         case let .package(identity, repository):
-            guard let package = PackageCenter.default.obtainPackage(with: identity, in: repository) else {
+            switch PackageCenter.default.lookups.package(identity: identity, in: repository) {
+            case .loading:
+                // what is known without the package, on every line the row
+                // will have: it is measured now, not when the package comes
+                title.text = identity
+                let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: repository)
+                subtitle.text = repo.map { "[\($0.nickName)]" } ?? " "
+            case let .loaded(package?):
+                insertPackageValue(package)
+            case .loaded(nil):
                 // the index still remembers a row the repository no longer has
                 image.showIcon(.fluent(.documentNone24Regular))
                 title.text = identity
@@ -139,7 +170,6 @@ class SearchCell: UITableViewCell {
                 updateAccessibilityLabel()
                 return
             }
-            insertPackageValue(package)
 
         // MARK: - REPO
 

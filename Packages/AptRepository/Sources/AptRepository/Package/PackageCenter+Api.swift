@@ -10,16 +10,22 @@ import Foundation
 
 public extension PackageCenter {
     /// Re-reads the bootstrap's dpkg status; returns once the new list is in
-    /// place. The parse itself runs off the main actor.
+    /// place, in the database and in `index.installedSnapshot`. The parse
+    /// and both reads run off the main actor; of two reloads that overlap,
+    /// the one asked for last is the one the center keeps.
     /// - Parameter sources: the packages a transaction just installed; each
     ///   repository package dpkg now reports becomes its identity's origin
     func reloadLocalPackages(installedFrom sources: [Package] = []) async {
-        let count = await Self.storeInstalled(
+        installedReloads += 1
+        let reload = installedReloads
+        let snapshot = await Self.storeInstalled(
             from: AptEnvironment.current.dpkgStatusLocation,
             into: index.db,
             installedFrom: sources
         )
-        aptLog(self, "updating installation info reported \(count) pacakges")
+        guard reload == installedReloads else { return }
+        index.installedSnapshot = snapshot
+        aptLog(self, "updating installation info reported \(snapshot.list.count) packages")
         dispatchNotification()
         updatePackageTracking(disableTableTrace: true)
     }

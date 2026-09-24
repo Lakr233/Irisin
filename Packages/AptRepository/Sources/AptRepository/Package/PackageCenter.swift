@@ -45,6 +45,15 @@ public final class PackageCenter {
 
     /// a newer trace cancels the one in flight
     var traceTask: Task<Void, Never>?
+    /// a repository trace was asked for and has not run yet
+    var traceWantsTable = false
+
+    /// reloads of the dpkg status begun, so an older one finishing last
+    /// does not put back what a newer one replaced
+    var installedReloads = 0
+
+    /// The repository packages the lists draw, read off the main actor.
+    public let lookups = PackageLookupCache()
 
     /// update blocker
     private let blockedUpdateStore = AptSetting<[String]>(

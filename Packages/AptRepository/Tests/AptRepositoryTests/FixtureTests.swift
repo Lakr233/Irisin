@@ -42,7 +42,8 @@ final class FixtureTests: XCTestCase {
         try status.write(toFile: path, atomically: true, encoding: .utf8)
         let db = TestEnvironment.database()
 
-        let count = await PackageCenter.storeInstalled(from: path, into: db)
+        let snapshot = await PackageCenter.storeInstalled(from: path, into: db)
+        let count = snapshot.list.count
         let read = await PackageCenter.readInstalled(at: path)
         let parsed = try XCTUnwrap(read)
         XCTAssertEqual(count, parsed.count, "Only actual dpkg records are stored")
@@ -50,6 +51,10 @@ final class FixtureTests: XCTestCase {
         let stored = db.installed()
         XCTAssertEqual(stored.count, count)
         let byIdentity = Dictionary(uniqueKeysWithValues: stored.map { ($0.identity, $0) })
+        // what the center answers from memory is what the database holds
+        XCTAssertEqual(snapshot.packages, byIdentity)
+        XCTAssertEqual(snapshot, InstalledSnapshot(reading: db))
+        XCTAssertEqual(db.installedVersions(), byIdentity.compactMapValues(\.latestVersion))
         for (identity, package) in parsed {
             XCTAssertEqual(byIdentity[identity]?.latestVersion, package.latestVersion, identity)
             XCTAssertEqual(byIdentity[identity]?.latestMetadata, package.latestMetadata, identity)
@@ -75,12 +80,15 @@ final class FixtureTests: XCTestCase {
         }
         let dpkgVersion = try XCTUnwrap(parsed["dpkg"]?.latestVersion)
 
-        _ = await PackageCenter.storeInstalled(from: path, into: db, installedFrom: [
+        let snapshot = await PackageCenter.storeInstalled(from: path, into: db, installedFrom: [
             source("apt", aptVersion),
             source("apt-not-installed", "1.0"),
             source("bash", "0.0-not-what-dpkg-says"),
             source("dpkg", dpkgVersion, repo: nil), // a local .deb: nowhere to come back to
         ])
+        // the origins the write kept, not the sources it was handed
+        XCTAssertEqual(snapshot.origins, db.installOriginPackages())
+        XCTAssertEqual(Set(snapshot.origins.keys), ["apt"])
         let origin = try XCTUnwrap(db.installOrigin(identity: "apt"))
         XCTAssertEqual(origin.repoRef, repo)
         XCTAssertEqual(origin.latestVersion, aptVersion)

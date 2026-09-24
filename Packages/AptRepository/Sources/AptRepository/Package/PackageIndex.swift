@@ -10,10 +10,17 @@ import Foundation
 /// The catalogue lives in the database; this is the handle the center hands
 /// out. Work that walks the whole catalogue off the main actor — search,
 /// dependency resolution, the dashboard, the traces — takes a copy and asks
-/// it, and every answer is a query. The one thing held in the value itself
-/// is the user's update block list.
+/// it, and every answer is a query. What the value holds itself is the
+/// user's update settings and the installed snapshot.
 public struct PackageIndex: Sendable {
     let db: AptDatabase
+
+    /// What dpkg reports installed and where each package came from, as the
+    /// last reload of the status file wrote them. A list row asks about
+    /// both for every package it draws, so they are answered from memory,
+    /// never with a query on the main actor. nil until the first reload
+    /// commits; the database answers until then.
+    public internal(set) var installedSnapshot: InstalledSnapshot?
 
     /// identities the user asked never to be offered an update for
     public internal(set) var blockedUpdateTable: [String] = []
@@ -80,7 +87,7 @@ public struct PackageIndex: Sendable {
     /// returns installed packages
     /// - Returns: array of packages
     public func obtainInstalledPackageList() -> [Package] {
-        db.installed()
+        installedSnapshot?.list ?? db.installed()
     }
 
     /// Every installed package with a newer version on offer, paired with
@@ -104,7 +111,12 @@ public struct PackageIndex: Sendable {
     /// - Parameter identity: id
     /// - Returns: any result if installed, otherwise not installed
     public func obtainPackageInstallationInfo(with identity: String) -> PackageCenter.InstallationInfo? {
-        guard let lookup = db.installed(identity: identity),
+        let installed = if let installedSnapshot {
+            installedSnapshot.packages[identity]
+        } else {
+            db.installed(identity: identity)
+        }
+        guard let lookup = installed,
               let version = lookup.latestVersion
         else {
             return nil
@@ -121,13 +133,16 @@ public struct PackageIndex: Sendable {
     /// without the repository. nil when this app did not install what dpkg
     /// reports, or the version has since changed under it.
     public func obtainInstallOrigin(of identity: String) -> Package? {
-        db.installOrigin(identity: identity)
+        if let installedSnapshot {
+            return installedSnapshot.origins[identity]
+        }
+        return db.installOrigin(identity: identity)
     }
 
     /// Every install origin by identity, for a list that sorts and searches
     /// its installed rows by what they show.
     public func obtainInstallOrigins() -> [String: Package] {
-        db.installOriginPackages()
+        installedSnapshot?.origins ?? db.installOriginPackages()
     }
 
     /// The package a row or a page describes `package` with. dpkg's record
@@ -237,5 +252,28 @@ public struct PackageIndex: Sendable {
                 description: row.description
             )
         }
+    }
+}
+
+/// The installed table and the install origins, read back together after
+/// the database was written, so the two always describe the same dpkg.
+public struct InstalledSnapshot: Equatable, Sendable {
+    /// every installed package by identity
+    public let packages: [String: Package]
+    /// the same packages by identity, in order, for the lists that walk them
+    public let list: [Package]
+    /// the repository package each identity was installed from, where this
+    /// app installed it
+    public let origins: [String: Package]
+
+    init(packages: [Package], origins: [String: Package]) {
+        list = packages.sorted { $0.identity < $1.identity }
+        self.packages = Dictionary(list.map { ($0.identity, $0) }) { first, _ in first }
+        self.origins = origins
+    }
+
+    /// what the database holds now
+    init(reading db: AptDatabase) {
+        self.init(packages: db.installed(), origins: db.installOriginPackages())
     }
 }

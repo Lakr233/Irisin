@@ -177,6 +177,21 @@ final class AptDatabase: @unchecked Sendable {
         }
     }
 
+    /// The packages one repository offers under any of `identities`, in
+    /// one statement: what a list asks for the rows it is about to draw.
+    func packages(identities: [String], in repo: URL) -> [Package] {
+        guard !identities.isEmpty else { return [] }
+        return read([]) {
+            let rows: [PackageRow] = try database.getObjects(
+                on: PackageRow.Properties.all,
+                fromTable: Table.package,
+                where: PackageRow.Properties.identity.in(identities)
+                    && PackageRow.Properties.repo == repo.absoluteString
+            )
+            return rows.map(\.package)
+        }
+    }
+
     func packages(in repo: URL, section: String?) -> [Package] {
         read([]) {
             var condition: WCDBSwift.Expression = PackageRow.Properties.repo == repo.absoluteString
@@ -347,6 +362,20 @@ final class AptDatabase: @unchecked Sendable {
         read([]) {
             let rows: [PackageRow] = try database.getObjects(on: PackageRow.Properties.all, fromTable: Table.installed)
             return rows.map(\.package)
+        }
+    }
+
+    /// Every installed (identity, version) without the payload: what
+    /// tracing needs of the installed table.
+    func installedVersions() -> [String: String] {
+        read([:]) {
+            let rows = try database.getRows(
+                on: [PackageRow.Properties.identity, PackageRow.Properties.version],
+                fromTable: Table.installed
+            )
+            // a row stores no version as an empty one
+            let versions = rows.map { ($0[0].stringValue, $0[1].stringValue) }.filter { !$0.1.isEmpty }
+            return Dictionary(versions) { first, _ in first }
         }
     }
 

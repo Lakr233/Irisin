@@ -320,7 +320,16 @@ end.
   from any actor without a lock; nothing keeps a `Handle`, `Insert` or
   `Select` past the statement that made it. `Repository` keeps only its
   source, Release metadata and `packageCount`; the packages are in the
-  database, never on the struct.
+  database, never on the struct. Two things a list row asks for are never
+  a query on the main actor. What dpkg reports installed and the install
+  origins are `PackageIndex.installedSnapshot`, returned by
+  `storeInstalled` off the main actor and committed with each reload. A
+  repository package a row draws comes from `PackageCenter.lookups`
+  (`PackageLookupCache`, an LRU on the main actor): a miss answers
+  `.loading` and is read in one batch in the background, a repository
+  written makes what is held stale and it is read again, and `loaded`
+  wakes the row. A row that waits keeps every line it will have, so it is
+  measured once.
 - **The resolver reads the catalogue ahead, and never solves with a stale
   read.** What a solve does for every request alike (the catalogue
   decoded, every candidate's relations parsed and matched against every
