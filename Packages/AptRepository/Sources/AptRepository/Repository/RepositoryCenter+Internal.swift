@@ -133,12 +133,56 @@ extension RepositoryCenter {
     /// the database.
     func finishUpdate(_ outcome: UpdateOutcome) {
         let url = outcome.url
-        var printName = url.absoluteString
-        var printDescription = ""
-        if repositories[url] == nil, outcome.packages != nil {
-            // deleted while in flight: its rows landed after the delete
+        // Deleted while in flight: its rows may have landed after the delete,
+        // and nothing it brought back belongs to a repository added again
+        // at the same address, whose own refresh waits for this one.
+        let deleted = deletedUpdates.remove(url) != nil
+        if deleted, outcome.packages != nil {
             AptDatabase.shared.deletePackages(of: url)
         }
+        if !deleted {
+            apply(outcome)
+        }
+
+        let givenUp = givenUpUpdates.contains(url)
+        currentlyInUpdate.remove(url)
+        currentUpdateProgress.removeValue(forKey: url)
+        updateTasks.removeValue(forKey: url)
+        updateStarted.removeValue(forKey: url)
+        lastActivity.removeValue(forKey: url)
+        stalledUpdates.remove(url)
+        givenUpUpdates.remove(url)
+
+        if deleted {
+            aptLog(self, "update \(url.absoluteString) ended after its repository was deleted")
+        } else {
+            recordInRound(outcome, givenUp: givenUp)
+        }
+        aptLog(
+            self,
+            "update engine reported \(pendingUpdateRequest.count) pending and \(currentlyInUpdate.count) in queue"
+        )
+        closeRoundIfDone()
+
+        PackageCenter.default.repositoryDidChange()
+        let object = UpdateNotification(
+            repository: url,
+            progress: nil,
+            complete: true,
+            success: !deleted && outcome.succeeded,
+            queueLeft: currentlyInUpdate.count + pendingUpdateRequest.count
+        )
+        NotificationCenter.default.post(name: RepositoryCenter.metadataUpdate, object: object)
+
+        // the slot is free now, not at the next tick
+        dispatchUpdateOnCurrentCenter()
+    }
+
+    /// Writes what an update brought back into its repository, and logs it.
+    private func apply(_ outcome: UpdateOutcome) {
+        let url = outcome.url
+        var printName = url.absoluteString
+        var printDescription = ""
         updateRepository(withUrl: url) { builder in
             if let avatar = outcome.avatar {
                 builder.avatar = avatar
@@ -187,15 +231,6 @@ extension RepositoryCenter {
             }
         }
 
-        let givenUp = givenUpUpdates.contains(url)
-        currentlyInUpdate.remove(url)
-        currentUpdateProgress.removeValue(forKey: url)
-        updateTasks.removeValue(forKey: url)
-        updateStarted.removeValue(forKey: url)
-        lastActivity.removeValue(forKey: url)
-        stalledUpdates.remove(url)
-        givenUpUpdates.remove(url)
-
         let issues = outcome.report?.issues ?? []
         let finalLog = """
         \(outcome.succeeded ? "Complete" : "Failed") update on \(url.absoluteString)
@@ -209,24 +244,6 @@ extension RepositoryCenter {
         // A refresh that fetched nothing used to read exactly like one that
         // worked, save for a `* Package: 0` line in the middle of the block.
         aptLog(self, finalLog, level: outcome.succeeded ? .info : .error)
-        aptLog(
-            self,
-            "update engine reported \(pendingUpdateRequest.count) pending and \(currentlyInUpdate.count) in queue"
-        )
-        recordInRound(outcome, givenUp: givenUp)
-
-        PackageCenter.default.repositoryDidChange()
-        let object = UpdateNotification(
-            repository: url,
-            progress: nil,
-            complete: true,
-            success: outcome.succeeded,
-            queueLeft: currentlyInUpdate.count + pendingUpdateRequest.count
-        )
-        NotificationCenter.default.post(name: RepositoryCenter.metadataUpdate, object: object)
-
-        // the slot is free now, not at the next tick
-        dispatchUpdateOnCurrentCenter()
     }
 
     /// Every index of one entry under one suffix, fetched at once, each

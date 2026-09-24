@@ -21,6 +21,12 @@ enum TestEnvironment {
             storage: MemoryStorage(),
             logger: PrintLogger()
         ))
+        // WCDB builds a table binding's columns the first time a table is
+        // created from it, and not safely from two threads: two databases
+        // opened at once can both add the primary key ("more than one
+        // primary key"). The app opens one; the tests open many in
+        // parallel, so every binding is built here first, once.
+        _ = AptDatabase.shared
         return dir
     }()
 

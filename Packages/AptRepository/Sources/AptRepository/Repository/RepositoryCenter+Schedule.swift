@@ -37,7 +37,7 @@ extension RepositoryCenter {
         // progress, the first to finish would call the repository idle,
         // and the older fetch could land its rows last. A request for
         // one in flight (deleted and added again, say) waits its turn.
-        let flights = currentlyInUpdate.subtracting(givenUpUpdates).compactMap { url in
+        let flights = currentlyInUpdate.subtracting(givenUpUpdates).subtracting(deletedUpdates).compactMap { url in
             updateStarted[url].map {
                 UpdateSchedule.Flight(url: url, started: $0, lastActivity: lastActivity[url] ?? $0)
             }
@@ -131,8 +131,13 @@ extension RepositoryCenter {
         advanceUpdate(of: url)
         let db = AptDatabase.shared
         updateTasks[url] = Task.detached(priority: .utility) {
-            let outcome = await Self.performUpdate(request) { units, absolute in
+            var outcome = await Self.performUpdate(request) { units, absolute in
                 await self.advanceUpdate(of: url, by: units, to: absolute)
+            }
+            // given up or deleted: whatever arrived anyway is not written,
+            // and the packages that are there stay
+            if Task.isCancelled {
+                outcome.packages = nil
             }
             // the heavy write, still off the main actor and still progress
             // to the watchdog; an update that read nothing leaves the rows
@@ -170,7 +175,7 @@ extension RepositoryCenter {
     /// The server said something to an update: it is moving, and one that
     /// was stalled takes its slot back.
     func noteActivity(of url: URL) {
-        guard currentlyInUpdate.contains(url), !givenUpUpdates.contains(url) else { return }
+        guard currentlyInUpdate.contains(url), !givenUpUpdates.contains(url), !deletedUpdates.contains(url) else { return }
         let now = Date()
         if stalledUpdates.remove(url) != nil {
             let idle = now.timeIntervalSince(lastActivity[url] ?? now)
@@ -179,8 +184,7 @@ extension RepositoryCenter {
         lastActivity[url] = now
     }
 
-    /// Notes how a finished update went for the round's summary, and logs
-    /// the summary once the queue is empty.
+    /// Notes how a finished update went for the round's summary.
     func recordInRound(_ outcome: UpdateOutcome, givenUp: Bool) {
         let url = outcome.url
         if outcome.hostUnreachable, let host = url.host {
@@ -196,7 +200,10 @@ extension RepositoryCenter {
             .failed
         }
         refreshRound?.results[url] = (result, outcome.report?.duration ?? 0)
+    }
 
+    /// Logs the round's summary once nothing is pending or in flight.
+    func closeRoundIfDone() {
         guard pendingUpdateRequest.isEmpty, currentlyInUpdate.isEmpty, let round = refreshRound else { return }
         refreshRound = nil
         let results = round.results.values

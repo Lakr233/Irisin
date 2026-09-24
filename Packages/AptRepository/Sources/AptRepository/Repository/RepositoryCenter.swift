@@ -77,6 +77,9 @@ public final class RepositoryCenter {
     var stalledUpdates: Set<URL> = []
     /// cancelled for making no progress, and not finished yet
     var givenUpUpdates: Set<URL> = []
+    /// cancelled because the repository was deleted, and not finished yet:
+    /// out of their slots, and what they bring back is thrown away
+    var deletedUpdates: Set<URL> = []
     /// the limit the last decision came to, and whether it was held back,
     /// to log a change once
     var updateLimit = 4

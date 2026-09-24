@@ -45,7 +45,7 @@ public extension RepositoryCenter {
     /// grab count of remaining update task
     /// - Returns: count
     func obtainUpdateRemain() -> Int {
-        pendingUpdateRequest.count + currentlyInUpdate.count
+        pendingUpdateRequest.count + currentlyInUpdate.subtracting(deletedUpdates).count
     }
 
     /// Where a repository stands in the update queue. Changes are announced
@@ -135,6 +135,15 @@ public extension RepositoryCenter {
         let deleted = repositories.removeValue(forKey: withUrl)
         pendingUpdateRequest.remove(withUrl)
         currentUpdateProgress.removeValue(forKey: withUrl)
+        // A fetch in flight is cancelled, not waited for. It stays in the
+        // queue until its task ends, so a re-added repository's refresh
+        // still waits its turn behind it.
+        if let task = updateTasks[withUrl], !deletedUpdates.contains(withUrl) {
+            task.cancel()
+            deletedUpdates.insert(withUrl)
+            stalledUpdates.remove(withUrl)
+            aptLog(self, "update \(withUrl.absoluteString) cancelled: the repository was deleted", level: .info)
+        }
         guard let deleted else {
             aptLog(self, "requesting delete on repository \(withUrl.absoluteString) was not found")
             return nil
@@ -187,8 +196,9 @@ public extension RepositoryCenter {
             aptLog(self, "repository \(url.absoluteString) was not found for metadata update")
             return
         }
-        // asked for again while it is being fetched: that fetch is the answer
-        guard !currentlyInUpdate.contains(url) else { return }
+        // asked for again while it is being fetched: that fetch is the
+        // answer, unless it belongs to a deletion and is only winding down
+        guard !currentlyInUpdate.contains(url) || deletedUpdates.contains(url) else { return }
         if let host = url.host {
             refreshRound?.unreachableHosts.remove(host)
         }
