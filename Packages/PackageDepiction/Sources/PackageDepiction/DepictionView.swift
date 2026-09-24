@@ -56,6 +56,13 @@ public class DepictionView: UIView {
         return view
     }
 
+    /// Whether this build has a view for the json's `class`, found the way
+    /// `view(dictionary:…)` finds it, without building one.
+    static func knowsClass(of dictionary: [String: Any]) -> Bool {
+        let className = (dictionary["class"] as? String) ?? ""
+        return Bundle.main.classNamed("PackageDepiction.\(className)") is DepictionView.Type
+    }
+
     public required init?(
         dictionary _: [String: Any],
         viewController: UIViewController,

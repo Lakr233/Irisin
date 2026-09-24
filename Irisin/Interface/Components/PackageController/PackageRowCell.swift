@@ -55,15 +55,25 @@ final class PackageRowCell: UITableViewCell {
         }
     }
 
+    /// The height the row would have to be for the view inside, while it
+    /// is not that height; nil when the view fits.
+    var heightMismatch: CGFloat? {
+        host.mismatch
+    }
+
     private final class HostView: UIView {
         var onHeightMismatch: ((CGFloat) -> Void)?
         var bottomInset: CGFloat = 0
 
+        var mismatch: CGFloat? {
+            guard let hosted = subviews.first, bounds.height > 0 else { return nil }
+            let wanted = hosted.frame.maxY + bottomInset
+            return abs(wanted - bounds.height) > 1 ? wanted : nil
+        }
+
         override func layoutSubviews() {
             super.layoutSubviews()
-            guard let hosted = subviews.first, bounds.height > 0 else { return }
-            let wanted = hosted.frame.maxY + bottomInset
-            if abs(wanted - bounds.height) > 1 {
+            if let wanted = mismatch {
                 onHeightMismatch?(wanted)
             }
         }

@@ -11,7 +11,18 @@ import UIKit
 
 final class DepictionTabView: DepictionView {
     private let segments = UISegmentedControl()
-    private let tabContentViews: [DepictionView]
+
+    /// Each tab's json, in the strip's order.
+    private let tabs: [[String: Any]]
+
+    /// The tabs built so far. The first is built with the view; another
+    /// only when it is first chosen, since a long changelog nobody opens
+    /// costs the page's first frame as much as the prose everybody reads.
+    private var tabContentViews: [Int: DepictionView] = [:]
+
+    /// The tint the depiction handed down, kept for a tab built later:
+    /// the view's own `tintColor` is dimmed while a sheet is up.
+    private let tabTint: UIColor
 
     /// Holds the one tab on show; the others are not in the hierarchy.
     private let contentArea = UIView()
@@ -31,26 +42,36 @@ final class DepictionTabView: DepictionView {
             }
         }
 
-        var views: [DepictionView] = []
-        var names: [String] = []
+        // The first tab that builds is the one on show. A tab after it is
+        // kept when this build knows its class, and built when chosen; one
+        // it does not know is left out and reported now, as building it
+        // would have.
+        var first: DepictionView?
+        var shown: [[String: Any]] = []
         for tab in tabs {
-            guard let tabName = tab["tabname"] as? String,
-                  let view = DepictionView.view(
-                      dictionary: tab,
-                      viewController: viewController,
-                      tintColor: tintColor,
-                      isActionable: isActionable
-                  )
-            else {
-                continue
+            if first == nil {
+                first = DepictionView.view(
+                    dictionary: tab,
+                    viewController: viewController,
+                    tintColor: tintColor,
+                    isActionable: isActionable
+                )
+                if first != nil {
+                    shown.append(tab)
+                }
+            } else if DepictionView.knowsClass(of: tab) {
+                shown.append(tab)
+            } else {
+                (viewController as? DepictionRenderObserver)?
+                    .depictionCouldNotRender(className: (tab["class"] as? String) ?? "")
             }
-            names.append(tabName)
-            views.append(view)
         }
-        guard !views.isEmpty else {
+        guard let first else {
             return nil
         }
-        tabContentViews = views
+        self.tabs = shown
+        tabContentViews[0] = first
+        tabTint = tintColor
 
         super.init(
             dictionary: dictionary,
@@ -60,8 +81,12 @@ final class DepictionTabView: DepictionView {
         )
 
         // The strip stays even for a single tab: it names the section.
-        for name in names {
-            segments.insertSegment(withTitle: name, at: segments.numberOfSegments, animated: false)
+        for tab in shown {
+            segments.insertSegment(
+                withTitle: tab["tabname"] as? String,
+                at: segments.numberOfSegments,
+                animated: false
+            )
         }
         addSubview(segments)
         addSubview(contentArea)
@@ -80,9 +105,31 @@ final class DepictionTabView: DepictionView {
         show(tab: 0)
     }
 
+    /// The tab at `index`, built the first time it is asked for. A tab
+    /// whose fields turn out to be missing shows nothing, and the page
+    /// hears of it as it would have while loading.
+    private func content(of index: Int) -> DepictionView? {
+        if let view = tabContentViews[index] {
+            return view
+        }
+        guard let parentViewController,
+              let view = DepictionView.view(
+                  dictionary: tabs[index],
+                  viewController: parentViewController,
+                  tintColor: tabTint,
+                  isActionable: isActionable
+              )
+        else {
+            return nil
+        }
+        view.isHighlighted = isHighlighted
+        tabContentViews[index] = view
+        return view
+    }
+
     private func show(tab index: Int) {
         contentArea.subviews.forEach { $0.removeFromSuperview() }
-        let view = tabContentViews[index]
+        guard let view = content(of: index) else { return }
         contentArea.addSubview(view)
         view.snp.makeConstraints { x in
             x.edges.equalToSuperview()
@@ -95,7 +142,7 @@ final class DepictionTabView: DepictionView {
 
     override var isHighlighted: Bool {
         didSet {
-            for view in tabContentViews {
+            for view in tabContentViews.values {
                 view.isHighlighted = isHighlighted
             }
         }

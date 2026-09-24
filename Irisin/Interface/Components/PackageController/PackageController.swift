@@ -180,6 +180,9 @@ class PackageController: UIViewController {
     /// measuring once more would only have it ask again, for ever.
     private var heightsAskedFor: [Row: CGFloat] = [:]
 
+    /// The rows that asked since the rows were last measured.
+    private var rowsAskingForHeight: Set<Row> = []
+
     /// A view outgrew its row or fell short of it: the rows are measured
     /// again, once for however many said so in this pass, and in place, as
     /// the scroll view this page used to be would have followed.
@@ -187,11 +190,25 @@ class PackageController: UIViewController {
         let height = height.rounded()
         guard heightsAskedFor[row] != height else { return }
         heightsAskedFor[row] = height
+        rowsAskingForHeight.insert(row)
         guard !rowHeightsAreStale else { return }
         rowHeightsAreStale = true
         Task { [weak self] in
             guard let self else { return }
             rowHeightsAreStale = false
+            let asking = rowsAskingForHeight
+            rowsAskingForHeight = []
+            // A cell is laid out at the table's estimate for a moment before
+            // the table sizes it, and says it does not fit. A row that fits
+            // by now asked for nothing: measuring every row again for it
+            // is a pass that changes nothing.
+            let stillWrong = tableView.visibleCells.contains {
+                ($0 as? PackageRowCell)?.heightMismatch != nil
+            }
+            guard stillWrong else {
+                asking.forEach { heightsAskedFor[$0] = nil }
+                return
+            }
             UIView.performWithoutAnimation {
                 self.measureRows(animated: false)
             }
