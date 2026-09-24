@@ -36,6 +36,15 @@ class SidebarController: UIViewController {
 
     private let refreshControl = SettlingRefreshControl()
 
+    /// The header's count: a label of its own, since the broken ones are
+    /// in red beside the total.
+    private let countLabel = UILabel().then {
+        $0.font = UIFont.body.monospacedDigitFont
+        // the grey of the header's own title
+        $0.textColor = .secondaryLabel
+        $0.isUserInteractionEnabled = false
+    }
+
     /// The repositories are an inset grouped list. The cards are not a list
     /// row, whose group corners would clip theirs, but take the list's margins.
     private lazy var collectionView = UICollectionView(
@@ -199,11 +208,33 @@ class SidebarController: UIViewController {
         var content = UIListContentConfiguration.sidebarHeader()
         content.text = String(localized: "Repositories")
         cell.contentConfiguration = content
-        // while a refresh runs: what is left of it over the whole list
-        let total = RepositoryCenter.default.obtainRepositoryCount()
-        let remain = RepositoryCenter.default.obtainUpdateRemain()
+        // while a refresh runs, how far it has come; after it, the whole
+        // list and, in red, the repositories left with no packages
+        let center = RepositoryCenter.default
+        let total = center.obtainRepositoryCount()
+        let remain = center.obtainUpdateRemain()
+        let count = NSMutableAttributedString(string: remain > 0 ? "\(total - remain)/\(total)" : String(total))
+        var spoken = count.string
+        if remain == 0 {
+            let broken = center.obtainRepositoryUrls().filter { center.refreshHealth(withUrl: $0) == .failed }.count
+            if broken > 0 {
+                count.append(NSAttributedString(
+                    string: " (\(broken))",
+                    attributes: [.foregroundColor: UIColor.repositoryFailed]
+                ))
+                spoken += ", \(broken) " + String(localized: "Unavailable")
+            }
+        }
+        countLabel.attributedText = count
+        countLabel.sizeToFit()
+        // drawn, not read: the header says the count as its value
+        cell.accessibilityValue = spoken
         cell.accessories = [
-            .label(text: remain > 0 ? "\(remain)/\(total)" : String(total)),
+            .customView(configuration: .init(
+                customView: countLabel,
+                placement: .trailing(displayed: .always),
+                reservedLayoutWidth: .actual
+            )),
             .outlineDisclosure(options: .init(style: .header)),
         ]
     }
