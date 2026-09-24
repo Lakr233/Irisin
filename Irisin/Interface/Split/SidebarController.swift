@@ -378,7 +378,11 @@ private final class RepoListCell: UICollectionViewListCell {
         super.init(frame: frame)
         contentView.addSubview(row)
         row.snp.makeConstraints { x in
-            x.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 12, bottom: 4, right: 12))
+            x.top.equalToSuperview().inset(4)
+            x.leading.trailing.equalToSuperview().inset(12)
+            // below required: a new cell is laid out once at the list's
+            // estimated height before it is measured, and the row is taller
+            x.bottom.equalToSuperview().inset(4).priority(999)
         }
         separatorLayoutGuide.snp.makeConstraints { x in
             x.leading.equalTo(row.title)

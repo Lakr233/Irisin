@@ -96,7 +96,9 @@ class WelcomeController: UIViewController {
         $0.axis = .vertical
         $0.spacing = 18
         $0.alignment = .fill
-        $0.distribution = .fillProportionally
+        // each view at its own height; proportional distribution measures
+        // every arranged view at zero width first, which none of them fit
+        $0.distribution = .fill
     }
 
     private var featureRows: [UIView] = []

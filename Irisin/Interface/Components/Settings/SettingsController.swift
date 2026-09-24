@@ -35,6 +35,11 @@ class SettingsController: UITableViewController {
 
     private var items: [String: SettingsItem] = [:]
 
+    /// A change that came while the page was off screen, applied when it
+    /// comes back: a table told to lay out outside a window lays out
+    /// against sizes it does not have yet.
+    private var needsSnapshot = false
+
     private lazy var dataSource = EditableTableDiffableDataSource<Section, Row>(
         tableView: tableView
     ) { [unowned self] tableView, indexPath, row in
@@ -153,6 +158,10 @@ class SettingsController: UITableViewController {
     /// none of them has a vendor. Rows that stay are reconfigured: the icon,
     /// the name or the account may have changed.
     private func applySnapshot(animatingDifferences: Bool) {
+        guard tableView.window != nil else {
+            needsSnapshot = true
+            return
+        }
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         let accounts = Self.paidRepositories().map { Row.account($0.url) }
         if !accounts.isEmpty {
@@ -197,6 +206,8 @@ class SettingsController: UITableViewController {
     }
 
     private func reloadValues() {
+        // off screen the next appearance reads every value again
+        guard tableView.window != nil else { return }
         var snapshot = dataSource.snapshot()
         snapshot.reconfigureItems(snapshot.itemIdentifiers.filter {
             if case .item = $0 {
@@ -233,8 +244,12 @@ class SettingsController: UITableViewController {
         }
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        if needsSnapshot {
+            needsSnapshot = false
+            applySnapshot(animatingDifferences: false)
+        }
         // the sizes on the rows are read when configured; coming back to
         // this screen after a download must not show the old ones
         dispatchValueUpdate()
@@ -287,7 +302,11 @@ final class SettingsFooterView: UIView {
         }
         addSubview(stack)
         stack.snp.makeConstraints { x in
-            x.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 32, bottom: 24, right: 32))
+            x.top.equalToSuperview().inset(12)
+            x.leading.trailing.equalToSuperview().inset(32)
+            // below required: the table holds the footer at its last frame
+            // until the controller measures it again
+            x.bottom.equalToSuperview().inset(24).priority(999)
         }
         licenseButton.addTarget(self, action: #selector(license), for: .touchUpInside)
         refresh()

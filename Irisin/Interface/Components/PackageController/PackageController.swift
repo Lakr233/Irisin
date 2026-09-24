@@ -371,8 +371,14 @@ class PackageController: UIViewController {
         {
             packageObject = fresh
         }
-        // settled before the button animates: a page whose first layout
-        // happens inside an animation block slides every view in from zero
+    }
+
+    /// Settled before the button animates: a page whose first layout
+    /// happens inside an animation block slides every view in from zero.
+    /// Not before the page is in the window, whose sizes the table lays
+    /// out against.
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
         UIView.performWithoutAnimation { view.layoutIfNeeded() }
         bannerPackageView.updateButton()
     }
@@ -401,7 +407,9 @@ class PackageController: UIViewController {
     /// shows, in an animation after.
     private func resizeBanner() {
         updatePreferredImageHeight()
-        guard preferredBannerHeight != appliedBannerHeight else {
+        // outside the window the table has no sizes to measure against; the
+        // first layout in it comes back here before the page shows
+        guard tableView.window != nil, preferredBannerHeight != appliedBannerHeight else {
             return
         }
         appliedBannerHeight = preferredBannerHeight

@@ -55,7 +55,9 @@ final class RepositoryAddSectionHeaderView: UITableViewHeaderFooterView {
         label.snp.makeConstraints { x in
             x.leading.equalTo(contentView.layoutMarginsGuide)
             x.top.equalToSuperview().inset(margins.top)
-            x.bottom.equalToSuperview().inset(margins.bottom)
+            // below required: the table lays the header out once at its
+            // estimated height before it is measured
+            x.bottom.equalToSuperview().inset(margins.bottom).priority(999)
             x.trailing.lessThanOrEqualTo(button.snp.leading)
         }
         button.snp.makeConstraints { x in

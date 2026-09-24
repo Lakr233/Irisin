@@ -180,8 +180,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
             .store(in: &subscriptions)
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
         reload()
     }
 
@@ -229,8 +229,13 @@ final class QueueController: UIViewController, UITableViewDelegate {
         if plan != nil, !manager.notices.isEmpty {
             snapshot.appendSections([.notices(manager.notices.uniqued().joined(separator: "\n\n"))])
         }
-        snapshot.reconfigureItems(survivingFrom: dataSource.snapshot())
-        dataSource.apply(snapshot, animatingDifferences: view.shouldAnimateDiff)
+        // off screen the rows wait for the page to come back: a table told
+        // to lay out outside a window lays out against sizes it does not
+        // have yet
+        if tableView.window != nil {
+            snapshot.reconfigureItems(survivingFrom: dataSource.snapshot())
+            dataSource.apply(snapshot, animatingDifferences: view.shouldAnimateDiff)
+        }
 
         guard let plan else {
             stage = .empty
@@ -329,6 +334,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     }
 
     private func redraw() {
+        guard tableView.window != nil else { return }
         var snapshot = dataSource.snapshot()
         snapshot.reconfigureItems(snapshot.itemIdentifiers)
         dataSource.apply(snapshot, animatingDifferences: false)
