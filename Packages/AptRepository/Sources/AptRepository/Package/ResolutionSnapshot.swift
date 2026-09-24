@@ -85,6 +85,23 @@ public struct ResolutionSnapshot: Sendable {
         !package.supports(architecture: architecture) && package.supports(anyOf: installableArchitectures)
     }
 
+    /// What moved in the database or on the device since a snapshot was
+    /// read (`PackageIndex.changes(since:)`).
+    public struct Changes: OptionSet, Sendable {
+        public let rawValue: Int
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+
+        /// A repository was written: refreshed, added or removed.
+        public static let catalogue = Changes(rawValue: 1 << 0)
+        /// dpkg's status is not the one read.
+        public static let installed = Changes(rawValue: 1 << 1)
+        /// The architectures, the blocked updates or whether an update may
+        /// be adapted.
+        public static let settings = Changes(rawValue: 1 << 2)
+    }
+
     public static func digest(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }

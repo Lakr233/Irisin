@@ -20,7 +20,10 @@ import UIKit
 /// below as boxes to tick, none ticked. The sheet solves on its own, again
 /// on every tick and whenever the queue or the packages move, and Confirm
 /// takes exactly what it shows; when that is nothing, Open Queue takes its
-/// place. A request the solver refuses shows none of
+/// place. While the repositories refresh the sheet keeps the catalogue it
+/// was solved with, and Confirm holds the answer against the one there is:
+/// a package no longer offered as it was asks to check again, in an alert
+/// the user may cancel. A request the solver refuses shows none of
 /// this: `PackageDiagnosticController` is the sheet, with Close in place of
 /// a way back. A refusal that comes later, from a tick or a queue that
 /// moved, is pushed over the last answer, which is still there to go back to.
@@ -58,6 +61,9 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// the rows stay where they are.
     private var unneeded: [String: [String]] = [:]
     private var work: Task<Void, Never>?
+    /// Confirm was tapped and the answer is being held against the
+    /// packages as they are now.
+    private var confirming: Task<Void, Never>?
     private var subscriptions = Set<AnyCancellable>()
     private lazy var icons = PackageIconCache { [weak self] in self?.redraw() }
 
@@ -307,6 +313,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// `confirmed` are the packages the user already agreed to install in
     /// compatibility mode, so an answer that moved asks only about the rest.
     private func commit(confirmed: Set<String> = []) {
+        guard confirming == nil else { return }
         if let work {
             // a tick is still being solved: Confirm takes its answer
             Task { [weak self] in
@@ -334,6 +341,33 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                 self?.commit(confirmed: confirmed.union(adapted.map(\.identity)))
             }
         }
+        // solved against the catalogue as it was: a refresh may have
+        // written it since
+        confirming = Task { [weak self] in
+            let currency = await PackageQueue.shared.currency(of: proposal)
+            guard let self else { return }
+            confirming = nil
+            switch currency {
+            case .current:
+                take(proposal)
+            case .moved:
+                solve()
+            case let .withdrawn(packages):
+                let names = ListFormatter.localizedString(byJoining: packages.map(name(of:)))
+                presentConfirmation(
+                    title: "Repositories Changed",
+                    message: "While you reviewed this change, a refresh updated or removed these packages: \(names). Check the change again before you confirm.",
+                    confirmTitle: "Check Again"
+                ) { [weak self] in
+                    PackageQueue.shared.readCatalogue()
+                    self?.solve()
+                }
+            }
+        }
+    }
+
+    /// The proposal becomes the queue, and the sheet leaves.
+    private func take(_ proposal: PackageQueue.Proposal) {
         guard PackageQueue.shared.commit(proposal) else {
             // the queue moved under the sheet; its notification solves again
             return solve()

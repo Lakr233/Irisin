@@ -5,15 +5,24 @@ public extension PackageIndex {
     /// the expensive half, every package of every repository decoded:
     /// `previous`'s is taken instead when the database has not been written
     /// since it was read, which the revision says in one query.
-    func resolutionSnapshot(reusingCatalogueOf previous: ResolutionSnapshot? = nil) throws -> ResolutionSnapshot {
+    /// `evenIfWritten` takes it when the database has been written too: a
+    /// refresh writes one repository after another, and a catalogue read
+    /// in the middle is out of date before the read ends. The snapshot
+    /// then says the revision it was read at, and `changes(since:)` what
+    /// moved after it.
+    func resolutionSnapshot(
+        reusingCatalogueOf previous: ResolutionSnapshot? = nil,
+        evenIfWritten: Bool = false
+    ) throws -> ResolutionSnapshot {
         let environment = AptEnvironment.current
         let statusURL = URL(fileURLWithPath: environment.dpkgStatusLocation)
         let status = try Self.statusContents(at: statusURL)
         var unchanged: (packages: [Package], revision: Int64)?
         if let previous, previous.catalogueIdentity == db.identity {
-            let revision = try db.resolutionRevision()
-            if revision == previous.catalogueRevision {
-                unchanged = (previous.packages, revision)
+            if evenIfWritten {
+                unchanged = (previous.packages, previous.catalogueRevision)
+            } else if try db.resolutionRevision() == previous.catalogueRevision {
+                unchanged = (previous.packages, previous.catalogueRevision)
             }
         }
         let catalogue = try unchanged ?? db.resolutionCatalogue()
@@ -48,13 +57,40 @@ public extension PackageIndex {
     }
 
     func isCurrent(_ snapshot: ResolutionSnapshot) throws -> Bool {
-        guard try snapshot.catalogueRevision == (db.resolutionRevision()),
-              snapshot.architecture == AptEnvironment.current.deviceArchitecture,
-              snapshot.installableArchitectures == AptEnvironment.current.installableArchitectures,
-              snapshot.blockedUpdates == Set(blockedUpdateTable),
-              snapshot.offersAdaptedUpdates == offersAdaptedUpdates else { return false }
+        try changes(since: snapshot).isEmpty
+    }
+
+    /// What moved since `snapshot` was read; empty when nothing did.
+    func changes(since snapshot: ResolutionSnapshot) throws -> ResolutionSnapshot.Changes {
+        var changes: ResolutionSnapshot.Changes = []
+        let revision = try db.resolutionRevision()
+        if snapshot.catalogueIdentity != db.identity || snapshot.catalogueRevision != revision {
+            changes.insert(.catalogue)
+        }
+        if snapshot.architecture != AptEnvironment.current.deviceArchitecture
+            || snapshot.installableArchitectures != AptEnvironment.current.installableArchitectures
+            || snapshot.blockedUpdates != Set(blockedUpdateTable)
+            || snapshot.offersAdaptedUpdates != offersAdaptedUpdates
+        {
+            changes.insert(.settings)
+        }
         let status = try Self.statusContents(at: URL(fileURLWithPath: AptEnvironment.current.dpkgStatusLocation))
-        return snapshot.statusDigest == ResolutionSnapshot.digest(status)
+        if snapshot.statusDigest != ResolutionSnapshot.digest(status) {
+            changes.insert(.installed)
+        }
+        return changes
+    }
+
+    /// The packages of `packages` their repository no longer offers as
+    /// they are here: gone from it, or listed with other fields (a new
+    /// file, a new hash). One with no repository, a file the user opened,
+    /// is never withdrawn.
+    func withdrawn(_ packages: [Package]) -> [Package] {
+        packages.filter { package in
+            guard let repository = package.repoRef, package.localFileURL == nil else { return false }
+            guard let offered = db.package(identity: package.identity, repo: repository) else { return true }
+            return package.payload.contains { version, metadata in offered.payload[version] != metadata }
+        }
     }
 
     /// The names `extended_states` marks `Auto-Installed: 1`. The marks only

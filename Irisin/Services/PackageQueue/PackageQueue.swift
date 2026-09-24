@@ -32,6 +32,13 @@ nonisolated extension Notification.Name {
 /// main actor, once the packages stop moving, so a tap solves only its own
 /// jobs. A pool read from anything but the packages as they are is never
 /// solved with: the resolver checks it against the snapshot of each solve.
+///
+/// The one exception is a refresh, which writes one repository after
+/// another: until the last is written, a solve keeps the catalogue last
+/// read, the queue is not solved again for each write, and an open sheet
+/// is not either. The plan says which catalogue it was solved with, and
+/// `currency(of:)` holds it against the one there is when the user
+/// confirms and when the plan stages. dpkg's status is never held.
 final class PackageQueue {
     static let shared = PackageQueue()
 
@@ -82,6 +89,9 @@ final class PackageQueue {
     /// The packages moved and the preflight waits for them to settle.
     private var preflightDelay: Task<Void, Never>?
     private var generations = 0
+    /// A repository was written while the repositories refreshed, and the
+    /// queue has not been solved again for it yet.
+    private var heldChange = false
 
     private init() {
         NotificationCenter.default.publisher(for: PackageCenter.packageRecordChanged)
@@ -417,7 +427,7 @@ final class PackageQueue {
         if succeeded, !dryRun, plan?.id == ran.id {
             clear()
         } else {
-            packagesChanged()
+            packagesChanged(installed: true)
         }
     }
 
@@ -434,9 +444,22 @@ final class PackageQueue {
 
     // MARK: - Solving
 
-    private func packagesChanged() {
-        changed()
+    /// The packages moved. A repository written while the repositories
+    /// refresh is held until the last is written, then the queue and an
+    /// open sheet solve once; the preflight that waits out the refresh
+    /// catches up a hold nothing else released. `installed`, dpkg's status
+    /// moving, is never held.
+    private func packagesChanged(installed: Bool = false) {
         schedulePreflight()
+        if Self.isRefreshing {
+            guard installed else {
+                heldChange = true
+                return
+            }
+        } else {
+            heldChange = false
+        }
+        changed()
         guard plan != nil else { return }
         refreshTask?.cancel()
         refreshTask = Task { await refresh() }
@@ -501,7 +524,7 @@ final class PackageQueue {
 
     private func solve(_ request: ResolutionRequest) async -> Result<ResolutionPlan, ResolutionFailure> {
         guard !Installer.shared.inProcessingQueue else { return .failure(Self.busy) }
-        let prepared = await preparedPool()
+        let (prepared, pinned) = await startingPool()
         // the wait is for the pool, and the pool is kept: whoever asked
         // and left since is not solved for
         guard !Task.isCancelled else { return .failure(ResolutionFailure(.unknown)) }
@@ -516,11 +539,16 @@ final class PackageQueue {
                 request: request,
                 index: index,
                 adaptedManifests: patched.mapValues(\.control),
-                pool: prepared
+                pool: prepared,
+                pinned: pinned
             )
             adopt(read, generation: generation)
+            // the catalogue may have been written since: the plan says
+            // which one it was solved with, and `currency(of:)` holds that
+            // against the one there is before it is taken or staged
             guard !Installer.shared.inProcessingQueue,
-                  try await Self.isCurrent(plan: plan, index: PackageCenter.default.index),
+                  try await Self.changes(since: plan, index: PackageCenter.default.index)
+                      .isDisjoint(with: [.installed, .settings]),
                   // Revalidate actor-owned facts after the asynchronous status check.
                   !Installer.shared.inProcessingQueue,
                   plan.snapshot.blockedUpdates == Set(PackageCenter.default.blockedUpdateTable),
@@ -572,14 +600,23 @@ final class PackageQueue {
             } catch {
                 return
             }
-            self?.readPool()
+            guard let self else { return }
+            // a write held while the repositories refreshed, and no word
+            // came after the last: the queue solves once, and the
+            // preflight that follows reads the pool
+            if heldChange {
+                return packagesChanged()
+            }
+            readPool()
         }
     }
 
     /// Starts reading the pool now, in place of any read already going: the
     /// packages it was started for have moved since.
+    /// `awaited` when a solve is about to wait for it: the packages moving
+    /// in the meantime do not cancel it.
     @discardableResult
-    private func readPool() -> Task<ResolutionPool?, Never> {
+    private func readPool(awaited: Bool = false) -> Task<ResolutionPool?, Never> {
         preflightDelay?.cancel()
         preflightDelay = nil
         poolRead?.task.cancel()
@@ -599,7 +636,7 @@ final class PackageQueue {
             }
             return read
         }
-        poolRead = (generation, task, false)
+        poolRead = (generation, task, awaited)
         return task
     }
 
@@ -611,6 +648,30 @@ final class PackageQueue {
         if preflightDelay != nil, !Installer.shared.inProcessingQueue {
             readPool()
         }
+        return await awaitedPool()
+    }
+
+    /// The pool a solve starts from, and whether it is pinned: while the
+    /// repositories refresh, the last one read (or the read in flight)
+    /// even though the catalogue has been written since, since a read in
+    /// the middle of a refresh is out of date before it ends.
+    private func startingPool() async -> (pool: ResolutionPool?, pinned: Bool) {
+        guard Self.isRefreshing else { return (await preparedPool(), false) }
+        if pool == nil, poolRead == nil, !Installer.shared.inProcessingQueue {
+            readPool()
+        }
+        return (await awaitedPool(), true)
+    }
+
+    /// Reads the catalogue as it is now, refresh or not, for the solves
+    /// that follow: the user asked for it after hearing the repositories
+    /// changed under their change.
+    func readCatalogue() {
+        readPool(awaited: true)
+    }
+
+    /// The read in flight, or else the last one read.
+    private func awaitedPool() async -> ResolutionPool? {
         // a read the packages moving cancelled has a newer one after it
         while let current = poolRead {
             poolRead?.awaited = true
@@ -633,6 +694,10 @@ final class PackageQueue {
         poolRead?.task.cancel()
         poolRead = nil
         pool = nil
+    }
+
+    private static var isRefreshing: Bool {
+        RepositoryCenter.default.obtainUpdateRemain() > 0
     }
 
     private static let busy = ResolutionFailure(
@@ -664,9 +729,10 @@ final class PackageQueue {
         request: ResolutionRequest,
         index: PackageIndex,
         adaptedManifests: [Package: [String: String]],
-        pool: ResolutionPool?
+        pool: ResolutionPool?,
+        pinned: Bool
     ) async throws -> (ResolutionPlan, ResolutionPool?) {
-        var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: pool?.snapshot)
+        var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: pool?.snapshot, evenIfWritten: pinned)
         snapshot.adaptedManifests = adaptedManifests
         let served = pool?.serves(snapshot) == true
         var kept = pool
@@ -700,5 +766,42 @@ final class PackageQueue {
     @concurrent
     nonisolated static func isCurrent(plan: ResolutionPlan, index: PackageIndex) async throws -> Bool {
         try index.isCurrent(plan.snapshot)
+    }
+
+    @concurrent
+    private nonisolated static func changes(
+        since plan: ResolutionPlan,
+        index: PackageIndex
+    ) async throws -> ResolutionSnapshot.Changes {
+        try index.changes(since: plan.snapshot)
+    }
+
+    /// Whether a plan still installs as it was solved.
+    nonisolated enum Currency: Equatable {
+        /// The installed packages and the settings are as they were, and
+        /// so is every package it installs, though a refresh may have
+        /// written the catalogue since.
+        case current
+        /// dpkg's status or a setting moved: the plan is solved again.
+        case moved
+        /// The repositories no longer offer these as the plan has them.
+        case withdrawn([Package])
+    }
+
+    @concurrent
+    nonisolated static func currency(of plan: ResolutionPlan, index: PackageIndex) async throws -> Currency {
+        let changes = try index.changes(since: plan.snapshot)
+        guard changes.isDisjoint(with: [.installed, .settings]) else { return .moved }
+        guard changes.contains(.catalogue) else { return .current }
+        let withdrawn = index.withdrawn(plan.install)
+        return withdrawn.isEmpty ? .current : .withdrawn(withdrawn)
+    }
+
+    /// The proposal's plan against the packages as they are, for Confirm;
+    /// an emptied queue is always current, and a status that cannot be
+    /// read is a reason to solve again.
+    func currency(of proposal: Proposal) async -> Currency {
+        guard let plan = proposal.plan else { return .current }
+        return await (try? Self.currency(of: plan, index: PackageCenter.default.index)) ?? .moved
     }
 }

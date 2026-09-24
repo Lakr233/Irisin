@@ -8615,6 +8615,124 @@
         }
       }
     },
+    "Check Again" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق مرة أخرى"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আবার যাচাই করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut prüfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a comprobar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier à nouveau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से जाँचें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periksa Lagi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricontrolla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度チェック"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 검사"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificar novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить снова"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kagua Tena"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Denetle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm tra lại"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ṣàyẹ̀wò Lẹ́ẹ̀kansí"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新检查"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新檢查"
+          }
+        }
+      }
+    },
     "Checking %@" : {
       "localizations" : {
         "ar" : {
@@ -36471,6 +36589,124 @@
         }
       }
     },
+    "Repositories Changed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيرت المستودعات"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিপোজিটরি পরিবর্তিত হয়েছে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellen geändert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositories Changed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositorios modificados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dépôts modifiés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपॉज़िटरी बदल गईं"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositori Berubah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repository modificati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリが変更されました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스가 변경됨"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositórios alterados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Репозитории изменились"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazina Zimebadilika"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depolar Değişti"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nguồn đã thay đổi"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Àwọn Ibi Ìpamọ́ Ti Yí Padà"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "软件源已变更"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "軟體源已變更"
+          }
+        }
+      }
+    },
     "Repositories found: %lld" : {
       "localizations" : {
         "ar" : {
@@ -58418,6 +58654,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安裝失敗時，查看出錯原因和下一步操作。"
+          }
+        }
+      }
+    },
+    "While you reviewed this change, a refresh updated or removed these packages: %@. Check the change again before you confirm." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء مراجعتك لهذا التغيير، أدى تحديث المستودعات إلى تحديث هذه الحزم أو إزالتها: %@. تحقق من التغيير مرة أخرى قبل التأكيد."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আপনি এই পরিবর্তনটি দেখার সময় একটি রিফ্রেশ এই প্যাকেজগুলি আপডেট করেছে বা সরিয়ে দিয়েছে: %@। নিশ্চিত করার আগে পরিবর্তনটি আবার যাচাই করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während du diese Änderung angesehen hast, hat eine Aktualisierung diese Pakete aktualisiert oder entfernt: %@. Prüfe die Änderung erneut, bevor du bestätigst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While you reviewed this change, a refresh updated or removed these packages: %@. Check the change again before you confirm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras revisabas este cambio, una actualización actualizó o eliminó estos paquetes: %@. Vuelve a comprobar el cambio antes de confirmar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant que vous examiniez cette modification, une actualisation a mis à jour ou supprimé ces paquets : %@. Vérifiez à nouveau la modification avant de confirmer."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जब आप यह बदलाव देख रहे थे, तब एक रीफ़्रेश ने ये पैकेज अपडेट किए या हटा दिए: %@। पुष्टि करने से पहले बदलाव को फिर से जाँचें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saat Anda meninjau perubahan ini, penyegaran memperbarui atau menghapus paket berikut: %@. Periksa lagi perubahan ini sebelum Anda mengonfirmasi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentre esaminavi questa modifica, un aggiornamento ha aggiornato o rimosso questi pacchetti: %@. Ricontrolla la modifica prima di confermare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この変更を確認している間に、リポジトリの更新によって次のパッケージが更新または削除されました：%@。確認する前に、変更をもう一度チェックしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 변경 사항을 검토하는 동안 새로 고침으로 다음 패키지가 업데이트되거나 제거되었습니다: %@. 확인하기 전에 변경 사항을 다시 검사하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enquanto você revisava esta alteração, uma atualização atualizou ou removeu estes pacotes: %@. Verifique a alteração novamente antes de confirmar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока вы просматривали это изменение, обновление репозиториев обновило или удалило эти пакеты: %@. Проверьте изменение снова, прежде чем подтвердить."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulipokuwa ukikagua badiliko hili, uonyeshaji upya ulisasisha au kuondoa vifurushi hivi: %@. Kagua badiliko tena kabla ya kuthibitisha."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu değişikliği incelerken bir yenileme şu paketleri güncelledi veya kaldırdı: %@. Onaylamadan önce değişikliği yeniden denetleyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trong lúc bạn xem thay đổi này, một lần làm mới đã cập nhật hoặc xóa các gói sau: %@. Hãy kiểm tra lại thay đổi trước khi xác nhận."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nígbà tí o ń ṣàyẹ̀wò àyípadà yìí, ìsọdọ̀tun kan ṣe àtúnṣe tàbí yọ àwọn pákéèjì wọ̀nyí kúrò: %@. Ṣàyẹ̀wò àyípadà náà lẹ́ẹ̀kansí kí o tó jẹ́rìí sí i."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在你查看此变更时，软件源刷新更新或移除了这些软件包：%@。请在确认前重新检查此变更。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在你檢視此變更時，軟體源重新整理更新或移除了這些套件：%@。請在確認前重新檢查此變更。"
           }
         }
       }

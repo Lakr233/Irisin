@@ -57,6 +57,47 @@ final class ResolutionPoolDatabaseTests: XCTestCase {
         XCTAssertEqual(written.packages.first { $0.identity == "com.example.library" }?.latestVersion, "2")
     }
 
+    /// A refresh writes one repository after another: a solve in the
+    /// middle keeps the catalogue it has, and says which one that was.
+    func testAPinnedCatalogueOutlivesAWrite() throws {
+        offer([app, package("com.example.library", "1")])
+        let first = try index.resolutionSnapshot()
+        XCTAssertEqual(try index.changes(since: first), [])
+
+        offer([app, package("com.example.library", "2")])
+        let pinned = try index.resolutionSnapshot(reusingCatalogueOf: first, evenIfWritten: true)
+        XCTAssertTrue(pinned.sharesCatalogue(with: first))
+        XCTAssertEqual(pinned.packages, first.packages)
+        XCTAssertEqual(try index.changes(since: pinned), .catalogue)
+        XCTAssertFalse(try index.isCurrent(pinned))
+
+        try Data("""
+        Package: com.example.library
+        Status: install ok installed
+        Version: 1
+        Architecture: iphoneos-arm64
+
+        """.utf8).write(to: status)
+        XCTAssertEqual(try index.changes(since: pinned), [.catalogue, .installed])
+    }
+
+    /// What a plan installs is withdrawn when its repository dropped it or
+    /// lists it with other fields; a version still listed as it was is not.
+    func testWithdrawnNamesWhatTheRepositoryNoLongerOffersAsItWas() throws {
+        let library = package("com.example.library", "1")
+        offer([app, library])
+        XCTAssertEqual(index.withdrawn([app, library]), [])
+
+        offer([app, package("com.example.library", "2")])
+        XCTAssertEqual(index.withdrawn([app, library]), [library])
+
+        offer([package("com.example.app", "1", ["depends": "com.example.library", "sha256": "0"]), library])
+        XCTAssertEqual(index.withdrawn([app, library]), [app])
+
+        let file = Package(identity: "com.example.file", payload: ["1": ["package": "com.example.file", "version": "1"]])
+        XCTAssertEqual(index.withdrawn([file]), [])
+    }
+
     /// Two databases written as often stand at the same revision.
     func testAnotherDatabaseIsNeverTakenForThisOne() throws {
         offer([app, package("com.example.library", "1")])

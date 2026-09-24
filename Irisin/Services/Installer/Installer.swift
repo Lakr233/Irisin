@@ -46,7 +46,7 @@ final class Installer {
         PackageQueue.shared.operationBegan()
         var sources: [(Package, URL, PackageQueue.PatchedPackage?)] = []
         do {
-            guard try await PackageQueue.isCurrent(plan: plan, index: PackageCenter.default.index) else {
+            guard try await PackageQueue.currency(of: plan, index: PackageCenter.default.index) == .current else {
                 // read again, so the queue is solved against what moved and
                 // Retry stages that plan, not this one again
                 await PackageCenter.default.reloadLocalPackages()
@@ -64,7 +64,7 @@ final class Installer {
             }
             let install = try await Self.stage(sources, at: workingLocation.appendingPathComponent(plan.id.uuidString))
             // checked again after the await: staging takes a while
-            guard try await PackageQueue.isCurrent(plan: plan, index: PackageCenter.default.index) else {
+            guard try await PackageQueue.currency(of: plan, index: PackageCenter.default.index) == .current else {
                 await PackageCenter.default.reloadLocalPackages()
                 throw ResolutionFailure(
                     message: String(localized: "Packages changed while preparing the installation. Try again.")
@@ -277,7 +277,7 @@ final class Installer {
     }
 
     private func perform(_ operation: OperationPayload, monitor: OperationMonitor) async -> OperationMonitor.Outcome {
-        guard await (try? PackageQueue.isCurrent(plan: operation.plan, index: PackageCenter.default.index)) == true
+        guard await (try? PackageQueue.currency(of: operation.plan, index: PackageCenter.default.index)) == .current
         else {
             return .failed(String(localized: "Packages changed. Review the changes and try again."))
         }

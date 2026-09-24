@@ -337,6 +337,18 @@ end.
   it. `ResolverProbe bench` and `golden` measure and check it against real
   repositories (`Scripts/fetch-repository-indexes.py`); every resolver
   test solves both ways (`resolveBothWays`).
+  A refresh is the one time a solve keeps a catalogue the database has
+  moved past: it writes one repository after another, and a read in the
+  middle is stale before it ends. While `obtainUpdateRemain()` is above
+  zero, a solve takes the pool last read (`resolutionSnapshot(evenIfWritten:)`),
+  and a repository written does not solve the queue or an open sheet
+  again; the queue solves once when the last is written. dpkg's status is
+  never held. A plan so solved is checked, never trusted:
+  `PackageQueue.currency(of:)` is current when the installed packages and
+  settings are as they were and every package it installs is still
+  offered as it was (`PackageIndex.withdrawn`). The sheet's Confirm and
+  staging both ask; a withdrawn package on Confirm is an alert with
+  Check Again, which reads the catalogue now.
 
 ## Layout
 
