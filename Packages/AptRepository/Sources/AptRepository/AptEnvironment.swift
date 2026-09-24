@@ -138,24 +138,26 @@ func aptLog(_ kind: Any, _ message: String, level: AptLogLevel = .info) {
     AptEnvironment.current.logger.log(String(describing: kind), message, level: level)
 }
 
-/// A value persisted through the injected `AptStorage`, cached after the first
-/// read. Owned by a center, so read and written on the main actor only.
+/// A value persisted through the injected `AptStorage`, read once when the
+/// center that owns it is made. Owned by a center, so read and written on the
+/// main actor only.
 @propertyWrapper
 public final class AptSetting<Value: Codable & Sendable> {
     private let key: String
-    private let defaultValue: Value
-    private var cachedValue: Value?
+    /// A key never written is its default from then on: the storage is in
+    /// place before either center exists, and a miss used to go back to the
+    /// disk on every read, once per dispatched update for the logging switch.
+    private var value: Value
 
     public init(key: String, defaultValue: Value) {
         self.key = key
-        self.defaultValue = defaultValue
-        cachedValue = Self.readDisk(key: key)
+        value = Self.readDisk(key: key) ?? defaultValue
     }
 
     public var wrappedValue: Value {
-        get { cachedValue ?? Self.readDisk(key: key) ?? defaultValue }
+        get { value }
         set {
-            cachedValue = newValue
+            value = newValue
             AptEnvironment.current.storage.write(key: key, value: try? JSONEncoder().encode(newValue))
         }
     }

@@ -37,15 +37,29 @@ nonisolated enum AptRepositoryBootstrap {
         PackageAdapters.installed.installable(on: PackagedArchitecture.architecture)
 }
 
+/// Dog stamps, formats, hands the line to os_log and writes the file on the
+/// caller's thread, and AptRepository logs from the main actor: a line or
+/// two for every repository a refresh finishes. The lines go to Dog from
+/// one queue, in the order they were logged, and the caller goes on; a
+/// critical line, the one a crash may follow, is waited for.
 private nonisolated struct DogLogger: AptLogger {
+    private static let queue = DispatchQueue(label: "wiki.qaq.irisin.log", qos: .utility)
+
     func log(_ kind: String, _ message: String, level: AptLogLevel) {
-        let dogLevel: Dog.DogLevel = switch level {
-        case .verbose: .verbose
-        case .info: .info
-        case .warning: .warning
-        case .error: .error
-        case .critical: .critical
+        let join: @Sendable () -> Void = {
+            let dogLevel: Dog.DogLevel = switch level {
+            case .verbose: .verbose
+            case .info: .info
+            case .warning: .warning
+            case .error: .error
+            case .critical: .critical
+            }
+            Dog.shared.join(kind, message, level: dogLevel)
         }
-        Dog.shared.join(kind, message, level: dogLevel)
+        if level == .critical {
+            Self.queue.sync(execute: join)
+        } else {
+            Self.queue.async(execute: join)
+        }
     }
 }

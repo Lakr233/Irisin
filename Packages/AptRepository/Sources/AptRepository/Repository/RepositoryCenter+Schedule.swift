@@ -20,7 +20,10 @@ struct RefreshRound {
     /// repositories are not asked
     var unreachableHosts: Set<String> = []
     var results: [URL: (result: Result, duration: TimeInterval)] = [:]
-    /// what the dispatch order was last logged for
+    /// the waiting updates in the order they start, as last worked out
+    var order: [URL] = []
+    /// what `order` was worked out for, less those finished or deleted
+    /// since: asked for again, one of them is ordered again
     var ordered: Set<URL> = []
 }
 
@@ -79,16 +82,10 @@ extension RepositoryCenter {
         // ordered only with a slot to fill: the reports are decoded for it,
         // and an import calls this once per repository it adds
         guard decision.slots > 0, !waiting.isEmpty else { return }
-        let order = UpdateSchedule.order(waiting, reports: waiting.reduce(into: [:]) { reports, url in
-            reports[url] = repositories[url]?.refreshReport
-        })
         if refreshRound == nil {
             refreshRound = RefreshRound(started: now)
         }
-        if let round = refreshRound, !waiting.isSubset(of: round.ordered) {
-            refreshRound?.ordered.formUnion(waiting)
-            aptLog(self, "update dispatch order: \(describeOrder(order))", level: .verbose)
-        }
+        let order = dispatchOrder(of: waiting)
 
         // started after the loop: finishing one starts the next, and the
         // queue has to be what this decision left before that happens
@@ -119,6 +116,24 @@ extension RepositoryCenter {
         for outcome in notAttempted {
             finishUpdate(outcome)
         }
+    }
+
+    /// The waiting updates in `UpdateSchedule`'s order, worked out again only
+    /// for one the round has not ordered. A waiting repository's report
+    /// changes only when it is refreshed; a round of a hundred
+    /// repositories used to decode every waiting report each time one of
+    /// them finished.
+    private func dispatchOrder(of waiting: Set<URL>) -> [URL] {
+        if let round = refreshRound, waiting.isSubset(of: round.ordered) {
+            return round.order.filter(waiting.contains)
+        }
+        let order = UpdateSchedule.order(waiting, reports: waiting.reduce(into: [:]) { reports, url in
+            reports[url] = repositories[url]?.refreshReport
+        })
+        refreshRound?.order = order
+        refreshRound?.ordered = waiting
+        aptLog(self, "update dispatch order: \(describeOrder(order))", level: .verbose)
+        return order
     }
 
     /// Puts one update in flight.

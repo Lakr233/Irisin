@@ -134,6 +134,7 @@ public extension RepositoryCenter {
         }
         let deleted = repositories.removeValue(forKey: withUrl)
         pendingUpdateRequest.remove(withUrl)
+        refreshRound?.ordered.remove(withUrl)
         currentUpdateProgress.removeValue(forKey: withUrl)
         // A fetch in flight is cancelled, not waited for. It stays in the
         // queue until its task ends, so a re-added repository's refresh

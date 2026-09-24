@@ -152,6 +152,7 @@ extension RepositoryCenter {
         lastActivity.removeValue(forKey: url)
         stalledUpdates.remove(url)
         givenUpUpdates.remove(url)
+        refreshRound?.ordered.remove(url)
 
         if deleted {
             aptLog(self, "update \(url.absoluteString) ended after its repository was deleted")

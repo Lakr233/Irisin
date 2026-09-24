@@ -173,14 +173,20 @@ class SidebarController: UIViewController {
         let animated = animated && hasListedRepositories
         hasListedRepositories = true
         let urls = RepositoryCenter.default.obtainRepositoryUrls(sortedByName: true).uniqued()
+        let rows = urls.isEmpty ? [Item.none] : urls.map(Item.repository)
         let previous = dataSource.snapshot(for: .repositories)
-        var outline = NSDiffableDataSourceSectionSnapshot<Item>()
-        outline.append([.header])
-        outline.append(urls.isEmpty ? [.none] : urls.map(Item.repository), to: .header)
-        if !previous.contains(.header) || previous.isExpanded(.header) {
-            outline.expand([.header])
+        // a refresh moves the header's count once a second and the list not
+        // at all: the same list is not diffed again, and the header stays as
+        // the user left it
+        if previous.items != [.header] + rows {
+            var outline = NSDiffableDataSourceSectionSnapshot<Item>()
+            outline.append([.header])
+            outline.append(rows, to: .header)
+            if !previous.contains(.header) || previous.isExpanded(.header) {
+                outline.expand([.header])
+            }
+            dataSource.apply(outline, to: .repositories, animatingDifferences: animated)
         }
-        dataSource.apply(outline, to: .repositories, animatingDifferences: animated)
         if let indexPath = dataSource.indexPath(for: .header),
            let cell = collectionView.cellForItem(at: indexPath) as? UICollectionViewListCell
         {
