@@ -332,6 +332,13 @@ extension PackageController {
                 level: .warning
             )
         }
+        // a tab chosen later that cannot be built makes the depiction on
+        // show partial, and the footer says so
+        proxy.onLateFailure = { [weak self, weak view] in
+            guard let self, let view, depictionView === view, !depictionIsPartial else { return }
+            depictionIsPartial = true
+            applyRows(reconfiguring: [.footer], animated: true)
+        }
         return view
     }
 }

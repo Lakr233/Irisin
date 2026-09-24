@@ -74,4 +74,34 @@ struct DepictionTests {
         #expect(PackageController.contact("ElleKit Team") == ("ElleKit Team", nil))
         #expect(PackageController.contact("Some <thing>") == ("Some <thing>", nil))
     }
+
+    /// A tab is built when first chosen; one whose fields are missing
+    /// leaves the strip, the tab before it shows, and the page hears of it.
+    @Test
+    func aTabThatCannotBeBuiltLeavesTheStrip() {
+        let observer = DepictionPresentationProxy()
+        var lateFailures = 0
+        observer.onLateFailure = { lateFailures += 1 }
+        let tabs = DepictionView.view(
+            dictionary: ["class": "DepictionTabView", "tabs": [
+                ["tabname": "Details", "class": "DepictionStackView", "views": [label]],
+                ["tabname": "Broken", "class": "DepictionHeaderView"],
+            ]],
+            viewController: observer,
+            tintColor: nil,
+            isActionable: false
+        )
+        let strip = tabs?.subviews.compactMap { $0 as? UISegmentedControl }.first
+        #expect(strip?.numberOfSegments == 2)
+        #expect(observer.unrenderedClasses.isEmpty)
+
+        strip?.selectedSegmentIndex = 1
+        strip?.sendActions(for: .valueChanged)
+        #expect(strip?.numberOfSegments == 1)
+        #expect(strip?.selectedSegmentIndex == 0)
+        #expect(observer.unrenderedClasses == ["DepictionHeaderView"])
+        #expect(lateFailures == 1)
+        #expect(height(of: tabs) > 0)
+    }
 }
+

@@ -13,7 +13,7 @@ final class DepictionTabView: DepictionView {
     private let segments = UISegmentedControl()
 
     /// Each tab's json, in the strip's order.
-    private let tabs: [[String: Any]]
+    private var tabs: [[String: Any]]
 
     /// The tabs built so far. The first is built with the view; another
     /// only when it is first chosen, since a long changelog nobody opens
@@ -59,7 +59,7 @@ final class DepictionTabView: DepictionView {
                 if first != nil {
                     shown.append(tab)
                 }
-            } else if DepictionView.knowsClass(of: tab) {
+            } else if DepictionView.viewClass(of: tab) != nil {
                 shown.append(tab)
             } else {
                 (viewController as? DepictionRenderObserver)?
@@ -105,9 +105,9 @@ final class DepictionTabView: DepictionView {
         show(tab: 0)
     }
 
-    /// The tab at `index`, built the first time it is asked for. A tab
-    /// whose fields turn out to be missing shows nothing, and the page
-    /// hears of it as it would have while loading.
+    /// The tab at `index`, built the first time it is asked for. The page
+    /// hears of one whose fields turn out to be missing as it would have
+    /// while loading.
     private func content(of index: Int) -> DepictionView? {
         if let view = tabContentViews[index] {
             return view
@@ -127,9 +127,20 @@ final class DepictionTabView: DepictionView {
         return view
     }
 
+    /// A tab that cannot be built leaves the strip, and the one before it
+    /// is shown in its place: the first always built.
     private func show(tab index: Int) {
         contentArea.subviews.forEach { $0.removeFromSuperview() }
-        guard let view = content(of: index) else { return }
+        guard let view = content(of: index) else {
+            tabs.remove(at: index)
+            tabContentViews = Dictionary(uniqueKeysWithValues: tabContentViews.map { key, view in
+                (key > index ? key - 1 : key, view)
+            })
+            segments.removeSegment(at: index, animated: false)
+            let previous = max(index - 1, 0)
+            segments.selectedSegmentIndex = previous
+            return show(tab: previous)
+        }
         contentArea.addSubview(view)
         view.snp.makeConstraints { x in
             x.edges.equalToSuperview()

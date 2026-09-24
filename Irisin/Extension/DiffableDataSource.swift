@@ -58,6 +58,41 @@ nonisolated extension Array where Element: Hashable {
     }
 }
 
+/// A list's changes for a table that may be out of the window. A table
+/// laid out outside a window lays out against sizes it does not have yet,
+/// so a change waits for the page to be in one: the latest change of each
+/// kind is kept and applied, unanimated and in the order they came, when
+/// the page calls `applyPending()` from `viewIsAppearing`. Every list
+/// that changes while another page covers it goes through this.
+final class WindowedListUpdates {
+    private var pending: [(kind: String, update: (_ animated: Bool) -> Void)] = []
+
+    /// Runs `update` now when `table` is in a window, or keeps it as the
+    /// latest change of its `kind` until the page appears. `update` reads
+    /// the page's state when it runs, not when it was asked for.
+    func apply(
+        _ kind: String,
+        to table: UIView,
+        animated: Bool,
+        _ update: @escaping (_ animated: Bool) -> Void
+    ) {
+        pending.removeAll { $0.kind == kind }
+        guard table.window != nil else {
+            pending.append((kind, update))
+            return
+        }
+        update(animated)
+    }
+
+    func applyPending() {
+        let updates = pending
+        pending = []
+        for entry in updates {
+            entry.update(false)
+        }
+    }
+}
+
 extension UIView {
     /// Animate a diff only while the user can see it. A reload behind another
     /// screen, or before the first layout, should just land.

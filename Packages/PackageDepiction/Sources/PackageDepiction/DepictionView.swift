@@ -43,8 +43,7 @@ public class DepictionView: UIView {
             tintColor = UIColor(css: tintColorStr) ?? .systemOrange
         }
 
-        let rawclass = Bundle.main.classNamed("PackageDepiction.\(className)") as? DepictionView.Type
-        let view = rawclass?.init(
+        let view = viewClass(of: dictionary)?.init(
             dictionary: dictionary,
             viewController: viewController,
             tintColor: tintColor,
@@ -56,11 +55,12 @@ public class DepictionView: UIView {
         return view
     }
 
-    /// Whether this build has a view for the json's `class`, found the way
-    /// `view(dictionary:…)` finds it, without building one.
-    static func knowsClass(of dictionary: [String: Any]) -> Bool {
+    /// The view this build has for the json's `class`, nil when it has
+    /// none: what `view(dictionary:…)` builds, and what a tab built later
+    /// is checked against.
+    static func viewClass(of dictionary: [String: Any]) -> DepictionView.Type? {
         let className = (dictionary["class"] as? String) ?? ""
-        return Bundle.main.classNamed("PackageDepiction.\(className)") is DepictionView.Type
+        return Bundle.main.classNamed("PackageDepiction.\(className)") as? DepictionView.Type
     }
 
     public required init?(

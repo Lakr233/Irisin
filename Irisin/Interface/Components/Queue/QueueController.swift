@@ -43,6 +43,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     }
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let listUpdates = WindowedListUpdates()
     private lazy var icons = PackageIconCache { [weak self] in self?.redraw() }
     private let emptyState = EmptyStateView(text: String(localized: "No packages in the queue"))
     private let executeButton = UIBarButtonItem()
@@ -183,6 +184,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
         reload()
+        listUpdates.applyPending()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -213,28 +215,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
             failure = nil
         }
         emptyState.isHidden = plan != nil
-
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
-        let changes = QueueChange.changes(of: plan, requested: Set(manager.actions.map(\.identity)))
-        if let reason = manager.blocked ?? failure {
-            snapshot.appendSections([.failure])
-            snapshot.appendItems([.failure(reason)], toSection: .failure)
-        }
-        for group in QueueChange.sections(of: changes.values) {
-            let section = Section.changes(group.kind, dependencies: group.dependencies)
-            snapshot.appendSections([section])
-            snapshot.appendItems(group.changes.map(Row.change), toSection: section)
-        }
-        // the sections already count the packages; only what they cannot say
-        if plan != nil, !manager.notices.isEmpty {
-            snapshot.appendSections([.notices(manager.notices.uniqued().joined(separator: "\n\n"))])
-        }
-        // off screen the rows wait for the page to come back: a table told
-        // to lay out outside a window lays out against sizes it does not
-        // have yet
-        if tableView.window != nil {
-            snapshot.reconfigureItems(survivingFrom: dataSource.snapshot())
-            dataSource.apply(snapshot, animatingDifferences: view.shouldAnimateDiff)
+        listUpdates.apply("rows", to: tableView, animated: view.shouldAnimateDiff) { [weak self] animated in
+            self?.applyRows(animated: animated)
         }
 
         guard let plan else {
@@ -256,6 +238,30 @@ final class QueueController: UIViewController, UITableViewDelegate {
             return
         }
         follow(plan)
+    }
+
+    /// The rows of the queue as it is when this runs: the reason the last
+    /// attempt stopped, a card per kind of change, then the notices.
+    private func applyRows(animated: Bool) {
+        let manager = PackageQueue.shared
+        let plan = manager.plan
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
+        let changes = QueueChange.changes(of: plan, requested: Set(manager.actions.map(\.identity)))
+        if let reason = manager.blocked ?? failure {
+            snapshot.appendSections([.failure])
+            snapshot.appendItems([.failure(reason)], toSection: .failure)
+        }
+        for group in QueueChange.sections(of: changes.values) {
+            let section = Section.changes(group.kind, dependencies: group.dependencies)
+            snapshot.appendSections([section])
+            snapshot.appendItems(group.changes.map(Row.change), toSection: section)
+        }
+        // the sections already count the packages; only what they cannot say
+        if plan != nil, !manager.notices.isEmpty {
+            snapshot.appendSections([.notices(manager.notices.uniqued().joined(separator: "\n\n"))])
+        }
+        snapshot.reconfigureItems(survivingFrom: dataSource.snapshot())
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
 
     /// Patch while a package of the plan is still to be adapted and Execute
@@ -334,10 +340,12 @@ final class QueueController: UIViewController, UITableViewDelegate {
     }
 
     private func redraw() {
-        guard tableView.window != nil else { return }
-        var snapshot = dataSource.snapshot()
-        snapshot.reconfigureItems(snapshot.itemIdentifiers)
-        dataSource.apply(snapshot, animatingDifferences: false)
+        listUpdates.apply("icons", to: tableView, animated: false) { [weak self] _ in
+            guard let self else { return }
+            var snapshot = dataSource.snapshot()
+            snapshot.reconfigureItems(snapshot.itemIdentifiers)
+            dataSource.apply(snapshot, animatingDifferences: false)
+        }
     }
 
     private func refreshVisibleProgress() {

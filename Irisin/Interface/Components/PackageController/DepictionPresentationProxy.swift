@@ -16,8 +16,13 @@ class DepictionPresentationProxy: UIViewController, DepictionRenderObserver {
     /// The classes the depiction named that this build could not build.
     private(set) var unrenderedClasses: [String] = []
 
+    /// Called for a view that could not be built after the depiction was
+    /// rendered: a tab is built when it is first chosen.
+    var onLateFailure: (() -> Void)?
+
     func depictionCouldNotRender(className: String) {
         unrenderedClasses.append(className)
+        onLateFailure?()
     }
 
     override func present(

@@ -35,10 +35,7 @@ class SettingsController: UITableViewController {
 
     private var items: [String: SettingsItem] = [:]
 
-    /// A change that came while the page was off screen, applied when it
-    /// comes back: a table told to lay out outside a window lays out
-    /// against sizes it does not have yet.
-    private var needsSnapshot = false
+    private let listUpdates = WindowedListUpdates()
 
     private lazy var dataSource = EditableTableDiffableDataSource<Section, Row>(
         tableView: tableView
@@ -158,10 +155,12 @@ class SettingsController: UITableViewController {
     /// none of them has a vendor. Rows that stay are reconfigured: the icon,
     /// the name or the account may have changed.
     private func applySnapshot(animatingDifferences: Bool) {
-        guard tableView.window != nil else {
-            needsSnapshot = true
-            return
+        listUpdates.apply("rows", to: tableView, animated: animatingDifferences) { [weak self] animated in
+            self?.applyRows(animated: animated)
         }
+    }
+
+    private func applyRows(animated animatingDifferences: Bool) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         let accounts = Self.paidRepositories().map { Row.account($0.url) }
         if !accounts.isEmpty {
@@ -206,18 +205,19 @@ class SettingsController: UITableViewController {
     }
 
     private func reloadValues() {
-        // off screen the next appearance reads every value again
-        guard tableView.window != nil else { return }
-        var snapshot = dataSource.snapshot()
-        snapshot.reconfigureItems(snapshot.itemIdentifiers.filter {
-            if case .item = $0 {
-                true
-            } else {
-                false
-            }
-        })
-        dataSource.apply(snapshot, animatingDifferences: false)
-        footer.refresh()
+        listUpdates.apply("values", to: tableView, animated: false) { [weak self] _ in
+            guard let self else { return }
+            var snapshot = dataSource.snapshot()
+            snapshot.reconfigureItems(snapshot.itemIdentifiers.filter {
+                if case .item = $0 {
+                    true
+                } else {
+                    false
+                }
+            })
+            dataSource.apply(snapshot, animatingDifferences: false)
+            footer.refresh()
+        }
     }
 
     /// A one-item menu: tapping the row asks once more before `confirm` runs.
@@ -246,10 +246,7 @@ class SettingsController: UITableViewController {
 
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
-        if needsSnapshot {
-            needsSnapshot = false
-            applySnapshot(animatingDifferences: false)
-        }
+        listUpdates.applyPending()
         // the sizes on the rows are read when configured; coming back to
         // this screen after a download must not show the old ones
         dispatchValueUpdate()

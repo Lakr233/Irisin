@@ -396,7 +396,10 @@ class PackageController: UIViewController {
     /// out against.
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
-        UIView.performWithoutAnimation { view.layoutIfNeeded() }
+        UIView.performWithoutAnimation {
+            view.layoutIfNeeded()
+            listUpdates.applyPending()
+        }
         bannerPackageView.updateButton()
     }
 
@@ -420,19 +423,25 @@ class PackageController: UIViewController {
     /// The banner height the constraints were last set to.
     private var appliedBannerHeight: CGFloat?
 
+    /// The banner's height waits for the page to be in a window.
+    private let listUpdates = WindowedListUpdates()
+
     /// Brings the banner to its preferred height: at once before the page
-    /// shows, in an animation after.
+    /// shows, in an animation after, and when it next appears for a photo
+    /// that arrived while another page covered it.
     private func resizeBanner() {
-        updatePreferredImageHeight()
-        // outside the window the table has no sizes to measure against; the
-        // first layout in it comes back here before the page shows
-        guard tableView.window != nil, preferredBannerHeight != appliedBannerHeight else {
-            return
+        listUpdates.apply("banner", to: tableView, animated: hasAppeared) { [weak self] animated in
+            self?.applyBannerHeight(animated: animated)
         }
+    }
+
+    private func applyBannerHeight(animated: Bool) {
+        updatePreferredImageHeight()
+        guard preferredBannerHeight != appliedBannerHeight else { return }
         appliedBannerHeight = preferredBannerHeight
         artworkHeight?.update(offset: preferredBannerHeight)
         heightsAskedFor[.artwork] = nil
-        guard hasAppeared else {
+        guard animated else {
             UIView.performWithoutAnimation {
                 measureRows(animated: false)
                 tableView.layoutIfNeeded()
