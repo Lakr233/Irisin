@@ -78,6 +78,8 @@ public extension InstallerJob {
               existing.count == transaction.configureExisting.count,
               automatic.count == transaction.autoInstalled.count, automatic.isSubset(of: installing),
               installing.isDisjoint(with: removing), existing.isDisjoint(with: installing.union(removing)),
+              (!transaction.bootstrapInstall || (!installing.isEmpty && removing.isEmpty
+                  && existing.isEmpty && !transaction.recoveryMode)),
               Self.isSHA256Hex(transaction.statusDigest),
               transaction.stages.count <= Self.maximumPackagesPerTransaction * 3
         else {

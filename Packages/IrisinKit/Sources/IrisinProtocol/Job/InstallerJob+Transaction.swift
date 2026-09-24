@@ -26,6 +26,10 @@ public extension InstallerJob {
         /// relationships are not checked and maintainer-script failures are
         /// warnings; archive and filesystem safety checks remain in force.
         public var recoveryMode: Bool
+        /// For a first installation, place every verified package payload
+        /// before running the normal unpack and configure stages. This makes
+        /// interpreters in the same transaction available to early scripts.
+        public var bootstrapInstall: Bool
 
         public init(
             install: [Item],
@@ -38,7 +42,8 @@ public extension InstallerJob {
             statusDigest: String = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             allowSystemRemoval: Bool = false,
             ignoreScriptFailures: Bool = false,
-            recoveryMode: Bool = false
+            recoveryMode: Bool = false,
+            bootstrapInstall: Bool = false
         ) {
             self.install = install
             self.remove = remove
@@ -49,6 +54,7 @@ public extension InstallerJob {
             self.allowSystemRemoval = allowSystemRemoval
             self.ignoreScriptFailures = ignoreScriptFailures
             self.recoveryMode = recoveryMode
+            self.bootstrapInstall = bootstrapInstall
             self.stages = stages ?? ([remove.isEmpty ? nil : .remove(remove),
                                       install.isEmpty ? nil : .unpack(install.map(\.identity)),
                                       install.isEmpty ? nil : .configure(install.map(\.identity))].compactMap(\.self))

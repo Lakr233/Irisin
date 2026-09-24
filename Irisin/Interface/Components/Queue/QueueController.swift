@@ -89,6 +89,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private var committed = false {
         didSet { updateBar() }
     }
+    private var bootstrapRequested = false
 
     /// The plan the page last showed, to tell a new one from a redraw.
     private var shownPlan: ResolutionPlan?
@@ -168,6 +169,17 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
         // the title is the bar's to set: Patch, Execute or Retry
         executeButton.primaryAction = UIAction { [weak self] _ in self?.primaryAction() }
+        executeButton.menu = UIMenu(children: [
+            UIDeferredMenuElement.uncached { [weak self] completion in
+                guard let self, let plan = PackageQueue.shared.plan,
+                      Self.canBootstrapInstall(plan), PackageQueue.shared.unpatched.isEmpty
+                else { return completion([]) }
+                completion([UIAction(
+                    title: String(localized: "Bootstrap Install"),
+                    image: UIImage(systemName: "shippingbox")
+                ) { [weak self] _ in self?.primaryAction(bootstrapInstall: true) }])
+            },
+        ])
         if #available(iOS 26.0, *) {
             executeButton.style = .prominent
         }
@@ -211,6 +223,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         let plan = manager.plan
         if plan?.id != shownPlan?.id {
             committed = false
+            bootstrapRequested = false
             shownPlan = plan
             failure = nil
         }
@@ -405,8 +418,20 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// Patch or Execute: Retry repeats what failed, otherwise the tap
     /// commits the plan, now if every file is here and as soon as they are
     /// if not.
-    private func primaryAction() {
+    private static func canBootstrapInstall(_ plan: ResolutionPlan) -> Bool {
+        let installing = Set(plan.install.map(\.identity))
+        let installed = Set(plan.snapshot.installed.map(\.identity))
+        let configuring = Set(plan.stages.flatMap { stage -> [String] in
+            if case let .configure(names) = stage { return names }
+            return []
+        })
+        return !installing.isEmpty && plan.remove.isEmpty && !plan.recoveryMode
+            && installing.isDisjoint(with: installed) && configuring.isSubset(of: installing)
+    }
+
+    private func primaryAction(bootstrapInstall: Bool = false) {
         guard let plan = PackageQueue.shared.plan else { return }
+        bootstrapRequested = bootstrapInstall
         switch stage {
         case .downloadFailed:
             failure = nil
@@ -424,7 +449,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     /// What the button said when it was tapped, every file being here.
     private func run(_ plan: ResolutionPlan) {
         if PackageQueue.shared.unpatched.isEmpty {
-            stageAndRun(plan)
+            stageAndRun(plan, bootstrapInstall: bootstrapRequested)
         } else {
             patch()
         }
@@ -518,7 +543,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         presentNotice(title: "Queue Changed", message: lines.joined(separator: "\n\n"))
     }
 
-    private func stageAndRun(_ plan: ResolutionPlan) {
+    private func stageAndRun(_ plan: ResolutionPlan, bootstrapInstall: Bool) {
         failure = nil
         guard !Installer.shared.inProcessingQueue else {
             return stagingFailed(
@@ -527,7 +552,10 @@ final class QueueController: UIViewController, UITableViewDelegate {
         }
         stage = .staging
         staging = Task { [weak self] in
-            let payload = await Installer.shared.createOperationPayload(plan: plan)
+            let payload = await Installer.shared.createOperationPayload(
+                plan: plan,
+                bootstrapInstall: bootstrapInstall
+            )
             guard let self else { return }
             staging = nil
             // a page left while staging ran has nothing to present on

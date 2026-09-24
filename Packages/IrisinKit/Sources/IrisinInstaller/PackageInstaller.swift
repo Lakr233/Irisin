@@ -79,6 +79,14 @@ public final class PackageInstaller {
         }
         try work.database.consolidate()
         emit(.phase(.applying))
+        if transaction.bootstrapInstall {
+            guard transaction.install.allSatisfy({ work.database.records[$0.identity] == nil }) else {
+                throw PackageFailure("Bootstrap Install is only available for packages not already installed")
+            }
+            try work.validateBootstrapPayloads(transaction.install.map(\.identity), archives: archives)
+            emit(.notice("Bootstrap Install: placing all package files before the normal installation"))
+            try work.seedPayloads(transaction.install.map(\.identity), archives: archives)
+        }
         // a stage that fails leaves the ones before it done: their marks
         // are written all the same, still under the frontend lock
         defer { saveMarkings(transaction, records: work.database.records) }

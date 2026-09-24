@@ -2,6 +2,29 @@ import Foundation
 import IrisinProtocol
 
 extension PackageTransaction {
+    /// Check ownership for every preliminary payload before the first file
+    /// is placed. The normal unpack will check again against the database
+    /// as each package becomes recorded there.
+    func validateBootstrapPayloads(_ identities: [String], archives: [String: PackageArchive]) throws {
+        var seen: [String: String] = [:]
+        for identity in identities {
+            guard let archive = archives[identity] else {
+                throw PackageFailure("Missing prepared package: \(identity)")
+            }
+            _ = try validateOwnership(archive, owners: fileOwners(excluding: identity))
+            for entry in archive.package.entries where entry.kind != .directory {
+                let path = overrides.path("/" + entry.path, owner: identity)
+                if let previous = seen[path], previous != identity, let first = archives[previous],
+                   try !PackageRelations.relates(archive.fields, .replaces, to: first.fields),
+                   try !PackageRelations.relates(first.fields, .replaces, to: archive.fields)
+                {
+                    throw PackageFailure("\(path) is in both \(previous) and \(identity); Replaces is required")
+                }
+                seen[path] = identity
+            }
+        }
+    }
+
     /// dpkg's `process_archive`, in its order: the Pre-Depends check, the
     /// old prerm, the new preinst, the files, the old postrm, the old
     /// version's leftover files, the ownership changes, then the record.

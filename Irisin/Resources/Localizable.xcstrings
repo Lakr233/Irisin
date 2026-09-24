@@ -8025,6 +8025,29 @@
         }
       }
     },
+    "Bootstrap Install" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تثبيت التمهيد" } },
+        "bn" : { "stringUnit" : { "state" : "translated", "value" : "বুটস্ট্র্যাপ ইনস্টল" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bootstrap-Installation" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bootstrap Install" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Instalación inicial" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Installation d’amorçage" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "बूटस्ट्रैप इंस्टॉल" } },
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Instalasi Bootstrap" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Installazione bootstrap" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブートストラップインストール" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "부트스트랩 설치" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Instalação inicial" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Первичная установка" } },
+        "sw" : { "stringUnit" : { "state" : "translated", "value" : "Usakinishaji wa Bootstrap" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Önyükleme Kurulumu" } },
+        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Cài đặt khởi tạo" } },
+        "yo" : { "stringUnit" : { "state" : "translated", "value" : "Fífìsílẹ̀ Bootstrap" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "引导安装" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "引導安裝" } }
+      }
+    },
     "Blocked Updates" : {
       "localizations" : {
         "ar" : {

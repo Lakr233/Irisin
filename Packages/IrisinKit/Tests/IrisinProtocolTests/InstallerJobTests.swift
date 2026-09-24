@@ -62,6 +62,10 @@ final class InstallerJobTests: XCTestCase {
             install: [tweak], remove: ["com.example.old"], autoInstalled: ["com.example.old"]
         ))
         XCTAssertThrowsError(try markedRemoval.validate())
+        XCTAssertNoThrow(try InstallerJob.transaction(.init(install: [tweak], remove: [], bootstrapInstall: true)).validate())
+        XCTAssertThrowsError(try InstallerJob.transaction(.init(
+            install: [tweak], remove: ["com.example.old"], bootstrapInstall: true
+        )).validate())
 
         XCTAssertNoThrow(try InstallerJob.respring.validate())
         XCTAssertNoThrow(try InstallerJob.bootstrapIrisinDaemon.validate())
@@ -76,6 +80,12 @@ final class InstallerJobTests: XCTestCase {
         ))
         let decoded = try InstallerJob.decode(job.encoded())
         XCTAssertEqual(decoded, job)
+        let bootstrap = InstallerJob.transaction(.init(
+            install: [.init(identity: "com.example.tweak", path: "/var/mobile/Documents/x.deb")],
+            remove: [],
+            bootstrapInstall: true
+        ))
+        XCTAssertEqual(try InstallerJob.decode(bootstrap.encoded()), bootstrap)
         XCTAssertThrowsError(try InstallerJob.decode(Data(repeating: 0x41, count: IrisinWire.maximumJobByteCount + 1)))
         XCTAssertThrowsError(try InstallerJob.decode(Data("{}".utf8)))
 

@@ -33,7 +33,8 @@ final class Installer {
     /// already running out of that directory.
     func createOperationPayload(
         plan: ResolutionPlan,
-        ignoreScriptFailures: Bool = false
+        ignoreScriptFailures: Bool = false,
+        bootstrapInstall: Bool = false
     ) async -> OperationPayload? {
         guard !inProcessingQueue else {
             Dog.shared.join(self, "refusing to stage a payload while an operation runs", level: .warning)
@@ -90,7 +91,8 @@ final class Installer {
                 // off since then has the helper refuse the removal
                 allowSystemRemoval: PackageQueue.shared.allowSystemRemoval,
                 ignoreScriptFailures: ignoreScriptFailures,
-                recoveryMode: plan.recoveryMode
+                recoveryMode: plan.recoveryMode,
+                bootstrapInstall: bootstrapInstall
             )
             try InstallerJob.transaction(transaction).validate()
             return OperationPayload(plan: plan, transaction: transaction)

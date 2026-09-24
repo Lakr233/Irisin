@@ -32,6 +32,12 @@ Download the package for your jailbreak from [Releases](https://github.com/Lakr2
 
 Irisin checks your jailbreak when it opens. If you installed the wrong package, Irisin names the architecture it was built for and the one your device uses, asks you to install the matching package, and does not open.
 
+### First-time CFW preparation
+
+On a fresh custom firmware bootstrap, an early package may need a program from a later package before that later package can be configured. For example, `debianutils` may need `bash` to run its configuration script, while `bash` needs `debianutils` configured first.
+
+Add the packages to the queue, then **long-press Execute** and choose **Bootstrap Install**. Irisin first extracts the files from every package in that queue, then runs the normal unpack, maintainer-script, and configuration sequence. This makes `bash` available to the early script without skipping package checks or script failures. The option appears only for a queue of new packages with no removals; use the regular Execute button after the initial preparation.
+
 ## Report a Problem
 
 Choose Report Issue in Settings, or [open an issue on GitHub](https://github.com/Lakr233/Irisin/issues/new). Search the existing issues first to avoid duplicates.

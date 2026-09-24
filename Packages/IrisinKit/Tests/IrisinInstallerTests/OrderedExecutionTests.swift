@@ -4,6 +4,78 @@ import IrisinProtocol
 import Testing
 
 struct OrderedExecutionTests {
+    /// The early configuration script needs the later package's executable,
+    /// while the later package has a Pre-Depends on the first being configured.
+    @Test func bootstrapInstallSeedsFilesBeforeNormalStages() throws {
+        func run(bootstrap: Bool) throws -> (NativeInstallFixture, [InstallerEvent]) {
+            let fixture = try NativeInstallFixture()
+            let debianutils = try fixture.package(
+                "debianutils",
+                controls: ["postinst": "#!/bin/sh\ntest -f \"$DPKG_ROOT/bin/bash\"\n"]
+            )
+            let bash = try fixture.package(
+                "bash",
+                files: ["bin/bash": "available"],
+                fields: ["pre-depends": "debianutils"]
+            )
+            let transaction = InstallerJob.Transaction(
+                install: [debianutils, bash],
+                remove: [],
+                stages: [
+                    .unpack(["debianutils"]), .configure(["debianutils"]),
+                    .unpack(["bash"]), .configure(["bash"]),
+                ],
+                bootstrapInstall: bootstrap
+            )
+            var events: [InstallerEvent] = []
+            let installer = PackageInstaller(
+                installRoot: fixture.root.path,
+                layout: .init(kind: .none),
+                databaseDirectory: fixture.database,
+                scriptRoot: fixture.root.path
+            ) { events.append($0) }
+            try installer.run(transaction)
+            return (fixture, events)
+        }
+
+        let failure = #expect(throws: PackageStepFailure.self) { try run(bootstrap: false) }
+        #expect(failure?.problem == .scriptFailed(
+            identity: "debianutils",
+            step: .configuring,
+            script: "postinst",
+            status: 1
+        ))
+        let (fixture, events) = try run(bootstrap: true)
+        #expect(try fixture.status("debianutils") == "install ok installed")
+        #expect(try fixture.status("bash") == "install ok installed")
+        #expect(try fixture.text("bin/bash") == "available")
+        #expect(events.contains(.notice("Bootstrap Install: placing all package files before the normal installation")))
+    }
+
+    @Test func bootstrapInstallChecksOwnershipBeforePlacingFiles() throws {
+        let fixture = try NativeInstallFixture()
+        let owner = try fixture.package("owner.package", files: ["bin/bash": "original"])
+        try fixture.run(install: [owner])
+        let incoming = try fixture.package("other.package", files: ["bin/bash": "replacement"])
+        let status = try Data(contentsOf: fixture.database.appendingPathComponent("status"))
+        let transaction = InstallerJob.Transaction(
+            install: [incoming],
+            remove: [],
+            statusDigest: PackageArchive.sha256(status),
+            bootstrapInstall: true
+        )
+        let installer = PackageInstaller(
+            installRoot: fixture.root.path,
+            layout: .init(kind: .none),
+            databaseDirectory: fixture.database,
+            scriptRoot: fixture.root.path
+        ) { _ in }
+
+        #expect(throws: PackageFailure.self) { try installer.run(transaction) }
+        #expect(try fixture.text("bin/bash") == "original")
+        #expect(try fixture.status("other.package") == nil)
+    }
+
     @Test func changedStatusPreventsEveryCommand() throws {
         let root = try Scratch.installRoot()
         defer { try? FileManager.default.removeItem(atPath: root) }
