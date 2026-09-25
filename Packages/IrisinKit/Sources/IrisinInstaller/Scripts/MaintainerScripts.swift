@@ -15,6 +15,12 @@ struct MaintainerScripts {
     /// never skips a script; it only decides whether a script's own failure
     /// stops the package step after that attempt.
     let ignoreScriptFailures: Bool
+    /// Irisin's own package, once the transaction's archives are verified.
+    /// Its postinst, prerm and postrm may fail without stopping it: an
+    /// update of Irisin must finish where the bootstrap shell those scripts
+    /// need is gone, and the helper loads the daemon itself at the end
+    /// (`InstallerRunner`). Its preinst still stops the unpack, as it means to.
+    let selfPackage: SelfPackage
     /// Called once a script has been started, whatever it did: what the
     /// installer remembers of the tree's shape is that script's to change.
     /// ElleKit's postinst replacing `Library/MobileSubstrate/DynamicLibraries`
@@ -61,7 +67,7 @@ struct MaintainerScripts {
         } catch {
             let failure = error as? ScriptFailure
                 ?? ScriptFailure(identity: identity, member: member, underlying: error)
-            if ignoreScriptFailures {
+            if ignoreScriptFailures || selfPackage.tolerates(member, of: identity) {
                 emit(.warning(.scriptFailureIgnored(
                     identity: identity,
                     script: member,
@@ -99,5 +105,30 @@ struct MaintainerScripts {
             "DPKG_MAINTSCRIPT_NAME": member,
             "DPKG_MAINTSCRIPT_ARCH": architecture ?? database.records[identity]?["architecture"] ?? "all",
         ]) { _, script in script }
+    }
+}
+
+/// The package in this transaction that ships the helper itself: Irisin,
+/// whatever its package name. A class, so the copy of `MaintainerScripts`
+/// that `Triggers` keeps sees it once it is known.
+final class SelfPackage {
+    private static let toleratedScripts: Set<String> = ["postinst", "prerm", "postrm"]
+
+    private(set) var identity: String?
+
+    /// Picks the archive that places `helperPath`, spelled as packages
+    /// spell it, by the identity the transaction gives it: the one scripts
+    /// and the database go by, whatever case its control file writes. A
+    /// package that ships that path replaces the helper, so counting it as
+    /// Irisin grants it nothing it did not already have.
+    func find(in archives: [String: PackageArchive], helperPath: String) {
+        let path = String(helperPath.drop { $0 == "/" })
+        identity = archives.first { _, archive in
+            archive.package.entries.contains { $0.path == path }
+        }?.key
+    }
+
+    func tolerates(_ member: String, of identity: String) -> Bool {
+        identity == self.identity && Self.toleratedScripts.contains(member)
     }
 }

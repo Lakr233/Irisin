@@ -113,6 +113,14 @@ end.
   after the transcript ends when `Transaction.touchesSelf`. `irisind` watches
   its opened executable inode and exits when replacement or removal drops its
   final link; the registration-completion check closes the startup unlink race.
+  An update of Irisin must finish where the bootstrap's shell is gone (a
+  vphone set up without one): the package that places the helper itself
+  (`SelfPackage`, never a name) may fail its postinst, prerm and postrm as
+  a `scriptFailureIgnored` warning, its preinst still stops it, and once its
+  files are placed the helper loads `irisind` itself at the end of the run,
+  whatever the run did, a `daemonNotLoaded` warning and never a failure.
+  The app has the same helper as itself, so the first update into this
+  rule still runs under the old one.
 - **A package built for another bootstrap is rewritten in the app, never
   by the helper.** `IrisinAdapter` runs as `mobile` inside
   `PackageQueue.patch` (and inside `Installer.stage` for a package Patch
@@ -152,6 +160,13 @@ end.
   disagree, since the paragraph solved with is the one installed. The queue
   asks before an adapted package joins it (Compatibility Mode), and its
   sheet says the queue may change at Patch.
+  While files download the queue's button reads Queue Install, and once
+  tapped Cancel Auto Install in the delete colour, which takes it back. On
+  a system whose status has no `dpkg` the tap asks first
+  (`QueueInstallChecks`): Bootstrap Install where the plan allows it,
+  Install Anyway, which reads the files' `control.tar` member names
+  (`ArchiveStream.debianControlMembers`) and names the packages that run
+  maintainer scripts before anything is staged, or Cancel.
   A newer version an adapter would have to rewrite is not an update until
   the user turns on Compatibility Updates (Settings, off, confirmed, and no
   row where nothing is adapted): `PackageCenter.offersAdaptedUpdates` keeps

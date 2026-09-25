@@ -65,6 +65,9 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
         case leftoverBundle(path: String, detail: String)
         /// icli's refresh reported failures.
         case refreshFailed(detail: String)
+        /// A transaction placed Irisin's own package, and the daemon it
+        /// ships could not be loaded and started after it.
+        case daemonNotLoaded(detail: String)
         /// A signal job found no process by that name.
         case noProcess(name: String)
         /// Unpacking failed after the database was told; the package stays
@@ -104,6 +107,8 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
                 "Cannot clean up app bundle \(path): \(detail)"
             case let .refreshFailed(detail):
                 "App refresh failed: \(detail)"
+            case let .daemonNotLoaded(detail):
+                "Irisin's background service could not be loaded and started: \(detail)"
             case let .noProcess(name):
                 "No process named \(name) is running."
             case let .packageNeedsRepair(identity):

@@ -75,6 +75,8 @@ extension InstallerEvent.Problem {
             String(localized: "Unable to remove leftover app files at \(path): \(detail)")
         case let .refreshFailed(detail):
             String(localized: "Unable to refresh apps: \(detail)")
+        case let .daemonNotLoaded(detail):
+            String(localized: "Irisin's background service could not be started: \(detail)")
         case let .noProcess(name):
             String(localized: "No process named \(name) is running.")
         case let .packageNeedsRepair(identity):

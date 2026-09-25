@@ -17,6 +17,11 @@ public final class PackageInstaller {
     private let databaseDirectory: URL
     private let scriptRoot: String
     private let emit: (InstallerEvent) -> Void
+    /// Whether the last run put Irisin's own package (the one that ships
+    /// this helper) on disk at the version it installs, whether or not the
+    /// run went on to succeed. Its files replaced the daemon, which exits
+    /// when its executable is replaced, so `InstallerRunner` loads it again.
+    public private(set) var placedSelf = false
 
     public init(
         installRoot: String,
@@ -34,6 +39,7 @@ public final class PackageInstaller {
     }
 
     public func run(_ transaction: InstallerJob.Transaction) throws {
+        placedSelf = false
         try InstallerJob.transaction(transaction).validate()
         emit(.phase(.preparing))
         // A bootstrap that has not written its database yet gets one; the
@@ -66,6 +72,15 @@ public final class PackageInstaller {
         }
         emit(.phase(.verifying))
         let archives = try work.prepare(transaction.install)
+        work.selfPackage.find(in: archives, helperPath: layout.bootstrapPath(IrisinWire.helperPath))
+        defer {
+            if !transaction.dryRun, let identity = work.selfPackage.identity,
+               let fields = work.database.records[identity], PackageDatabase.isPresent(fields),
+               fields["version"] == archives[identity]?.version
+            {
+                placedSelf = true
+            }
+        }
         if transaction.recoveryMode {
             try work.validateRecoveryRemoval(transaction)
         } else {

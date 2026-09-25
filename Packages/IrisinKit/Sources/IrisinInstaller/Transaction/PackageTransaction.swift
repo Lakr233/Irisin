@@ -7,6 +7,7 @@ final class PackageTransaction {
     let database: PackageDatabase
     let filesystem: PackageFilesystem
     let scripts: MaintainerScripts
+    let selfPackage: SelfPackage
     let triggers: Triggers
     let recoveryMode: Bool
     var overrides: PackageOverrides
@@ -24,12 +25,15 @@ final class PackageTransaction {
     ) throws {
         database = try PackageDatabase(directory: databaseDirectory)
         filesystem = try PackageFilesystem(root: root, layout: layout, database: databaseDirectory)
+        let selfPackage = SelfPackage()
+        self.selfPackage = selfPackage
         scripts = MaintainerScripts(
             layout: layout,
             database: database,
             scriptRoot: scriptRoot,
             emit: emit,
             ignoreScriptFailures: ignoreScriptFailures,
+            selfPackage: selfPackage,
             forgetPaths: { [filesystem] in filesystem.forgetPaths() }
         )
         triggers = Triggers(database: database, scripts: scripts)

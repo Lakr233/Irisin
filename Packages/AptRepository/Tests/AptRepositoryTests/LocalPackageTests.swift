@@ -87,6 +87,12 @@ final class LocalPackageTests: XCTestCase {
         XCTAssertEqual(contents.files.sorted(), ["/var/jb/usr/bin/hello", "/var/jb/usr/bin/hi"])
         XCTAssertEqual(contents.directories.sorted(), ["/var", "/var/jb", "/var/jb/usr", "/var/jb/usr/bin"])
         XCTAssertThrowsError(try ArchiveStream.debianContents(atPath: dir.appendingPathComponent("control").path))
+
+        // the member names alone, spelled without the archive's `./`
+        let members = try ArchiveStream.debianControlMembers(atPath: dir.appendingPathComponent("a.deb").path)
+        XCTAssertEqual(members, ["control", "postinst"])
+        XCTAssertEqual(try ArchiveStream.debianControl(atPath: dir.appendingPathComponent("a.deb").path), "Package: a.b\nVersion: 1\n")
+        XCTAssertThrowsError(try ArchiveStream.debianControlMembers(atPath: dir.appendingPathComponent("control").path))
     }
 
     /// dpkg installs an entry as the user its archive names, when the

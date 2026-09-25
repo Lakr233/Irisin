@@ -18,7 +18,11 @@ import UIKit
 /// the leading edge. The files download from the moment the queue takes a change,
 /// whether or not this page is open; the page only watches. Execute is the one
 /// thing the user does: tapped at any time, it stages the transaction and
-/// hands it to the console as soon as every file is here. A queue with a
+/// hands it to the console as soon as every file is here. While files are
+/// still coming it reads Queue Install, and once tapped, Cancel Auto Install
+/// in red, which takes the tap back. On a system with no dpkg the tap asks
+/// first: Bootstrap Install, Install Anyway (with a second alert when a
+/// package runs scripts) or Cancel (`QueueInstallChecks`). A queue with a
 /// package built for another bootstrap shows Patch in its place first: the
 /// tap adapts those packages once their files are here, an alert says what
 /// solving again took out of the queue or brought in, and the button is
@@ -89,7 +93,16 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private var committed = false {
         didSet { updateBar() }
     }
+
     private var bootstrapRequested = false
+    /// Install Anyway was chosen on a system with no dpkg: the packages'
+    /// scripts are looked for once every file is here.
+    private var installsWithoutDpkg = false
+    /// The user saw which packages run scripts and went on.
+    private var scriptsAccepted = false
+    /// The packages that run scripts, until the alert that says so is up:
+    /// the files may land while the page is off screen.
+    private var scriptWarning: (plan: UUID, names: [String])?
 
     /// The plan the page last showed, to tell a new one from a redraw.
     private var shownPlan: ResolutionPlan?
@@ -171,7 +184,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
         executeButton.primaryAction = UIAction { [weak self] _ in self?.primaryAction() }
         executeButton.menu = UIMenu(children: [
             UIDeferredMenuElement.uncached { [weak self] completion in
-                guard let self, let plan = PackageQueue.shared.plan,
+                // nothing to offer beside Cancel Auto Install
+                guard let self, let plan = PackageQueue.shared.plan, !committed,
                       Self.canBootstrapInstall(plan), PackageQueue.shared.unpatched.isEmpty
                 else { return completion([]) }
                 completion([UIAction(
@@ -202,6 +216,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         presentPatchOutcome()
+        presentScriptWarning()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -223,7 +238,8 @@ final class QueueController: UIViewController, UITableViewDelegate {
         let plan = manager.plan
         if plan?.id != shownPlan?.id {
             committed = false
-            bootstrapRequested = false
+            forgetChecks()
+            scriptWarning = nil
             shownPlan = plan
             failure = nil
         }
@@ -278,20 +294,29 @@ final class QueueController: UIViewController, UITableViewDelegate {
     }
 
     /// Patch while a package of the plan is still to be adapted and Execute
-    /// once none is, a spinner in its place while the page works on its own,
-    /// and Retry after a failure.
+    /// once none is, Queue Install in its place while files download and
+    /// Cancel Auto Install once that is tapped, a spinner while the page
+    /// works on its own, and Retry after a failure.
     private func updateBar() {
         let queued = PackageQueue.shared.plan != nil
-        let busy = stage == .patching || stage == .staging || (stage == .downloading && committed)
+        let executes = PackageQueue.shared.unpatched.isEmpty
+        let autoInstall = stage == .downloading && committed && executes
+        // a committed Patch has nothing to take back: it only waits
+        let busy = stage == .patching || stage == .staging || (stage == .downloading && committed && !executes)
         // a failed patch keeps Patch: the tap is the same one again
         let retries = stage == .downloadFailed || stage == .stagingFailed
         executeButton.title = if retries {
             String(localized: "Retry")
-        } else if PackageQueue.shared.unpatched.isEmpty {
-            String(localized: "Execute")
-        } else {
+        } else if !executes {
             String(localized: "Patch")
+        } else if autoInstall {
+            String(localized: "Cancel Auto Install")
+        } else if stage == .downloading {
+            String(localized: "Queue Install")
+        } else {
+            String(localized: "Execute")
         }
+        executeButton.tintColor = autoInstall ? .swipeDelete : nil
         executeButton.isEnabled = stage != .blocked
         executeButton.isHidden = !queued || busy
         busyItem.isHidden = !queued || !busy
@@ -415,43 +440,132 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     // MARK: - Download, patch and execute
 
-    /// Patch or Execute: Retry repeats what failed, otherwise the tap
-    /// commits the plan, now if every file is here and as soon as they are
-    /// if not.
+    /// Whether the helper can place every file of the plan before any of
+    /// its scripts runs: nothing removed, nothing already installed.
     private static func canBootstrapInstall(_ plan: ResolutionPlan) -> Bool {
         let installing = Set(plan.install.map(\.identity))
         let installed = Set(plan.snapshot.installed.map(\.identity))
         let configuring = Set(plan.stages.flatMap { stage -> [String] in
-            if case let .configure(names) = stage { return names }
+            if case let .configure(names) = stage {
+                return names
+            }
             return []
         })
         return !installing.isEmpty && plan.remove.isEmpty && !plan.recoveryMode
             && installing.isDisjoint(with: installed) && configuring.isSubset(of: installing)
     }
 
+    /// Patch or Execute: Retry repeats what failed, Cancel Auto Install
+    /// takes a committed tap back, otherwise the tap commits the plan, now
+    /// if every file is here and as soon as they are if not.
     private func primaryAction(bootstrapInstall: Bool = false) {
         guard let plan = PackageQueue.shared.plan else { return }
-        bootstrapRequested = bootstrapInstall
         switch stage {
         case .downloadFailed:
+            forgetChecks()
             failure = nil
             Downloads.shared.download(plan.install)
             reload()
-        case .patchFailed, .stagingFailed, .ready:
-            run(plan)
-        case .downloading:
-            committed = true
+        case .downloading where committed:
+            // Cancel Auto Install: the downloads go on, the install waits
+            // for the next tap
+            committed = false
+            forgetChecks()
+        case .patchFailed, .stagingFailed, .ready, .downloading:
+            // Patch installs nothing: it asks nothing
+            guard PackageQueue.shared.unpatched.isEmpty else {
+                forgetChecks()
+                if stage == .downloading {
+                    committed = true
+                } else {
+                    run(plan)
+                }
+                return
+            }
+            Task { await checkAndCommit(plan, bootstrapInstall: bootstrapInstall) }
         case .empty, .blocked, .patching, .staging:
             break
         }
     }
 
+    /// The last check before an install is committed: a system with no
+    /// dpkg asks how to go on. Then now if every file is here, and as soon
+    /// as they are if not. The downloads may land while the alert is up;
+    /// the answer holds all the same.
+    private func checkAndCommit(_ plan: ResolutionPlan, bootstrapInstall: Bool) async {
+        var bootstrap = bootstrapInstall
+        var withoutDpkg = false
+        if !bootstrap, !QueueInstallChecks.hasDpkg(plan) {
+            switch await askWithoutDpkg(offersBootstrap: Self.canBootstrapInstall(plan)) {
+            case .cancel: return
+            case .bootstrapInstall: bootstrap = true
+            case .installAnyway: withoutDpkg = true
+            }
+        }
+        // the queue moved on while the alert was up
+        guard PackageQueue.shared.plan?.id == plan.id, !committed else { return }
+        bootstrapRequested = bootstrap
+        installsWithoutDpkg = withoutDpkg
+        scriptsAccepted = false
+        switch stage {
+        case .downloading:
+            committed = true
+        case .ready, .patchFailed, .stagingFailed:
+            run(plan)
+        case .empty, .blocked, .patching, .staging, .downloadFailed:
+            break
+        }
+    }
+
+    /// What the answers to the checks said, for a plan that is not the one
+    /// they were given for, or an install taken back.
+    private func forgetChecks() {
+        bootstrapRequested = false
+        installsWithoutDpkg = false
+        scriptsAccepted = false
+    }
+
     /// What the button said when it was tapped, every file being here.
+    /// Without dpkg the packages' scripts are looked for first, and a
+    /// queue with any waits for the user to see them.
     private func run(_ plan: ResolutionPlan) {
-        if PackageQueue.shared.unpatched.isEmpty {
-            stageAndRun(plan, bootstrapInstall: bootstrapRequested)
-        } else {
-            patch()
+        guard PackageQueue.shared.unpatched.isEmpty else { return patch() }
+        guard installsWithoutDpkg, !scriptsAccepted else {
+            return stageAndRun(plan, bootstrapInstall: bootstrapRequested)
+        }
+        failure = nil
+        stage = .staging
+        staging = Task { [weak self] in
+            let names = await QueueInstallChecks.packagesRunningScripts(in: plan)
+            guard let self else { return }
+            staging = nil
+            guard PackageQueue.shared.plan?.id == plan.id else {
+                stage = .empty
+                return reload()
+            }
+            guard !names.isEmpty else {
+                scriptsAccepted = true
+                return stageAndRun(plan, bootstrapInstall: false)
+            }
+            committed = false
+            stage = .ready
+            scriptWarning = (plan.id, names)
+            presentScriptWarning()
+        }
+    }
+
+    /// The alert naming the packages that run scripts, now if the page is
+    /// on screen with nothing over it, otherwise when it next appears.
+    private func presentScriptWarning() {
+        guard let warning = scriptWarning, view.window != nil, presentedViewController == nil else { return }
+        scriptWarning = nil
+        guard PackageQueue.shared.plan?.id == warning.plan else { return }
+        warnAboutScripts(warning.names) { [weak self] in
+            guard let self, let plan = PackageQueue.shared.plan, plan.id == warning.plan,
+                  stage == .ready || stage == .stagingFailed
+            else { return }
+            scriptsAccepted = true
+            run(plan)
         }
     }
 

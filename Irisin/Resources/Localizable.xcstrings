@@ -8145,25 +8145,120 @@
     },
     "Bootstrap Install" : {
       "localizations" : {
-        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تثبيت التمهيد" } },
-        "bn" : { "stringUnit" : { "state" : "translated", "value" : "বুটস্ট্র্যাপ ইনস্টল" } },
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bootstrap-Installation" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bootstrap Install" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Instalación inicial" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Installation d’amorçage" } },
-        "hi" : { "stringUnit" : { "state" : "translated", "value" : "बूटस्ट्रैप इंस्टॉल" } },
-        "id" : { "stringUnit" : { "state" : "translated", "value" : "Instalasi Bootstrap" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Installazione bootstrap" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ブートストラップインストール" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "부트스트랩 설치" } },
-        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Instalação inicial" } },
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Первичная установка" } },
-        "sw" : { "stringUnit" : { "state" : "translated", "value" : "Usakinishaji wa Bootstrap" } },
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Önyükleme Kurulumu" } },
-        "vi" : { "stringUnit" : { "state" : "translated", "value" : "Cài đặt khởi tạo" } },
-        "yo" : { "stringUnit" : { "state" : "translated", "value" : "Fífìsílẹ̀ Bootstrap" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "引导安装" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "引導安裝" } }
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت التمهيد"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "বুটস্ট্র্যাপ ইনস্টল"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bootstrap-Installation"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bootstrap Install"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalación inicial"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation d’amorçage"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बूटस्ट्रैप इंस्टॉल"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalasi Bootstrap"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installazione bootstrap"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブートストラップインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부트스트랩 설치"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalação inicial"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первичная установка"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usakinishaji wa Bootstrap"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önyükleme Kurulumu"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt khởi tạo"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fífìsílẹ̀ Bootstrap"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引导安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引導安裝"
+          }
+        }
       }
     },
     "Blocked Updates" : {
@@ -8280,6 +8375,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已阻擋的更新"
+          }
+        }
+      }
+    },
+    "Bootstrap Install places every package's files before any script runs." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضع تثبيت التمهيد ملفات كل الحزم قبل تشغيل أي نص برمجي."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "বুটস্ট্র্যাপ ইনস্টল কোনো স্ক্রিপ্ট চালানোর আগেই প্রতিটি প্যাকেজের ফাইল বসিয়ে দেয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bootstrap-Installation legt die Dateien aller Pakete ab, bevor ein Skript ausgeführt wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bootstrap Install places every package's files before any script runs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La instalación inicial coloca los archivos de todos los paquetes antes de ejecutar ningún script."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’installation d’amorçage place les fichiers de tous les paquets avant l’exécution de tout script."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बूटस्ट्रैप इंस्टॉल कोई भी स्क्रिप्ट चलने से पहले हर पैकेज की फ़ाइलें रख देता है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalasi Bootstrap menempatkan file setiap paket sebelum skrip apa pun dijalankan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’installazione bootstrap colloca i file di ogni pacchetto prima che venga eseguito qualsiasi script."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブートストラップインストールは、スクリプトを実行する前にすべてのパッケージのファイルを配置します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부트스트랩 설치는 스크립트를 실행하기 전에 모든 패키지의 파일을 먼저 배치합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A instalação inicial coloca os arquivos de todos os pacotes antes que qualquer script seja executado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первичная установка размещает файлы всех пакетов до запуска любых сценариев."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usakinishaji wa Bootstrap huweka faili za kila kifurushi kabla hati yoyote haijaendeshwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önyükleme Kurulumu, herhangi bir betik çalışmadan önce tüm paketlerin dosyalarını yerleştirir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt khởi tạo đặt tệp của mọi gói trước khi chạy bất kỳ tập lệnh nào."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fífìsílẹ̀ Bootstrap máa ń gbé fáìlì gbogbo àpò sí ààyè kí síkírípítì kankan tó ṣiṣẹ́."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引导安装会在运行任何脚本之前放置所有软件包的文件。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引導安裝會在執行任何指令碼之前放置所有套件的檔案。"
           }
         }
       }
@@ -8752,6 +8965,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取消"
+          }
+        }
+      }
+    },
+    "Cancel Auto Install" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء التثبيت التلقائي"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "স্বয়ংক্রিয় ইনস্টল বাতিল করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatische Installation abbrechen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Auto Install"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar instalación automática"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler l’installation automatique"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्वचालित इंस्टॉल रद्द करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batalkan Instalasi Otomatis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla installazione automatica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動インストールをキャンセル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 설치 취소"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar instalação automática"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить автоустановку"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghairi Usakinishaji wa Kiotomatiki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik Kurulumu İptal Et"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy cài đặt tự động"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fagilé Ìfisórí Ẹ̀rọ Aládàáṣe"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消自动安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消自動安裝"
           }
         }
       }
@@ -10526,6 +10857,242 @@
         }
       }
     },
+    "dpkg Is Not Installed" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم تثبيت dpkg"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg ইনস্টল করা নেই"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg ist nicht installiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg Is Not Installed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg no está instalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg n’est pas installé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg इंस्टॉल नहीं है"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg Tidak Terinstal"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg non è installato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg がインストールされていません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg가 설치되어 있지 않음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O dpkg não está instalado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg не установлен"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg Haijasakinishwa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg Yüklü Değil"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa cài đặt dpkg"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg Kò Sí Lórí Ẹ̀rọ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装 dpkg"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安裝 dpkg"
+          }
+        }
+      }
+    },
+    "dpkg is not installed on this system, so the tools the packages' scripts need may be missing." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم تثبيت dpkg على هذا النظام، لذا قد تكون الأدوات التي تحتاجها النصوص البرمجية للحزم مفقودة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই সিস্টেমে dpkg ইনস্টল করা নেই, তাই প্যাকেজগুলোর স্ক্রিপ্টের প্রয়োজনীয় টুল না-ও থাকতে পারে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg ist auf diesem System nicht installiert. Die Werkzeuge, die die Skripte der Pakete brauchen, fehlen daher möglicherweise."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg is not installed on this system, so the tools the packages' scripts need may be missing."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg no está instalado en este sistema, así que pueden faltar las herramientas que necesitan los scripts de los paquetes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg n’est pas installé sur ce système : les outils dont les scripts des paquets ont besoin peuvent manquer."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस सिस्टम पर dpkg इंस्टॉल नहीं है, इसलिए हो सकता है कि पैकेजों की स्क्रिप्ट के लिए ज़रूरी टूल मौजूद न हों।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg tidak terinstal di sistem ini, jadi alat yang dibutuhkan skrip paket mungkin tidak ada."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg non è installato su questo sistema, quindi potrebbero mancare gli strumenti richiesti dagli script dei pacchetti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このシステムには dpkg がインストールされていないため、パッケージのスクリプトが必要とするツールがない可能性があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 시스템에 dpkg가 설치되어 있지 않아 패키지 스크립트에 필요한 도구가 없을 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O dpkg não está instalado neste sistema, então podem faltar as ferramentas de que os scripts dos pacotes precisam."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В этой системе не установлен dpkg, поэтому инструментов, нужных сценариям пакетов, может не быть."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg haijasakinishwa kwenye mfumo huu, kwa hivyo zana zinazohitajiwa na hati za vifurushi huenda hazipo."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sistemde dpkg yüklü değil, bu yüzden paketlerin betiklerinin ihtiyaç duyduğu araçlar eksik olabilir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hệ thống này chưa cài đặt dpkg, nên có thể thiếu các công cụ mà tập lệnh của gói cần."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dpkg kò sí lórí ẹ̀rọ yìí, nítorí náà àwọn irinṣẹ́ tí síkírípítì àwọn àpò nílò lè má sí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此系统未安装 dpkg，软件包脚本所需的工具可能缺失。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此系統未安裝 dpkg，套件指令碼所需的工具可能缺少。"
+          }
+        }
+      }
+    },
     "Empty Repositories" : {
       "localizations" : {
         "ar" : {
@@ -11938,6 +12505,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "忽略腳本錯誤並重試？"
+          }
+        }
+      }
+    },
+    "Installation Likely to Fail" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من المرجح أن يفشل التثبيت"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ইনস্টলেশন সম্ভবত ব্যর্থ হবে"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation wird wahrscheinlich fehlschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation Likely to Fail"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es probable que la instalación falle"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’installation risque d’échouer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉलेशन के विफल होने की संभावना है"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalasi Kemungkinan Gagal"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probabile errore di installazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストールが失敗する可能性があります"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치가 실패할 가능성이 높음"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A instalação provavelmente falhará"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установка, скорее всего, не удастся"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usakinishaji Huenda Ukashindwa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme Büyük Olasılıkla Başarısız Olacak"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt có thể thất bại"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ìfisórí Ẹ̀rọ Lè Kùnà"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装可能会失败"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝可能會失敗"
           }
         }
       }
@@ -22802,6 +23487,124 @@
         }
       }
     },
+    "Irisin's background service could not be started: %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تشغيل خدمة Irisin في الخلفية: %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin-এর ব্যাকগ্রাউন্ড সার্ভিস চালু করা যায়নি: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von Irisin konnte nicht gestartet werden: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin's background service could not be started: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo iniciar el servicio en segundo plano de Irisin: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le service d’arrière-plan d’Irisin n’a pas pu être démarré : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin की बैकग्राउंड सेवा शुरू नहीं की जा सकी: %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layanan latar belakang Irisin tidak dapat dimulai: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile avviare il servizio in background di Irisin: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin のバックグラウンドサービスを開始できませんでした: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 백그라운드 서비스를 시작할 수 없습니다: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível iniciar o serviço em segundo plano do Irisin: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось запустить фоновую службу Irisin: %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huduma ya chinichini ya Irisin haikuweza kuanzishwa: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin arka plan hizmeti başlatılamadı: %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể khởi động dịch vụ nền của Irisin: %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iṣẹ́ abẹ́lẹ̀ Irisin kò ṣeé bẹ̀rẹ̀: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法启动 Irisin 的后台服务：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法啟動 Irisin 的背景服務：%@"
+          }
+        }
+      }
+    },
     "Its packages will no longer be listed. This cannot be undone." : {
       "localizations" : {
         "ar" : {
@@ -32714,6 +33517,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "佇列變更"
+          }
+        }
+      }
+    },
+    "Queue Install" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جدولة التثبيت"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ইনস্টল সারিতে রাখুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation vormerken"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue Install"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programar instalación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programmer l’installation"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल कतार में रखें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antrekan Instalasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metti in coda l’installazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストールを予約"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치 예약"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agendar instalação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить после загрузки"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panga Usakinishaji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurulumu Sıraya Al"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xếp hàng cài đặt"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ṣètò Ìfisórí Ẹ̀rọ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排隊安裝"
           }
         }
       }
@@ -48056,6 +48977,124 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法為這些套件排出有效的安裝順序：%@。請從佇列移除其中部分套件後再試一次。"
+          }
+        }
+      }
+    },
+    "These packages run scripts that this system may not be able to run: %@. The installation is likely to fail." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تشغّل هذه الحزم نصوصًا برمجية قد لا يتمكن هذا النظام من تشغيلها: %@. من المرجح أن يفشل التثبيت."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই প্যাকেজগুলো এমন স্ক্রিপ্ট চালায় যা এই সিস্টেম হয়তো চালাতে পারবে না: %@। ইনস্টলেশন সম্ভবত ব্যর্থ হবে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Pakete führen Skripte aus, die dieses System möglicherweise nicht ausführen kann: %@. Die Installation wird wahrscheinlich fehlschlagen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These packages run scripts that this system may not be able to run: %@. The installation is likely to fail."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estos paquetes ejecutan scripts que puede que este sistema no pueda ejecutar: %@. Es probable que la instalación falle."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces paquets exécutent des scripts que ce système ne pourra peut-être pas exécuter : %@. L’installation risque d’échouer."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ये पैकेज ऐसी स्क्रिप्ट चलाते हैं जिन्हें शायद यह सिस्टम न चला सके: %@। इंस्टॉलेशन के विफल होने की संभावना है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket ini menjalankan skrip yang mungkin tidak dapat dijalankan sistem ini: %@. Instalasi kemungkinan akan gagal."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questi pacchetti eseguono script che questo sistema potrebbe non riuscire a eseguire: %@. È probabile che l’installazione non riesca."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これらのパッケージは、このシステムで実行できない可能性があるスクリプトを実行します: %@。インストールは失敗する可能性があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 패키지들은 이 시스템에서 실행하지 못할 수 있는 스크립트를 실행합니다: %@. 설치가 실패할 가능성이 높습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estes pacotes executam scripts que este sistema talvez não consiga executar: %@. A instalação provavelmente falhará."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти пакеты запускают сценарии, которые эта система, возможно, не сможет выполнить: %@. Установка, скорее всего, не удастся."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vifurushi hivi huendesha hati ambazo mfumo huu huenda usiweze kuendesha: %@. Usakinishaji huenda ukashindwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu paketler, bu sistemin çalıştıramayabileceği betikler çalıştırıyor: %@. Yükleme büyük olasılıkla başarısız olacak."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các gói này chạy tập lệnh mà hệ thống này có thể không chạy được: %@. Cài đặt có thể thất bại."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Àwọn àpò wọ̀nyí ń ṣiṣẹ́ síkírípítì tí ẹ̀rọ yìí lè má lè ṣiṣẹ́: %@. Ìfisórí ẹ̀rọ lè kùnà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些软件包会运行此系统可能无法运行的脚本：%@。安装可能会失败。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些套件會執行此系統可能無法執行的指令碼：%@。安裝可能會失敗。"
           }
         }
       }

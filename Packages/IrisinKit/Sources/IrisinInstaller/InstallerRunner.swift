@@ -76,7 +76,7 @@ public final class InstallerRunner {
         case .respring:
             respring()
         case .bootstrapIrisinDaemon:
-            manageDaemon(.bootstrap(plist: daemonPlist, executable: layout.resolve(layout.bootstrapPath(IrisinWire.daemonPath))))
+            manageDaemon(.bootstrap(plist: daemonPlist, executable: daemonExecutable))
         case .bootoutIrisinDaemon:
             manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:
@@ -103,6 +103,11 @@ public final class InstallerRunner {
         layout.resolve(layout.bootstrapPath("/Library/LaunchDaemons/wiki.qaq.irisind.plist"))
     }
 
+    /// The kernel path of the daemon's executable, beside this helper.
+    private var daemonExecutable: String {
+        layout.resolve(layout.bootstrapPath(IrisinWire.daemonPath))
+    }
+
     // MARK: - Transaction
 
     private func runTransaction(_ transaction: InstallerJob.Transaction) -> Int32 {
@@ -110,8 +115,17 @@ public final class InstallerRunner {
         emit(.notice("Install root \(installRoot.isEmpty ? "/" : installRoot)"))
         emit(.notice("Applications directory \(applicationsDirectory)"))
 
+        let installer = PackageInstaller(installRoot: installRoot, layout: layout, emit: emit)
+        // Irisin's own files replaced the daemon, which leaves when its
+        // executable does; its postinst loads the new one, but may not have
+        // had a shell to run in, and a run that stopped later never reached
+        // it. Loaded here whatever the run did, never as its failure.
+        defer {
+            if installer.placedSelf {
+                reloadOwnDaemon()
+            }
+        }
         do {
-            let installer = PackageInstaller(installRoot: installRoot, layout: layout, emit: emit)
             try installer.run(transaction)
         } catch let error as PackageStepFailure {
             emit(.failure(error.problem))
@@ -242,6 +256,18 @@ public final class InstallerRunner {
         } catch {
             emit(.failure(.installationStopped(detail: String(describing: error))))
             return 1
+        }
+    }
+
+    /// The daemon job the package's postinst pipes in, run from the end of
+    /// a transaction that placed Irisin. A failure is a warning: the
+    /// transaction's own outcome is already said.
+    private func reloadOwnDaemon() {
+        do {
+            try daemonManager.perform(.bootstrap(plist: daemonPlist, executable: daemonExecutable))
+            emit(.notice("Bootstrapped and started Irisin daemon from \(daemonPlist)"))
+        } catch {
+            emit(.warning(.daemonNotLoaded(detail: String(describing: error))))
         }
     }
 

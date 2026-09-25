@@ -29,9 +29,54 @@ public enum ArchiveStream {
     }
 
     /// The `control` file of a Debian package on disk, read without unpacking
-    /// anything else: the outer `ar` is walked to its `control.tar.*` member,
-    /// which is small and is opened as a second archive from memory.
+    /// anything else.
     public static func debianControl(atPath path: String) throws -> String {
+        try withControlArchive(atPath: path) { inner in
+            var file: OpaquePointer?
+            while archive_read_next_header(inner, &file) == ARCHIVE_OK {
+                let name = archive_entry_pathname(file).map { String(cString: $0) } ?? ""
+                guard name == "control" || name == "./control" else {
+                    archive_read_data_skip(inner)
+                    continue
+                }
+                return try String(decoding: readData(inner), as: UTF8.self)
+            }
+            throw Failure(description: "control.tar has no control file")
+        }
+    }
+
+    /// The names of the members of a Debian package's `control.tar` on
+    /// disk (`control`, `postinst`, ...), spelled as dpkg names them with no
+    /// leading `./`. Nothing is read but the listing, and `data.tar` is
+    /// never opened.
+    public static func debianControlMembers(atPath path: String) throws -> Set<String> {
+        try withControlArchive(atPath: path) { inner in
+            var names = Set<String>()
+            var file: OpaquePointer?
+            while true {
+                let status = archive_read_next_header(inner, &file)
+                if status == ARCHIVE_EOF {
+                    return names
+                }
+                try check(status, inner)
+                let name = try PreparedPackage.relativePath(
+                    archive_entry_pathname(file).map { String(cString: $0) } ?? ""
+                )
+                if !name.isEmpty {
+                    names.insert(name)
+                }
+                archive_read_data_skip(inner)
+            }
+        }
+    }
+
+    /// Runs `read` over the `control.tar.*` member of a Debian package on
+    /// disk: the outer `ar` is walked to it, and the member, which is small,
+    /// is opened as a second archive from memory.
+    private static func withControlArchive<T>(
+        atPath path: String,
+        _ read: (OpaquePointer) throws -> T
+    ) throws -> T {
         let outer = try open(filters: false, formats: [archive_read_support_format_ar])
         defer { archive_read_free(outer) }
         try check(archive_read_open_filename(outer, path, chunkSize), outer)
@@ -44,20 +89,11 @@ public enum ArchiveStream {
                 continue
             }
             let member = try readData(outer)
-            return try member.withUnsafeBytes { bytes -> String in
+            return try member.withUnsafeBytes { bytes -> T in
                 let inner = try open(filters: true, formats: [archive_read_support_format_tar])
                 defer { archive_read_free(inner) }
                 try check(archive_read_open_memory(inner, bytes.baseAddress, bytes.count), inner)
-                var file: OpaquePointer?
-                while archive_read_next_header(inner, &file) == ARCHIVE_OK {
-                    let name = archive_entry_pathname(file).map { String(cString: $0) } ?? ""
-                    guard name == "control" || name == "./control" else {
-                        archive_read_data_skip(inner)
-                        continue
-                    }
-                    return try String(decoding: readData(inner), as: UTF8.self)
-                }
-                throw Failure(description: "control.tar has no control file")
+                return try read(inner)
             }
         }
         throw Failure(description: "not a Debian package: no control.tar member")
