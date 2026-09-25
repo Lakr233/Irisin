@@ -29,6 +29,8 @@ public extension InstallerJob {
         /// For a first installation, place every verified package payload
         /// before running the normal unpack and configure stages. This makes
         /// interpreters in the same transaction available to early scripts.
+        /// Try Again after one that failed is one too, and configures what
+        /// the failed run left unpacked (`configureExisting`) beside it.
         public var bootstrapInstall: Bool
 
         public init(

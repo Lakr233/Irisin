@@ -98,6 +98,13 @@ public final class PackageInstaller {
             guard transaction.install.allSatisfy({ work.database.records[$0.identity] == nil }) else {
                 throw PackageFailure("Bootstrap Install is only available for packages not already installed")
             }
+            // what an earlier Bootstrap Install unpacked before it failed is
+            // configured again beside the rest; nothing configured is touched
+            guard transaction.configureExisting.allSatisfy({
+                work.database.records[$0]?["status"]?.hasSuffix(" installed") == false
+            }) else {
+                throw PackageFailure("Bootstrap Install can only configure packages an earlier run left unconfigured")
+            }
             try work.validateBootstrapPayloads(transaction.install.map(\.identity), archives: archives)
             emit(.notice("Bootstrap Install: placing all package files before the normal installation"))
             try work.seedPayloads(transaction.install.map(\.identity), archives: archives)

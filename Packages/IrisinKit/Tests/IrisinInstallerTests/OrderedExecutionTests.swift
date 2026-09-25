@@ -52,6 +52,73 @@ struct OrderedExecutionTests {
         #expect(events.contains(.notice("Bootstrap Install: placing all package files before the normal installation")))
     }
 
+    /// Try Again after a Bootstrap Install that stopped at a script: the
+    /// package it left unconfigured is configured beside the ones it never
+    /// reached, whose files are placed first again.
+    @Test func bootstrapInstallRetryConfiguresWhatTheFailedRunLeft() throws {
+        let fixture = try NativeInstallFixture()
+        let debianutils = try fixture.package(
+            "debianutils",
+            controls: ["postinst": "#!/bin/sh\ntest -f \"$DPKG_ROOT/bin/bash\" && test -f \"$DPKG_ROOT/ready\"\n"]
+        )
+        let bash = try fixture.package(
+            "bash",
+            files: ["bin/bash": "available"],
+            fields: ["pre-depends": "debianutils"]
+        )
+        func installer() -> PackageInstaller {
+            PackageInstaller(
+                installRoot: fixture.root.path,
+                layout: .init(kind: .none),
+                databaseDirectory: fixture.database,
+                scriptRoot: fixture.root.path
+            ) { _ in }
+        }
+        func statusDigest() throws -> String {
+            try PackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
+        }
+
+        #expect(throws: PackageStepFailure.self) {
+            try installer().run(.init(
+                install: [debianutils, bash],
+                remove: [],
+                stages: [
+                    .unpack(["debianutils"]), .configure(["debianutils"]),
+                    .unpack(["bash"]), .configure(["bash"]),
+                ],
+                bootstrapInstall: true
+            ))
+        }
+        #expect(try fixture.status("debianutils") == "install ok half-configured")
+        #expect(try fixture.status("bash") == nil)
+
+        try Data().write(to: fixture.root.appendingPathComponent("ready"))
+        try installer().run(.init(
+            install: [bash],
+            remove: [],
+            stages: [.configure(["debianutils"]), .unpack(["bash"]), .configure(["bash"])],
+            configureExisting: ["debianutils"],
+            statusDigest: statusDigest(),
+            bootstrapInstall: true
+        ))
+        #expect(try fixture.status("debianutils") == "install ok installed")
+        #expect(try fixture.status("bash") == "install ok installed")
+
+        // a configured package is not a failed run's to finish
+        let other = try fixture.package("other.package", files: ["bin/other": "other"])
+        #expect(throws: PackageFailure.self) {
+            try installer().run(.init(
+                install: [other],
+                remove: [],
+                stages: [.unpack(["other.package"]), .configure(["other.package", "debianutils"])],
+                configureExisting: ["debianutils"],
+                statusDigest: statusDigest(),
+                bootstrapInstall: true
+            ))
+        }
+        #expect(try fixture.status("other.package") == nil)
+    }
+
     @Test func bootstrapInstallChecksOwnershipBeforePlacingFiles() throws {
         let fixture = try NativeInstallFixture()
         let owner = try fixture.package("owner.package", files: ["bin/bash": "original"])

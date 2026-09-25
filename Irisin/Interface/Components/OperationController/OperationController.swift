@@ -417,7 +417,8 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     /// Try Again: the queue, solved again against what the failed run left,
-    /// is staged and run in this sheet, as Execute would run it.
+    /// is staged and run in this sheet, as Execute would run it. A Bootstrap
+    /// Install is tried again as one, configuring what it left unpacked.
     private func retry(ignoreScriptFailures: Bool? = nil) {
         guard !retrying else { return }
         retrying = true
@@ -439,7 +440,8 @@ final class OperationController: UIViewController, UITableViewDelegate {
             } else if manager.blocked == nil, let plan = manager.plan {
                 await Installer.shared.createOperationPayload(
                     plan: plan,
-                    ignoreScriptFailures: ignoreScriptFailures ?? ignoresScriptFailures
+                    ignoreScriptFailures: ignoreScriptFailures ?? ignoresScriptFailures,
+                    bootstrapInstall: operation.transaction.bootstrapInstall && plan.allowsBootstrapInstall
                 )
             } else {
                 nil

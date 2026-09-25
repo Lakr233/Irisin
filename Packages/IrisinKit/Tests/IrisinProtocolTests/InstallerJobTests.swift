@@ -66,6 +66,13 @@ final class InstallerJobTests: XCTestCase {
         XCTAssertThrowsError(try InstallerJob.transaction(.init(
             install: [tweak], remove: ["com.example.old"], bootstrapInstall: true
         )).validate())
+        // Try Again after a Bootstrap Install configures what it left
+        XCTAssertNoThrow(try InstallerJob.transaction(.init(
+            install: [tweak], remove: [], configureExisting: ["com.example.left"], bootstrapInstall: true
+        )).validate())
+        XCTAssertThrowsError(try InstallerJob.transaction(.init(
+            install: [], remove: [], configureExisting: ["com.example.left"], bootstrapInstall: true
+        )).validate())
 
         XCTAssertNoThrow(try InstallerJob.respring.validate())
         XCTAssertNoThrow(try InstallerJob.bootstrapIrisinDaemon.validate())

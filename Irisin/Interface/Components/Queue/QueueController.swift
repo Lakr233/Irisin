@@ -186,7 +186,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
             UIDeferredMenuElement.uncached { [weak self] completion in
                 // nothing to offer beside Cancel Auto Install
                 guard let self, let plan = PackageQueue.shared.plan, !committed,
-                      Self.canBootstrapInstall(plan), PackageQueue.shared.unpatched.isEmpty
+                      plan.allowsBootstrapInstall, PackageQueue.shared.unpatched.isEmpty
                 else { return completion([]) }
                 completion([UIAction(
                     title: String(localized: "Bootstrap Install"),
@@ -440,21 +440,6 @@ final class QueueController: UIViewController, UITableViewDelegate {
 
     // MARK: - Download, patch and execute
 
-    /// Whether the helper can place every file of the plan before any of
-    /// its scripts runs: nothing removed, nothing already installed.
-    private static func canBootstrapInstall(_ plan: ResolutionPlan) -> Bool {
-        let installing = Set(plan.install.map(\.identity))
-        let installed = Set(plan.snapshot.installed.map(\.identity))
-        let configuring = Set(plan.stages.flatMap { stage -> [String] in
-            if case let .configure(names) = stage {
-                return names
-            }
-            return []
-        })
-        return !installing.isEmpty && plan.remove.isEmpty && !plan.recoveryMode
-            && installing.isDisjoint(with: installed) && configuring.isSubset(of: installing)
-    }
-
     /// Patch or Execute: Retry repeats what failed, Cancel Auto Install
     /// takes a committed tap back, otherwise the tap commits the plan, now
     /// if every file is here and as soon as they are if not.
@@ -482,7 +467,9 @@ final class QueueController: UIViewController, UITableViewDelegate {
                 }
                 return
             }
-            Task { await checkAndCommit(plan, bootstrapInstall: bootstrapInstall) }
+            // Retry after staging repeats a Bootstrap Install as one
+            let bootstrap = bootstrapInstall || (stage == .stagingFailed && bootstrapRequested)
+            Task { await checkAndCommit(plan, bootstrapInstall: bootstrap) }
         case .empty, .blocked, .patching, .staging:
             break
         }
@@ -496,7 +483,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         var bootstrap = bootstrapInstall
         var withoutDpkg = false
         if !bootstrap, !QueueInstallChecks.hasDpkg(plan) {
-            switch await askWithoutDpkg(offersBootstrap: Self.canBootstrapInstall(plan)) {
+            switch await askWithoutDpkg(offersBootstrap: plan.allowsBootstrapInstall) {
             case .cancel: return
             case .bootstrapInstall: bootstrap = true
             case .installAnyway: withoutDpkg = true
