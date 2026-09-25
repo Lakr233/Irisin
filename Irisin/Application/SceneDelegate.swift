@@ -172,7 +172,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func open(file url: URL, inPlace: Bool) {
         let type = UTType(filenameExtension: url.pathExtension)
         if type == .irisinRepositoryList || type == .irisinRepository {
-            importRepositories(from: url, inPlace: inPlace)
+            importRepositories(from: url)
         } else if type == .debArchive {
             openQuickInstall(url: url, inPlace: inPlace)
         } else {
@@ -181,20 +181,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private func importRepositories(from url: URL, inPlace: Bool) {
-        let scoped = inPlace && url.startAccessingSecurityScopedResource()
-        defer {
-            if scoped {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        guard let data = try? Data(contentsOf: url),
-              let sources = try? RepositoryListFile.sources(in: data)
-        else {
-            presentNotice(title: "Unable to Import", message: "This file could not be read. Choose another file.")
-            return
-        }
+    private func importRepositories(from url: URL) {
         Task {
+            guard let data = await Self.read(url),
+                  let sources = try? RepositoryListFile.sources(in: data)
+            else {
+                presentNotice(title: "Unable to Import", message: "This file could not be read. Choose another file.")
+                return
+            }
             // what is already added is known once the repositories are read
             guard let interface = await interface() else { return }
             let registered = Set(RepositoryCenter.default.obtainRepositoryUrls())
@@ -205,6 +199,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             (interface.presentedViewController ?? interface)
                 .present(RepositoryAddController.sheet(candidates: fresh, origin: .file), animated: true)
+        }
+    }
+
+    /// The file's bytes. Opened in place from iCloud Drive, it may have to
+    /// download first; an inbox copy is read at once.
+    private static func read(_ url: URL) async -> Data? {
+        do {
+            return try await url.readingCoordinated { try Data(contentsOf: $0) }
+        } catch {
+            Dog.shared.join("SceneDelegate", "can not read \(url.path): \(error)", level: .error)
+            return nil
         }
     }
 

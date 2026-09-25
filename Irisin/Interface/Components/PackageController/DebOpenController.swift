@@ -41,27 +41,52 @@ class DebOpenController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
-        defer {
-            text.text = ""
-            indicator.stopAnimating()
-        }
+        // an alert over this page brings it back here once it is dismissed
+        guard opening == nil else { return }
 
         guard let url = patternLocation else {
             failedAndExit()
             return
         }
+        opening = Task {
+            await open(url)
+            text.text = ""
+            indicator.stopAnimating()
+        }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        // left before the file arrived: the download stops with the page
+        if isMovingFromParent || isBeingDismissed || navigationController?.isBeingDismissed == true {
+            opening?.cancel()
+        }
+    }
+
+    private var opening: Task<Void, Never>?
+
+    private func open(_ url: URL) async {
+        let kept: URL
+        do {
+            kept = try await Self.keep(url, inPlace: openedInPlace)
+        } catch {
+            guard !Task.isCancelled else { return }
+            Dog.shared.join(self, "can not copy \(url.path): \(error)", level: .error)
+            failedAndExit(with: String(localized: "This file could not be read. Choose another file."))
+            return
+        }
 
         let package: Package
         do {
-            package = try Package(debianPackageAt: keep(url))
+            package = try await Self.read(kept)
         } catch {
-            Dog.shared.join(self, "can not read \(url.path): \(error)", level: .error)
+            Dog.shared.join(self, "can not read \(kept.path): \(error)", level: .error)
             failedAndExit(
                 with: String(localized: "This package could not be verified. Choose a different file and try again.")
             )
             return
         }
+        guard !Task.isCancelled else { return }
 
         let target = PackageController(package: package)
         if let navigator = navigationController {
@@ -89,26 +114,37 @@ class DebOpenController: UIViewController {
     /// launch clears it before accepting imports.
     ///
     /// An inbox copy is ours to take and is moved. A file opened in place is
-    /// the user's, still listed in their Files app: it is copied under a
-    /// security scope, because moving it would take it out of their folder.
-    private func keep(_ url: URL) throws -> URL {
+    /// the user's, still listed in their Files app: it is copied through a
+    /// coordinated read, because moving it would take it out of their folder.
+    ///
+    /// Off the main actor: a file in iCloud Drive may have to download first.
+    @concurrent
+    private static func keep(_ url: URL, inPlace: Bool) async throws -> URL {
         let directory = documentsDirectory
             .appendingPathComponent("DirectInstallCache")
             .appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let kept = directory.appendingPathComponent(url.lastPathComponent)
-        guard openedInPlace else {
-            try FileManager.default.moveItem(at: url, to: kept)
-            return kept
-        }
-        let scoped = url.startAccessingSecurityScopedResource()
-        defer {
-            if scoped {
-                url.stopAccessingSecurityScopedResource()
+        do {
+            if inPlace {
+                try await url.readingCoordinated { readable in
+                    try FileManager.default.copyItem(at: readable, to: kept)
+                }
+            } else {
+                try FileManager.default.moveItem(at: url, to: kept)
             }
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
         }
-        try FileManager.default.copyItem(at: url, to: kept)
         return kept
+    }
+
+    /// The control file and the digest of the whole archive, off the main
+    /// actor: a large package takes a moment to hash.
+    @concurrent
+    private static func read(_ kept: URL) async throws -> Package {
+        try Package(debianPackageAt: kept)
     }
 
     func failedAndExit(with reason: String? = nil) {
