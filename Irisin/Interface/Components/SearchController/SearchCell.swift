@@ -201,7 +201,8 @@ class SearchCell: UITableViewCell {
         if package.latestMetadata?["tag"]?.contains("cydia::commercial") ?? false {
             title.textColor = .paidPackage
         }
-        title.text = PackageCenter.default.name(of: package)
+        let name = PackageCenter.default.name(of: package)
+        title.text = package.latestVersion.map { "\(name) @\($0)" } ?? name
         let description = PackageCenter.default.description(of: package)
         if let repoUrl = package.repoRef,
            let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: repoUrl)
