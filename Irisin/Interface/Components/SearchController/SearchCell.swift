@@ -202,7 +202,14 @@ class SearchCell: UITableViewCell {
             title.textColor = .paidPackage
         }
         let name = PackageCenter.default.name(of: package)
-        title.text = package.latestVersion.map { "\(name) @\($0)" } ?? name
+        if let version = package.latestVersion {
+            // the version in the gray of the line below, the name as it is
+            let text = NSMutableAttributedString(string: name, attributes: [.foregroundColor: title.textColor ?? .textTitle])
+            text.append(NSAttributedString(string: " @\(version)", attributes: [.foregroundColor: UIColor.textSubtitle]))
+            title.attributedText = text
+        } else {
+            title.text = name
+        }
         let description = PackageCenter.default.description(of: package)
         if let repoUrl = package.repoRef,
            let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: repoUrl)
