@@ -43,6 +43,7 @@ final class InstalledPackageCell: UICollectionViewListCell {
         contentView.preservesSuperviewLayoutMargins = false
         contentView.directionalLayoutMargins = .zero
 
+        originalCell.showsInstallOrigin = true
         contentView.addSubview(selectionMark)
         contentView.addSubview(originalCell)
         selectionMark.alpha = 0
