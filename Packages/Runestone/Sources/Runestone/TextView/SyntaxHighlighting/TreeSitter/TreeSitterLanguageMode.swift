@@ -27,6 +27,7 @@ extension TreeSitterLanguageMode: LanguageMode {
             language: language.internalLanguage,
             languageProvider: languageProvider,
             stringView: stringView,
-            lineManager: lineManager)
+            lineManager: lineManager
+        )
     }
 }

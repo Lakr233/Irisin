@@ -15,7 +15,7 @@ struct ByteCount: Hashable {
     }
 
     init(utf16Length: Int) {
-        self.value = utf16Length * 2
+        value = utf16Length * 2
     }
 }
 
@@ -49,8 +49,8 @@ extension ByteCount: Numeric {
         value
     }
 
-    init?<T>(exactly source: T) where T: BinaryInteger {
-        self.value = Int(source)
+    init?(exactly source: some BinaryInteger) {
+        value = Int(source)
     }
 
     init(integerLiteral value: Int) {

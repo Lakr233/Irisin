@@ -20,7 +20,8 @@ extension NSString {
             encoding: encoding.rawValue,
             options: [],
             range: range,
-            remaining: nil)
+            remaining: nil
+        )
         if didGetBytes {
             return UnsafePointer<Int8>(buffer)
         } else {
@@ -38,7 +39,7 @@ extension NSString {
     func customRangeOfComposedCharacterSequences(for range: NSRange) -> NSRange {
         let defaultRange = rangeOfComposedCharacterSequences(for: range)
         let candidateCRLFRange = NSRange(location: defaultRange.location - 1, length: 2)
-        if candidateCRLFRange.location >= 0 && candidateCRLFRange.upperBound <= length && isCRLFLineEnding(in: candidateCRLFRange) {
+        if candidateCRLFRange.location >= 0, candidateCRLFRange.upperBound <= length, isCRLFLineEnding(in: candidateCRLFRange) {
             return NSRange(location: defaultRange.location - 1, length: defaultRange.length + 1)
         } else {
             return defaultRange

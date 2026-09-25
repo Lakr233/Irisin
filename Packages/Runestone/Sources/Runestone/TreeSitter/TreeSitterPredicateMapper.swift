@@ -15,11 +15,11 @@ enum TreeSitterPredicateMapper {
                 let setProperties = self.properties(fromSetSteps: predicate.steps)
                 properties[setProperties.name] = setProperties.value
             case "eq?":
-                textPredicates.append(self.textPredicate(fromEqSteps: predicate.steps, isPositive: true))
+                textPredicates.append(textPredicate(fromEqSteps: predicate.steps, isPositive: true))
             case "not-eq?":
-                textPredicates.append(self.textPredicate(fromEqSteps: predicate.steps, isPositive: false))
+                textPredicates.append(textPredicate(fromEqSteps: predicate.steps, isPositive: false))
             case "match?":
-                textPredicates.append(self.textPredicate(fromMatchSteps: predicate.steps, isPositive: true))
+                textPredicates.append(textPredicate(fromMatchSteps: predicate.steps, isPositive: true))
             case "not-match?":
                 textPredicates.append(textPredicate(fromMatchSteps: predicate.steps, isPositive: false))
             default:

@@ -25,8 +25,13 @@ final class MarkdownViewCoordinator {
     private var lastApplyDate: Date = .distantPast
     private var scheduledTask: Task<Void, Never>?
 
-    var targetText: String { pendingText ?? lastText }
-    var targetTheme: MarkdownTheme { pendingTheme ?? lastTheme }
+    var targetText: String {
+        pendingText ?? lastText
+    }
+
+    var targetTheme: MarkdownTheme {
+        pendingTheme ?? lastTheme
+    }
 
     func setTextThrottled(_ text: String, theme: MarkdownTheme, on view: MarkdownTextView) {
         let now = Date()
@@ -89,11 +94,10 @@ final class MarkdownViewCoordinator {
 
     private func apply(text: String, theme: MarkdownTheme, to view: MarkdownTextView) {
         cancelScheduledApply()
-        let result: MarkdownParser.ParseResult
-        if lastText == text, let cached = lastParseResult {
-            result = cached
+        let result: MarkdownParser.ParseResult = if lastText == text, let cached = lastParseResult {
+            cached
         } else {
-            result = MarkdownParser().parse(text)
+            MarkdownParser().parse(text)
         }
         let content = MarkdownContent(parserResult: result, theme: theme)
         lastText = text

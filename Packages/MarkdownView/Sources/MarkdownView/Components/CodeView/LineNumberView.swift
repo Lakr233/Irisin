@@ -131,4 +131,3 @@ final class LineNumberView: UIView {
         lineCount = max(lines.count, 1)
     }
 }
-

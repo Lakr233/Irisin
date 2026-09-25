@@ -18,7 +18,7 @@ struct DefaultStringAttributes {
             .foregroundColor: textColor,
             .font: font,
             .kern: kern as NSNumber,
-            .paragraphStyle: paragraphStyle
+            .paragraphStyle: paragraphStyle,
         ]
         attributedString.beginEditing()
         attributedString.setAttributes(attributes, range: range)

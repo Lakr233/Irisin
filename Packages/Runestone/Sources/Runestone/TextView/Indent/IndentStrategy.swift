@@ -11,19 +11,19 @@ public enum IndentStrategy: Equatable {
 extension IndentStrategy {
     var tabLength: Int {
         switch self {
-        case .tab(let length):
-            return length
-        case .space(let length):
-            return length
+        case let .tab(length):
+            length
+        case let .space(length):
+            length
         }
     }
 
     func string(indentLevel: Int) -> String {
         switch self {
         case .tab:
-            return String(repeating: Symbol.Character.tab, count: indentLevel)
-        case .space(let length):
-            return String(repeating: Symbol.Character.space, count: length * indentLevel)
+            String(repeating: Symbol.Character.tab, count: indentLevel)
+        case let .space(length):
+            String(repeating: Symbol.Character.space, count: length * indentLevel)
         }
     }
 }

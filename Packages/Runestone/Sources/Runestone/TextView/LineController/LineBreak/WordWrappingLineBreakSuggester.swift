@@ -36,7 +36,7 @@ private extension WordWrappingLineBreakSuggester {
     private func lookbackToFindFirstLineBreakableCharacter(startingAt startLocation: Int, maximumLookback: Int) -> Int? {
         var lookback = 0
         var foundWhitespace = false
-        while lookback < maximumLookback && !foundWhitespace {
+        while lookback < maximumLookback, !foundWhitespace {
             if prefersInsertingLineBreakAfterCharacter(at: startLocation - lookback) {
                 foundWhitespace = true
             } else {

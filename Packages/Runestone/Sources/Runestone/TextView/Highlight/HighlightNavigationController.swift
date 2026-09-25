@@ -4,7 +4,8 @@ import UIKit
 protocol HighlightNavigationControllerDelegate: AnyObject {
     func highlightNavigationController(
         _ controller: HighlightNavigationController,
-        shouldNavigateTo highlightNavigationRange: HighlightNavigationRange)
+        shouldNavigateTo highlightNavigationRange: HighlightNavigationRange
+    )
 }
 
 struct HighlightNavigationRange {
@@ -30,7 +31,7 @@ final class HighlightNavigationController {
     var loopRanges = false
 
     private var previousNavigationRange: HighlightNavigationRange? {
-        if let selectedRange = selectedRange {
+        if let selectedRange {
             let reversedRanges = highlightedRanges.reversed()
             if let nextRange = reversedRanges.first(where: { $0.range.upperBound <= selectedRange.lowerBound }) {
                 return HighlightNavigationRange(range: nextRange.range)
@@ -45,38 +46,39 @@ final class HighlightNavigationController {
             return nil
         }
     }
+
     private var nextNavigationRange: HighlightNavigationRange? {
-        if let selectedRange = selectedRange {
+        if let selectedRange {
             if let nextRange = highlightedRanges.first(where: { $0.range.lowerBound >= selectedRange.upperBound }) {
-                return HighlightNavigationRange(range: nextRange.range)
+                HighlightNavigationRange(range: nextRange.range)
             } else if loopRanges, let firstRange = highlightedRanges.first {
-                return HighlightNavigationRange(range: firstRange.range, loopMode: .nextGoesToFirst)
+                HighlightNavigationRange(range: firstRange.range, loopMode: .nextGoesToFirst)
             } else {
-                return nil
+                nil
             }
         } else if let firstRange = highlightedRanges.first {
-            return HighlightNavigationRange(range: firstRange.range)
+            HighlightNavigationRange(range: firstRange.range)
         } else {
-            return nil
+            nil
         }
     }
 
     func selectPreviousRange() {
-        if let previousNavigationRange = previousNavigationRange {
+        if let previousNavigationRange {
             selectedRange = previousNavigationRange.range
             delegate?.highlightNavigationController(self, shouldNavigateTo: previousNavigationRange)
         }
     }
 
     func selectNextRange() {
-        if let nextNavigationRange = nextNavigationRange {
+        if let nextNavigationRange {
             selectedRange = nextNavigationRange.range
             delegate?.highlightNavigationController(self, shouldNavigateTo: nextNavigationRange)
         }
     }
 
     func selectRange(at index: Int) {
-        if index >= 0 && index < highlightedRanges.count {
+        if index >= 0, index < highlightedRanges.count {
             let highlightedRange = highlightedRanges[index]
             let navigationRange = HighlightNavigationRange(range: highlightedRange.range)
             selectedRange = highlightedRange.range

@@ -18,11 +18,11 @@ public enum LineEnding: String, CaseIterable {
     public var symbol: String {
         switch self {
         case .cr:
-            return Symbol.carriageReturn
+            Symbol.carriageReturn
         case .lf:
-            return Symbol.lineFeed
+            Symbol.lineFeed
         case .crlf:
-            return Symbol.carriageReturnLineFeed
+            Symbol.carriageReturnLineFeed
         }
     }
 

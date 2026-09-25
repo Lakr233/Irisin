@@ -32,4 +32,3 @@ struct MarkdownViewRepresentable: UIViewRepresentable, MarkdownViewRepresentable
         MarkdownViewCoordinator()
     }
 }
-

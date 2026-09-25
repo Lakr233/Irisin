@@ -43,7 +43,11 @@ extension RepositoryCenter {
         case stalled
 
         var data: Data? {
-            if case let .data(data) = self { data } else { nil }
+            if case let .data(data) = self {
+                data
+            } else {
+                nil
+            }
         }
 
         /// The server answered, whatever it said.
@@ -55,13 +59,21 @@ extension RepositoryCenter {
         }
 
         var isStalled: Bool {
-            if case .stalled = self { true } else { false }
+            if case .stalled = self {
+                true
+            } else {
+                false
+            }
         }
 
         /// No answer because this device has no network: nothing said
         /// about the host.
         var deviceOffline: Bool {
-            if case .unreachable(.notConnectedToInternet) = self { true } else { false }
+            if case .unreachable(.notConnectedToInternet) = self {
+                true
+            } else {
+                false
+            }
         }
 
         /// For a log line: `unreachable (timed out)`.

@@ -9,15 +9,16 @@ enum StringModifier {
     var character: Character {
         switch self {
         case .uppercaseLetter:
-            return "u"
+            "u"
         case .uppercaseAllLetters:
-            return "U"
+            "U"
         case .lowercaseLetter:
-            return "l"
+            "l"
         case .lowercaseAllLetters:
-            return "L"
+            "L"
         }
     }
+
     var string: String {
         "\\" + String(character)
     }
@@ -25,9 +26,9 @@ enum StringModifier {
     private var terminatesStringModification: Bool {
         switch self {
         case .uppercaseAllLetters, .lowercaseAllLetters:
-            return true
+            true
         case .uppercaseLetter, .lowercaseLetter:
-            return false
+            false
         }
     }
 
@@ -38,7 +39,7 @@ enum StringModifier {
         var stringIndex = string.startIndex
         var modifierIndex = modifiers.startIndex
         var result = ""
-        while stringIndex < string.endIndex && modifierIndex < modifiers.endIndex {
+        while stringIndex < string.endIndex, modifierIndex < modifiers.endIndex {
             let modifier = modifiers[modifierIndex]
             switch modifier {
             case .uppercaseLetter:

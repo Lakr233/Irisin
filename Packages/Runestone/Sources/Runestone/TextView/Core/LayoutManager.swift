@@ -14,6 +14,7 @@ final class LayoutManager {
             }
         }
     }
+
     weak var textInputView: UIView? {
         didSet {
             if textInputView != oldValue {
@@ -21,6 +22,7 @@ final class LayoutManager {
             }
         }
     }
+
     var lineManager: LineManager
     var stringView: StringView
     var scrollViewWidth: CGFloat = 0
@@ -35,6 +37,7 @@ final class LayoutManager {
             }
         }
     }
+
     var theme: Theme = DefaultTheme() {
         didSet {
             if theme !== oldValue {
@@ -56,6 +59,7 @@ final class LayoutManager {
             }
         }
     }
+
     var isEditing = false {
         didSet {
             if isEditing != oldValue {
@@ -64,6 +68,7 @@ final class LayoutManager {
             }
         }
     }
+
     var showLineNumbers = false {
         didSet {
             if showLineNumbers != oldValue {
@@ -71,6 +76,7 @@ final class LayoutManager {
             }
         }
     }
+
     var lineSelectionDisplayType: LineSelectionDisplayType = .disabled {
         didSet {
             if lineSelectionDisplayType != oldValue {
@@ -80,6 +86,7 @@ final class LayoutManager {
             }
         }
     }
+
     var isLineWrappingEnabled = true
     /// Spacing around the text. The left-side spacing defines the distance between the text and the gutter.
     var textContainerInset: UIEdgeInsets = .zero
@@ -91,16 +98,18 @@ final class LayoutManager {
             }
         }
     }
+
     var lineHeightMultiplier: CGFloat = 1
     var constrainingLineWidth: CGFloat {
         if isLineWrappingEnabled {
-            return scrollViewWidth - leadingLineSpacing - textContainerInset.right - safeAreaInsets.left - safeAreaInsets.right
+            scrollViewWidth - leadingLineSpacing - textContainerInset.right - safeAreaInsets.left - safeAreaInsets.right
         } else {
             // Rendering multiple very long lines is very expensive. In order to let the editor remain useable,
             // we set a very high maximum line width when line wrapping is disabled.
-            return 10_000
+            10000
         }
     }
+
     var markedRange: NSRange? {
         didSet {
             if markedRange != oldValue {
@@ -110,6 +119,7 @@ final class LayoutManager {
     }
 
     // MARK: - Views
+
     let gutterContainerView = UIView()
     private var lineFragmentViewReuseQueue = ViewReuseQueue<LineFragmentID, LineFragmentView>()
     private var lineNumberLabelReuseQueue = ViewReuseQueue<DocumentLineNodeID, LineNumberView>()
@@ -121,13 +131,15 @@ final class LayoutManager {
     private let lineSelectionBackgroundView = UIView()
 
     // MARK: - Sizing
+
     private var leadingLineSpacing: CGFloat {
         if showLineNumbers {
-            return gutterWidthService.gutterWidth + textContainerInset.left
+            gutterWidthService.gutterWidth + textContainerInset.left
         } else {
-            return textContainerInset.left
+            textContainerInset.left
         }
     }
+
     private var insetViewport: CGRect {
         let x = viewport.minX - textContainerInset.left
         let y = viewport.minY - textContainerInset.top
@@ -135,6 +147,7 @@ final class LayoutManager {
         let height = viewport.height + textContainerInset.top + textContainerInset.bottom
         return CGRect(x: x, y: y, width: width, height: height)
     }
+
     private let contentSizeService: ContentSizeService
     private let gutterWidthService: GutterWidthService
     private let caretRectService: CaretRectService
@@ -142,21 +155,24 @@ final class LayoutManager {
     private let highlightService: HighlightService
 
     // MARK: - Rendering
+
     private let invisibleCharacterConfiguration: InvisibleCharacterConfiguration
     private let lineControllerStorage: LineControllerStorage
     private var needsLayout = false
     private var needsLayoutLineSelection = false
 
-    init(lineManager: LineManager,
-         languageMode: InternalLanguageMode,
-         stringView: StringView,
-         lineControllerStorage: LineControllerStorage,
-         contentSizeService: ContentSizeService,
-         gutterWidthService: GutterWidthService,
-         caretRectService: CaretRectService,
-         selectionRectService: SelectionRectService,
-         highlightService: HighlightService,
-         invisibleCharacterConfiguration: InvisibleCharacterConfiguration) {
+    init(
+        lineManager: LineManager,
+        languageMode: InternalLanguageMode,
+        stringView: StringView,
+        lineControllerStorage: LineControllerStorage,
+        contentSizeService: ContentSizeService,
+        gutterWidthService: GutterWidthService,
+        caretRectService: CaretRectService,
+        selectionRectService: SelectionRectService,
+        highlightService: HighlightService,
+        invisibleCharacterConfiguration: InvisibleCharacterConfiguration
+    ) {
         self.lineManager = lineManager
         self.languageMode = languageMode
         self.stringView = stringView
@@ -167,13 +183,13 @@ final class LayoutManager {
         self.caretRectService = caretRectService
         self.selectionRectService = selectionRectService
         self.highlightService = highlightService
-        self.linesContainerView.isUserInteractionEnabled = false
-        self.lineNumbersContainerView.isUserInteractionEnabled = false
-        self.gutterContainerView.isUserInteractionEnabled = false
-        self.gutterBackgroundView.isUserInteractionEnabled = false
-        self.gutterSelectionBackgroundView.isUserInteractionEnabled = false
-        self.lineSelectionBackgroundView.isUserInteractionEnabled = false
-        self.updateShownViews()
+        linesContainerView.isUserInteractionEnabled = false
+        lineNumbersContainerView.isUserInteractionEnabled = false
+        gutterContainerView.isUserInteractionEnabled = false
+        gutterBackgroundView.isUserInteractionEnabled = false
+        gutterSelectionBackgroundView.isUserInteractionEnabled = false
+        lineSelectionBackgroundView.isUserInteractionEnabled = false
+        updateShownViews()
         let memoryWarningNotificationName = UIApplication.didReceiveMemoryWarningNotification
         NotificationCenter.default.addObserver(self, selector: #selector(clearMemory), name: memoryWarningNotificationName, object: nil)
     }
@@ -227,14 +243,17 @@ final class LayoutManager {
         let localNeedleLocation = needleRange.location - startLocation
         let localNeedleLength = min(needleRange.length, previewRange.length)
         let needleInPreviewRange = NSRange(location: localNeedleLocation, length: localNeedleLength)
-        return TextPreview(needleRange: needleRange,
-                           previewRange: previewRange,
-                           needleInPreviewRange: needleInPreviewRange,
-                           lineControllers: lineControllers)
+        return TextPreview(
+            needleRange: needleRange,
+            previewRange: previewRange,
+            needleInPreviewRange: needleInPreviewRange,
+            lineControllers: lineControllers
+        )
     }
 }
 
 // MARK: - UITextInput
+
 extension LayoutManager {
     func firstRect(for range: NSRange) -> CGRect {
         guard let line = lineManager.line(containingCharacterAt: range.location) else {
@@ -281,6 +300,7 @@ extension LayoutManager {
 }
 
 // MARK: - Layout
+
 extension LayoutManager {
     func setNeedsLayout() {
         needsLayout = true
@@ -333,7 +353,7 @@ extension LayoutManager {
     }
 
     private func getLineSelectionRect() -> CGRect? {
-        guard lineSelectionDisplayType.shouldShowLineSelection, var selectedRange = selectedRange else {
+        guard lineSelectionDisplayType.shouldShowLineSelection, var selectedRange else {
             return nil
         }
         guard let (startLine, endLine) = lineManager.startAndEndLine(in: selectedRange) else {
@@ -341,7 +361,7 @@ extension LayoutManager {
         }
         // If the line starts where our selection ends then our selection end son a line break and we will not include the following line.
         var realEndLine = endLine
-        if selectedRange.upperBound == endLine.location && startLine !== endLine {
+        if selectedRange.upperBound == endLine.location, startLine !== endLine {
             realEndLine = endLine.previous
             selectedRange = NSRange(location: selectedRange.lowerBound, length: max(selectedRange.length - 1, 0))
         }
@@ -375,7 +395,7 @@ extension LayoutManager {
             let lineSize = CGSize(width: lineController.lineWidth, height: lineController.lineHeight)
             contentSizeService.setSize(of: lineController.line, to: lineSize)
             let lineEndLocation = lineLocation + line.data.length
-            if ((lineEndLocation < location) || (lineLocation == location && !isLocationEndOfString)) && line.index < lineManager.lineCount - 1 {
+            if (lineEndLocation < location) || (lineLocation == location && !isLocationEndOfString), line.index < lineManager.lineCount - 1 {
                 nextLine = lineManager.line(atRow: line.index + 1)
             } else {
                 nextLine = nil
@@ -386,7 +406,7 @@ extension LayoutManager {
     // swiftlint:disable:next function_body_length
     private func layoutLinesInViewport() {
         // Immediately bail out from generating lines in a viewport of zero size.
-        guard viewport.size.width > 0 && viewport.size.height > 0 else {
+        guard viewport.size.width > 0, viewport.size.height > 0 else {
             return
         }
         let oldVisibleLineIDs = visibleLineIDs
@@ -413,13 +433,15 @@ extension LayoutManager {
                 let lineFragment = lineFragmentController.lineFragment
                 var lineFragmentFrame: CGRect = .zero
                 appearedLineFragmentIDs.insert(lineFragment.id)
-                lineFragmentController.highlightedRangeFragments = highlightService.highlightedRangeFragments(for: lineFragment,
-                                                                                                              inLineWithID: line.id)
+                lineFragmentController.highlightedRangeFragments = highlightService.highlightedRangeFragments(
+                    for: lineFragment,
+                    inLineWithID: line.id
+                )
                 layoutLineFragmentView(for: lineFragmentController, lineYPosition: lineYPosition, lineFragmentFrame: &lineFragmentFrame)
                 maxY = lineFragmentFrame.maxY
             }
             // The line fragments have now been created and we can set the marked and highlighted ranges on them.
-            if let markedRange = markedRange {
+            if let markedRange {
                 let lineRange = NSRange(location: lineController.line.location, length: lineController.line.data.totalLength)
                 let localMarkedRange = markedRange.local(to: lineRange)
                 lineController.setMarkedTextOnLineFragments(localMarkedRange)
@@ -430,10 +452,10 @@ extension LayoutManager {
             let lineSize = CGSize(width: lineController.lineWidth, height: lineController.lineHeight)
             contentSizeService.setSize(of: lineController.line, to: lineSize)
             let isSizingLineAboveTopEdge = line.yPosition < insetViewport.minY + textContainerInset.top
-            if isSizingLineAboveTopEdge && lineController.isFinishedTypesetting {
+            if isSizingLineAboveTopEdge, lineController.isFinishedTypesetting {
                 contentOffsetAdjustmentY += lineController.lineHeight - oldLineHeight
             }
-            if !stoppedGeneratingLineFragments && line.index < lineManager.lineCount - 1 {
+            if !stoppedGeneratingLineFragments, line.index < lineManager.lineCount - 1 {
                 nextLine = lineManager.line(atRow: line.index + 1)
             } else {
                 nextLine = nil
@@ -538,11 +560,12 @@ extension LayoutManager {
 }
 
 // MARK: - Marked Text
+
 private extension LayoutManager {
     private func updateMarkedTextOnVisibleLines() {
         for lineID in visibleLineIDs {
             if let lineController = lineControllerStorage[lineID] {
-                if let markedRange = markedRange {
+                if let markedRange {
                     let lineRange = NSRange(location: lineController.line.location, length: lineController.line.data.totalLength)
                     let localMarkedRange = markedRange.local(to: lineRange)
                     lineController.setMarkedTextOnLineFragments(localMarkedRange)
@@ -555,6 +578,7 @@ private extension LayoutManager {
 }
 
 // MARK: - Memory Management
+
 private extension LayoutManager {
     @objc private func clearMemory() {
         lineControllerStorage.removeAllLineControllers(exceptLinesWithID: visibleLineIDs)

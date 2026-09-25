@@ -48,10 +48,12 @@ public final class TreeSitterIndentationScopes {
     ///   - inheritIndent: Inherit indentation from a parent node in the syntax tree.
     ///   - outdent: Node types removing a level of indentation.
     ///   - whitespaceDenotesBlocks: `true` to start searching for nodes increasing indentation from the deepest node in the syntax tree.
-    public init(indent: [String] = [],
-                inheritIndent: [String] = [],
-                outdent: [String] = [],
-                whitespaceDenotesBlocks: Bool = false) {
+    public init(
+        indent: [String] = [],
+        inheritIndent: [String] = [],
+        outdent: [String] = [],
+        whitespaceDenotesBlocks: Bool = false
+    ) {
         self.indent = indent
         self.inheritIndent = inheritIndent
         self.outdent = outdent
@@ -62,8 +64,8 @@ public final class TreeSitterIndentationScopes {
 extension TreeSitterIndentationScopes: CustomDebugStringConvertible {
     public var debugDescription: String {
         "[TreeSitterIndentationScopes indent=\(indent)"
-        + " inheritIndent=\(inheritIndent)"
-        + " outdent=\(outdent)"
-        + " whitespaceDenotesBlocks=\(whitespaceDenotesBlocks)]"
+            + " inheritIndent=\(inheritIndent)"
+            + " outdent=\(outdent)"
+            + " whitespaceDenotesBlocks=\(whitespaceDenotesBlocks)]"
     }
 }

@@ -39,7 +39,7 @@ final class TreeSitterQuery {
         case 5:
             throw TreeSitterQueryError.structure(offset: errorOffset.pointee)
         default:
-            if let pointer = pointer {
+            if let pointer {
                 self.language = language
                 self.pointer = pointer
             } else {

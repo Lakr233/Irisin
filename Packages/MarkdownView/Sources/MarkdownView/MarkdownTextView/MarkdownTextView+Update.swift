@@ -55,4 +55,3 @@ extension MarkdownTextView {
         setNeedsDisplay()
     }
 }
-

@@ -60,8 +60,8 @@ private extension EditMenuController {
             return nil
         }
         return UIAction(title: L10n.Menu.ItemTitle.replace) { [weak self] _ in
-            if let self = self {
-                self.delegate?.editMenuControllerShouldReplaceText(self)
+            if let self {
+                delegate?.editMenuControllerShouldReplaceText(self)
             }
         }
     }
@@ -69,14 +69,14 @@ private extension EditMenuController {
 
 extension EditMenuController: UIEditMenuInteractionDelegate {
     func editMenuInteraction(
-        _ interaction: UIEditMenuInteraction,
-        menuFor configuration: UIEditMenuConfiguration,
+        _: UIEditMenuInteraction,
+        menuFor _: UIEditMenuConfiguration,
         suggestedActions: [UIMenuElement]
     ) -> UIMenu? {
         if let selectedRange = delegate?.selectedRange(for: self), let replaceAction = replaceActionIfAvailable(for: selectedRange) {
-            return UIMenu(children: [replaceAction] + suggestedActions)
+            UIMenu(children: [replaceAction] + suggestedActions)
         } else {
-            return UIMenu(children: suggestedActions)
+            UIMenu(children: suggestedActions)
         }
     }
 }

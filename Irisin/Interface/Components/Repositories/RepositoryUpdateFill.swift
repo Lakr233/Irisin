@@ -47,7 +47,9 @@ final class RepositoryUpdateFill: UIView {
             guard let self else { return }
             if let update = notification.object as? RepositoryCenter.UpdateNotification,
                update.repository != url
-            { return }
+            {
+                return
+            }
             update(animated: true)
         }
         .store(in: &subscriptions)

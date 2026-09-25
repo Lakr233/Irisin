@@ -7,9 +7,9 @@ enum TreeSitterSyntaxHighlighterError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cancelled:
-            return "Operation was cancelled"
+            "Operation was cancelled"
         case .operationDeallocated:
-            return "The operation was deallocated"
+            "The operation was deallocated"
         }
     }
 }
@@ -34,14 +34,14 @@ final class TreeSitterSyntaxHighlighter: LineSyntaxHighlighter {
 
     func syntaxHighlight(_ input: LineSyntaxHighlighterInput) {
         let captures = languageMode.captures(in: input.byteRange)
-        let tokens = self.tokens(for: captures, localTo: input.byteRange)
+        let tokens = tokens(for: captures, localTo: input.byteRange)
         setAttributes(for: tokens, on: input.attributedString)
     }
 
     func syntaxHighlight(_ input: LineSyntaxHighlighterInput, completion: @escaping AsyncCallback) {
         let operation = BlockOperation()
         operation.addExecutionBlock { [weak operation, weak self] in
-            guard let operation = operation, let self = self else {
+            guard let operation, let self else {
                 DispatchQueue.main.async {
                     completion(.failure(TreeSitterSyntaxHighlighterError.operationDeallocated))
                 }
@@ -53,7 +53,7 @@ final class TreeSitterSyntaxHighlighter: LineSyntaxHighlighter {
                 }
                 return
             }
-            let captures = self.languageMode.captures(in: input.byteRange)
+            let captures = languageMode.captures(in: input.byteRange)
             if !operation.isCancelled {
                 DispatchQueue.main.async {
                     if !operation.isCancelled {
@@ -106,11 +106,10 @@ private extension TreeSitterSyntaxHighlighter {
             }
             let currentFont = attributedString.attribute(.font, at: token.range.location, effectiveRange: nil) as? UIFont
             let baseFont = token.font ?? theme.font
-            let newFont: UIFont
-            if !symbolicTraits.isEmpty {
-                newFont = baseFont.withSymbolicTraits(symbolicTraits) ?? baseFont
+            let newFont: UIFont = if !symbolicTraits.isEmpty {
+                baseFont.withSymbolicTraits(symbolicTraits) ?? baseFont
             } else {
-                newFont = baseFont
+                baseFont
             }
             if newFont != currentFont {
                 attributes[.font] = newFont
@@ -157,9 +156,9 @@ private extension TreeSitterSyntaxHighlighter {
 private extension UIFont {
     func withSymbolicTraits(_ symbolicTraits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
         if let newFontDescriptor = fontDescriptor.withSymbolicTraits(symbolicTraits) {
-            return UIFont(descriptor: newFontDescriptor, size: pointSize)
+            UIFont(descriptor: newFontDescriptor, size: pointSize)
         } else {
-            return nil
+            nil
         }
     }
 }

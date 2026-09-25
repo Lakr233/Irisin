@@ -427,8 +427,8 @@ final class OperationController: UIViewController, UITableViewDelegate {
             await manager.settled()
             guard let self, view.window != nil else { return }
             let payload: Installer.OperationPayload? = if operation.plan.recoveryMode,
-                                                              operation.plan.install.count == 1,
-                                                              let package = operation.plan.install.first
+                                                          operation.plan.install.count == 1,
+                                                          let package = operation.plan.install.first
             {
                 await Installer.shared.createRecoveryOperationPayload(package: package)
             } else if operation.plan.recoveryMode,

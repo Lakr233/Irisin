@@ -1,5 +1,5 @@
 //
-//  MarkdownTextView+LTXDelegate.swift
+//  MarkdownTextView+TextLabelViewDelegate.swift
 //  MarkdownView
 //
 //  Created by 秋星桥 on 7/9/25.
@@ -50,4 +50,3 @@ extension MarkdownTextView: TextLabelViewDelegate {
         }
     }
 }
-

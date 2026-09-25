@@ -9,10 +9,12 @@ final class SelectionRectService {
     private let gutterWidthService: GutterWidthService
     private let caretRectService: CaretRectService
 
-    init(lineManager: LineManager,
-         contentSizeService: ContentSizeService,
-         gutterWidthService: GutterWidthService,
-         caretRectService: CaretRectService) {
+    init(
+        lineManager: LineManager,
+        contentSizeService: ContentSizeService,
+        gutterWidthService: GutterWidthService,
+        caretRectService: CaretRectService
+    ) {
         self.lineManager = lineManager
         self.contentSizeService = contentSizeService
         self.gutterWidthService = gutterWidthService
@@ -32,7 +34,7 @@ final class SelectionRectService {
         let startCaretRect = caretRectService.caretRect(at: adjustedRange.lowerBound, allowMovingCaretToNextLineFragment: true)
         let endCaretRect = caretRectService.caretRect(at: adjustedRange.upperBound, allowMovingCaretToNextLineFragment: false)
         let fullWidth = max(contentSizeService.contentWidth, contentSizeService.scrollViewWidth) - leadingLineSpacing - textContainerInset.right
-        if startCaretRect.minY == endCaretRect.minY && startCaretRect.maxY == endCaretRect.maxY {
+        if startCaretRect.minY == endCaretRect.minY, startCaretRect.maxY == endCaretRect.maxY {
             // Selecting text in the same line fragment.
             let width = selectsLineEnding ? fullWidth - (startCaretRect.minX - leadingLineSpacing) : endCaretRect.maxX - startCaretRect.maxX
             let scaledHeight = startCaretRect.height * lineHeightMultiplier

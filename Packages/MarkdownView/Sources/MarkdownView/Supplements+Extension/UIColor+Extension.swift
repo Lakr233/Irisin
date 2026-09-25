@@ -12,4 +12,3 @@ extension UIColor {
         self.init(dynamicProvider: { $0.userInterfaceStyle == .dark ? dark : light })
     }
 }
-

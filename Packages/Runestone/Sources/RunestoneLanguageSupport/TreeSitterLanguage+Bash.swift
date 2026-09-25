@@ -31,8 +31,8 @@ public extension TreeSitterIndentationScopes {
     }
 }
 
-// Queries/highlights.scm from TreeSitterLanguages, kept as a literal so the
-// package ships no resource bundle for it.
+/// Queries/highlights.scm from TreeSitterLanguages, kept as a literal so the
+/// package ships no resource bundle for it.
 private let bashHighlights = #"""
 [
   (string)

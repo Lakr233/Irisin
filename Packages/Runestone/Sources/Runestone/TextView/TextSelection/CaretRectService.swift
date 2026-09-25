@@ -10,16 +10,18 @@ final class CaretRectService {
     private let gutterWidthService: GutterWidthService
     private var leadingLineSpacing: CGFloat {
         if showLineNumbers {
-            return gutterWidthService.gutterWidth + textContainerInset.left
+            gutterWidthService.gutterWidth + textContainerInset.left
         } else {
-            return textContainerInset.left
+            textContainerInset.left
         }
     }
 
-    init(stringView: StringView,
-         lineManager: LineManager,
-         lineControllerStorage: LineControllerStorage,
-         gutterWidthService: GutterWidthService) {
+    init(
+        stringView: StringView,
+        lineManager: LineManager,
+        lineControllerStorage: LineControllerStorage,
+        gutterWidthService: GutterWidthService
+    ) {
         self.stringView = stringView
         self.lineManager = lineManager
         self.lineControllerStorage = lineControllerStorage
@@ -31,7 +33,7 @@ final class CaretRectService {
         let line = lineManager.line(containingCharacterAt: safeLocation)!
         let lineController = lineControllerStorage.getOrCreateLineController(for: line)
         let lineLocalLocation = safeLocation - line.location
-        if allowMovingCaretToNextLineFragment && shouldMoveCaretToNextLineFragment(forLocation: lineLocalLocation, in: line) {
+        if allowMovingCaretToNextLineFragment, shouldMoveCaretToNextLineFragment(forLocation: lineLocalLocation, in: line) {
             let rect = caretRect(at: location + 1, allowMovingCaretToNextLineFragment: false)
             return CGRect(x: leadingLineSpacing, y: rect.minY, width: rect.width, height: rect.height)
         } else {

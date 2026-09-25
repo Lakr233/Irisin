@@ -19,6 +19,7 @@ final class IndentController {
             }
         }
     }
+
     var indentStrategy: IndentStrategy {
         didSet {
             if indentStrategy != oldValue {
@@ -26,6 +27,7 @@ final class IndentController {
             }
         }
     }
+
     var tabWidth: CGFloat {
         if let tabWidth = _tabWidth {
             return tabWidth
@@ -82,7 +84,7 @@ final class IndentController {
                 newSelectedRange.length -= utf16IndentLength
             }
         }
-        if let replacementString = replacementString {
+        if let replacementString {
             delegate?.indentController(self, shouldInsert: replacementString, in: originalRange)
             delegate?.indentController(self, shouldSelect: newSelectedRange)
         }
@@ -105,7 +107,7 @@ final class IndentController {
                 newSelectedRange.length += indentLength
             }
         }
-        if let replacementString = replacementString {
+        if let replacementString {
             delegate?.indentController(self, shouldInsert: replacementString, in: originalRange)
             delegate?.indentController(self, shouldSelect: newSelectedRange)
         }
@@ -114,7 +116,8 @@ final class IndentController {
     func insertLineBreak(in range: NSRange, using lineEnding: LineEnding) {
         let symbol = lineEnding.symbol
         if let startLinePosition = lineManager.linePosition(at: range.lowerBound),
-            let endLinePosition = lineManager.linePosition(at: range.upperBound) {
+           let endLinePosition = lineManager.linePosition(at: range.upperBound)
+        {
             let strategy = languageMode.strategyForInsertingLineBreak(from: startLinePosition, to: endLinePosition, using: indentStrategy)
             if strategy.insertExtraLineBreak {
                 // Inserting a line break enters a new indentation level.
@@ -134,18 +137,17 @@ final class IndentController {
         }
     }
 
-    // Returns the range of an indentation text if the cursor is placed after an indentation.
-    // This can be used when doing a deleteBackward operation to delete an indent level.
+    /// Returns the range of an indentation text if the cursor is placed after an indentation.
+    /// This can be used when doing a deleteBackward operation to delete an indent level.
     func indentRangeInFrontOfLocation(_ location: Int) -> NSRange? {
         guard let line = lineManager.line(containingCharacterAt: location) else {
             return nil
         }
-        let tabLength: Int
-        switch indentStrategy {
+        let tabLength: Int = switch indentStrategy {
         case .tab:
-            tabLength = 1
-        case .space(let length):
-            tabLength = length
+            1
+        case let .space(length):
+            length
         }
         let localLocation = location - line.location
         guard localLocation >= tabLength else {

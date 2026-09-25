@@ -19,9 +19,9 @@ final class TreeSitterCapture {
         self.index = index
         self.name = name
         self.byteRange = byteRange
-        self.properties = predicateMapResult.properties
-        self.textPredicates = predicateMapResult.textPredicates
-        self.nameComponentCount = name.split(separator: ".").count
+        properties = predicateMapResult.properties
+        textPredicates = predicateMapResult.textPredicates
+        nameComponentCount = name.split(separator: ".").count
     }
 }
 

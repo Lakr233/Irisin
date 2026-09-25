@@ -588,7 +588,7 @@ final class PackageQueue {
             // against the one there is before it is taken or staged
             guard !Installer.shared.inProcessingQueue,
                   try await Self.changes(since: plan, index: PackageCenter.default.index)
-                      .isDisjoint(with: [.installed, .settings]),
+                  .isDisjoint(with: [.installed, .settings]),
                   // an operation may have begun during the status check
                   !Installer.shared.inProcessingQueue
             else {
@@ -689,11 +689,11 @@ final class PackageQueue {
     /// even though the catalogue has been written since, since a read in
     /// the middle of a refresh is out of date before it ends.
     private func startingPool() async -> (pool: ResolutionPool?, pinned: Bool) {
-        guard Self.isRefreshing else { return (await preparedPool(), false) }
+        guard Self.isRefreshing else { return await (preparedPool(), false) }
         if pool == nil, poolRead == nil, !Installer.shared.inProcessingQueue {
             readPool()
         }
-        return (await awaitedPool(), true)
+        return await (awaitedPool(), true)
     }
 
     /// Reads the catalogue as it is now, refresh or not, for the solves

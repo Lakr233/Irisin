@@ -97,7 +97,9 @@ public final class PackageLookupCache {
         let found = await Self.read(keys, from: PackageCenter.default.index)
         for key in keys {
             // an older read never replaces a newer one
-            if let held = entries.value(forKey: key), held.generation >= read { continue }
+            if let held = entries.value(forKey: key), held.generation >= read {
+                continue
+            }
             entries.setValue(Entry(package: found[key], generation: read), forKey: key)
         }
         // an answer from before a write stays requested in no generation:

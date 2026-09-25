@@ -7,14 +7,14 @@ final class HighlightedRangeFragment: Equatable {
     let color: UIColor
     let cornerRadius: CGFloat
     var roundedCorners: UIRectCorner {
-        if containsStart && containsEnd {
-            return .allCorners
+        if containsStart, containsEnd {
+            .allCorners
         } else if containsStart {
-            return [.topLeft, .bottomLeft]
+            [.topLeft, .bottomLeft]
         } else if containsEnd {
-            return [.topRight, .bottomRight]
+            [.topRight, .bottomRight]
         } else {
-            return []
+            []
         }
     }
 
@@ -30,9 +30,9 @@ final class HighlightedRangeFragment: Equatable {
 extension HighlightedRangeFragment {
     static func == (lhs: HighlightedRangeFragment, rhs: HighlightedRangeFragment) -> Bool {
         lhs.range == rhs.range
-        && lhs.containsStart == rhs.containsStart
-        && lhs.containsEnd == rhs.containsEnd
-        && lhs.color == rhs.color
-        && lhs.cornerRadius == rhs.cornerRadius
+            && lhs.containsStart == rhs.containsStart
+            && lhs.containsEnd == rhs.containsEnd
+            && lhs.color == rhs.color
+            && lhs.cornerRadius == rhs.cornerRadius
     }
 }

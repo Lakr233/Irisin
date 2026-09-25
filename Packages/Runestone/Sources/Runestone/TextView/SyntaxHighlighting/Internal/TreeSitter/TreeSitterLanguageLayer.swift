@@ -17,17 +17,19 @@ final class TreeSitterLanguageLayer {
     private let languageProvider: TreeSitterLanguageProvider?
     private var isEmpty: Bool {
         if let rootNode = tree?.rootNode {
-            return rootNode.endByte - rootNode.startByte <= ByteCount(0)
+            rootNode.endByte - rootNode.startByte <= ByteCount(0)
         } else {
-            return true
+            true
         }
     }
 
-    init(language: TreeSitterInternalLanguage,
-         languageProvider: TreeSitterLanguageProvider?,
-         parser: TreeSitterParser,
-         stringView: StringView,
-         lineManager: LineManager) {
+    init(
+        language: TreeSitterInternalLanguage,
+        languageProvider: TreeSitterLanguageProvider?,
+        parser: TreeSitterParser,
+        stringView: StringView,
+        lineManager: LineManager
+    ) {
         self.language = language
         self.languageProvider = languageProvider
         self.parser = parser
@@ -37,14 +39,15 @@ final class TreeSitterLanguageLayer {
 }
 
 // MARK: - Parsing
+
 extension TreeSitterLanguageLayer {
     func parse(_ text: NSString) {
-        let ranges = [tree?.rootNode.textRange].compactMap { $0 }
+        let ranges = [tree?.rootNode.textRange].compactMap(\.self)
         parse(ranges, from: text)
     }
 
     func apply(_ edit: TreeSitterInputEdit) -> LineChangeSet {
-        let ranges = [tree?.rootNode.textRange].compactMap { $0 }
+        let ranges = [tree?.rootNode.textRange].compactMap(\.self)
         return apply(edit, parsing: ranges)
     }
 
@@ -74,7 +77,7 @@ extension TreeSitterLanguageLayer {
         tree = parser.parse(oldTree: tree)
         // Gather changed lines.
         let lineChangeSet = LineChangeSet()
-        if let oldTree = oldTree, let newTree = tree {
+        if let oldTree, let newTree = tree {
             let changedRanges = oldTree.rangesChanged(comparingTo: newTree)
             for changedRange in changedRanges {
                 let startRow = Int(changedRange.startPoint.row)
@@ -92,7 +95,7 @@ extension TreeSitterLanguageLayer {
 
     private func prepareParser(toParse ranges: [TreeSitterTextRange]) {
         parser.language = language.languagePointer
-        if !ranges.isEmpty && parentLanguageLayer != nil {
+        if !ranges.isEmpty, parentLanguageLayer != nil {
             parser.setIncludedRanges(ranges)
         } else {
             parser.removeAllIncludedRanges()
@@ -119,6 +122,7 @@ extension TreeSitterLanguageLayer {
 }
 
 // MARK: - Syntax Highlighting
+
 extension TreeSitterLanguageLayer {
     func captures(in range: ByteRange) -> [TreeSitterCapture] {
         guard !range.isEmpty else {
@@ -130,7 +134,7 @@ extension TreeSitterLanguageLayer {
     }
 
     private func allValidCaptures(in range: ByteRange) -> [TreeSitterCapture] {
-        guard let tree = tree else {
+        guard let tree else {
             return []
         }
         guard let highlightsQuery = language.highlightsQuery else {
@@ -146,6 +150,7 @@ extension TreeSitterLanguageLayer {
 }
 
 // MARK: - Child Language Layers
+
 private extension TreeSitterLanguageLayer {
     @discardableResult
     private func childLanguageLayer(withID id: UnsafeRawPointer, forLanguageNamed languageName: String) -> TreeSitterLanguageLayer? {
@@ -157,7 +162,8 @@ private extension TreeSitterLanguageLayer {
                 languageProvider: languageProvider,
                 parser: parser,
                 stringView: stringView,
-                lineManager: lineManager)
+                lineManager: lineManager
+            )
             childLanguageLayer.parentLanguageLayer = self
             childLanguageLayerStore.storeLayer(childLanguageLayer, forKey: id)
             return childLanguageLayer
@@ -205,8 +211,9 @@ private extension TreeSitterLanguageLayer {
 }
 
 // MARK: - TreeSitterInjectedLanguageMapperDelegate
+
 extension TreeSitterLanguageLayer: TreeSitterInjectedLanguageMapperDelegate {
-    func treeSitterInjectedLanguageMapper(_ mapper: TreeSitterInjectedLanguageMapper, textIn textRange: TreeSitterTextRange) -> String? {
+    func treeSitterInjectedLanguageMapper(_: TreeSitterInjectedLanguageMapper, textIn textRange: TreeSitterTextRange) -> String? {
         let byteRange = ByteRange(from: textRange.startByte, to: textRange.endByte)
         let range = NSRange(byteRange)
         return stringView.substring(in: range)
@@ -214,6 +221,7 @@ extension TreeSitterLanguageLayer: TreeSitterInjectedLanguageMapperDelegate {
 }
 
 // MARK: - Debugging Language Layers
+
 extension TreeSitterLanguageLayer {
     func languageHierarchyStringRepresentation() -> String {
         var str = ""
@@ -267,15 +275,15 @@ private extension TreeSitterCapture {
         // 3. The number of components in the name. E.g. "variable.builtin" is sorted after "variable" as the styling of "variable.builtin"
         //    should be applied after applying the styling of "variable", since it's a specialization.
         if lhs.byteRange.location < rhs.byteRange.location {
-            return true
+            true
         } else if lhs.byteRange.location > rhs.byteRange.location {
-            return false
+            false
         } else if lhs.byteRange.length > rhs.byteRange.length {
-            return true
+            true
         } else if lhs.byteRange.length < rhs.byteRange.length {
-            return false
+            false
         } else {
-            return lhs.nameComponentCount < rhs.nameComponentCount
+            lhs.nameComponentCount < rhs.nameComponentCount
         }
     }
 }

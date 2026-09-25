@@ -90,7 +90,7 @@ public extension PackageIndex {
             let records = [
                 db.package(identity: package.identity, repo: repository),
                 db.installOrigin(identity: package.identity),
-            ].compactMap { $0 }.filter { $0.repoRef == repository }
+            ].compactMap(\.self).filter { $0.repoRef == repository }
             return package.payload.contains { version, metadata in
                 !records.contains { $0.payload[version] == metadata }
             }

@@ -6,11 +6,12 @@ final class ContentSizeService {
     var textContainerInset: UIEdgeInsets = .zero
     var scrollViewWidth: CGFloat = 0 {
         didSet {
-            if scrollViewWidth != oldValue && isLineWrappingEnabled {
+            if scrollViewWidth != oldValue, isLineWrappingEnabled {
                 invalidateContentSize()
             }
         }
     }
+
     var isLineWrappingEnabled = true {
         didSet {
             if isLineWrappingEnabled != oldValue {
@@ -18,6 +19,7 @@ final class ContentSizeService {
             }
         }
     }
+
     let invisibleCharacterConfiguration: InvisibleCharacterConfiguration
     var lineManager: LineManager {
         didSet {
@@ -28,6 +30,7 @@ final class ContentSizeService {
             }
         }
     }
+
     var contentWidth: CGFloat {
         let minimumWidth = scrollViewWidth - safeAreaInset.left - safeAreaInset.right
         if isLineWrappingEnabled {
@@ -36,20 +39,23 @@ final class ContentSizeService {
             let textContentWidth = longestLineWidth ?? scrollViewWidth
             let preferredWidth = ceil(
                 textContentWidth
-                + gutterWidthService.gutterWidth
-                + textContainerInset.left
-                + textContainerInset.right
-                + invisibleCharacterConfiguration.maximumLineBreakSymbolWidth
+                    + gutterWidthService.gutterWidth
+                    + textContainerInset.left
+                    + textContainerInset.right
+                    + invisibleCharacterConfiguration.maximumLineBreakSymbolWidth
             )
             return max(preferredWidth, minimumWidth)
         }
     }
+
     var contentHeight: CGFloat {
         ceil(totalLinesHeight + textContainerInset.top + textContainerInset.bottom)
     }
+
     var contentSize: CGSize {
         CGSize(width: contentWidth, height: contentHeight)
     }
+
     @Published private(set) var isContentSizeInvalid = false
 
     private let lineControllerStorage: LineControllerStorage
@@ -59,7 +65,7 @@ final class ContentSizeService {
     private var longestLineWidth: CGFloat? {
         if let longestLineWidth = _longestLineWidth {
             return longestLineWidth
-        } else if let lineIDTrackingWidth = lineIDTrackingWidth, let lineWidth = lineWidths[lineIDTrackingWidth] {
+        } else if let lineIDTrackingWidth, let lineWidth = lineWidths[lineIDTrackingWidth] {
             let longestLineWidth = lineWidth
             _longestLineWidth = longestLineWidth
             if _totalLinesHeight != nil {
@@ -81,12 +87,13 @@ final class ContentSizeService {
                 }
             }
             _longestLineWidth = longestLineWidth
-            if longestLineWidth != nil && _totalLinesHeight != nil {
+            if longestLineWidth != nil, _totalLinesHeight != nil {
                 isContentSizeInvalid = false
             }
             return longestLineWidth
         }
     }
+
     private var totalLinesHeight: CGFloat {
         if let totalLinesHeight = _totalLinesHeight {
             return totalLinesHeight
@@ -99,6 +106,7 @@ final class ContentSizeService {
             return totalLinesHeight
         }
     }
+
     private var _longestLineWidth: CGFloat? {
         didSet {
             if _longestLineWidth != oldValue {
@@ -106,6 +114,7 @@ final class ContentSizeService {
             }
         }
     }
+
     private var _totalLinesHeight: CGFloat? {
         didSet {
             if _totalLinesHeight != oldValue {
@@ -114,10 +123,12 @@ final class ContentSizeService {
         }
     }
 
-    init(lineManager: LineManager,
-         lineControllerStorage: LineControllerStorage,
-         gutterWidthService: GutterWidthService,
-         invisibleCharacterConfiguration: InvisibleCharacterConfiguration) {
+    init(
+        lineManager: LineManager,
+        lineControllerStorage: LineControllerStorage,
+        gutterWidthService: GutterWidthService,
+        invisibleCharacterConfiguration: InvisibleCharacterConfiguration
+    ) {
         self.lineManager = lineManager
         self.lineControllerStorage = lineControllerStorage
         self.gutterWidthService = gutterWidthService
@@ -141,7 +152,7 @@ final class ContentSizeService {
         let lineWidth = newSize.width
         if lineWidths[line.id] != lineWidth {
             lineWidths[line.id] = lineWidth
-            if let lineIDTrackingWidth = lineIDTrackingWidth {
+            if let lineIDTrackingWidth {
                 let maximumLineWidth = lineWidths[lineIDTrackingWidth] ?? 0
                 if line.id == lineIDTrackingWidth || lineWidth > maximumLineWidth {
                     self.lineIDTrackingWidth = line.id

@@ -490,7 +490,7 @@ extension RepositoryCenter {
                 return .cutoff
             }
             var parts = OptionalParts()
-            var waiting: Set<String> = ["avatar", "payment_endpoint", "sileo-featured"]
+            var waiting: Set = ["avatar", "payment_endpoint", "sileo-featured"]
             for await part in group {
                 switch part {
                 case let .avatar(value):
@@ -729,13 +729,23 @@ extension RepositoryCenter {
                 issues = [downloads.contains(where: \.isStalled) ? .stalled : .unreachable]
                 // a device with no network says nothing about the host
                 outcome.hostUnreachable = issues == [.unreachable] && !downloads.contains(where: \.deviceOffline)
-            } else if !issues.contains(where: { if case .serverError = $0 { true } else { false } }) {
+            } else if !issues.contains(where: {
+                if case .serverError = $0 {
+                    true
+                } else {
+                    false
+                }
+            }) {
                 // the server answered something; what became of the index
                 // is what the report says: its own error, the connection
                 // dropping on it, or that there is none for this device
                 let unanswered = preferredDownloads.values.first { !$0.reachedServer }
                 let serverError = preferredDownloads.values.lazy.compactMap { download -> Int? in
-                    if case let .serverError(code) = download { code } else { nil }
+                    if case let .serverError(code) = download {
+                        code
+                    } else {
+                        nil
+                    }
                 }.first
                 if let serverError {
                     issues.append(.serverError(serverError))

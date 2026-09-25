@@ -7,8 +7,8 @@
 //
 
 import AptRepository
-import OrderedCollections
 import Combine
+import OrderedCollections
 import SPIndicator
 import Then
 import UIKit

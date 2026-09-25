@@ -9,6 +9,7 @@ final class InvisibleCharacterConfiguration {
             }
         }
     }
+
     var textColor: UIColor = .label
     var showTabs = false
     var showSpaces = false
@@ -20,6 +21,7 @@ final class InvisibleCharacterConfiguration {
             }
         }
     }
+
     var showSoftLineBreaks = false {
         didSet {
             if showSoftLineBreaks != oldValue {
@@ -27,6 +29,7 @@ final class InvisibleCharacterConfiguration {
             }
         }
     }
+
     var tabSymbol = "\u{25b8}"
     var spaceSymbol = "\u{00b7}"
     var nonBreakingSpaceSymbol = "\u{00b7}"
@@ -37,6 +40,7 @@ final class InvisibleCharacterConfiguration {
             }
         }
     }
+
     var softLineBreakSymbol = "\u{00ac}" {
         didSet {
             if softLineBreakSymbol != oldValue {
@@ -44,6 +48,7 @@ final class InvisibleCharacterConfiguration {
             }
         }
     }
+
     var lineBreakSymbolSize: CGSize {
         if let lineBreakSymbolSize = _lineBreakSymbolSize {
             return lineBreakSymbolSize
@@ -56,6 +61,7 @@ final class InvisibleCharacterConfiguration {
             return .zero
         }
     }
+
     var softLineBreakSymbolSize: CGSize {
         if let softLineBreakSymbolSize = _softLineBreakSymbolSize {
             return softLineBreakSymbolSize
@@ -68,15 +74,16 @@ final class InvisibleCharacterConfiguration {
             return .zero
         }
     }
+
     var maximumLineBreakSymbolWidth: CGFloat {
-        if showLineBreaks && showSoftLineBreaks {
-            return max(lineBreakSymbolSize.width, softLineBreakSymbolSize.width)
+        if showLineBreaks, showSoftLineBreaks {
+            max(lineBreakSymbolSize.width, softLineBreakSymbolSize.width)
         } else if showLineBreaks {
-            return lineBreakSymbolSize.width
+            lineBreakSymbolSize.width
         } else if showSoftLineBreaks {
-            return softLineBreakSymbolSize.width
+            softLineBreakSymbolSize.width
         } else {
-            return 0
+            0
         }
     }
 

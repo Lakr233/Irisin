@@ -106,4 +106,3 @@ extension MarkdownTextView {
         view.frame = frame
     }
 }
-

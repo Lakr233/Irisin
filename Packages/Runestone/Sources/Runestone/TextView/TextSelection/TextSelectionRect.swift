@@ -4,15 +4,19 @@ final class TextSelectionRect: UITextSelectionRect {
     override var rect: CGRect {
         _rect
     }
+
     override var writingDirection: NSWritingDirection {
         _writingDirection
     }
+
     override var containsStart: Bool {
         _containsStart
     }
+
     override var containsEnd: Bool {
         _containsEnd
     }
+
     override var isVertical: Bool {
         _isVertical
     }

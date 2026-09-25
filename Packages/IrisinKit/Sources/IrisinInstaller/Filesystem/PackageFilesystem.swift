@@ -254,7 +254,7 @@ final class PackageFilesystem {
     /// Package lists have no entry kinds. A database path they record is
     /// protected scaffolding during removal, never payload to delete.
     func isPackageDatabasePath(_ path: String) throws -> Bool {
-        isInDatabase(try resolvedLocation(path))
+        try isInDatabase(resolvedLocation(path))
     }
 
     private func isInDatabase(_ url: URL) -> Bool {

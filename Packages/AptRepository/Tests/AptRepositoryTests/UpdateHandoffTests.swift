@@ -214,8 +214,8 @@ import Testing
     /// mtac.app: a Release with its digests listed over and over. Its name
     /// is read, its packages are, and the report says the Release is bad.
     @Test func releaseWithDuplicatedDigestsStillNamesTheRepository() async throws {
-        let outcome = await update(host: "mtac.test", serving: [
-            "/Release": Data(try TestEnvironment.fixture("mtac-release").utf8),
+        let outcome = try await update(host: "mtac.test", serving: [
+            "/Release": Data(TestEnvironment.fixture("mtac-release").utf8),
             "/Packages.xz": Self.current,
         ])
         #expect(outcome.release?["label"] == "MTAC's Repo")

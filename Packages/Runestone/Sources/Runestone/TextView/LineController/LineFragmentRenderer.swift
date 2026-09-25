@@ -47,16 +47,15 @@ private extension LineFragmentRenderer {
         context.saveGState()
         for highlightedRange in highlightedRangeFragments {
             let startX = CTLineGetOffsetForStringIndex(lineFragment.line, highlightedRange.range.lowerBound, nil)
-            let endX: CGFloat
-            if shouldHighlightLineEnding(for: highlightedRange) {
-                endX = canvasSize.width
+            let endX: CGFloat = if shouldHighlightLineEnding(for: highlightedRange) {
+                canvasSize.width
             } else {
-                endX = CTLineGetOffsetForStringIndex(lineFragment.line, highlightedRange.range.upperBound, nil)
+                CTLineGetOffsetForStringIndex(lineFragment.line, highlightedRange.range.upperBound, nil)
             }
             let rect = CGRect(x: startX, y: 0, width: endX - startX, height: lineFragment.scaledSize.height)
             let roundedCorners = highlightedRange.roundedCorners
             context.setFillColor(highlightedRange.color.cgColor)
-            if !roundedCorners.isEmpty && highlightedRange.cornerRadius > 0 {
+            if !roundedCorners.isEmpty, highlightedRange.cornerRadius > 0 {
                 let cornerRadii = CGSize(width: highlightedRange.cornerRadius, height: highlightedRange.cornerRadius)
                 let bezierPath = UIBezierPath(roundedRect: rect, byRoundingCorners: roundedCorners, cornerRadii: cornerRadii)
                 context.addPath(bezierPath.cgPath)
@@ -69,7 +68,7 @@ private extension LineFragmentRenderer {
     }
 
     private func drawMarkedRange(to context: CGContext) {
-        if let markedRange = markedRange {
+        if let markedRange {
             context.saveGState()
             let startX = CTLineGetOffsetForStringIndex(lineFragment.line, markedRange.lowerBound, nil)
             let endX = CTLineGetOffsetForStringIndex(lineFragment.line, markedRange.upperBound, nil)
@@ -109,15 +108,15 @@ private extension LineFragmentRenderer {
         for substring in string {
             let indexInLine = lineFragment.visibleRange.location + indexInLineFragment
             indexInLineFragment += substring.utf16.count
-            if invisibleCharacterConfiguration.showSpaces && substring == Symbol.Character.space {
+            if invisibleCharacterConfiguration.showSpaces, substring == Symbol.Character.space {
                 draw(invisibleCharacterConfiguration.spaceSymbol, at: .character(indexInLine))
-            } else if invisibleCharacterConfiguration.showNonBreakingSpaces && substring == Symbol.Character.nonBreakingSpace {
+            } else if invisibleCharacterConfiguration.showNonBreakingSpaces, substring == Symbol.Character.nonBreakingSpace {
                 draw(invisibleCharacterConfiguration.nonBreakingSpaceSymbol, at: .character(indexInLine))
-            } else if invisibleCharacterConfiguration.showTabs && substring == Symbol.Character.tab {
+            } else if invisibleCharacterConfiguration.showTabs, substring == Symbol.Character.tab {
                 draw(invisibleCharacterConfiguration.tabSymbol, at: .character(indexInLine))
-            } else if invisibleCharacterConfiguration.showLineBreaks && isLineBreak(substring) {
+            } else if invisibleCharacterConfiguration.showLineBreaks, isLineBreak(substring) {
                 draw(invisibleCharacterConfiguration.lineBreakSymbol, at: .endOfLine)
-            } else if invisibleCharacterConfiguration.showSoftLineBreaks && substring == Symbol.Character.lineSeparator {
+            } else if invisibleCharacterConfiguration.showSoftLineBreaks, substring == Symbol.Character.lineSeparator {
                 draw(invisibleCharacterConfiguration.softLineBreakSymbol, at: .endOfLine)
             }
         }
@@ -126,7 +125,7 @@ private extension LineFragmentRenderer {
     private func draw(_ symbol: String, at horizontalPosition: HorizontalPosition) {
         let attrs: [NSAttributedString.Key: Any] = [
             .foregroundColor: invisibleCharacterConfiguration.textColor,
-            .font: invisibleCharacterConfiguration.font
+            .font: invisibleCharacterConfiguration.font,
         ]
         let size = symbol.size(withAttributes: attrs)
         let xPosition = xPosition(for: horizontalPosition)
@@ -137,10 +136,10 @@ private extension LineFragmentRenderer {
 
     private func xPosition(for horizontalPosition: HorizontalPosition) -> CGFloat {
         switch horizontalPosition {
-        case .character(let index):
-            return CTLineGetOffsetForStringIndex(lineFragment.line, index, nil)
+        case let .character(index):
+            CTLineGetOffsetForStringIndex(lineFragment.line, index, nil)
         case .endOfLine:
-            return CGFloat(CTLineGetTypographicBounds(lineFragment.line, nil, nil, nil))
+            CGFloat(CTLineGetTypographicBounds(lineFragment.line, nil, nil, nil))
         }
     }
 

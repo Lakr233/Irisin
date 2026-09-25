@@ -46,9 +46,9 @@ private extension SearchController {
         let matches = query.matches(in: stringView.string)
         return matches.compactMap { textCheckingResult in
             if textCheckingResult.range.length > 0, let mappedValue = mapper(textCheckingResult) {
-                return mappedValue
+                mappedValue
             } else {
-                return nil
+                nil
             }
         }
     }

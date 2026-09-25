@@ -32,13 +32,14 @@ public final class TextViewState {
     ///   - languageProvider: Object that can provide embedded languages on demand. A strong reference will be stored to the language provider.
     public init(text: String, theme: Theme = DefaultTheme(), language: TreeSitterLanguage, languageProvider: TreeSitterLanguageProvider? = nil) {
         self.theme = theme
-        self.stringView = StringView(string: NSMutableString(string: text))
-        self.lineManager = LineManager(stringView: stringView)
-        self.languageMode = TreeSitterInternalLanguageMode(
+        stringView = StringView(string: NSMutableString(string: text))
+        lineManager = LineManager(stringView: stringView)
+        languageMode = TreeSitterInternalLanguageMode(
             language: language.internalLanguage,
             languageProvider: languageProvider,
             stringView: stringView,
-            lineManager: lineManager)
+            lineManager: lineManager
+        )
         prepare(with: text)
     }
 
@@ -50,9 +51,9 @@ public final class TextViewState {
     ///   - theme: The theme to use when syntax highlighting the text.
     public init(text: String, theme: Theme = DefaultTheme()) {
         self.theme = theme
-        self.stringView = StringView(string: NSMutableString(string: text))
-        self.lineManager = LineManager(stringView: stringView)
-        self.languageMode = PlainTextInternalLanguageMode()
+        stringView = StringView(string: NSMutableString(string: text))
+        lineManager = LineManager(stringView: stringView)
+        languageMode = PlainTextInternalLanguageMode()
         prepare(with: text)
     }
 }

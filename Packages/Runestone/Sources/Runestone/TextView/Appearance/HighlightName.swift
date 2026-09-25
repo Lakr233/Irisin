@@ -1,5 +1,5 @@
 #if DEBUG
-private var previousUnrecognizedHighlightNames: [String] = []
+    private var previousUnrecognizedHighlightNames: [String] = []
 #endif
 
 enum HighlightName: String {
@@ -28,14 +28,14 @@ enum HighlightName: String {
             }
             comps.removeLast()
         }
-#if DEBUG
-        if !previousUnrecognizedHighlightNames.contains(rawHighlightName) {
-            previousUnrecognizedHighlightNames.append(rawHighlightName)
-            print("Unrecognized highlight name: '\(rawHighlightName)'."
-                  + " Add the highlight name to HighlightName.swift if you want to add support for syntax highlighting it."
-                  + " This message will only be shown once per highlight name.")
-        }
-#endif
+        #if DEBUG
+            if !previousUnrecognizedHighlightNames.contains(rawHighlightName) {
+                previousUnrecognizedHighlightNames.append(rawHighlightName)
+                print("Unrecognized highlight name: '\(rawHighlightName)'."
+                    + " Add the highlight name to HighlightName.swift if you want to add support for syntax highlighting it."
+                    + " This message will only be shown once per highlight name.")
+            }
+        #endif
         return nil
     }
 }

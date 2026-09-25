@@ -144,7 +144,9 @@ enum ShareSheet {
         for presenter: UIViewController,
         anchor: PopoverAnchor? = nil
     ) -> UIViewController? {
-        if canPresent(over: presenter) { return presenter }
+        if canPresent(over: presenter) {
+            return presenter
+        }
         let window = presenter.viewIfLoaded?.window ?? anchor?.view?.window ?? UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive }?

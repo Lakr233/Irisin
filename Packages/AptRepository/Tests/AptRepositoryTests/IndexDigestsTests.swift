@@ -31,7 +31,7 @@ struct IndexDigestsTests {
 
     @Test func flatRepositoryIndexIsHeldToItsRelease() throws {
         let digests = try IndexDigests(release: Self.release(listing: ["Packages", "Packages.xz"]), releaseUrl: flat)
-        let url = URL(string: "https://example.org/Packages.xz")!
+        let url = try #require(URL(string: "https://example.org/Packages.xz"))
         #expect(digests.verdict(of: Self.current, at: url) == .matches)
         #expect(digests.verdict(of: Self.stale, at: url) == .differs)
     }
@@ -39,26 +39,26 @@ struct IndexDigestsTests {
     @Test func suiteIndexIsFoundByItsPathUnderTheRelease() throws {
         let path = "main/binary-iphoneos-arm64/Packages.bz2"
         let digests = try IndexDigests(release: Self.release(listing: [path]), releaseUrl: suite)
-        let url = URL(string: "https://example.org/dists/stable/\(path)")!
+        let url = try #require(URL(string: "https://example.org/dists/stable/\(path)"))
         #expect(digests.verdict(of: Self.current, at: url) == .matches)
         #expect(digests.verdict(of: Self.stale, at: url) == .differs)
     }
 
     @Test func dotSlashSpellingIsTheSameFile() throws {
         let digests = try IndexDigests(release: Self.release(listing: ["./Packages"]), releaseUrl: flat)
-        #expect(digests.verdict(of: Self.stale, at: URL(string: "https://example.org/Packages")!) == .differs)
+        #expect(try digests.verdict(of: Self.stale, at: #require(URL(string: "https://example.org/Packages"))) == .differs)
     }
 
     @Test func whatTheReleaseDoesNotListIsNotJudged() throws {
         let listed = try IndexDigests(release: Self.release(listing: ["Packages"]), releaseUrl: flat)
-        #expect(listed.verdict(of: Self.stale, at: URL(string: "https://example.org/Packages.gz")!) == .unlisted)
-        #expect(listed.verdict(of: Self.stale, at: URL(string: "https://elsewhere.org/Packages")!) == .unlisted)
+        #expect(try listed.verdict(of: Self.stale, at: #require(URL(string: "https://example.org/Packages.gz"))) == .unlisted)
+        #expect(try listed.verdict(of: Self.stale, at: #require(URL(string: "https://elsewhere.org/Packages"))) == .unlisted)
 
         let md5 = try IndexDigests(release: Self.release(listing: ["Packages"], md5Only: true), releaseUrl: flat)
-        #expect(md5.verdict(of: Self.stale, at: URL(string: "https://example.org/Packages")!) == .unlisted)
+        #expect(try md5.verdict(of: Self.stale, at: #require(URL(string: "https://example.org/Packages"))) == .unlisted)
 
         let silent = IndexDigests(release: ["origin": "Example"], releaseUrl: flat)
-        #expect(silent.verdict(of: Self.stale, at: URL(string: "https://example.org/Packages")!) == .unlisted)
+        #expect(try silent.verdict(of: Self.stale, at: #require(URL(string: "https://example.org/Packages"))) == .unlisted)
     }
 
     @Test func indexTheSessionUnpackedIsTheUncompressedOne() throws {
@@ -70,17 +70,17 @@ struct IndexDigestsTests {
          \(Self.hex(Data("packed".utf8))) 6 Packages.gz
         """)
         let digests = IndexDigests(release: release, releaseUrl: flat)
-        let url = URL(string: "https://example.org/Packages.gz")!
+        let url = try #require(URL(string: "https://example.org/Packages.gz"))
         #expect(digests.verdict(of: Self.current, at: url) == .matches)
         #expect(digests.verdict(of: Self.stale, at: url) == .differs)
     }
 
-    @Test func aWordOutOfPlaceCostsOneEntry() {
+    @Test func aWordOutOfPlaceCostsOneEntry() throws {
         let digests = IndexDigests(
             release: ["sha256": "junk \(Self.hex(Self.current)) 22 Packages"],
             releaseUrl: flat
         )
-        #expect(digests.verdict(of: Self.stale, at: URL(string: "https://example.org/Packages")!) == .differs)
+        #expect(try digests.verdict(of: Self.stale, at: #require(URL(string: "https://example.org/Packages"))) == .differs)
     }
 
     @Test func releaseDateIsRead() throws {
@@ -95,7 +95,7 @@ struct IndexDigestsTests {
         // a refused index is logged, and the log is the environment's
         _ = TestEnvironment.root
         let digests = try IndexDigests(release: Self.release(listing: ["Packages"]), releaseUrl: flat)
-        let base = URL(string: "https://example.org/Packages")!
+        let base = try #require(URL(string: "https://example.org/Packages"))
         let fresh = RepositoryCenter.FetchedIndex(url: base, data: Self.current)
         let old = RepositoryCenter.FetchedIndex(url: base, data: Self.stale)
         func read(_ indexes: [RepositoryCenter.FetchedIndex], digests: IndexDigests?) -> String? {
@@ -111,8 +111,8 @@ struct IndexDigestsTests {
 
     @Test func componentsAreReadInOrderAndAListedOneMustArrive() throws {
         _ = TestEnvironment.root
-        let main = URL(string: "https://example.org/dists/stable/main/binary-iphoneos-arm64/Packages")!
-        let extra = URL(string: "https://example.org/dists/stable/extra/binary-iphoneos-arm64/Packages")!
+        let main = try #require(URL(string: "https://example.org/dists/stable/main/binary-iphoneos-arm64/Packages"))
+        let extra = try #require(URL(string: "https://example.org/dists/stable/extra/binary-iphoneos-arm64/Packages"))
         let first = RepositoryCenter.FetchedIndex(url: main, data: Self.current)
         let second = RepositoryCenter.FetchedIndex(url: extra, data: Self.stale)
         func read(_ indexes: [RepositoryCenter.FetchedIndex], listing: [String]) throws -> String? {
@@ -122,7 +122,7 @@ struct IndexDigestsTests {
 
         // whichever answered first, main is read first
         let both = try #require(try read([second, first], listing: []))
-        #expect(both.range(of: "Version: 2")!.lowerBound < both.range(of: "Version: 1")!.lowerBound)
+        #expect(try #require(both.range(of: "Version: 2")?.lowerBound) < both.range(of: "Version: 1")!.lowerBound)
         // a component the Release never listed may be missing
         #expect(try read([first], listing: ["main/binary-iphoneos-arm64/Packages"]) != nil)
         // one it lists may not: the spelling is refused whole

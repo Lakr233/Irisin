@@ -33,7 +33,7 @@ import Testing
     /// shorter limits: one that never gets an answer, one that sends a few
     /// bytes and stops, and one that sends slowly and steadily. Only the
     /// first two are stopped, and the third arrives whole.
-    @Test func watchdogStopsOnlyWhatStoppedMoving() async {
+    @Test func watchdogStopsOnlyWhatStoppedMoving() async throws {
         _ = TestEnvironment.root
         let chunk = Data(repeating: 0x41, count: 600)
         StubServer.serve([:], on: "watched.test", behaving: [
@@ -78,11 +78,11 @@ import Testing
             try? await Task.sleep(for: .milliseconds(100))
         }
         #expect(await watch.killed == ["hang", "stall"])
-        guard case .stalled = await tasks["hang"]!.value, case .stalled = await tasks["stall"]!.value else {
+        guard case .stalled = try await #require(tasks["hang"]?.value), case .stalled = try await #require(tasks["stall"]?.value) else {
             Issue.record("a download given up is stalled, not unreachable")
             return
         }
-        #expect(await tasks["trickle"]!.value.data?.count == chunk.count * 20)
+        #expect(await tasks["trickle"]?.value.data?.count == chunk.count * 20)
     }
 }
 
@@ -117,8 +117,13 @@ extension DownloadWatchdogTests {
 private final class Beats: @unchecked Sendable {
     private let lock = NSLock()
     private var value = 0
-    var count: Int { lock.withLock { value } }
-    func add() { lock.withLock { value += 1 } }
+    var count: Int {
+        lock.withLock { value }
+    }
+
+    func add() {
+        lock.withLock { value += 1 }
+    }
 }
 
 @MainActor private final class Watch {

@@ -12,20 +12,19 @@ final class LineMovementController {
     }
 
     func location(from location: Int, in direction: UITextLayoutDirection, offset: Int) -> Int? {
-        let newLocation: Int?
-        switch direction {
+        let newLocation: Int? = switch direction {
         case .left:
-            newLocation = locationForMoving(fromLocation: location, by: offset * -1)
+            locationForMoving(fromLocation: location, by: offset * -1)
         case .right:
-            newLocation = locationForMoving(fromLocation: location, by: offset)
+            locationForMoving(fromLocation: location, by: offset)
         case .up:
-            newLocation = locationForMoving(lineOffset: offset * -1, fromLineContainingCharacterAt: location)
+            locationForMoving(lineOffset: offset * -1, fromLineContainingCharacterAt: location)
         case .down:
-            newLocation = locationForMoving(lineOffset: offset, fromLineContainingCharacterAt: location)
+            locationForMoving(lineOffset: offset, fromLineContainingCharacterAt: location)
         @unknown default:
-            newLocation = nil
+            nil
         }
-        if let newLocation = newLocation, newLocation >= 0 && newLocation <= stringView.string.length {
+        if let newLocation, newLocation >= 0, newLocation <= stringView.string.length {
             return newLocation
         } else {
             return nil
@@ -36,14 +35,14 @@ final class LineMovementController {
 private extension LineMovementController {
     private func locationForMoving(fromLocation location: Int, by offset: Int) -> Int {
         let naiveNewLocation = location + offset
-        guard naiveNewLocation >= 0 && naiveNewLocation <= stringView.string.length else {
+        guard naiveNewLocation >= 0, naiveNewLocation <= stringView.string.length else {
             return location
         }
-        guard naiveNewLocation > 0 && naiveNewLocation < stringView.string.length else {
+        guard naiveNewLocation > 0, naiveNewLocation < stringView.string.length else {
             return naiveNewLocation
         }
         let range = stringView.string.customRangeOfComposedCharacterSequence(at: naiveNewLocation)
-        guard naiveNewLocation > range.location && naiveNewLocation < range.location + range.length else {
+        guard naiveNewLocation > range.location, naiveNewLocation < range.location + range.length else {
             return naiveNewLocation
         }
         if offset < 0 {
@@ -68,10 +67,12 @@ private extension LineMovementController {
         return locationForMoving(lineOffset: lineOffset, fromLocation: lineFragmentLocalLocation, inLineFragmentAt: lineFragmentNode.index, of: line)
     }
 
-    private func locationForMoving(lineOffset: Int,
-                                   fromLocation location: Int,
-                                   inLineFragmentAt lineFragmentIndex: Int,
-                                   of line: DocumentLineNode) -> Int {
+    private func locationForMoving(
+        lineOffset: Int,
+        fromLocation location: Int,
+        inLineFragmentAt lineFragmentIndex: Int,
+        of line: DocumentLineNode
+    ) -> Int {
         if lineOffset < 0 {
             return locationForMovingUpwards(lineOffset: abs(lineOffset), fromLocation: location, inLineFragmentAt: lineFragmentIndex, of: line)
         } else if lineOffset > 0 {
@@ -89,10 +90,12 @@ private extension LineMovementController {
         }
     }
 
-    private func locationForMovingUpwards(lineOffset: Int,
-                                          fromLocation location: Int,
-                                          inLineFragmentAt lineFragmentIndex: Int,
-                                          of line: DocumentLineNode) -> Int {
+    private func locationForMovingUpwards(
+        lineOffset: Int,
+        fromLocation location: Int,
+        inLineFragmentAt lineFragmentIndex: Int,
+        of line: DocumentLineNode
+    ) -> Int {
         let takeLineCount = min(lineFragmentIndex, lineOffset)
         let remainingLineOffset = lineOffset - takeLineCount
         guard remainingLineOffset > 0 else {
@@ -106,16 +109,20 @@ private extension LineMovementController {
         let previousLine = lineManager.line(atRow: lineIndex - 1)
         let numberOfLineFragments = numberOfLineFragments(in: previousLine)
         let newLineFragmentIndex = numberOfLineFragments - 1
-        return locationForMovingUpwards(lineOffset: remainingLineOffset - 1,
-                                        fromLocation: location,
-                                        inLineFragmentAt: newLineFragmentIndex,
-                                        of: previousLine)
+        return locationForMovingUpwards(
+            lineOffset: remainingLineOffset - 1,
+            fromLocation: location,
+            inLineFragmentAt: newLineFragmentIndex,
+            of: previousLine
+        )
     }
 
-    private func locationForMovingDownwards(lineOffset: Int,
-                                            fromLocation location: Int,
-                                            inLineFragmentAt lineFragmentIndex: Int,
-                                            of line: DocumentLineNode) -> Int {
+    private func locationForMovingDownwards(
+        lineOffset: Int,
+        fromLocation location: Int,
+        inLineFragmentAt lineFragmentIndex: Int,
+        of line: DocumentLineNode
+    ) -> Int {
         let numberOfLineFragments = numberOfLineFragments(in: line)
         let takeLineCount = min(numberOfLineFragments - lineFragmentIndex - 1, lineOffset)
         let remainingLineOffset = lineOffset - takeLineCount

@@ -24,10 +24,10 @@ extension TreeSitterPredicate: CustomDebugStringConvertible {
 extension TreeSitterPredicate.Step: CustomDebugStringConvertible {
     var debugDescription: String {
         switch self {
-        case .capture(let id):
-            return "[TreeSitterPredicate.Step capture=\(id)]"
-        case .string(let string):
-            return "[TreeSitterPredicate.Step string=\(string)]"
+        case let .capture(id):
+            "[TreeSitterPredicate.Step capture=\(id)]"
+        case let .string(string):
+            "[TreeSitterPredicate.Step string=\(string)]"
         }
     }
 }

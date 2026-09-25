@@ -25,11 +25,11 @@ import Testing
 
     /// The server never answers, so only a cancel ends the fetch before the
     /// request's own timeout.
-    @Test func deletingCancelsTheFetch() async {
+    @Test func deletingCancelsTheFetch() async throws {
         _ = TestEnvironment.root
         let center = RepositoryCenter.default
         StubServer.serve([:], on: "deleted-in-flight.test", behaving: Self.silence)
-        let url = URL(string: "https://deleted-in-flight.test")!
+        let url = try #require(URL(string: "https://deleted-in-flight.test"))
         center.registerRepository(RepositorySource(url: url))
         #expect(await until(3) { StubServer.requests(to: "deleted-in-flight.test").contains("/Release") })
 
@@ -44,11 +44,11 @@ import Testing
 
     /// Deleted and added again before the first fetch ended: the new one is
     /// queued behind it, runs once it is gone, and keeps what it read.
-    @Test func addedAgainIsRefreshedOnItsOwn() async {
+    @Test func addedAgainIsRefreshedOnItsOwn() async throws {
         _ = TestEnvironment.root
         let center = RepositoryCenter.default
         StubServer.serve([:], on: "added-again.test", behaving: Self.silence)
-        let url = URL(string: "https://added-again.test")!
+        let url = try #require(URL(string: "https://added-again.test"))
         center.registerRepository(RepositorySource(url: url))
         // the first fetch is waiting on the server, not about to ask it
         #expect(await until(3) { StubServer.requests(to: "added-again.test").contains("/Release") })

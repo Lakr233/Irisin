@@ -83,7 +83,7 @@ final class ResolutionPoolDatabaseTests: XCTestCase {
 
     /// What a plan installs is withdrawn when its repository dropped it or
     /// lists it with other fields; a version still listed as it was is not.
-    func testWithdrawnNamesWhatTheRepositoryNoLongerOffersAsItWas() throws {
+    func testWithdrawnNamesWhatTheRepositoryNoLongerOffersAsItWas() {
         let library = package("com.example.library", "1")
         offer([app, library])
         XCTAssertEqual(index.withdrawn([app, library]), [])

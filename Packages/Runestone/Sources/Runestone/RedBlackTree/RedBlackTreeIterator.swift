@@ -6,7 +6,7 @@ final class RedBlackTreeIterator<NodeID: RedBlackTreeNodeID, NodeValue: RedBlack
 
     init(tree: RedBlackTree<NodeID, NodeValue, NodeData>) {
         self.tree = tree
-        self.node = tree.root.leftMost
+        node = tree.root.leftMost
     }
 
     func next() -> RedBlackTreeNode<NodeID, NodeValue, NodeData>? {

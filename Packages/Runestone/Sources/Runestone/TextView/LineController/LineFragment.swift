@@ -5,7 +5,7 @@ struct LineFragmentID: Identifiable, Hashable {
     let id: String
 
     init(lineId: String, lineFragmentIndex: Int) {
-        self.id = "\(lineId)[\(lineFragmentIndex)]"
+        id = "\(lineId)[\(lineFragmentIndex)]"
     }
 }
 
@@ -110,7 +110,7 @@ final class LineFragment {
 
     func caretLocation(forLineLocalLocation lineLocalLocation: Int) -> Int? {
         let lineFragmentLocalLocation = lineLocalLocation - range.location
-        guard lineFragmentLocalLocation >= 0 && lineFragmentLocalLocation <= range.length else {
+        guard lineFragmentLocalLocation >= 0, lineFragmentLocalLocation <= range.length else {
             return nil
         }
         return min(lineLocalLocation, visibleRange.upperBound)

@@ -33,7 +33,7 @@ final class MoveLinesService {
         if isMovingDown {
             targetLineIndex += selectedLines.count - 1
         }
-        guard targetLineIndex >= 0 && targetLineIndex < lineManager.lineCount else {
+        guard targetLineIndex >= 0, targetLineIndex < lineManager.lineCount else {
             return nil
         }
         // Find the line to move the selected text to.
@@ -52,7 +52,7 @@ final class MoveLinesService {
         var removeRange = NSRange(location: removeLocation, length: removeLength)
         let insertRange = NSRange(location: insertLocation, length: 0)
         var text = stringView.substring(in: removeRange) ?? ""
-        if isMovingDown && targetLine.data.delimiterLength == 0 {
+        if isMovingDown, targetLine.data.delimiterLength == 0 {
             if lastLine.data.delimiterLength > 0 {
                 // We're moving to a line with no line break so we'll remove the last line break from the text we're moving.
                 // This behavior matches the one of Nova.
@@ -61,7 +61,7 @@ final class MoveLinesService {
             // Since the line we're moving to has no line break, we should add one in the beginning of the text.
             text = lineEndingSymbol + text
             locationOffset += lineEndingSymbol.count
-        } else if !isMovingDown && lastLine.data.delimiterLength == 0 {
+        } else if !isMovingDown, lastLine.data.delimiterLength == 0 {
             // The last line we're moving has no line break, so we'll add one.
             text += lineEndingSymbol
             // Adjust the removal range to remove the line break of the line we're moving to.

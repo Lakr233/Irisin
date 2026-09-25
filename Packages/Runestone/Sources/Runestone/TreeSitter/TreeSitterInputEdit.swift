@@ -8,12 +8,14 @@ final class TreeSitterInputEdit {
     let oldEndPoint: TreeSitterTextPoint
     let newEndPoint: TreeSitterTextPoint
 
-    init(startByte: ByteCount,
-         oldEndByte: ByteCount,
-         newEndByte: ByteCount,
-         startPoint: TreeSitterTextPoint,
-         oldEndPoint: TreeSitterTextPoint,
-         newEndPoint: TreeSitterTextPoint) {
+    init(
+        startByte: ByteCount,
+        oldEndByte: ByteCount,
+        newEndByte: ByteCount,
+        startPoint: TreeSitterTextPoint,
+        oldEndPoint: TreeSitterTextPoint,
+        newEndPoint: TreeSitterTextPoint
+    ) {
         self.startByte = startByte
         self.oldEndByte = oldEndByte
         self.newEndByte = newEndByte
@@ -32,11 +34,13 @@ extension TreeSitterInputEdit: CustomDebugStringConvertible {
 
 extension TSInputEdit {
     init(_ inputEdit: TreeSitterInputEdit) {
-        self.init(start_byte: UInt32(inputEdit.startByte.value),
-                  old_end_byte: UInt32(inputEdit.oldEndByte.value),
-                  new_end_byte: UInt32(inputEdit.newEndByte.value),
-                  start_point: inputEdit.startPoint.rawValue,
-                  old_end_point: inputEdit.oldEndPoint.rawValue,
-                  new_end_point: inputEdit.newEndPoint.rawValue)
+        self.init(
+            start_byte: UInt32(inputEdit.startByte.value),
+            old_end_byte: UInt32(inputEdit.oldEndByte.value),
+            new_end_byte: UInt32(inputEdit.newEndByte.value),
+            start_point: inputEdit.startPoint.rawValue,
+            old_end_point: inputEdit.oldEndPoint.rawValue,
+            new_end_point: inputEdit.newEndPoint.rawValue
+        )
     }
 }

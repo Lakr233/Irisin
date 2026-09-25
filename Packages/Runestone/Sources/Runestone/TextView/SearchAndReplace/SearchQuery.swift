@@ -34,20 +34,22 @@ public struct SearchQuery: Hashable, Equatable {
     private var annotatedText: String {
         switch matchMethod {
         case .fullWord:
-            return "\\b\(escapedText)\\b"
+            "\\b\(escapedText)\\b"
         case .startsWith:
-            return "\\b\(escapedText)"
+            "\\b\(escapedText)"
         case .endsWith:
-            return "\(escapedText)\\b"
+            "\(escapedText)\\b"
         case .contains:
-            return escapedText
+            escapedText
         case .regularExpression:
-            return text
+            text
         }
     }
+
     private var escapedText: String {
         NSRegularExpression.escapedPattern(for: text)
     }
+
     private var regularExpressionOptions: NSRegularExpression.Options {
         var options: NSRegularExpression.Options = [.anchorsMatchLines]
         if !isCaseSensitive {
@@ -75,7 +77,7 @@ public struct SearchQuery: Hashable, Equatable {
             return regex.matches(in: string as String, range: range ?? NSRange(location: 0, length: string.length))
         } catch {
             #if DEBUG
-            print(error)
+                print(error)
             #endif
             return []
         }

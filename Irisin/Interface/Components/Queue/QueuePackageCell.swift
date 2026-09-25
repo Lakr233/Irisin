@@ -143,7 +143,7 @@ final class QueuePackageCell: UITableViewCell {
         // the name is drawn attributed for a removal, the lines under it
         // plain: whichever the configuration carries, read together
         accessibilityLabel = [configuration.attributedText?.string ?? configuration.text, configuration.secondaryText]
-            .compactMap { $0 }
+            .compactMap(\.self)
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
         setNeedsLayout()

@@ -172,4 +172,3 @@ extension CodeView: TextLabel.AttachmentRepresentable {
         textView.attributedText
     }
 }
-

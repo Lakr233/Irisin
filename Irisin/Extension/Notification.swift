@@ -13,7 +13,6 @@ nonisolated extension Notification.Name {
     static let RepositoryQueueChanged = Notification.Name("wiki.qaq.RepositoryQueueChanged")
     static let RepositoryPaymentChanged = Notification.Name("wiki.qaq.RepositoryPaymentChanged")
 
-
     static let SettingsDidChange = Notification.Name("wiki.qaq.SettingsDidChange")
 }
 

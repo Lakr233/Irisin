@@ -36,9 +36,9 @@ struct ParsedReplacementString: Equatable {
         components.contains { component in
             switch component {
             case .text:
-                return false
+                false
             case .placeholder:
-                return true
+                true
             }
         }
     }
@@ -47,9 +47,9 @@ struct ParsedReplacementString: Equatable {
         var result = ""
         for component in components {
             switch component {
-            case .text(let parameters):
+            case let .text(parameters):
                 result += parameters.text
-            case .placeholder(let parameters):
+            case let .placeholder(parameters):
                 if parameters.index < textCheckingResult.numberOfRanges {
                     let range = textCheckingResult.range(at: parameters.index)
                     let substring = string.substring(with: range)
@@ -75,9 +75,9 @@ extension ParsedReplacementString: CustomDebugStringConvertible {
         var stringComponents: [String] = []
         for component in components {
             switch component {
-            case .text(let textParameters):
+            case let .text(textParameters):
                 stringComponents.append(".text(\"\(textParameters.text)\")")
-            case .placeholder(let placeholderParameters):
+            case let .placeholder(placeholderParameters):
                 var string = ".placeholder("
                 if !placeholderParameters.modifiers.isEmpty {
                     string += String(placeholderParameters.modifiers.map(\.character))

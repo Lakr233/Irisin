@@ -14,10 +14,18 @@ extension PackageTransaction {
                     throw PackageFailure("Missing prepared package: \(identity)")
                 }
                 let entries = archive.package.entries.sorted { lhs, rhs in
-                    if lhs.kind == .directory, rhs.kind != .directory { return true }
-                    if rhs.kind == .directory, lhs.kind != .directory { return false }
-                    if lhs.kind == .hardLink, rhs.kind != .hardLink { return false }
-                    if rhs.kind == .hardLink, lhs.kind != .hardLink { return true }
+                    if lhs.kind == .directory, rhs.kind != .directory {
+                        return true
+                    }
+                    if rhs.kind == .directory, lhs.kind != .directory {
+                        return false
+                    }
+                    if lhs.kind == .hardLink, rhs.kind != .hardLink {
+                        return false
+                    }
+                    if rhs.kind == .hardLink, lhs.kind != .hardLink {
+                        return true
+                    }
                     return lhs.path < rhs.path
                 }
                 for entry in entries where entry.kind != .hardLink {

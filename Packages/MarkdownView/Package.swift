@@ -2,8 +2,8 @@
 
 import PackageDescription
 
-// MarkdownView, vendored from Lakr233/MarkdownView 4.3.2 for UIKit alone,
-// without math or code highlighting. README.md says what changed.
+/// MarkdownView, vendored from Lakr233/MarkdownView 4.3.2 for UIKit alone,
+/// without math or code highlighting. README.md says what changed.
 let package = Package(
     name: "MarkdownView",
     platforms: [

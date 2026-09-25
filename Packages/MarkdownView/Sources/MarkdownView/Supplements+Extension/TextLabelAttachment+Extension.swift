@@ -1,5 +1,5 @@
 //
-//  TextLabel.Attachment+Extension.swift
+//  TextLabelAttachment+Extension.swift
 //  MarkdownView
 //
 //  Created by 秋星桥 on 3/27/25.

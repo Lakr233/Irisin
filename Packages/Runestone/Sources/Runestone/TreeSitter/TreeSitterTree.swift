@@ -7,7 +7,7 @@ final class TreeSitterTree {
     }
 
     init(_ tree: UnsafeMutablePointer<TSTree>) {
-        self.pointer = tree
+        pointer = tree
     }
 
     deinit {

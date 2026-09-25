@@ -9,6 +9,7 @@ final class LineNumberView: UIView, ReusableView {
             titleLabel.textColor = newValue
         }
     }
+
     var font: UIFont {
         get {
             titleLabel.font
@@ -17,6 +18,7 @@ final class LineNumberView: UIView, ReusableView {
             titleLabel.font = newValue
         }
     }
+
     var text: String? {
         get {
             titleLabel.text
@@ -37,7 +39,8 @@ final class LineNumberView: UIView, ReusableView {
         addSubview(titleLabel)
     }
 
-    required init?(coder: NSCoder) {
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 

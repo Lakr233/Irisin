@@ -355,4 +355,3 @@ extension TableView: TextLabelViewDelegate {
         }
     }
 }
-

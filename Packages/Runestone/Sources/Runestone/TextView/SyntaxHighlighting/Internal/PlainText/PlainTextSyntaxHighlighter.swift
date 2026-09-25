@@ -8,9 +8,9 @@ final class PlainTextSyntaxHighlighter: LineSyntaxHighlighter {
         false
     }
 
-    func syntaxHighlight(_ input: LineSyntaxHighlighterInput) {}
+    func syntaxHighlight(_: LineSyntaxHighlighterInput) {}
 
-    func syntaxHighlight(_ input: LineSyntaxHighlighterInput, completion: @escaping AsyncCallback) {
+    func syntaxHighlight(_: LineSyntaxHighlighterInput, completion: @escaping AsyncCallback) {
         completion(.success(()))
     }
 

@@ -41,8 +41,7 @@ final class TreeSitterLanguageLayerStore {
             semaphore.signal()
         }
         semaphore.wait()
-        let value = store[key]
-        return value
+        return store[key]
     }
 
     func removeLayer(forKey key: UnsafeRawPointer) {

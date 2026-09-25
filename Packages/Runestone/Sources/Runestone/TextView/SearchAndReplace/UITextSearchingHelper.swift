@@ -13,10 +13,11 @@ final class UITextSearchingHelper: NSObject {
             }
         }
     }
+
     @available(iOS 16, *)
     var findInteraction: UIFindInteraction? {
         get {
-            guard let _findInteraction = _findInteraction else {
+            guard let _findInteraction else {
                 return nil
             }
             guard let findInteraction = _findInteraction as? UIFindInteraction else {
@@ -28,12 +29,13 @@ final class UITextSearchingHelper: NSObject {
             _findInteraction = newValue
         }
     }
+
     private var _findInteraction: Any?
 
     private let queue = OperationQueue()
     private var _textView: TextView {
-        if let textView = textView {
-            return textView
+        if let textView {
+            textView
         } else {
             fatalError("Text view has been deallocated.")
         }
@@ -45,7 +47,8 @@ final class UITextSearchingHelper: NSObject {
         queue.maxConcurrentOperationCount = 1
     }
 
-    required init?(coder: NSCoder) {
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
@@ -60,7 +63,7 @@ extension UITextSearchingHelper: UITextSearching {
         _textView.selectedTextRange
     }
 
-    func compare(_ foundRange: UITextRange, toRange: UITextRange, document: AnyHashable??) -> ComparisonResult {
+    func compare(_ foundRange: UITextRange, toRange: UITextRange, document _: AnyHashable??) -> ComparisonResult {
         guard let foundRange = foundRange as? IndexedRange, let toRange = toRange as? IndexedRange else {
             fatalError("Expected indexed ranges.")
         }
@@ -87,7 +90,7 @@ extension UITextSearchingHelper: UITextSearching {
         }
     }
 
-    func decorate(foundTextRange: UITextRange, document: AnyHashable??, usingStyle style: UITextSearchFoundTextStyle) {
+    func decorate(foundTextRange: UITextRange, document _: AnyHashable??, usingStyle style: UITextSearchFoundTextStyle) {
         guard let foundTextRange = foundTextRange as? IndexedRange else {
             return
         }
@@ -111,11 +114,11 @@ extension UITextSearchingHelper: UITextSearching {
         }
     }
 
-    func replace(foundTextRange: UITextRange, document: AnyHashable??, withText replacementText: String) {
+    func replace(foundTextRange: UITextRange, document _: AnyHashable??, withText replacementText: String) {
         _textView.replace(foundTextRange, withText: replacementText)
     }
 
-    func shouldReplace(foundTextRange: UITextRange, document: AnyHashable??, withText replacementText: String) -> Bool {
+    func shouldReplace(foundTextRange: UITextRange, document _: AnyHashable??, withText _: String) -> Bool {
         guard let foundTextRange = foundTextRange as? IndexedRange else {
             // iOS 16 beta 2 will call this function when presenting the find/replace navigator and pass <uninitialized> to foundTextRange. If we return false in this case, the find/replace UI will not be shown, so we need to return true when we can't convert the UITextRange to an IndexedRange.
             return true
@@ -126,7 +129,7 @@ extension UITextSearchingHelper: UITextSearching {
         return _textView.editorDelegate?.textView(_textView, canReplaceTextIn: highlightedRange) ?? false
     }
 
-    func scrollRangeToVisible(_ range: UITextRange, inDocument: AnyHashable??) {
+    func scrollRangeToVisible(_ range: UITextRange, inDocument _: AnyHashable??) {
         if let indexedRange = range as? IndexedRange {
             _textView.scrollRangeToVisible(indexedRange.range)
         }
@@ -143,7 +146,7 @@ private extension UITextSearchingHelper {
     }
 
     private func removeFindInteraction() {
-        if #available(iOS 16, *), let findInteraction = findInteraction {
+        if #available(iOS 16, *), let findInteraction {
             self.findInteraction = nil
             _textView.removeInteraction(findInteraction)
         }
@@ -154,11 +157,11 @@ private extension UITextSearchingHelper {
         queue.cancelAllOperations()
         let operation = BlockOperation()
         operation.addExecutionBlock { [weak self, weak operation] in
-            guard let self = self, let operation = operation, !operation.isCancelled else {
+            guard let self, let operation, !operation.isCancelled else {
                 return
             }
             let query = SearchQuery(queryString: queryString, options: options)
-            let searchResults = self._textView.search(for: query)
+            let searchResults = _textView.search(for: query)
             completion(searchResults)
         }
         queue.addOperation(operation)
@@ -167,7 +170,7 @@ private extension UITextSearchingHelper {
 
 @available(iOS 16, *)
 extension UITextSearchingHelper: UIFindInteractionDelegate {
-    func findInteraction(_ interaction: UIFindInteraction, sessionFor view: UIView) -> UIFindSession? {
+    func findInteraction(_: UIFindInteraction, sessionFor _: UIView) -> UIFindSession? {
         UITextSearchingFindSession(searchableObject: self)
     }
 }

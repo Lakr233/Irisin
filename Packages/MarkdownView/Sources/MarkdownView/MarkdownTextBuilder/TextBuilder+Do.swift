@@ -29,7 +29,9 @@ private func builtinSystemImage(_ name: String) -> UIImage {
 @MainActor private var kNumberCircleImageCache: [Int: UIImage] = [:]
 
 @MainActor private func kNumberCircleImage(_ number: Int) -> UIImage {
-    if let cached = kNumberCircleImageCache[number] { return cached }
+    if let cached = kNumberCircleImageCache[number] {
+        return cached
+    }
     let image = builtinSystemImage("\(number).circle.fill")
     kNumberCircleImageCache[number] = image
     return image
@@ -139,7 +141,11 @@ extension TextBuilder {
             .withCheckboxDrawing { context, line, lineOrigin, isChecked in
                 let style = markerStyle(of: line)
                 let column = ListMarkerLayout.column(lineOrigin: lineOrigin, font: style.font)
-                let image = if isChecked { kCheckedBoxImage } else { kUncheckedBoxImage }
+                let image = if isChecked {
+                    kCheckedBoxImage
+                } else {
+                    kUncheckedBoxImage
+                }
                 context.saveGState()
                 defer { context.restoreGState() }
                 drawSymbol(

@@ -22,8 +22,12 @@ nonisolated enum RecommendedRepositories {
         var maximumSystemVersion: Int?
 
         func applies(to majorVersion: Int) -> Bool {
-            if let minimumSystemVersion, majorVersion < minimumSystemVersion { return false }
-            if let maximumSystemVersion, majorVersion > maximumSystemVersion { return false }
+            if let minimumSystemVersion, majorVersion < minimumSystemVersion {
+                return false
+            }
+            if let maximumSystemVersion, majorVersion > maximumSystemVersion {
+                return false
+            }
             return true
         }
     }

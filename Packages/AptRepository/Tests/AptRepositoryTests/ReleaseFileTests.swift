@@ -30,9 +30,9 @@ struct ReleaseFileTests {
         """
         let reading = try #require(ReleaseFile.read(text))
         #expect(!reading.digestsDuplicated)
-        #expect(reading.fields == (try DebianControl.parse(text)))
-        let digests = IndexDigests(release: reading.fields, releaseUrl: URL(string: "https://example.test/Release")!)
-        #expect(digests.lists(URL(string: "https://example.test/Packages.xz")!))
+        #expect(try reading.fields == (DebianControl.parse(text)))
+        let digests = try IndexDigests(release: reading.fields, releaseUrl: #require(URL(string: "https://example.test/Release")))
+        #expect(try digests.lists(#require(URL(string: "https://example.test/Packages.xz"))))
     }
 
     @Test func blankLineDoesNotEndTheFile() throws {

@@ -2,9 +2,9 @@
 
 import PackageDescription
 
-// Runestone, vendored: simonbs/Runestone's text view, the Tree-sitter runtime,
-// and only the grammars Irisin highlights (bash and JSON). README.md says
-// where each part came from and what changed.
+/// Runestone, vendored: simonbs/Runestone's text view, the Tree-sitter runtime,
+/// and only the grammars Irisin highlights (bash and JSON). README.md says
+/// where each part came from and what changed.
 let package = Package(
     name: "Runestone",
     defaultLocalization: "en",

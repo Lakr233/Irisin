@@ -77,15 +77,15 @@ public extension Theme {
         0
     }
 
-    func font(for highlightName: String) -> UIFont? {
+    func font(for _: String) -> UIFont? {
         nil
     }
 
-    func fontTraits(for highlightName: String) -> FontTraits {
+    func fontTraits(for _: String) -> FontTraits {
         []
     }
 
-    func shadow(for highlightName: String) -> NSShadow? {
+    func shadow(for _: String) -> NSShadow? {
         nil
     }
 

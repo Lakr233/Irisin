@@ -158,7 +158,9 @@ class RepositoryAddController: UITableViewController {
         // the offered sources have a header view of their own, and a title
         // given here as well would be drawn over it
         dataSource.headerTitle = { section in
-            if case .candidates = section { return nil }
+            if case .candidates = section {
+                return nil
+            }
             return Self.headerTitle(of: section)
         }
         dataSource.footerTitle = { section in

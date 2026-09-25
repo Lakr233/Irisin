@@ -171,7 +171,9 @@ extension ListProcessor {
                         let isTask = item.isDone != nil
                         let isDone = item.isDone ?? false
                         result.append(.init(depth: currentDepth, ordered: isOrdered, index: index, isTask: isTask, isDone: isDone, showsMarker: isFirstParagraph, paragraph: contents))
-                        if isFirstParagraph { index += 1 }
+                        if isFirstParagraph {
+                            index += 1
+                        }
                         isFirstParagraph = false
                     case let .bulletedList(_, sublist):
                         result.append(contentsOf: flatList(.bulleted(sublist), currentDepth: currentDepth + 1))

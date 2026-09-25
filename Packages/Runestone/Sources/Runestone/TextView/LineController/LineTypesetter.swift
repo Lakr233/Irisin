@@ -21,10 +21,10 @@ final class LineTypesetter {
 
         func shouldKeepTypesetting(currentYPosition: CGFloat, currentCharacterIndex: Int) -> Bool {
             switch self {
-            case .yPosition(let targetYPosition):
-                return currentYPosition < targetYPosition
-            case .characterIndex(let targetCharacterIndex):
-                return currentCharacterIndex < targetCharacterIndex
+            case let .yPosition(targetYPosition):
+                currentYPosition < targetYPosition
+            case let .characterIndex(targetCharacterIndex):
+                currentCharacterIndex < targetCharacterIndex
             }
         }
     }
@@ -44,9 +44,11 @@ final class LineTypesetter {
             return lineFragments.count + remainingNumberOfLineFragments
         }
     }
+
     var isFinishedTypesetting: Bool {
         startOffset >= stringLength
     }
+
     var typesetLength: Int {
         startOffset
     }
@@ -104,9 +106,9 @@ final class LineTypesetter {
 
     func lineFragment(withID lineFragmentID: LineFragmentID) -> LineFragment? {
         if let index = lineFragmentsMap[lineFragmentID] {
-            return lineFragments[index]
+            lineFragments[index]
         } else {
-            return nil
+            nil
         }
     }
 }
@@ -121,7 +123,7 @@ private extension LineTypesetter {
     }
 
     private func typesetLineFragments(until condition: TypesetEndCondition, additionalLineFragmentCount: Int = 0) -> [LineFragment] {
-        guard let typesetter = typesetter else {
+        guard let typesetter else {
             return []
         }
         let typesetResult = typesetLineFragments(
@@ -149,7 +151,7 @@ private extension LineTypesetter {
         var remainingAdditionalLineFragmentCount = additionalLineFragmentCount
         let conditionAllowsKeepTypesetting = condition.shouldKeepTypesetting(currentYPosition: nextYPosition, currentCharacterIndex: startOffset)
         var shouldKeepTypesetting = conditionAllowsKeepTypesetting || remainingAdditionalLineFragmentCount > 0
-        while startOffset < stringLength && shouldKeepTypesetting, let lineFragment = makeNextLineFragment(using: typesetter) {
+        while startOffset < stringLength, shouldKeepTypesetting, let lineFragment = makeNextLineFragment(using: typesetter) {
             lineFragments.append(lineFragment)
             nextYPosition += lineFragment.scaledSize.height
             startOffset += lineFragment.range.length

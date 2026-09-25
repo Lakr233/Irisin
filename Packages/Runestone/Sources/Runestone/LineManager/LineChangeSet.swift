@@ -18,7 +18,7 @@ final class LineChangeSet {
     }
 
     func markLineEdited(_ line: DocumentLineNode) {
-        if !insertedLines.contains(line) && !removedLines.contains(line) {
+        if !insertedLines.contains(line), !removedLines.contains(line) {
             editedLines.insert(line)
         }
     }

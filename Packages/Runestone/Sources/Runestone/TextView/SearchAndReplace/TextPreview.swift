@@ -13,7 +13,7 @@ public final class TextPreview {
     /// The range may be longer than the one specified by ``TextPreview/needleRange``.
     public let previewRange: NSRange
     /// The range of the needle range local to the preview range.
-    /// 
+    ///
     /// This range is guaranteed to be within the ``TextPreview/previewRange``.
     public let needleInPreviewRange: NSRange
     /// The attributed string within the preview range.

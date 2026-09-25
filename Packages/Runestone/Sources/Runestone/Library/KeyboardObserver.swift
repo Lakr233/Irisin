@@ -1,23 +1,31 @@
 import UIKit
 
 protocol KeyboardObserverDelegate: AnyObject {
-    func keyboardObserver(_ keyboardObserver: KeyboardObserver,
-                          keyboardWillShowWithHeight keyboardHeight: CGFloat,
-                          animation: KeyboardObserver.Animation?)
+    func keyboardObserver(
+        _ keyboardObserver: KeyboardObserver,
+        keyboardWillShowWithHeight keyboardHeight: CGFloat,
+        animation: KeyboardObserver.Animation?
+    )
     func keyboardObserver(_ keyboardObserver: KeyboardObserver, keyboardWillHideWith animation: KeyboardObserver.Animation?)
-    func keyboardObserver(_ keyboardObserver: KeyboardObserver,
-                          keyboardWillChangeHeightTo keyboardHeight: CGFloat,
-                          animation: KeyboardObserver.Animation?)
+    func keyboardObserver(
+        _ keyboardObserver: KeyboardObserver,
+        keyboardWillChangeHeightTo keyboardHeight: CGFloat,
+        animation: KeyboardObserver.Animation?
+    )
 }
 
 extension KeyboardObserverDelegate {
-    func keyboardObserver(_ keyboardObserver: KeyboardObserver,
-                          keyboardWillShowWithHeight keyboardHeight: CGFloat,
-                          animation: KeyboardObserver.Animation?) {}
-    func keyboardObserver(_ keyboardObserver: KeyboardObserver, keyboardWillHideWith animation: KeyboardObserver.Animation?) {}
-    func keyboardObserver(_ keyboardObserver: KeyboardObserver,
-                          keyboardWillChangeHeightTo keyboardHeight: CGFloat,
-                          animation: KeyboardObserver.Animation?) {}
+    func keyboardObserver(
+        _: KeyboardObserver,
+        keyboardWillShowWithHeight _: CGFloat,
+        animation _: KeyboardObserver.Animation?
+    ) {}
+    func keyboardObserver(_: KeyboardObserver, keyboardWillHideWith _: KeyboardObserver.Animation?) {}
+    func keyboardObserver(
+        _: KeyboardObserver,
+        keyboardWillChangeHeightTo _: CGFloat,
+        animation _: KeyboardObserver.Animation?
+    ) {}
 }
 
 final class KeyboardObserver {
@@ -44,17 +52,20 @@ final class KeyboardObserver {
             self,
             selector: #selector(keyboardWillShow(notification:)),
             name: UIResponder.keyboardWillShowNotification,
-            object: nil)
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillHide(notification:)),
             name: UIResponder.keyboardWillHideNotification,
-            object: nil)
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillChangeFrame(notification:)),
             name: UIResponder.keyboardWillChangeFrameNotification,
-            object: nil)
+            object: nil
+        )
     }
 
     deinit {
@@ -100,7 +111,7 @@ private extension KeyboardObserver {
     private func createAnimation(from notification: Notification) -> Animation? {
         let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval
         let rawCurve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int
-        if let duration = duration, let rawCurve = rawCurve, let curve = UIView.AnimationCurve(rawValue: rawCurve) {
+        if let duration, let rawCurve, let curve = UIView.AnimationCurve(rawValue: rawCurve) {
             return Animation(duration: duration, curve: curve)
         } else {
             return nil

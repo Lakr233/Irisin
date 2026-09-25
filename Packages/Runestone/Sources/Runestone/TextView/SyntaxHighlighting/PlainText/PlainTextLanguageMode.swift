@@ -9,7 +9,7 @@ public final class PlainTextLanguageMode {
 }
 
 extension PlainTextLanguageMode: LanguageMode {
-    func makeInternalLanguageMode(stringView: StringView, lineManager: LineManager) -> InternalLanguageMode {
+    func makeInternalLanguageMode(stringView _: StringView, lineManager _: LineManager) -> InternalLanguageMode {
         PlainTextInternalLanguageMode()
     }
 }

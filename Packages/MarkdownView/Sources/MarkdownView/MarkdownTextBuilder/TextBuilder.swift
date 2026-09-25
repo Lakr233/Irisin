@@ -154,7 +154,7 @@ extension TextBuilder {
             viewProvider: viewProvider,
             context: context,
             thematicBreakDrawing: thematicBreakDrawing,
-            inlineTextDecoration: inlineTextDecoration,
+            inlineTextDecoration: inlineTextDecoration
         )
 
         let listProcessor = ListProcessor(

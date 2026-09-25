@@ -104,4 +104,3 @@ struct DepictionTests {
         #expect(height(of: tabs) > 0)
     }
 }
-

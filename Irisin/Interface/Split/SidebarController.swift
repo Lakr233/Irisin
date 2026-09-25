@@ -315,7 +315,7 @@ class SidebarController: UIViewController {
     /// Refresh and Delete are the swipe's; the two that hand out a file are
     /// here, where the list on the iPhone keeps them too.
     func collectionView(
-        _ collectionView: UICollectionView,
+        _: UICollectionView,
         contextMenuConfigurationForItemAt indexPath: IndexPath,
         point _: CGPoint
     ) -> UIContextMenuConfiguration? {
