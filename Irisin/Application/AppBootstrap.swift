@@ -52,6 +52,10 @@ enum AppBootstrap {
             _ = Installer.shared
 
             isFinished = true
+
+            // MARK: - AUTOMATIC REFRESH
+
+            AutomaticRefresh.start()
         }
     }
 

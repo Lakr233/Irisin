@@ -50,16 +50,6 @@ extension SettingsController {
                     self?.present(next: BlockUpdateController())
                 }
             ),
-            SettingsItem(
-                id: "package.emptyRepositories",
-                icon: "sparkles",
-                title: String(localized: "Clean Up Repositories"),
-                kind: .disclosure,
-                action: { [weak self] in
-                    guard let self else { return }
-                    EmptyRepositoriesController.present(from: self)
-                }
-            ),
             compatibilityUpdatesItem(),
             SettingsItem(
                 id: "package.systemRemoval",

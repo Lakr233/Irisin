@@ -48,8 +48,26 @@ public final class RepositoryCenter {
         }
     }
 
-    /// A repository older than this is refreshed on launch: one day.
+    /// A repository older than this is out of date: its dot says so. One day.
     public let smartUpdateTimeInterval = 86400
+
+    /// How old a repository may get before it is refreshed on its own, in
+    /// seconds; zero never does. Asked at launch here, and after that by
+    /// the app (`dispatchAutomaticRefresh()`). A day unless Settings says
+    /// otherwise. Writing it queues nothing: whoever writes it asks.
+    private let automaticRefreshStore = AptSetting<TimeInterval>(
+        key: "\(kRepositoryCenterIdentity).automaticRefreshInterval",
+        defaultValue: 86400
+    )
+    public var automaticRefreshInterval: TimeInterval {
+        get { automaticRefreshStore.wrappedValue }
+        set { automaticRefreshStore.wrappedValue = max(newValue, 0) }
+    }
+
+    /// When the automatic refresh last queued each repository. A refresh
+    /// that fails leaves the repository as old as it was, and without this
+    /// it would be queued again at every look; it waits an interval instead.
+    var automaticAttempts: [URL: Date] = [:]
 
     /// used to present notification to user interface
     lazy var notificationThrottle = Throttler(minimumDelay: 0.5)
@@ -149,7 +167,7 @@ public final class RepositoryCenter {
         // update queue once a second: the watchdog runs on this tick.
         updateLoop = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 3 * NSEC_PER_SEC)
-            self?.dispatchSmartUpdateRequestOnAll()
+            self?.dispatchAutomaticRefresh()
             self?.hasQueuedLaunchRefresh = true
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: NSEC_PER_SEC)

@@ -162,23 +162,66 @@ public extension RepositoryCenter {
         return deleted
     }
 
+    /// How old a repository may be before the Repositories page's refresh
+    /// asks for it: a day, or the automatic refresh's interval when that is
+    /// shorter, so the page never calls current what is about to be
+    /// refreshed on its own.
+    var smartUpdateAge: TimeInterval {
+        let day = Double(smartUpdateTimeInterval)
+        let automatic = automaticRefreshInterval
+        return automatic > 0 ? min(automatic, day) : day
+    }
+
     /// check every repository if it requires an update
     /// and dispatch them if needed
     /// - Returns: has update dispatched
     @discardableResult
     func dispatchSmartUpdateRequestOnAll() -> Bool {
-        var dispatched = false
-        repositories
+        !dispatchUpdates(olderThan: smartUpdateAge).isEmpty
+    }
+
+    /// Refreshes what is older than `automaticRefreshInterval`, and nothing
+    /// while that is zero. Once the database is read: an empty list before
+    /// that says nothing. A repository it queued is not queued by it again
+    /// for an interval, whether or not that refresh succeeded: one that
+    /// keeps failing is tried once per interval, not at every look.
+    /// - Returns: has update dispatched
+    @discardableResult
+    func dispatchAutomaticRefresh() -> Bool {
+        let interval = automaticRefreshInterval
+        guard isLoaded, interval > 0 else { return false }
+        let now = Date()
+        let queued = dispatchUpdates(olderThan: interval) { [automaticAttempts] repo in
+            automaticAttempts[repo.url].map { now.timeIntervalSince($0) > interval } ?? true
+        }
+        for url in queued {
+            automaticAttempts[url] = now
+        }
+        if !queued.isEmpty {
+            aptLog(
+                self,
+                "automatic refresh: \(queued.count) repositories older than \(Self.seconds(interval)) queued",
+                level: .info
+            )
+        }
+        return !queued.isEmpty
+    }
+
+    /// Queues every repository older than `age`, not in flight, and let
+    /// through by `include`; returns those queued.
+    private func dispatchUpdates(
+        olderThan age: TimeInterval,
+        include: (Repository) -> Bool = { _ in true }
+    ) -> [URL] {
+        let queued = repositories
             .values
-            .filter { repositoryeligibleForSmartUpdate(target: $0) }
+            .filter { repositoryeligibleForSmartUpdate(target: $0, age: age) }
             .filter { !currentlyInUpdate.contains($0.url) }
+            .filter(include)
             .map(\.url)
-            .forEach {
-                dispatched = true
-                pendingUpdateRequest.insert($0)
-            }
+        pendingUpdateRequest.formUnion(queued)
         dispatchUpdateOnCurrentCenter()
-        return dispatched
+        return queued
     }
 
     /// send everything to update queue

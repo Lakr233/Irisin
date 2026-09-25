@@ -73,6 +73,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 await PackageCenter.default.reloadLocalPackages()
             }
         }
+        // back after a while away: what went out of date meanwhile is
+        // refreshed now, not at the next minute's look
+        AutomaticRefresh.check()
     }
 
     /// A repository added, changed or deleted a moment ago is written behind

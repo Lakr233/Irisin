@@ -13,14 +13,15 @@ import SnapKit
 import Then
 import UIKit
 
-/// Settings: the vendor accounts of the paid repositories, two inset groups
-/// of rows, and a footer saying what this build is. Each row is a
+/// Settings: the vendor accounts of the paid repositories, inset groups of
+/// rows, and a footer saying what this build is. Each row is a
 /// `SettingsItem`; the cells read their values through it and are
 /// reconfigured whenever a value changes.
 class SettingsController: UITableViewController {
     private var subscriptions = Set<AnyCancellable>()
 
     nonisolated enum Section: Hashable {
+        case accounts
         case repositories
         case packages
         case downloads
@@ -111,7 +112,8 @@ class SettingsController: UITableViewController {
         tableView.separatorStyle = .none
         dataSource.headerTitle = { section in
             switch section {
-            case .repositories: String(localized: "Vendor Accounts")
+            case .accounts: String(localized: "Vendor Accounts")
+            case .repositories: String(localized: "Repositories")
             case .packages: String(localized: "Packages")
             case .downloads: String(localized: "Downloads")
             case .system: String(localized: "System")
@@ -122,7 +124,7 @@ class SettingsController: UITableViewController {
         footer.onLicense = { [weak self] in self?.present(next: LicenseController()) }
         tableView.tableFooterView = footer
 
-        for item in packageItems() + downloadItems() + systemItems() + supportItems() {
+        for item in repositoryItems() + packageItems() + downloadItems() + systemItems() + supportItems() {
             items[item.id] = item
         }
         applySnapshot(animatingDifferences: false)
@@ -164,11 +166,12 @@ class SettingsController: UITableViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         let accounts = Self.paidRepositories().map { Row.account($0.url) }
         if !accounts.isEmpty {
-            snapshot.appendSections([.repositories])
-            snapshot.appendItems(accounts, toSection: .repositories)
+            snapshot.appendSections([.accounts])
+            snapshot.appendItems(accounts, toSection: .accounts)
         }
         for (section, list) in [
-            (Section.packages, packageItems()),
+            (Section.repositories, repositoryItems()),
+            (.packages, packageItems()),
             (.downloads, downloadItems()),
             (.system, systemItems()),
             (.support, supportItems()),

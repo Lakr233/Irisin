@@ -12,11 +12,13 @@ extension RepositoryCenter {
     // MARK: - UPDATE ENGINE
 
     /// if any part of the repo outdated then it's eligible for it
-    /// - Parameter target: the target repository
+    /// - Parameters:
+    ///   - target: the target repository
+    ///   - age: how old a part may be
     /// - Returns: if it is eligible
-    func repositoryeligibleForSmartUpdate(target: Repository) -> Bool {
+    func repositoryeligibleForSmartUpdate(target: Repository, age: TimeInterval) -> Bool {
         let oldest = min(target.lastUpdateRelease, target.lastUpdatePackage)
-        return Date().timeIntervalSince(oldest) > Double(smartUpdateTimeInterval)
+        return Date().timeIntervalSince(oldest) > age
     }
 
     /// What one update needs from the repository, taken when it is dispatched
