@@ -237,6 +237,15 @@ class PackageListRow: UIView {
     func loadValue(package row: Package) {
         let package = PackageCenter.default.obtainDescription(of: row)
         guard row != represent || package != described else {
+            // the origin's name is the repository's, not the package's: one
+            // renamed, deleted or read since the last draw shows here
+            if showsInstallOrigin {
+                let origin = versionAndOrigin(of: package)
+                if subtitle.text != origin {
+                    subtitle.text = origin
+                    updateAccessibilityLabel()
+                }
+            }
             updateIndicator()
             return
         }
@@ -262,10 +271,11 @@ class PackageListRow: UIView {
 
     /// `1.2 @ Procursus`: a dpkg row is described by its install origin,
     /// which carries the repository; one with none, or whose repository is
-    /// gone, came from outside Irisin as far as the row can say.
+    /// gone, came from outside Irisin as far as the row can say. Looked up
+    /// quietly: a deleted repository is an expected miss, not a log line.
     private func versionAndOrigin(of package: Package) -> String {
         let origin = package.repoRef
-            .flatMap { RepositoryCenter.default.obtainImmutableRepository(withUrl: $0) }
+            .flatMap { RepositoryCenter.default.repositories[$0] }
             .map(\.nickName)
             ?? String(localized: "External")
         return [package.latestVersion, origin].compactMap(\.self).joined(separator: " @ ")
