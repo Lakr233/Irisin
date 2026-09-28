@@ -803,8 +803,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Lakr233/Dog";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.1.1;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.2;
 			};
 		};
 		CA600000000000000000000A /* XCRemoteSwiftPackageReference "AlertController" */ = {

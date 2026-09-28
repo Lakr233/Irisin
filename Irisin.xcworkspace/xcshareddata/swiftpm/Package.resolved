@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/Dog",
       "state" : {
-        "revision" : "3697b6b0e3df29f85e1194a49f67144a0dcd7ec9",
-        "version" : "0.1.1"
+        "revision" : "68e7bce39115914dcb280c702843c1da8d72e24d",
+        "version" : "0.1.2"
       }
     },
     {
