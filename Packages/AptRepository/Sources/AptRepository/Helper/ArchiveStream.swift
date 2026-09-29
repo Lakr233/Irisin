@@ -112,12 +112,12 @@ public enum ArchiveStream {
     }
 
     /// The control members the installer opens by name, and the only ones
-    /// read here: `PackageTransaction` runs the four scripts and parses
-    /// `conffiles` and `triggers`; anything else (`config`, `extrainst_`,
-    /// `md5sums`) it copies into dpkg's info directory unopened. A package
-    /// may pack as much of that as it likes, so none of it is held.
+    /// read here: `PackageTransaction` runs the four scripts and
+    /// `extrainst_` and parses `conffiles` and `triggers`; anything else
+    /// (`config`, `md5sums`) it copies into dpkg's info directory unopened.
+    /// A package may pack as much of that as it likes, so none of it is held.
     private static let controlMembers: Set<String> = [
-        "control", "preinst", "postinst", "prerm", "postrm", "conffiles", "triggers",
+        "control", "preinst", "postinst", "prerm", "postrm", "extrainst_", "conffiles", "triggers",
     ]
 
     /// One of those larger than this is not read either: nothing shows a

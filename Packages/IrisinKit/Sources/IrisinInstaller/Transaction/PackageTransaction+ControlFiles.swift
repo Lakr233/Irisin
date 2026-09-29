@@ -26,7 +26,7 @@ extension PackageTransaction {
             )
             try filesystem.backup(path)
             try PackageDatabase.write(Data(contentsOf: archive.content(blob)), to: path)
-            if ["preinst", "postinst", "prerm", "postrm", "config"].contains(member) {
+            if ["preinst", "postinst", "prerm", "postrm", "config", "extrainst_"].contains(member) {
                 guard chmod(path.path, 0o755) == 0 else {
                     throw PackageFailure("Cannot set maintainer script permissions")
                 }

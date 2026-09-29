@@ -73,16 +73,17 @@ final class LocalPackageTests: XCTestCase {
 
         try "Package: a.b\nVersion: 1\n".write(to: dir.appendingPathComponent("control"), atomically: true, encoding: .utf8)
         try "#!/bin/sh\nexit 0\n".write(to: dir.appendingPathComponent("postinst"), atomically: true, encoding: .utf8)
+        try "#!/bin/sh\n".write(to: dir.appendingPathComponent("extrainst_"), atomically: true, encoding: .utf8)
         try "2.0\n".write(to: dir.appendingPathComponent("debian-binary"), atomically: true, encoding: .utf8)
         // bigger than one read, so the member is streamed in several
         try Data(count: 300_000).write(to: bin.appendingPathComponent("hello"))
         try FileManager.default.createSymbolicLink(atPath: bin.path + "/hi", withDestinationPath: "hello")
-        try run("/usr/bin/tar", ["-czf", "control.tar.gz", "./control", "./postinst"], in: dir)
+        try run("/usr/bin/tar", ["-czf", "control.tar.gz", "./control", "./postinst", "./extrainst_"], in: dir)
         try run("/usr/bin/tar", ["-cf", "data.tar", "./var"], in: dir)
         try run("/usr/bin/ar", ["rcS", "a.deb", "debian-binary", "control.tar.gz", "data.tar"], in: dir)
 
         let contents = try ArchiveStream.debianContents(atPath: dir.appendingPathComponent("a.deb").path)
-        XCTAssertEqual(Set(contents.controlFiles.keys), ["control", "postinst"])
+        XCTAssertEqual(Set(contents.controlFiles.keys), ["control", "postinst", "extrainst_"])
         XCTAssertEqual(contents.controlFiles["postinst"], Data("#!/bin/sh\nexit 0\n".utf8))
         XCTAssertEqual(contents.files.sorted(), ["/var/jb/usr/bin/hello", "/var/jb/usr/bin/hi"])
         XCTAssertEqual(contents.directories.sorted(), ["/var", "/var/jb", "/var/jb/usr", "/var/jb/usr/bin"])
@@ -90,7 +91,7 @@ final class LocalPackageTests: XCTestCase {
 
         // the member names alone, spelled without the archive's `./`
         let members = try ArchiveStream.debianControlMembers(atPath: dir.appendingPathComponent("a.deb").path)
-        XCTAssertEqual(members, ["control", "postinst"])
+        XCTAssertEqual(members, ["control", "postinst", "extrainst_"])
         XCTAssertEqual(try ArchiveStream.debianControl(atPath: dir.appendingPathComponent("a.deb").path), "Package: a.b\nVersion: 1\n")
         XCTAssertThrowsError(try ArchiveStream.debianControlMembers(atPath: dir.appendingPathComponent("control").path))
     }

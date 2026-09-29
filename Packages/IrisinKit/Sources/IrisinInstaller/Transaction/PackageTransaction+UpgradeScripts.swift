@@ -95,6 +95,23 @@ extension PackageTransaction {
         }
     }
 
+    /// The new `extrainst_` once its files are in place, as the dpkg of
+    /// every iOS bootstrap runs it (Procursus's `extrainst.diff`): `install`
+    /// over nothing or config files, `upgrade` and the old version over
+    /// anything else. Procursus's openssh-server loads sshd from it and has
+    /// no postinst. A failure stops the unpack, as a preinst's does.
+    func runExtrainst(_ archive: PackageArchive, old: [String: String]?) throws {
+        guard let extrainst = archive.package.controlFiles["extrainst_"] else { return }
+        let arguments = PackageDatabase.isPresent(old) ? ["upgrade", old?["version"] ?? ""] : ["install"]
+        try scripts.run(
+            "extrainst_",
+            identity: archive.identity,
+            architecture: archive.architecture,
+            arguments: arguments,
+            source: archive.content(extrainst)
+        )
+    }
+
     /// The old postrm hears `upgrade` once the new files are in place and
     /// before the old version's leftover files go. When it and the new
     /// postrm's `failed-upgrade` both fail, the old preinst hears

@@ -29,6 +29,10 @@ enum QueueInstallChecks {
     }
 
     private nonisolated static let scriptMembers: Set<String> = ["preinst", "postinst", "prerm", "postrm"]
+    /// What a new file runs as it unpacks and Irisin's own may not fail:
+    /// the helper runs `extrainst_` from the file alone, never from the
+    /// installed copy.
+    private nonisolated static let unpackScripts: Set<String> = ["preinst", "extrainst_"]
 
     /// The names of the packages whose maintainer scripts the plan would
     /// run: a new file's own, and the installed version's for what it
@@ -72,11 +76,11 @@ enum QueueInstallChecks {
         })
         for (identity, file) in files {
             guard let members = try? ArchiveStream.debianControlMembers(atPath: file.path) else { continue }
-            if !members.isDisjoint(with: scriptMembers) {
+            if !members.isDisjoint(with: scriptMembers.union(unpackScripts)) {
                 scripted.insert(identity)
             }
-            // a preinst of Irisin's own still stops it, and is counted
-            if !members.contains("preinst"), shipsHelper(identity: identity, file: file) {
+            // a preinst or extrainst_ of Irisin's own still stops it, and is counted
+            if members.isDisjoint(with: unpackScripts), shipsHelper(identity: identity, file: file) {
                 scripted.remove(identity)
             }
         }

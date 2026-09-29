@@ -357,6 +357,32 @@ struct DpkgParityTests {
         #expect(try fixture.status() == "install ok config-files")
     }
 
+    /// Procursus's `extrainst.diff` in `process_archive`: the new
+    /// extrainst_ once the files are extracted, before the old postrm and
+    /// long before any configure; `install` over config files too.
+    @Test func extrainstRunsAfterTheFilesAndBeforeTheOldPostrm() throws {
+        let fixture = try NativeInstallFixture()
+        let script = log + "\n[ -f \"$DPKG_ROOT/usr/example\" ] && echo placed >> \"$DPKG_ROOT/script log\"\n"
+        try fixture.run(install: [fixture.package(files: ["usr/example": "1"], controls: ["extrainst_": script, "postinst": log, "postrm": log])])
+        #expect(try fixture.text("script log") == "extrainst_:install\nplaced\npostinst:configure \n")
+        try Data().write(to: fixture.root.appendingPathComponent("script log"))
+        try fixture.run(install: [fixture.package(version: "2", files: ["usr/example": "2"], controls: ["extrainst_": log, "postinst": log, "postrm": log])])
+        #expect(try fixture.text("script log") == "extrainst_:upgrade 1\npostrm:upgrade 2\npostinst:configure 1\n")
+        try fixture.run(remove: ["example.package"])
+        try Data().write(to: fixture.root.appendingPathComponent("script log"))
+        try fixture.run(install: [fixture.package(version: "3", controls: ["extrainst_": log])])
+        #expect(try fixture.text("script log") == "extrainst_:install\n")
+    }
+
+    @Test func failedExtrainstAbortsTheUnpack() throws {
+        let fixture = try NativeInstallFixture()
+        let failing = try fixture.package(files: ["usr/example": "x"], controls: ["extrainst_": "#!/bin/sh\nexit 3\n", "postrm": log])
+        #expect(throws: (any Error).self) { try fixture.run(install: [failing]) }
+        #expect(try fixture.text("script log") == "postrm:abort-install\n")
+        #expect(try fixture.status() == nil)
+        #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("usr/example").path))
+    }
+
     @Test func prermUpgradeOnlyRunsForAConfiguredOldVersion() throws {
         let fixture = try NativeInstallFixture()
         try seed(fixture, [["package": "example.package", "version": "1", "architecture": "all", "status": "install ok unpacked"]])

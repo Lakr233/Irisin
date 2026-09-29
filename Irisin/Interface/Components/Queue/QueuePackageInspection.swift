@@ -105,6 +105,12 @@ nonisolated struct QueuePackageInspection: Sendable {
                     contents?.controlFiles["preinst"],
                     installed: false
                 ),
+                script(
+                    "extrainst_",
+                    current.map { ["upgrade", $0] } ?? ["install"],
+                    contents?.controlFiles["extrainst_"],
+                    installed: false
+                ),
                 current.flatMap { _ in script("postrm", ["upgrade", next], member("postrm"), installed: true) },
                 script(
                     "postinst",

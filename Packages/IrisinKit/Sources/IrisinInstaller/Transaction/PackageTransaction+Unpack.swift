@@ -26,8 +26,9 @@ extension PackageTransaction {
     }
 
     /// dpkg's `process_archive`, in its order: the Pre-Depends check, the
-    /// old prerm, the new preinst, the files, the old postrm, the old
-    /// version's leftover files, the ownership changes, then the record.
+    /// old prerm, the new preinst, the files, the new extrainst_, the old
+    /// postrm, the old version's leftover files, the ownership changes,
+    /// then the record.
     /// A failure after the preinst runs the abort scripts dpkg would and
     /// puts the record back where it was.
     func unpack(_ identity: String, archive: PackageArchive) throws {
@@ -60,6 +61,7 @@ extension PackageTransaction {
             let owners = try fileOwners(excluding: identity)
             let kept = try validateOwnership(archive, owners: owners)
             try installPayload(identity, archive: archive, conffiles: &conffiles)
+            try runExtrainst(archive, old: old)
             try finishUpgrade(archive, old: old)
             removed = try removeOldFiles(identity, archive: archive, owners: owners, conffiles: &conffiles)
             try installControlFiles(identity, archive: archive)

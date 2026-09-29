@@ -574,6 +574,13 @@ is `/var/jb/var/log/irisin-install.log`.
   `spawn scheduled`, and the app, which never falls back beside a daemon
   plist, said Waiting for good. `launchctl print system/wiki.qaq.irisind`
   shows the doubled `program`; installing the package again repairs it.
+- **`extrainst_` is a maintainer script on every iOS bootstrap.** Procursus
+  patches dpkg (`build_patch/dpkg/extrainst.diff`) to run the new one in
+  `process_archive` once the files are extracted, before the old postrm:
+  `install`, or `upgrade <old version>`. openssh-server has no postinst and
+  loads sshd from it; through 4.5.11 the helper only kept the file, and sshd
+  waited for the next boot. `PackageTransaction.runExtrainst` runs it there,
+  a failure aborts the unpack, and the queue's package page lists it.
 - **The vphone loses its `/var/jb` symlink** after some boots because the
   first-boot script exits early on its done marker. Recreate it:
   `ln -sf /private/preboot/<hash>/jb-vphone/procursus /private/var/jb`.
