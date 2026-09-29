@@ -63,7 +63,8 @@ DEB_OUTPUT          ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$
 XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh
 DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 DEB_VERIFIER        := $(ROOT_DIR)/Scripts/verify-deb.sh
-VERSION_APPLIER     := $(ROOT_DIR)/Scripts/apply-version.sh
+FLOOR_AUDIT         := $(ROOT_DIR)/Scripts/audit-ios-floor.sh
+VERSION_APPLIER    := $(ROOT_DIR)/Scripts/apply-version.sh
 DEVICE_INSTALLER    := $(ROOT_DIR)/Scripts/install-device.sh
 
 # `make install` talks to the device over a usbmuxd forward (`iproxy 2333 22`).
@@ -149,7 +150,7 @@ check:
 	done
 	@test -f "$(CONTROL_TEMPLATE)" || { echo "error: Debian control template is missing" >&2; exit 66; }
 	@test -f "$(PACKAGE_DIR)/Package.swift" || { echo "error: Packages/IrisinKit/Package.swift is missing" >&2; exit 66; }
-	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
+	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(FLOOR_AUDIT)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
 		test -x "$$script" || { echo "error: $$script is not executable" >&2; exit 66; }; \
 	done
 	@for xcconfig in Version Base Size Development Release; do \
@@ -296,6 +297,7 @@ deb: build
 	@$(MAKE) --no-print-directory _package-deb
 
 _package-deb:
+	"$(FLOOR_AUDIT)" "$(MINIMUM_IOS_VERSION)" "$(APP_BUNDLE)" "$(DAEMON_BINARY)" "$(HELPER_BINARY)"
 	"$(DEB_PACKAGER)" \
 		"$(APP_BUNDLE)" \
 		"$(DAEMON_BINARY)" \
