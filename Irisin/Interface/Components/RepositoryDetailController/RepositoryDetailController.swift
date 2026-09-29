@@ -144,9 +144,11 @@ class RepositoryDetailController: UIViewController {
         // the grouped ground, so the inset list rows read as cards
         view.backgroundColor = .groupedBackground
 
-        let share = UIBarButtonItem(image: .fluent(.shareIos24Filled), menu: shareMenu)
-        share.accessibilityLabel = String(localized: "Share")
-        navigationItem.rightBarButtonItems = [share]
+        let more = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: moreMenu).then {
+            $0.tintColor = .textTitle
+            $0.accessibilityLabel = String(localized: "More")
+        }
+        navigationItem.rightBarButtonItems = [more]
         if paymentEndpoint != nil {
             updateAccountItem()
             NotificationCenter.default.publisher(for: .RepositoryPaymentChanged)
@@ -178,12 +180,28 @@ class RepositoryDetailController: UIViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.reloadRepository() }
             .store(in: &subscriptions)
+
+        // deleted here or anywhere else, the page has nothing left to show
+        NotificationCenter.default.publisher(for: RepositoryCenter.registrationUpdate)
+            .receive(on: DispatchQueue.main)
+            .filter { [url = repo.url] _ in RepositoryCenter.default.obtainImmutableRepository(withUrl: url) == nil }
+            .first()
+            .sink { [weak self] _ in self?.leaveForRemovedRepository() }
+            .store(in: &subscriptions)
     }
 
-    /// The vendor account beside Share: the purchases and sign out as a
+    private func leaveForRemovedRepository() {
+        if let navigator = navigationController, navigator.viewControllers.first !== self {
+            navigator.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    /// The vendor account beside More: the purchases and sign out as a
     /// menu, or, with sign in the only thing to do, a tap that does it.
     private func updateAccountItem() {
-        guard let share = navigationItem.rightBarButtonItems?.first else { return }
+        guard let more = navigationItem.rightBarButtonItems?.first else { return }
         let elements = VendorAccount.shared.accountMenu(for: repo) { [weak self] in self }
         let only = elements.count == 1 ? elements.first as? UIAction : nil
         let account = UIBarButtonItem(
@@ -192,7 +210,7 @@ class RepositoryDetailController: UIViewController {
             menu: only == nil ? UIMenu(children: elements) : nil
         )
         account.accessibilityLabel = String(localized: "Account")
-        navigationItem.rightBarButtonItems = [share, account]
+        navigationItem.rightBarButtonItems = [more, account]
     }
 
     private var sectionRows: [Item] {
@@ -344,12 +362,56 @@ class RepositoryDetailController: UIViewController {
         return "\n" + sentences.uniqued().joined(separator: " ")
     }
 
+    // MARK: - MORE
+
+    /// Refresh, then Share as a submenu, then Delete on its own: the
+    /// repository list's context menu, for the repository on this page.
+    private var moreMenu: UIMenu {
+        UIMenu(children: [
+            UIMenu(options: .displayInline, children: [
+                UIAction(
+                    title: String(localized: "Refresh"),
+                    image: UIImage(systemName: "arrow.clockwise")
+                ) { [weak self] _ in self?.refresh() },
+                shareMenu,
+            ]),
+            UIAction(
+                title: String(localized: "Delete"),
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { [weak self] _ in self?.confirmDelete() },
+        ])
+    }
+
+    private func refresh() {
+        RepositoryCenter.default.dispatchUpdateOnRepository(withUrl: repo.url)
+        SPIndicator.present(title: String(localized: "Refreshing…"), preset: .done)
+    }
+
+    /// Asks first, as the list does; the page leaves once the repository is
+    /// gone.
+    private func confirmDelete() {
+        let url = repo.url
+        presentConfirmation(
+            title: "Delete Repository?",
+            message: String.LocalizationValue(
+                String(localized: "Its packages will no longer be listed. This cannot be undone.")
+                    + "\n\n" + repo.nickName
+            ),
+            confirmTitle: "Delete",
+            destructive: true
+        ) {
+            RepositoriesController.remove(url)
+            SPIndicator.present(title: String(localized: "Deleted"), preset: .done)
+        }
+    }
+
     // MARK: - SHARE
 
     /// The address three ways (copied bare, copied as a sources.list line,
     /// shared), then the whole catalogue as a file.
     private var shareMenu: UIMenu {
-        UIMenu(children: [
+        UIMenu(title: String(localized: "Share"), image: UIImage(systemName: "square.and.arrow.up"), children: [
             UIMenu(options: .displayInline, children: [
                 UIAction(
                     title: String(localized: "Copy Address"),
