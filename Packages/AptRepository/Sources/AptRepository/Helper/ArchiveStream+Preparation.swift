@@ -7,6 +7,10 @@ extension ArchiveStream {
     /// Decode on the unprivileged side. Never let libarchive choose output
     /// paths: regular contents go into generated flat blobs, links stay metadata.
     public static func prepareDebianPackage(at source: URL, in directory: URL) throws -> String {
+        try withUTF8Names { try prepare(source, in: directory) }
+    }
+
+    private static func prepare(_ source: URL, in directory: URL) throws -> String {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let outer = try reader(source, tar: false)
         defer { archive_read_free(outer) }
@@ -21,8 +25,10 @@ extension ArchiveStream {
             if status == ARCHIVE_EOF {
                 break
             }
-            guard status == ARCHIVE_OK, let header else { throw CocoaError(.fileReadCorruptFile) }
-            let name = String(cString: archive_entry_pathname(header))
+            guard status == ARCHIVE_OK, let header, let pathname = archive_entry_pathname(header) else {
+                throw CocoaError(.fileReadCorruptFile)
+            }
+            let name = String(cString: pathname)
             if name == "debian-binary" {
                 guard members.insert(name).inserted else { throw CocoaError(.fileReadCorruptFile) }
                 let blob = try copyMember(outer, directory: directory, sequence: &sequence)
@@ -46,8 +52,10 @@ extension ArchiveStream {
                 if status == ARCHIVE_EOF {
                     break
                 }
-                guard status == ARCHIVE_OK, let entry else { throw CocoaError(.fileReadCorruptFile) }
-                let path = try PreparedPackage.relativePath(String(cString: archive_entry_pathname(entry)))
+                guard status == ARCHIVE_OK, let entry, let pathname = archive_entry_pathname(entry) else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                let path = try PreparedPackage.relativePath(String(cString: pathname))
                 if path.isEmpty {
                     archive_read_data_skip(inner); continue
                 }

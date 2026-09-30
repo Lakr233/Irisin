@@ -77,6 +77,13 @@ public enum ArchiveStream {
         atPath path: String,
         _ read: (OpaquePointer) throws -> T
     ) throws -> T {
+        try withUTF8Names { try readControlArchive(atPath: path, read) }
+    }
+
+    private static func readControlArchive<T>(
+        atPath path: String,
+        _ read: (OpaquePointer) throws -> T
+    ) throws -> T {
         let outer = try open(filters: false, formats: [archive_read_support_format_ar])
         defer { archive_read_free(outer) }
         try check(archive_read_open_filename(outer, path, chunkSize), outer)
@@ -127,6 +134,10 @@ public enum ArchiveStream {
     /// The listing of a Debian package. Both inner archives are streamed out
     /// of the outer `ar`, so a large `data.tar` is decoded and never held.
     public static func debianContents(atPath path: String) throws -> DebianContents {
+        try withUTF8Names { try readDebianContents(atPath: path) }
+    }
+
+    private static func readDebianContents(atPath path: String) throws -> DebianContents {
         let outer = try open(filters: false, formats: [archive_read_support_format_ar])
         defer { archive_read_free(outer) }
         try check(archive_read_open_filename(outer, path, chunkSize), outer)
@@ -203,6 +214,28 @@ public enum ArchiveStream {
     }
 
     // MARK: - libarchive
+
+    /// libarchive converts entry names into the calling thread's codeset.
+    /// The app starts in the C locale, where a UTF-8 name in a PAX header
+    /// fails the header read and leaves the pathname NULL, so every reader
+    /// that looks at names runs inside this: a UTF-8 LC_CTYPE on this thread
+    /// only, the thread's previous locale restored after. Never `setlocale`,
+    /// which is process-wide. Without a UTF-8 locale ASCII names still work,
+    /// so that case runs as before.
+    static func withUTF8Names<T>(_ body: () throws -> T) rethrows -> T {
+        let previous = uselocale(nil)
+        guard let base = duplocale(previous) else { return try body() }
+        guard let utf8 = newlocale(LC_CTYPE_MASK, "UTF-8", base) else {
+            freelocale(base)
+            return try body()
+        }
+        uselocale(utf8)
+        defer {
+            uselocale(previous)
+            freelocale(utf8)
+        }
+        return try body()
+    }
 
     private static func open(filters: Bool, formats: [(OpaquePointer?) -> Int32]) throws -> OpaquePointer {
         guard let archive = archive_read_new() else { throw Failure(description: "archive_read_new failed") }

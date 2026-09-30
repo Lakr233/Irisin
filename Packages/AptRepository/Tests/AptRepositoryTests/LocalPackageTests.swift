@@ -119,6 +119,32 @@ final class LocalPackageTests: XCTestCase {
         XCTAssertEqual(owners, ["a/named": [0, 0], "a/unknown": [777, 778]])
     }
 
+    /// A PAX header spells a name in UTF-8, and libarchive converts it into
+    /// the thread's codeset. The test runner, like the app, starts in the C
+    /// locale, where that conversion fails unless the reader scopes a UTF-8
+    /// one to itself; the thread's own locale comes back afterwards.
+    func testUTF8NamesReadInTheCLocale() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("a"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try "Package: a.b\nVersion: 1\nArchitecture: all\n".write(to: dir.appendingPathComponent("control"), atomically: true, encoding: .utf8)
+        try "2.0\n".write(to: dir.appendingPathComponent("debian-binary"), atomically: true, encoding: .utf8)
+        try Data("x".utf8).write(to: dir.appendingPathComponent("a/What’s New é.txt"))
+        try run("/usr/bin/tar", ["-czf", "control.tar.gz", "./control"], in: dir)
+        try run("/usr/bin/tar", ["--format", "pax", "-cf", "data.tar", "./a"], in: dir)
+        try run("/usr/bin/ar", ["rcS", "a.deb", "debian-binary", "control.tar.gz", "data.tar"], in: dir)
+        let deb = dir.appendingPathComponent("a.deb")
+        let codeset = String(cString: nl_langinfo(CODESET))
+
+        let contents = try ArchiveStream.debianContents(atPath: deb.path)
+        XCTAssertEqual(contents.files, ["/a/What’s New é.txt"])
+        let prepared = dir.appendingPathComponent("prepared")
+        _ = try ArchiveStream.prepareDebianPackage(at: deb, in: prepared)
+        let manifest = try JSONDecoder().decode(PreparedPackage.self, from: Data(contentsOf: prepared.appendingPathComponent("manifest.json")))
+        XCTAssertEqual(manifest.entries.map(\.path).sorted(), ["a", "a/What’s New é.txt"])
+        XCTAssertEqual(String(cString: nl_langinfo(CODESET)), codeset)
+    }
+
     private func run(_ tool: String, _ arguments: [String], in dir: URL) throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: tool)
