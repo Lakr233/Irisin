@@ -54,6 +54,11 @@ class RepositoriesController: UIViewController {
 
     private let footer = ListFootnoteView()
 
+    let searchController = UISearchController()
+    private let emptyStateLabel = EmptyStateView(
+        text: String(localized: "No repositories match the search.")
+    )
+
     /// Read as the view loads, never at init: the tab bar makes this page
     /// at launch and nothing listens until the tab is opened, so what
     /// onboarding added in between would be missing.
@@ -85,6 +90,14 @@ class RepositoriesController: UIViewController {
 
         title = String(localized: "Repositories")
         view.backgroundColor = .pageBackground
+
+        searchController.searchBar.placeholder = String(localized: "Search repositories")
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.searchTextField.autocapitalizationType = .none
+        searchController.searchBar.searchTextField.autocorrectionType = .no
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
 
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
 
@@ -124,12 +137,38 @@ class RepositoriesController: UIViewController {
 
     private var hasListedRepositories = false
 
+    private var searchText: String {
+        (searchController.searchBar.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The registered list, narrowed to the repositories whose name,
+    /// description or address holds the search text.
+    private var shownUrls: [URL] {
+        let urls = dataSourceCache.uniqued()
+        let text = searchText
+        guard !text.isEmpty else { return urls }
+        return urls.filter { url in
+            let repo = RepositoryCenter.default.obtainImmutableRepository(withUrl: url)
+            return [repo?.nickName, repo?.repositoryDescription, url.absoluteString]
+                .compactMap(\.self)
+                .contains { $0.localizedCaseInsensitiveContains(text) }
+        }
+    }
+
     private func applySnapshot(animatingDifferences: Bool) {
+        let urls = shownUrls
+        let isSearching = !searchText.isEmpty
         var snapshot = NSDiffableDataSourceSnapshot<Int, Row>()
         snapshot.appendSections([0])
-        snapshot.appendItems(dataSourceCache.isEmpty ? [.none] : dataSourceCache.uniqued().map(Row.repository))
+        if dataSourceCache.isEmpty, !isSearching {
+            snapshot.appendItems([.none])
+        } else {
+            snapshot.appendItems(urls.map(Row.repository))
+        }
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
         diffableDataSource.apply(snapshot, animatingDifferences: animatingDifferences)
+        // a search that holds every row back says so; a blank page looks broken
+        tableView.backgroundView = isSearching && urls.isEmpty ? emptyStateLabel : nil
     }
 
     private func reloadDataSource(animated: Bool = true) {
@@ -464,6 +503,13 @@ class RepositoriesController: UIViewController {
                 completion: nil
             )
         }
+    }
+}
+
+extension RepositoriesController: UISearchResultsUpdating {
+    func updateSearchResults(for _: UISearchController) {
+        guard hasListedRepositories else { return }
+        applySnapshot(animatingDifferences: tableView.shouldAnimateDiff)
     }
 }
 
