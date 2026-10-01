@@ -762,10 +762,9 @@
 		502F639B304F1353006C2087 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
-			/* Pinned: 1.7.0 built with Xcode 27 references swift_initBorrow, which only iOS 27's libswiftCore has, and the app dies in dyld on iOS 26 and older. Whoever moves this pin must have the developer launch a packaged Release build on a device below iOS 27 first. Packages/MarkdownView pins the same version. */
 			requirement = {
-				kind = exactVersion;
-				version = 1.6.0;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.1;
 			};
 		};
 		CA6000000000000000000001 /* XCRemoteSwiftPackageReference "SnapKit" */ = {

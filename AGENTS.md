@@ -546,14 +546,10 @@ is `/var/jb/var/log/irisin-install.log`.
   module's by case alone, and on a case-insensitive volume the compiler
   refused it: "cannot load module 'LibArchive' as 'libarchive'". Swift
   imports `ArchiveKit` now; the C shim that worked around that is gone.
-- **swift-collections is pinned at exactly 1.6.0.** 1.7.0 adopts the Swift
-  6.4 standard library's borrow types, and built with Xcode 27 the app
-  imports `swift_initBorrow`, which only iOS 27's libswiftCore has: 4.5.11
-  died in dyld at launch on iOS 26 ("Symbol not found: _swift_initBorrow").
-  The pin is in `project.pbxproj` and `Packages/MarkdownView/Package.swift`
-  and they move together. Whoever moves it tells the developer to launch a
-  packaged Release build on a device below iOS 27 before it ships; a build
-  that succeeds proves nothing. `Scripts/audit-ios-floor.sh`, the
+- **A clean build says nothing about the deployment target.** A bump of
+  anything that follows the standard library closely is proven by launching
+  a packaged Release build on a device below the newest iOS before it
+  ships. `Scripts/audit-ios-floor.sh`, the
   template's (platformize-app-ios), runs over the app, `irisind` and
   `irisin-install` before every package is made and fails on a runtime
   symbol, library, or build version above the deployment target; a fix to

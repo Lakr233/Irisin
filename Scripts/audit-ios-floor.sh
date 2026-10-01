@@ -106,16 +106,16 @@ check_weak_symbols() {
 #      "Symbol not found: _swift_initBorrow"
 #      "Expected in: /usr/lib/swift/libswiftCore.dylib"
 #
-#    Nothing in the build says so: swift-collections 1.7.0 built with Xcode 27
-#    imported that iOS 27 runtime entry point strongly, and Irisin 4.5.11 died
-#    at launch on iOS 26.6.2. Two checks. The list below always runs; add a line
-#    with the crash that taught it. The comparison after it runs where an iOS
+#    Nothing in the build says so: the compiler can reference a runtime entry
+#    point newer than the deployment target from code that never names it.
+#    Two checks. The list below always runs; add a line with the symbol and the
+#    iOS that first exports it. The comparison after it runs where an iOS
 #    simulator runtime at or above the floor is installed with its libraries
 #    as files (18.x is; 26 and later keep them only in a shared cache): every
 #    symbol imported from /usr/lib/swift must be one that runtime exports, and
 #    the Swift ABI only ever adds, so what that runtime lacks the floor lacks.
 declare -a late_runtime_symbols=(
-    "_swift_initBorrow:27.0"          # swift-collections 1.7.0 + Xcode 27; killed Irisin 4.5.11 on iOS 26.6.2
+    "_swift_initBorrow:27.0"          # Swift 6.4 can import it strongly from code that never names it
 )
 
 # The oldest iOS simulator runtime at or above the floor whose Swift libraries
