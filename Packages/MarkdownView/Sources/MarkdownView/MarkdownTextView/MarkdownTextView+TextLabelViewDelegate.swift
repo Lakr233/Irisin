@@ -6,15 +6,33 @@
 //
 
 import Litext
-import UIKit
 
 extension MarkdownTextView: TextLabelViewDelegate {
-    public func textLabelView(_: TextLabelView, didChangeSelection _: NSRange?) {
-        // reserved for future use
+    public func textLabelView(_ label: TextLabelView, didChangeSelection _: NSRange?) {
+        // Code and table views report their own labels here too; only the
+        // document's selection can run across them.
+        guard label === textLabelView else { return }
+        syncContextViewSelection()
     }
 
     public func textLabelView(_ label: TextLabelView, didDragSelectionAt location: CGPoint) {
         guard let scrollView = trackedScrollView else { return }
+        autoScroll(scrollView, toFollowDragAt: location, in: label)
+    }
+
+    public func textLabelView(_: TextLabelView, didTapHighlightRegion highlightRegion: TextLabel.HighlightRegion, at location: CGPoint) {
+        let link = highlightRegion.attributes[NSAttributedString.Key.link]
+        let range = highlightRegion.stringRange
+        if let url = link as? URL {
+            linkHandler?(.url(url), range, location)
+        } else if let string = link as? String {
+            linkHandler?(.string(string), range, location)
+        }
+    }
+}
+
+private extension MarkdownTextView {
+    func autoScroll(_ scrollView: UIScrollView, toFollowDragAt location: CGPoint, in label: TextLabelView) {
         guard scrollView.contentSize.height > scrollView.bounds.height else { return }
 
         let edgeDetection = CGFloat(16)
@@ -38,15 +56,5 @@ extension MarkdownTextView: TextLabelViewDelegate {
         )
         currentOffset.y = min(max(currentOffset.y, minOffsetY), maxOffsetY)
         scrollView.setContentOffset(currentOffset, animated: false)
-    }
-
-    public func textLabelView(_: TextLabelView, didTapHighlightRegion highlightRegion: TextLabel.HighlightRegion, at location: CGPoint) {
-        let link = highlightRegion.attributes[NSAttributedString.Key.link]
-        let range = highlightRegion.stringRange
-        if let url = link as? URL {
-            linkHandler?(.url(url), range, location)
-        } else if let string = link as? String {
-            linkHandler?(.string(string), range, location)
-        }
     }
 }

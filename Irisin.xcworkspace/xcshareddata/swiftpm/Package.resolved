@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "displaylink",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Lakr233/DisplayLink.git",
+      "state" : {
+        "revision" : "41bea2661e04bebcb1c4f15fc0b6197850100fdd",
+        "version" : "3.0.1"
+      }
+    },
+    {
       "identity" : "dog",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/Dog",
@@ -68,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/Litext",
       "state" : {
-        "revision" : "097475a348ab4a0aee1d027789307ebf69afbc1f",
-        "version" : "2.2.2"
+        "revision" : "52f114f0110a699a3d22d81190fb9a5670f478a4",
+        "version" : "3.4.2"
       }
     },
     {

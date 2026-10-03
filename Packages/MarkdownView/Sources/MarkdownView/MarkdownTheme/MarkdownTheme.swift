@@ -12,13 +12,15 @@ import UIKit
 public extension MarkdownTheme {
     @MainActor static var `default`: MarkdownTheme = .init()
     static let codeScale = 0.85
+    /// Inline code is set at the body's size.
+    static let codeInlineScale = 1.0
 }
 
 public struct MarkdownTheme: Equatable, @unchecked Sendable {
     public struct Fonts: Equatable, @unchecked Sendable {
         public var body = UIFont.preferredFont(forTextStyle: .body)
         public var codeInline = UIFont.monospacedSystemFont(
-            ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize,
+            ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize * codeInlineScale,
             weight: .regular
         )
         public var bold = UIFont.preferredFont(forTextStyle: .body).bold
@@ -45,7 +47,9 @@ public struct MarkdownTheme: Equatable, @unchecked Sendable {
                 ?? UIColor(named: "accentColor")
                 ?? .systemOrange
         public var code = UIColor.label
-        public var codeBackground = UIColor.gray.withAlphaComponent(0.25)
+        public var codeBackground = CodeBlockDefaults.background
+        public var codeBlockBackground = CodeBlockDefaults.background
+        public var codeBlockBarBackground = CodeBlockDefaults.barBackground
         public var selectionBackground: UIColor? =
             (UIColor(named: "AccentColor")
                     ?? UIColor(named: "accentColor")
@@ -87,6 +91,18 @@ public struct MarkdownTheme: Equatable, @unchecked Sendable {
     public var table: Table = .init()
 
     public init() {}
+}
+
+/// Translucent, so a code block shades whatever it sits on rather than
+/// laying a fixed grey over a tinted page: 5% black in light appearance,
+/// 10% white in dark. The bar sits on the body and lays the same layer
+/// again, so it is one step further from the page.
+enum CodeBlockDefaults {
+    static let background = UIColor(
+        light: UIColor.black.withAlphaComponent(0.05),
+        dark: UIColor.white.withAlphaComponent(0.1)
+    )
+    static let barBackground = background
 }
 
 public extension MarkdownTheme {
@@ -152,7 +168,7 @@ public extension MarkdownTheme {
 
     mutating func align(to pointSize: CGFloat) {
         fonts.body = fonts.body.withSize(pointSize)
-        fonts.codeInline = fonts.codeInline.withSize(pointSize)
+        fonts.codeInline = fonts.codeInline.withSize(pointSize * Self.codeInlineScale)
         fonts.bold = fonts.bold.withSize(pointSize).bold
         fonts.italic = fonts.italic.withSize(pointSize)
         fonts.code = fonts.code.withSize(pointSize * Self.codeScale)

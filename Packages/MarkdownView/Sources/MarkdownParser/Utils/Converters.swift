@@ -99,7 +99,7 @@ extension RawListItem {
         guard unsafeNode.nodeType == .item else {
             fatalError("Expected a list item but got a '\(unsafeNode.nodeType)' instead.")
         }
-        self.init(children: unsafeNode.children.compactMap(MarkdownBlockNode.init(unsafeNode:)))
+        self.init(children: unsafeNode.children.flatMap(MarkdownBlockNode.makeBlocks(unsafeNode:)))
     }
 }
 
@@ -110,7 +110,7 @@ extension RawTaskListItem {
         }
         self.init(
             isCompleted: unsafeNode.isTaskListItemChecked,
-            children: unsafeNode.children.compactMap(MarkdownBlockNode.init(unsafeNode:))
+            children: unsafeNode.children.flatMap(MarkdownBlockNode.makeBlocks(unsafeNode:))
         )
     }
 }

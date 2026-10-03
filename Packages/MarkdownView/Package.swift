@@ -2,7 +2,7 @@
 
 import PackageDescription
 
-/// MarkdownView, vendored from Lakr233/MarkdownView 4.3.2 for UIKit alone,
+/// MarkdownView, vendored from Lakr233/MarkdownView 4.6.7 for UIKit alone,
 /// without math or code highlighting. README.md says what changed.
 let package = Package(
     name: "MarkdownView",
@@ -14,7 +14,7 @@ let package = Package(
         .library(name: "MarkdownParser", targets: ["MarkdownParser"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Lakr233/Litext", from: "2.2.2"),
+        .package(url: "https://github.com/Lakr233/Litext", from: "3.4.2"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.7.1"),
         .package(url: "https://github.com/swiftlang/swift-cmark", from: "0.9.0"),
         .package(url: "https://github.com/nicklockwood/LRUCache", from: "1.3.0"),

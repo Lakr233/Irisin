@@ -9,7 +9,7 @@ import UIKit
 @MainActor
 private class ObjectPool<T: Equatable & Hashable> {
     private let factory: () -> T
-    fileprivate lazy var objects: Deque<T> = .init()
+    private lazy var objects: Deque<T> = .init()
 
     init(_ factory: @escaping () -> T) {
         self.factory = factory
@@ -25,6 +25,14 @@ private class ObjectPool<T: Equatable & Hashable> {
 
     func stash(_ object: T) {
         objects.append(object)
+    }
+
+    /// Takes `object` out of the pool, so nothing else can acquire it.
+    /// Returns whether it was there to take.
+    func withdraw(_ object: T) -> Bool {
+        guard let index = objects.firstIndex(where: { $0 == object }) else { return false }
+        objects.remove(at: index)
+        return true
     }
 
     func reorder(matching sequence: [T]) {
@@ -52,11 +60,6 @@ public final class ReusableViewProvider {
 
     public init() {}
 
-    func removeAll() {
-        codeViewPool.objects.removeAll()
-        tableViewPool.objects.removeAll()
-    }
-
     func acquireCodeView() -> CodeView {
         codeViewPool.acquire()
     }
@@ -71,6 +74,21 @@ public final class ReusableViewProvider {
 
     func stashTableView(_ tableView: TableView) {
         tableViewPool.stash(tableView)
+    }
+
+    /// Takes a view a cached block brings back out of the pool before any
+    /// other block can acquire it.
+    ///
+    /// Returns false when the view is not in the pool — someone else holds
+    /// it — and the block then has to be built again rather than share it.
+    func withdraw(_ view: UIView) -> Bool {
+        if let codeView = view as? CodeView {
+            return codeViewPool.withdraw(codeView)
+        }
+        if let tableView = view as? TableView {
+            return tableViewPool.withdraw(tableView)
+        }
+        return false
     }
 
     func reorderViews(matching sequence: [UIView]) {

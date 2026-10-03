@@ -59,71 +59,18 @@ extension CodeView {
         setupScrollView()
         setupTextView()
         setupLineNumberView()
-    }
-
-    private func setupViewAppearance() {
-        layer.cornerRadius = 8
-        layer.cornerCurve = .continuous
-        clipsToBounds = true
-        backgroundColor = .gray.withAlphaComponent(0.05)
-    }
-
-    private func setupBarView() {
-        barView.backgroundColor = .gray.withAlphaComponent(0.05)
-        addSubview(barView)
-        barView.addSubview(languageLabel)
+        applyBackgroundColors()
     }
 
     private func setupButtons() {
         setupPreviewButton()
         setupCopyButton()
-    }
-
-    private func setupPreviewButton() {
-        let previewImage = UIImage(
-            systemName: "eye",
-            withConfiguration: UIImage.SymbolConfiguration(scale: .small)
-        )
-        previewButton.setImage(previewImage, for: .normal)
-        previewButton.addTarget(self, action: #selector(handlePreview(_:)), for: .touchUpInside)
-        barView.addSubview(previewButton)
-    }
-
-    private func setupCopyButton() {
-        let copyImage = UIImage(
-            systemName: "doc.on.doc",
-            withConfiguration: UIImage.SymbolConfiguration(scale: .small)
-        )
-        copyButton.setImage(copyImage, for: .normal)
-        copyButton.addTarget(self, action: #selector(handleCopy(_:)), for: .touchUpInside)
-        barView.addSubview(copyButton)
-    }
-
-    private func setupScrollView() {
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.showsHorizontalScrollIndicator = false
-        scrollView.alwaysBounceVertical = false
-        scrollView.alwaysBounceHorizontal = false
-        addSubview(scrollView)
-    }
-
-    private func setupTextView() {
-        textView.backgroundColor = .clear
-        textView.preferredMaxLayoutWidth = .infinity
-        textView.isSelectable = true
-        textView.selectionBackgroundColor = theme.colors.selectionBackground
-        scrollView.addSubview(textView)
-    }
-
-    private func setupLineNumberView() {
-        lineNumberView.backgroundColor = .clear
-        addSubview(lineNumberView)
-        updateLineNumberView()
+        setupBarButton(expandButton, symbol: CodeView.expandSymbol, title: TableTitleText.expand, action: #selector(handleExpand(_:)))
     }
 
     func performLayout() {
         let labelSize = languageLabel.intrinsicContentSize
-        let barHeight = max(languageLabel.font?.lineHeight ?? 16, labelSize.height) + CodeViewConfiguration.barPadding * 2
+        let barHeight = max(languageLabel.lineHeight, labelSize.height) + CodeViewConfiguration.barPadding * 2
 
         layoutBarView(barHeight: barHeight, labelSize: labelSize)
         layoutButtons()
@@ -131,32 +78,20 @@ extension CodeView {
         layoutScrollViewAndTextView(barHeight: barHeight)
     }
 
+    /// Lays the bar's buttons out from the trailing edge: Expand, Copy, then
+    /// Preview when there is a handler, then the host's actions.
     private func layoutButtons() {
-        let buttonSize = CGSize(width: 44, height: 44)
-        let hasPreview = previewAction != nil
-
-        if hasPreview {
-            copyButton.frame = CGRect(
-                x: barView.bounds.width - buttonSize.width,
+        let buttonSize = CGSize(width: TableTitleBar.buttonWidth, height: 44)
+        previewButton.isHidden = previewAction == nil
+        var trailing = barView.bounds.width - 4
+        for button in barButtons where !button.isHidden {
+            trailing -= buttonSize.width
+            button.applyFrame(CGRect(
+                x: trailing,
                 y: (barView.bounds.height - buttonSize.height) / 2,
                 width: buttonSize.width,
                 height: buttonSize.height
-            )
-            previewButton.isHidden = false
-            previewButton.frame = CGRect(
-                x: copyButton.frame.minX - buttonSize.width,
-                y: (barView.bounds.height - buttonSize.height) / 2,
-                width: buttonSize.width,
-                height: buttonSize.height
-            )
-        } else {
-            copyButton.frame = CGRect(
-                x: barView.bounds.width - buttonSize.width,
-                y: (barView.bounds.height - buttonSize.height) / 2,
-                width: buttonSize.width,
-                height: buttonSize.height
-            )
-            previewButton.isHidden = true
+            ))
         }
     }
 
@@ -189,9 +124,10 @@ extension CodeView {
             height: bounds.height - barHeight
         )
 
+        let textOrigin = CGPoint(x: CodeViewConfiguration.codePadding, y: CodeViewConfiguration.codePadding)
         textView.frame = CGRect(
-            x: CodeViewConfiguration.codePadding,
-            y: CodeViewConfiguration.codePadding,
+            x: textOrigin.x,
+            y: textOrigin.y,
             width: max(scrollView.bounds.width - CodeViewConfiguration.codePadding * 2, textContentSize.width),
             height: textContentSize.height
         )
@@ -200,5 +136,83 @@ extension CodeView {
             width: textView.frame.width + CodeViewConfiguration.codePadding * 2,
             height: 0
         )
+    }
+}
+
+private extension CodeView {
+    func setupViewAppearance() {
+        layer.cornerRadius = 8
+        layer.cornerCurve = .continuous
+        // Not clipped, so a selection's handles can reach past the code;
+        // the bar rounds its own corners instead.
+        clipsToBounds = false
+    }
+
+    func setupBarView() {
+        barView.layer.cornerRadius = layer.cornerRadius
+        barView.layer.cornerCurve = .continuous
+        barView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        addSubview(barView)
+        barView.addSubview(languageLabel)
+    }
+
+    func setupPreviewButton() {
+        let previewImage = UIImage(
+            systemName: "eye",
+            withConfiguration: UIImage.SymbolConfiguration(scale: .small)
+        )
+        previewButton.setImage(previewImage, for: .normal)
+        previewButton.tintColor = .label
+        previewButton.addTarget(self, action: #selector(handlePreview(_:)), for: .touchUpInside)
+        barView.addSubview(previewButton)
+    }
+
+    func setupCopyButton() {
+        setupBarButton(copyButton, symbol: CodeView.copySymbol, title: TableTitleText.copy, action: #selector(handleCopy(_:)))
+    }
+
+    func setupBarButton(_ button: UIButton, symbol: String, title: String, action: Selector) {
+        let image = UIImage(
+            systemName: symbol,
+            withConfiguration: UIImage.SymbolConfiguration(scale: .small)
+        )
+        button.setImage(image, for: .normal)
+        button.tintColor = .label
+        button.accessibilityLabel = title
+        button.addTarget(self, action: action, for: .touchUpInside)
+        barView.addSubview(button)
+    }
+
+    func setupScrollView() {
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.alwaysBounceVertical = false
+        scrollView.alwaysBounceHorizontal = false
+        scrollView.blankLeadingWidth = CodeViewConfiguration.codePadding
+        scrollView.blankTrailingWidth = CodeViewConfiguration.codePadding
+        addSubview(scrollView)
+    }
+
+    func setupTextView() {
+        textView.backgroundColor = .clear
+        textView.preferredMaxLayoutWidth = .greatestFiniteMagnitude
+        textView.isSelectable = true
+        textView.selectionBackgroundColor = theme.colors.selectionBackground
+        scrollView.addSubview(textView)
+    }
+
+    func setupLineNumberView() {
+        lineNumberView.backgroundColor = .clear
+        // Under the code, so a selection's handles draw over the gutter.
+        insertSubview(lineNumberView, belowSubview: scrollView)
+        updateLineNumberView()
+    }
+}
+
+extension CodeView {
+    /// Paints the body and the bar in the theme's code block colours.
+    func applyBackgroundColors() {
+        backgroundColor = theme.colors.codeBlockBackground
+        barView.backgroundColor = theme.colors.codeBlockBarBackground
     }
 }

@@ -97,27 +97,15 @@ public final class MarkdownContent: @unchecked Sendable {
                 .foregroundColor: theme.colors.body,
             ]
         )
-        MarkdownContentLocale.applyLanguageAttributes(
-            to: rendered,
-            fallbackLocale: locale
-        )
         // Resolve the fallback font here, once per distinct piece of text,
         // rather than leaving it to the pass over the finished document.
         // The body font covers no CJK and no emoji, so that pass was asking
         // CoreText for a substitute for the same runs on every rebuild — a
-        // third of the cost of a streaming update.
-        rendered.fixAttributes(in: NSRange(location: 0, length: rendered.length))
-        // With the font resolved, the language attribute has done its job for
-        // most scripts — and carrying it into the document triples the cost of
-        // building a framesetter, which is paid again on every rebuild. It stays
-        // only where it still changes what the reader sees.
-        let fullRange = NSRange(location: 0, length: rendered.length)
-        rendered.enumerateAttribute(.coreTextLanguage, in: fullRange, options: []) { value, range, _ in
-            guard let language = value as? String,
-                  !MarkdownContentLocale.affectsShaping(language)
-            else { return }
-            rendered.removeAttribute(.coreTextLanguage, range: range)
-        }
+        // third of the cost of a streaming update. With the font resolved, the
+        // language attribute has done its job for most scripts — and carrying
+        // it into the document triples the cost of building a framesetter,
+        // which is paid again on every rebuild.
+        MarkdownContentLocale.resolveFonts(in: rendered, fallbackLocale: locale)
         let cached = rendered.copy() as! NSAttributedString
         Self.inlineRenderCache.setValue(cached, forKey: key)
         return cached

@@ -7,7 +7,6 @@
 
 import CoreText
 import Litext
-import UIKit
 
 extension MarkdownTextView {
     func updateTextExecute() {
@@ -28,9 +27,14 @@ extension MarkdownTextView {
         }
 
         viewProvider.reorderViews(matching: contextViews)
+        let ownedContextViews = contextViews
         contextViews.removeAll()
 
-        let artifacts = TextBuilder.build(view: self, viewProvider: viewProvider)
+        let artifacts = TextBuilder.build(
+            view: self,
+            viewProvider: viewProvider,
+            ownedContextViews: ownedContextViews
+        )
         textLabelView.attributedText = artifacts.document
         contextViews = artifacts.subviews
         blockFragmentCache = artifacts.fragmentCache
@@ -48,10 +52,10 @@ extension MarkdownTextView {
             goneView.removeFromSuperview()
         }
 
-        textLabelView.setNeedsLayout()
-        setNeedsLayout()
+        textLabelView.markNeedsLayout()
+        markNeedsLayout()
 
-        textLabelView.setNeedsDisplay()
-        setNeedsDisplay()
+        textLabelView.markNeedsDisplay()
+        markNeedsDisplay()
     }
 }

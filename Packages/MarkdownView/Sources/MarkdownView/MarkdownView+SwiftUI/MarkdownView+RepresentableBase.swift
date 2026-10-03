@@ -28,7 +28,10 @@ extension MarkdownViewRepresentableBase {
     func updateMarkdownTextView(_ view: MarkdownTextView, coordinator: MarkdownViewCoordinator) {
         switch contentSource {
         case let .text(text):
-            let needsUpdate = coordinator.targetText != text
+            // A view last fed prebuilt content is showing that content, not
+            // `lastText`, so any text replaces it — even the empty string.
+            let needsUpdate = coordinator.lastContent != nil
+                || coordinator.targetText != text
                 || coordinator.targetTheme != theme
             if needsUpdate {
                 coordinator.setTextThrottled(text, theme: theme, on: view)
@@ -43,7 +46,6 @@ extension MarkdownViewRepresentableBase {
                 coordinator.lastParseResult = nil
                 coordinator.lastContent = markdownContent
                 view.setContentImmediately(markdownContent, theme: theme)
-                view.invalidateIntrinsicContentSize()
                 coordinator.lastTheme = theme
             }
         }

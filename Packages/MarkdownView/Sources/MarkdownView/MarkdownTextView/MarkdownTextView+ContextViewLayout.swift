@@ -7,13 +7,16 @@
 
 import Foundation
 import Litext
-import UIKit
 
 extension MarkdownTextView {
     func syncContextViewLayout() {
         var placed: Set<UIView> = []
+        contextViewLocations.removeAll(keepingCapacity: true)
 
         for run in textLabelView.layoutRuns(matching: .contextView) {
+            if let view = run.attributes[.contextView] as? UIView {
+                contextViewLocations[ObjectIdentifier(view)] = run.stringRange.location
+            }
             if let codeView = run.attributes[.contextView] as? CodeView {
                 syncCodeView(codeView, with: run)
                 placed.insert(codeView)
@@ -34,6 +37,7 @@ extension MarkdownTextView {
         }
 
         syncBlockquoteBars()
+        syncContextViewSelection()
     }
 
     /// Gives every blockquote a bar spanning all of its lines.
@@ -44,16 +48,19 @@ extension MarkdownTextView {
     private func syncBlockquoteBars() {
         let spans = blockquoteLineSpans()
 
-        while blockquoteBars.count < spans.count {
-            let bar = BlockquoteBarView()
-            blockquoteBars.append(bar)
-            addSubview(bar)
-        }
         while blockquoteBars.count > spans.count {
             blockquoteBars.removeLast().removeFromSuperview()
         }
 
-        for (bar, span) in zip(blockquoteBars, spans) {
+        for (index, span) in spans.enumerated() {
+            guard index < blockquoteBars.count else {
+                let bar = BlockquoteBarView()
+                bar.setTheme(theme)
+                bar.place(at: span, in: self)
+                blockquoteBars.append(bar)
+                continue
+            }
+            let bar = blockquoteBars[index]
             bar.setTheme(theme)
             bar.isHidden = false
             setFrameIfNeeded(for: bar, to: span)
@@ -61,27 +68,33 @@ extension MarkdownTextView {
     }
 
     private func syncCodeView(_ codeView: CodeView, with run: TextLabel.LayoutRun) {
-        if codeView.superview != self {
-            addSubview(codeView)
-        }
         codeView.textView.delegate = self
         codeView.previewAction = codePreviewHandler
-        setFrameIfNeeded(
-            for: codeView,
-            to: contextViewFrame(for: run, height: codeView.intrinsicContentSize.height)
+        codeView.actionProvider = codeBlockActionProvider
+        placeContextView(
+            codeView,
+            at: contextViewFrame(for: run, height: codeView.intrinsicContentSize.height)
         )
     }
 
     private func syncTableView(_ tableView: TableView, with run: TextLabel.LayoutRun) {
-        if tableView.superview != self {
-            addSubview(tableView)
-        }
         tableView.linkHandler = linkHandler
         tableView.textSelectionDelegate = self
-        setFrameIfNeeded(
-            for: tableView,
-            to: contextViewFrame(for: run, height: tableView.intrinsicContentSize.height)
+        placeContextView(
+            tableView,
+            at: contextViewFrame(for: run, height: tableView.intrinsicContentSize.height)
         )
+    }
+
+    /// Moves a view that was on screen last pass; places one that was not —
+    /// new, taken from the pool, or hidden — straight at `frame`, so it does
+    /// not animate in from wherever it last was.
+    private func placeContextView(_ view: UIView, at frame: CGRect) {
+        guard view.superview === self, !view.isHidden else {
+            view.place(at: frame, in: self)
+            return
+        }
+        setFrameIfNeeded(for: view, to: frame)
     }
 
     private func contextViewFrame(for run: TextLabel.LayoutRun, height: CGFloat) -> CGRect {

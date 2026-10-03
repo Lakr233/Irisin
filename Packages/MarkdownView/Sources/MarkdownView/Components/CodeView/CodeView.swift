@@ -4,7 +4,6 @@
 //
 
 import Litext
-import UIKit
 
 final class CodeView: UIView {
     // MARK: - CONTENT
@@ -14,9 +13,12 @@ final class CodeView: UIView {
     var theme: MarkdownTheme = .default {
         didSet {
             languageLabel.font = theme.fonts.code
+            applyBackgroundColors()
             textView.selectionBackgroundColor = theme.colors.selectionBackground
             updateLineNumberView()
-            if oldValue.fonts.code != theme.fonts.code || oldValue.colors.code != theme.colors.code {
+            if oldValue.fonts.code != theme.fonts.code
+                || oldValue.colors.code != theme.colors.code
+            {
                 needsTextRebuild = true
             }
         }
@@ -25,17 +27,31 @@ final class CodeView: UIView {
     var language: String = "" {
         didSet {
             languageLabel.text = language.isEmpty ? "</>" : language
+            // The label is sized in layout.
+            if oldValue != language {
+                resetCopyFeedback()
+                reloadActions()
+                markNeedsLayout()
+            }
         }
     }
 
     var content: String = "" {
         didSet {
+            // A reused view takes another block, and a streaming block's
+            // copy is already stale; either way it no longer shows "copied".
+            if oldValue != content {
+                resetCopyFeedback()
+            }
             guard oldValue != content || needsTextRebuild else { return }
             needsTextRebuild = false
             cachedLineCount = max(content.components(separatedBy: .newlines).count, 1)
             textView.attributedText = CodeViewConfiguration.attributedCode(content, theme: theme)
             lineNumberView.updateForContent(content)
             updateLineNumberView()
+            // A line can grow without the frame changing, and the text
+            // view and scroll extent are sized in layout.
+            markNeedsLayout()
         }
     }
 
@@ -46,19 +62,29 @@ final class CodeView: UIView {
     var previewAction: ((String?, NSAttributedString) -> Void)? {
         didSet {
             guard (oldValue == nil) != (previewAction == nil) else { return }
-            setNeedsLayout()
+            markNeedsLayout()
         }
     }
 
-    private let callerIdentifier = UUID()
-    private var currentTaskIdentifier: UUID?
+    /// Supplies the host's own buttons, asked again when the language changes.
+    weak var actionProvider: CodeBlockActionProvider? {
+        didSet {
+            guard oldValue !== actionProvider else { return }
+            reloadActions()
+        }
+    }
+
+    var actions: [CodeBlockAction] = []
 
     lazy var barView: UIView = .init()
-    lazy var scrollView: UIScrollView = .init()
-    lazy var languageLabel: UILabel = .init()
-    lazy var textView: TextLabelView = .init()
+    lazy var scrollView: HorizontalClippingScrollView = .init()
     lazy var copyButton: UIButton = .init()
+    lazy var expandButton: UIButton = .init()
     lazy var previewButton: UIButton = .init()
+    var actionButtons: [UIButton] = []
+
+    lazy var languageLabel: BarTextLabel = .init()
+    lazy var textView: TextLabelView = .init()
     lazy var lineNumberView: LineNumberView = .init()
 
     override init(frame: CGRect) {
@@ -83,7 +109,7 @@ final class CodeView: UIView {
     }
 
     func interactionTarget(at point: CGPoint, event: UIEvent? = nil) -> UIView? {
-        for button in [previewButton, copyButton] where !button.isHidden {
+        for button in barButtons where !button.isHidden {
             let buttonPoint = button.convert(point, from: self)
             guard button.bounds.contains(buttonPoint) else { continue }
             return button.hitTest(buttonPoint, with: event) ?? button
@@ -139,11 +165,16 @@ final class CodeView: UIView {
     @objc func handleCopy(_: UIButton) {
         UIPasteboard.general.string = content
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+        showCopyFeedback()
     }
 
     @objc func handlePreview(_: UIButton) {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         previewAction?(language, textView.attributedText)
+    }
+
+    @objc func handleExpand(_: UIButton) {
+        CodeSheetPresenter.present(self)
     }
 
     func updateLineNumberView() {
@@ -154,11 +185,12 @@ final class CodeView: UIView {
         lineNumberView.configure(
             lineCount: cachedLineCount,
             contentHeight: textViewContentHeight,
+            lineSpacing: CodeViewConfiguration.codeLineSpacing,
             font: font,
             textColor: theme.colors.body.withAlphaComponent(0.5)
         )
 
-        lineNumberView.padding = UIEdgeInsets(
+        lineNumberView.padding = .init(
             top: CodeViewConfiguration.codePadding,
             left: CodeViewConfiguration.lineNumberPadding,
             bottom: CodeViewConfiguration.codePadding,

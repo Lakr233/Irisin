@@ -7,11 +7,20 @@ import Combine
 import CoreText
 import Litext
 import MarkdownParser
-import UIKit
 
 open class MarkdownTextView: UIView {
-    public var linkHandler: ((LinkPayload, NSRange, CGPoint) -> Void)?
-    public var codePreviewHandler: ((String?, NSAttributedString) -> Void)?
+    public var linkHandler: ((LinkPayload, NSRange, CGPoint) -> Void)? {
+        didSet { syncContextViewHandlers() }
+    }
+
+    public var codePreviewHandler: ((String?, NSAttributedString) -> Void)? {
+        didSet { syncContextViewHandlers() }
+    }
+
+    /// Adds the host's own buttons to code blocks; see `CodeBlockActionProvider`.
+    public weak var codeBlockActionProvider: CodeBlockActionProvider? {
+        didSet { syncContextViewHandlers() }
+    }
 
     public internal(set) var content: MarkdownContent = .init()
 
@@ -42,6 +51,9 @@ open class MarkdownTextView: UIView {
 
     var contextViews: [UIView] = []
     var blockquoteBars: [BlockquoteBarView] = []
+    /// Where each placed code or table view's attachment sits in the text,
+    /// so a selection can tell which of them it covers.
+    var contextViewLocations: [ObjectIdentifier: Int] = [:]
     /// What each block rendered to last time, so an unchanged block is not
     /// built again. Held per view because a fragment's drawing callbacks
     /// read from the view they were built for.
@@ -49,7 +61,7 @@ open class MarkdownTextView: UIView {
     var cancellables = Set<AnyCancellable>()
     let contentSubject = CurrentValueSubject<MarkdownContent, Never>(.init())
     public var throttleInterval: TimeInterval? = 1 / 20 { // x fps
-        didSet { setupCombine() }
+        didSet { resubscribeKeepingPendingContent() }
     }
 
     let viewProvider: ReusableViewProvider
@@ -57,17 +69,17 @@ open class MarkdownTextView: UIView {
     /// - Parameter textLabelView: the label that draws the document body.
     ///   Pass a `TextLabelView` subclass to change how body text is drawn
     ///   while code blocks, tables and selection keep working as before.
-    public init(textLabelView: TextLabelView = .init(), viewProvider: ReusableViewProvider = .init()) {
+    public init(textLabelView: TextLabelView = MarkdownTextLabelView(), viewProvider: ReusableViewProvider = .init()) {
         self.textLabelView = textLabelView
         self.viewProvider = viewProvider
         super.init(frame: .zero)
         textLabelView.isSelectable = true
-        textLabelView.backgroundColor = .clear
         textLabelView.selectionBackgroundColor = theme.colors.selectionBackground
         textLabelView.delegate = self
-        // The label is sized in `layoutSubviews()` rather than by constraints:
-        // its height decides how much text CoreText lays out, and a frame that
-        // trails the view by one pass drops the tail of the document.
+        textLabelView.backgroundColor = .clear
+        // The label is sized in layout rather than by constraints: its height
+        // decides how much text CoreText lays out, and a frame that trails
+        // the view by one pass drops the tail of the document.
         addSubview(textLabelView)
         setupCombine()
     }
@@ -81,6 +93,13 @@ open class MarkdownTextView: UIView {
         super.layoutSubviews()
         textLabelView.frame = bounds
         textLabelView.preferredMaxLayoutWidth = bounds.width
+        // The placement below reads the label's layout, so the label has
+        // to be laid out first. iOS 18 can clear the label's pending
+        // layout before this runs and lay it out only afterwards, which
+        // leaves `layoutIfNeeded()` with nothing to do and the label with
+        // no lines: every code block and table would be hidden, and stay
+        // hidden until the frame next changes.
+        textLabelView.setNeedsLayout()
         textLabelView.layoutIfNeeded()
         syncContextViewLayout()
     }

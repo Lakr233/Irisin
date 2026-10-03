@@ -4,45 +4,58 @@
 //
 
 import Litext
-import UIKit
 
 final class LineNumberView: UIView {
+    typealias EdgeInsets = UIEdgeInsets
+    private static var defaultTextColor: UIColor {
+        .secondaryLabel
+    }
+
     var lineCount: Int = 1 {
         didSet {
             guard oldValue != lineCount else { return }
-            setNeedsDisplay()
-            invalidateIntrinsicContentSize()
+            markNeedsDisplay()
+            invalidateSize()
         }
     }
 
     var font: UIFont = .monospacedSystemFont(ofSize: 12, weight: .regular) {
         didSet {
             guard oldValue != font else { return }
-            setNeedsDisplay()
-            invalidateIntrinsicContentSize()
+            markNeedsDisplay()
+            invalidateSize()
         }
     }
 
-    var textColor: UIColor = .secondaryLabel {
+    var textColor: UIColor = defaultTextColor {
         didSet {
             guard oldValue != textColor else { return }
-            setNeedsDisplay()
+            markNeedsDisplay()
         }
     }
 
-    var padding: UIEdgeInsets = .init(top: 8, left: 8, bottom: 8, right: 8) {
+    var padding: EdgeInsets = .init(top: 8, left: 8, bottom: 8, right: 8) {
         didSet {
             guard oldValue != padding else { return }
-            setNeedsDisplay()
-            invalidateIntrinsicContentSize()
+            markNeedsDisplay()
+            invalidateSize()
+        }
+    }
+
+    /// The space between two lines of the code, which the text engine adds
+    /// after every line but the last.
+    var lineSpacing: CGFloat = 0 {
+        didSet {
+            guard oldValue != lineSpacing else { return }
+            markNeedsDisplay()
         }
     }
 
     var contentHeight: CGFloat = 0 {
         didSet {
             guard oldValue != contentHeight else { return }
-            setNeedsDisplay()
-            invalidateIntrinsicContentSize()
+            markNeedsDisplay()
+            invalidateSize()
         }
     }
 
@@ -62,21 +75,58 @@ final class LineNumberView: UIView {
         contentMode = .redraw
     }
 
+    override func draw(_ rect: CGRect) {
+        drawLineNumbers(in: rect)
+    }
+
+    /// Measured once per change: layout asks for it several times a pass,
+    /// and every pass while a window resizes.
+    private var cachedIntrinsicSize: CGSize?
+
+    private func invalidateSize() {
+        cachedIntrinsicSize = nil
+        invalidateIntrinsicContentSize()
+    }
+
     override var intrinsicContentSize: CGSize {
+        if let cachedIntrinsicSize {
+            return cachedIntrinsicSize
+        }
         let maxLineNumber = max(lineCount, 1)
         let numberString = "\(maxLineNumber)"
         let textSize = numberString.size(withAttributes: [.font: font])
 
-        return CGSize(
+        let size = CGSize(
             width: textSize.width + padding.left + padding.right,
             height: max(contentHeight + padding.top + padding.bottom, textSize.height + padding.top + padding.bottom)
         )
+        cachedIntrinsicSize = size
+        return size
     }
 
-    override func draw(_ rect: CGRect) {
-        guard let context = UIGraphicsGetCurrentContext() else { return }
-        context.clear(rect)
+    /// How far apart the code's lines sit. Every line but the last is
+    /// followed by `lineSpacing`, so it is not the content height shared out
+    /// evenly, which would spread the spacing over every line and let the
+    /// numbers drift off their lines down the block.
+    private var linePitch: CGFloat {
+        guard lineCount > 0 else { return 0 }
+        return (contentHeight + lineSpacing) / CGFloat(lineCount)
+    }
 
+    /// The vertical centre of the code line `lineNumber` (from 1), which its
+    /// number is centred on.
+    func lineMidY(_ lineNumber: Int) -> CGFloat {
+        let pitch = linePitch
+        return padding.top + CGFloat(lineNumber - 1) * pitch + (pitch - lineSpacing) / 2
+    }
+
+    /// Draws the numbers of the lines that cross `rect`, and nothing else.
+    ///
+    /// The view is transparent and the system clears its own backing before
+    /// drawing, so it must not clear the context itself: drawn into a shared
+    /// context, as a snapshot, PDF or print is, a clear punches through the
+    /// code block's background and leaves the gutter black.
+    private func drawLineNumbers(in rect: CGRect) {
         guard lineCount > 0, contentHeight > 0 else { return }
 
         let textAttributes: [NSAttributedString.Key: Any] = [
@@ -84,14 +134,11 @@ final class LineNumberView: UIView {
             .foregroundColor: textColor,
         ]
 
-        let availableHeight = contentHeight
-        let lineSpacing = availableHeight / CGFloat(lineCount)
-        let startY = padding.top
+        let pitch = linePitch
+        guard pitch > 0 else { return }
 
-        guard lineSpacing > 0 else { return }
-
-        let firstLine = max(1, Int(floor((rect.minY - padding.top) / lineSpacing)))
-        let lastLine = min(lineCount, Int(ceil((rect.maxY - padding.top) / lineSpacing)) + 1)
+        let firstLine = max(1, Int(floor((rect.minY - padding.top) / pitch)))
+        let lastLine = min(lineCount, Int(ceil((rect.maxY - padding.top) / pitch)) + 1)
         guard firstLine <= lastLine else { return }
 
         let textHeight = "0".size(withAttributes: textAttributes).height
@@ -106,7 +153,7 @@ final class LineNumberView: UIView {
             }
 
             let x = bounds.width - padding.right - textWidth
-            let y = startY + CGFloat(lineNumber - 1) * lineSpacing + (lineSpacing - textHeight) / 2
+            let y = lineMidY(lineNumber) - textHeight / 2
 
             let textRect = CGRect(
                 x: x,
@@ -119,8 +166,15 @@ final class LineNumberView: UIView {
         }
     }
 
-    func configure(lineCount: Int, contentHeight: CGFloat, font: UIFont, textColor: UIColor) {
+    func configure(
+        lineCount: Int,
+        contentHeight: CGFloat,
+        lineSpacing: CGFloat,
+        font: UIFont,
+        textColor: UIColor
+    ) {
         self.lineCount = lineCount
+        self.lineSpacing = lineSpacing
         self.contentHeight = contentHeight
         self.font = font
         self.textColor = textColor

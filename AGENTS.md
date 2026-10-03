@@ -427,8 +427,9 @@ other locales are made from, so a Chinese value that drifts from the English
 drifts in every language after it. Everything the user reads is in one of
 these, all under `Irisin/Resources/`:
 
-- `Localizable.xcstrings` — everything the app says, plus the two labels
-  PackageDepiction's photo viewer asks for ("Share", "Close"): a package's
+- `Localizable.xcstrings` — everything the app says, plus the labels
+  PackageDepiction's photo viewer asks for ("Share", "Close") and those of
+  MarkdownView's code and table bars and sheets: a package's
   `String(localized:)` with no bundle resolves against the app's catalog.
 - `InfoPlist.xcstrings` — the bundle names (marked not to translate) and
   "Debian Package", the name of the `.deb` document type.

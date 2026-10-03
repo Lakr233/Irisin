@@ -46,15 +46,19 @@ extension TextBuilder {
         return .init(x: lineOrigin.x, y: lineOrigin.y - descent, width: width, height: ascent + descent)
     }
 
-    static func build(view: MarkdownTextView, viewProvider: ReusableViewProvider) -> BuildResult {
+    static func build(
+        view: MarkdownTextView,
+        viewProvider: ReusableViewProvider,
+        ownedContextViews: [UIView] = []
+    ) -> BuildResult {
         let context: MarkdownContent = view.content
         let theme: MarkdownTheme = view.theme
 
-        /// Color and font a drawn marker takes from the line it belongs to.
-        ///
-        /// The marker's own run leads the line, so its attributes are the ones a
-        /// marker has to match: the color the theme gave that item, and the font
-        /// whose cap height places the marker column.
+        // Color and font a drawn marker takes from the line it belongs to.
+        //
+        // The marker's own run leads the line, so its attributes are the ones a
+        // marker has to match: the color the theme gave that item, and the font
+        // whose cap height places the marker column.
         func markerStyle(of line: CTLine) -> (color: UIColor, font: UIFont) {
             var color = theme.colors.body
             var font = theme.fonts.body
@@ -71,7 +75,7 @@ extension TextBuilder {
             return (color, font)
         }
 
-        /// Draws a template symbol inside the marker column, scaled to fit it.
+        // Draws a template symbol inside the marker column, scaled to fit it.
         func drawSymbol(_ image: UIImage, in column: CGRect, color: UIColor, context: CGContext) {
             guard let cgImage = image.cgImage else { return }
             let targetRect = ListMarkerLayout.fit(imageSize: image.size, in: column)
@@ -83,6 +87,7 @@ extension TextBuilder {
         return TextBuilder(nodes: context.blocks, context: context, viewProvider: viewProvider)
             .withTheme(theme)
             .withFragmentCache(view.blockFragmentCache)
+            .withOwnedContextViews(ownedContextViews)
             .withInlineTextDecoration { [weak view] text in
                 guard let view else { return text }
                 return view.decorate(inlineText: text, theme: theme)
