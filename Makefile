@@ -143,6 +143,7 @@ check:
 	@command -v dpkg-deb >/dev/null || { echo "error: dpkg-deb is required" >&2; exit 69; }
 	@test -d "$(PROJECT)" || { echo "error: Irisin.xcodeproj is missing" >&2; exit 66; }
 	@"$(ROOT_DIR)/Scripts/check-gpu-entitlements.py" "$(ROOT_DIR)/Packaging/irisin.entitlements"
+	@"$(ROOT_DIR)/Scripts/check-launchd-paths.py" "$(LAUNCH_DAEMON)" --substituted-by "$(ROOT_DIR)/Scripts/package-deb.sh"
 	@test -f "$(WORKSPACE)/contents.xcworkspacedata" || { echo "error: Irisin.xcworkspace is missing" >&2; exit 66; }
 	@for package in "$(ROOT_DIR)"/Packages/*/Package.swift; do \
 		name="$$(basename "$$(dirname "$$package")")"; \
