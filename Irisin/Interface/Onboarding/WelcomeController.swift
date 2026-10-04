@@ -8,7 +8,7 @@
 //  page's button finishes.
 //
 
-@preconcurrency import AlertController
+import AlertController
 import SnapKit
 import Then
 import UIKit

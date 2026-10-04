@@ -3,9 +3,7 @@
 //  Irisin
 //
 
-// preconcurrency: the configuration is a plain static var upstream, only
-// ever touched on the main actor here
-@preconcurrency import AlertController
+import AlertController
 import AptRepository
 import SnapKit
 import Then

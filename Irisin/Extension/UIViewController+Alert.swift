@@ -3,9 +3,7 @@
 //  Irisin
 //
 
-// preconcurrency: the configuration is a plain static var upstream, only
-// ever touched on the main actor here
-@preconcurrency import AlertController
+import AlertController
 import UIKit
 
 /// Two shapes cover nearly every alert in the app: a notice you acknowledge and
@@ -99,7 +97,7 @@ extension UIViewController {
                 context.addAction(title: "Select Recommended", attribute: .accent) {
                     context.dispose { continuation.resume(returning: .recommended) }
                 }
-                context.addAction(title: anywayTitle) {
+                context.addAction(title: .init(anywayTitle)) {
                     context.dispose { continuation.resume(returning: .anyway) }
                 }
                 context.addAction(title: "Cancel") {

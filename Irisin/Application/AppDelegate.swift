@@ -6,9 +6,7 @@
 //  Copyright © 2020 Lakr Aream. All rights reserved.
 //
 
-// preconcurrency: the configuration is a plain static var upstream, written
-// here once before any alert exists
-@preconcurrency import AlertController
+import AlertController
 import AptRepository
 import Combine
 import Dog
