@@ -9,16 +9,16 @@ import Litext
 import MarkdownParser
 
 open class MarkdownTextView: UIView {
-    public var linkHandler: ((LinkPayload, NSRange, CGPoint) -> Void)? {
+    open var linkHandler: ((LinkPayload, NSRange, CGPoint) -> Void)? {
         didSet { syncContextViewHandlers() }
     }
 
-    public var codePreviewHandler: ((String?, NSAttributedString) -> Void)? {
+    open var codePreviewHandler: ((String?, NSAttributedString) -> Void)? {
         didSet { syncContextViewHandlers() }
     }
 
     /// Adds the host's own buttons to code blocks; see `CodeBlockActionProvider`.
-    public weak var codeBlockActionProvider: CodeBlockActionProvider? {
+    open weak var codeBlockActionProvider: CodeBlockActionProvider? {
         didSet { syncContextViewHandlers() }
     }
 
@@ -37,7 +37,7 @@ open class MarkdownTextView: UIView {
     }
 
     var themeStorage: MarkdownTheme = .default
-    public var theme: MarkdownTheme {
+    open var theme: MarkdownTheme {
         get { themeStorage }
         set {
             guard themeStorage != newValue else { return }
@@ -47,7 +47,7 @@ open class MarkdownTextView: UIView {
     }
 
     /// Scroll view used for auto-scrolling while the user drags a text selection.
-    public weak var trackedScrollView: UIScrollView?
+    open weak var trackedScrollView: UIScrollView?
 
     var contextViews: [UIView] = []
     var blockquoteBars: [BlockquoteBarView] = []
@@ -60,7 +60,7 @@ open class MarkdownTextView: UIView {
     var blockFragmentCache: BlockFragmentCache = .init()
     var cancellables = Set<AnyCancellable>()
     let contentSubject = CurrentValueSubject<MarkdownContent, Never>(.init())
-    public var throttleInterval: TimeInterval? = 1 / 20 { // x fps
+    open var throttleInterval: TimeInterval? = 1 / 20 { // x fps
         didSet { resubscribeKeepingPendingContent() }
     }
 
@@ -73,6 +73,9 @@ open class MarkdownTextView: UIView {
         self.textLabelView = textLabelView
         self.viewProvider = viewProvider
         super.init(frame: .zero)
+        if textLabelView.lineRenderer == nil {
+            textLabelView.lineRenderer = InlineCodeLineRenderer()
+        }
         textLabelView.isSelectable = true
         textLabelView.selectionBackgroundColor = theme.colors.selectionBackground
         textLabelView.delegate = self
@@ -143,7 +146,7 @@ open class MarkdownTextView: UIView {
 
     /// Rebuilds the document, dropping text decorated against state that
     /// has since moved on.
-    public func invalidateInlineDecoration() {
+    open func invalidateInlineDecoration() {
         assert(Thread.isMainThread)
         blockFragmentCache = .init()
         for case let tableView as TableView in contextViews {
@@ -191,7 +194,7 @@ open class MarkdownTextView: UIView {
     /// Parses and displays markdown text in one step.
     /// For streaming or off-main-thread parsing, build a ``MarkdownContent``
     /// yourself and use ``setContent(_:)``.
-    public func setMarkdown(_ markdown: String) {
+    open func setMarkdown(_ markdown: String) {
         setContentImmediately(.init(markdown: markdown, theme: theme))
     }
 
@@ -216,5 +219,41 @@ open class MarkdownTextView: UIView {
     @available(*, deprecated, renamed: "trackedScrollView")
     public func bindContentOffset(from scrollView: UIScrollView?) {
         trackedScrollView = scrollView
+    }
+
+    // MARK: - TextLabelViewDelegate
+
+    // Declared here rather than in the conformance's extension, where a
+    // subclass could not override them. Overrides must call `super`.
+
+    open func textLabelView(_ label: TextLabelView, didChangeSelection _: NSRange?) {
+        // Code and table views report their own labels here too; only the
+        // document's selection can run across them.
+        guard label === textLabelView else { return }
+        syncContextViewSelection()
+    }
+
+    open func textLabelView(_ label: TextLabelView, didDragSelectionAt location: CGPoint) {
+        guard let scrollView = trackedScrollView else { return }
+        autoScroll(scrollView, toFollowDragAt: location, in: label)
+    }
+
+    open func textLabelView(_: TextLabelView, didTapHighlightRegion highlightRegion: TextLabel.HighlightRegion, at location: CGPoint) {
+        let link = highlightRegion.attributes[NSAttributedString.Key.link]
+        let range = highlightRegion.stringRange
+        if let url = link as? URL {
+            linkHandler?(.url(url), range, location)
+        } else if let string = link as? String {
+            linkHandler?(.string(string), range, location)
+        }
+    }
+
+    /// Returns `nil`, the system's menu.
+    open func textLabelView(
+        _: TextLabelView,
+        editMenuForSelection _: NSRange,
+        suggestedActions _: [UIMenuElement]
+    ) -> UIMenu? {
+        nil
     }
 }

@@ -1,7 +1,7 @@
 # MarkdownView
 
 The markdown a depiction writes, drawn by `DepictionMarkdownView`. Vendored
-from [Lakr233/MarkdownView](https://github.com/Lakr233/MarkdownView) 4.6.7
+from [Lakr233/MarkdownView](https://github.com/Lakr233/MarkdownView) 4.7.0
 (`Sources/MarkdownView` and `Sources/MarkdownParser`; MIT, `LICENSE`) and cut
 down to what a depiction uses. Upstream draws math through SwiftMath, which
 brings fourteen OpenType math fonts (7 MB), and colours code with a lexer of

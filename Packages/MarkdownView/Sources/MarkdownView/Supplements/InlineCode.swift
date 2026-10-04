@@ -108,29 +108,36 @@ final class InlineCodeBackground: NSObject {
 
 /// A text label that draws inline code on its pill.
 ///
-/// The pill has to be drawn before the line's text: drawn afterwards it
-/// either covers the glyphs or, composited beneath them, stacks up again on
-/// every partial redraw. Labels showing markdown use this class; a plain
-/// `TextLabelView` shows inline code without its background.
+/// It draws through an ``InlineCodeLineRenderer``, which `MarkdownTextView`
+/// also gives any label it is handed without a renderer of its own, so a
+/// subclass is free to return a layout of its own from `makeTextLayout(_:)`.
 open class MarkdownTextLabelView: TextLabelView {
-    override open func makeTextLayout(_ attributedText: NSAttributedString) -> TextLabel.Layout {
-        InlineCodeLayout(attributedString: attributedText)
+    override public init(frame: CGRect) {
+        super.init(frame: frame)
+        lineRenderer = InlineCodeLineRenderer()
+    }
+
+    @available(*, unavailable)
+    public required init?(coder _: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
-private final class InlineCodeLayout: TextLabel.Layout {
-    private lazy var hasInlineCode: Bool = {
-        var found = false
-        attributedString.enumerateAttribute(
-            .inlineCodeBackground,
-            in: NSRange(location: 0, length: attributedString.length)
-        ) { value, _, stop in
-            guard value != nil else { return }
-            found = true
-            stop.pointee = true
-        }
-        return found
-    }()
+/// Draws each inline code span on its pill, behind the line's glyphs.
+///
+/// The pill has to be drawn before the line's text: drawn afterwards it
+/// either covers the glyphs or, composited beneath them, stacks up again on
+/// every partial redraw. As a renderer it is drawn by any layout a label
+/// builds, an animatable label's included, and an animator that draws a
+/// line through `LTXAnimatedLine.draw(in:)` fades the pill with the text.
+///
+/// Give each label its own instance: it keeps what it measured for the
+/// layout it last drew.
+open class InlineCodeLineRenderer: TextLabel.LineRenderer {
+    /// The layout the state below belongs to. Weak, because the layout holds
+    /// this renderer.
+    private weak var measuredLayout: TextLabel.Layout?
+    private var hasInlineCode = false
 
     /// The pills of each line drawn so far, kept with the line they were
     /// measured on. A resize redraws every line, and finding the spans means
@@ -145,14 +152,17 @@ private final class InlineCodeLayout: TextLabel.Layout {
         let maxX: CGFloat
     }
 
-    override func draw(line: CTLine, at index: Int, in context: CGContext) {
-        if hasInlineCode {
-            drawInlineCodeBackgrounds(of: line, at: index, in: context)
+    /// Fills the pill behind every inline code span on `line`, relative to
+    /// the context's text position.
+    ///
+    /// - Important: Performance-sensitive: runs for every visible line on
+    ///   every display pass. A document without inline code returns after
+    ///   one comparison.
+    override open func drawBackground(of line: CTLine, at index: Int, in context: CGContext, layout: TextLabel.Layout) {
+        if measuredLayout !== layout {
+            measure(layout)
         }
-        super.draw(line: line, at: index, in: context)
-    }
-
-    private func drawInlineCodeBackgrounds(of line: CTLine, at index: Int, in context: CGContext) {
+        guard hasInlineCode else { return }
         let pills: [Pill]
         if let cached = pillCache[index], cached.line === line {
             pills = cached.pills
@@ -180,6 +190,24 @@ private final class InlineCodeLayout: TextLabel.Layout {
             context.fillPath()
         }
         context.textPosition = origin
+    }
+
+    /// Starts over for a layout this renderer has not drawn: whether it holds
+    /// any inline code, and no pills yet.
+    private func measure(_ layout: TextLabel.Layout) {
+        measuredLayout = layout
+        pillCache.removeAll(keepingCapacity: true)
+        let string = layout.attributedString
+        var found = false
+        string.enumerateAttribute(
+            .inlineCodeBackground,
+            in: NSRange(location: 0, length: string.length)
+        ) { value, _, stop in
+            guard value != nil else { return }
+            found = true
+            stop.pointee = true
+        }
+        hasInlineCode = found
     }
 
     private static let backgroundKey = NSAttributedString.Key.inlineCodeBackground.rawValue as CFString
@@ -235,5 +263,24 @@ private final class InlineCodeLayout: TextLabel.Layout {
                 maxX: span.maxX + (hasTrailingSpacer ? 0 : InlineCode.wrappedEndInset)
             )
         }
+    }
+}
+
+/// The layout ``MarkdownTextLabelView`` used to return, which draws the
+/// pills itself.
+@available(*, deprecated, message: "Set an InlineCodeLineRenderer as the label's lineRenderer instead; it works with any layout.")
+open class MarkdownTextLayout: TextLabel.Layout {
+    private let pills = InlineCodeLineRenderer()
+
+    override open func draw(line: CTLine, at index: Int, in context: CGContext) {
+        drawInlineCodeBackgrounds(of: line, at: index, in: context)
+        super.draw(line: line, at: index, in: context)
+    }
+
+    /// Fills the pill behind every inline code span on `line`, unless the
+    /// label's renderer draws them already.
+    open func drawInlineCodeBackgrounds(of line: CTLine, at index: Int, in context: CGContext) {
+        guard !(lineRenderer is InlineCodeLineRenderer) else { return }
+        pills.drawBackground(of: line, at: index, in: context, layout: self)
     }
 }
