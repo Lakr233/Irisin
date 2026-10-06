@@ -376,7 +376,11 @@ end.
   and a repository written does not solve the queue or an open sheet
   again; the queue solves once when the last is written. An operation
   finishing is never held, and a refusal from the kept catalogue is solved
-  once more against the one there is. A plan so solved is checked, never
+  once more against the one there is. Update All never takes the kept
+  pool: which packages are updates is the catalogue's own answer, which
+  nothing checks later, so it reads the catalogue the Updates page lists
+  (an empty answer from a kept pool was "No changes" beside a list of
+  updates). A plan so solved is checked, never
   trusted:
   `PackageQueue.currency(of:)` is current when the installed packages and
   settings are as they were and every package it installs is still

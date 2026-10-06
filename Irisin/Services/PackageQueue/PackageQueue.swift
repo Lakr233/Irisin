@@ -394,7 +394,15 @@ final class PackageQueue {
 
     /// Every installed package with a newer version, as install requests,
     /// and a line for each one an update of everything leaves behind.
+    /// Which packages are updates is the catalogue's own answer, and nothing
+    /// holds it against the catalogue later: Confirm finds an update missing
+    /// from a kept catalogue no more than an empty answer offers Confirm at
+    /// all. So it is read as it is now, the one the Updates page lists, even
+    /// while the repositories refresh.
     func updateAllActions() async -> Result<(actions: [ResolutionAction], notices: [String]), ResolutionFailure> {
+        if Self.isRefreshing {
+            readPool(awaited: true)
+        }
         switch await solve(ResolutionRequest(updateAll: true)) {
         case let .success(plan):
             let installed = Set(plan.snapshot.installed.map(\.identity))
