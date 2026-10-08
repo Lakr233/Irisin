@@ -33,9 +33,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private static func prepareEnvironment() {
         // MARK: - Document
 
-        // Our home is whatever the LaunchServices record says. On roothide
-        // icli registers it inside the bootstrap, which need not have
-        // var/mobile, and mobile cannot make it there: the helper can.
+        // A fallback for a missing home, and only for that: a normal install
+        // has one and never gets here. Our home is whatever the
+        // LaunchServices record says; on roothide icli registers it inside
+        // the bootstrap, which need not have var/mobile, and mobile cannot
+        // make it there: the helper can.
         if !FileManager.default.fileExists(atPath: NSHomeDirectory()) {
             requestHomeFromDaemon()
         }
