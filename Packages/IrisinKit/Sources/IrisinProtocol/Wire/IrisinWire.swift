@@ -30,6 +30,13 @@ public enum IrisinWire {
     /// The run before it is kept beside it with `.previous` appended.
     public static let installerLogPath = "/var/log/irisin-install.log"
 
+    /// The app's own folder in mobile's `Documents`, named for its bundle id.
+    /// The app has no container, so its home is shared with every other app
+    /// without one; the bundle id keeps them out of each other's data, as a
+    /// sandbox's container would. The postinst and `prepareUserHome` make it,
+    /// and `Documents` above it, for mobile.
+    public static let appDataFolderName = "wiki.qaq.irisin"
+
     /// Hard ceiling on the encoded job in a `run` request.
     public static let maximumJobByteCount = 256 * 1024
 

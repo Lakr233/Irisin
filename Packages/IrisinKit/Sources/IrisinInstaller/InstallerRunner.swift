@@ -346,32 +346,54 @@ public final class InstallerRunner {
         }
     }
 
-    /// Makes `userHome` for mobile when it is missing; one that exists is
-    /// left as it is. A roothide bootstrap need not have `var/mobile`, the
+    /// Makes the app's data folder for mobile, and every level above it that
+    /// is missing: `userHome`, its `Documents`, and
+    /// `Documents/<IrisinWire.appDataFolderName>` — the same as the postinst
+    /// does at install. A roothide bootstrap need not have `var/mobile`, the
     /// jbroot's `var` belongs to root, and an app whose home is missing
     /// cannot make it or keep anything.
+    ///
+    /// Each level is made and handed to mobile on its own: one `mkdir -p` as
+    /// root leaves the levels above the last one root's, and mobile can then
+    /// make nothing beside it. A level that exists is left as it is, but for
+    /// a `Documents` that root owns — what the postinst of 4.3.4 through
+    /// 4.5.25 left on a bootstrap that had none — which goes back to mobile.
+    /// No level is followed through a symlink: mobile could have planted one
+    /// to have root hand it some other directory.
     private func prepareUserHome() -> Int32 {
         let home = userHome
-        var info = stat()
-        if stat(home, &info) == 0 {
-            guard info.st_mode & S_IFMT == S_IFDIR else {
-                emit(.failure(.installationStopped(detail: "\(home) is not a directory")))
-                return 1
-            }
-            emit(.notice("Home \(home) is there"))
-            return 0
-        }
-        emit(.phase(.applying))
+        let documents = home + "/Documents"
         let mobile = getpwnam("mobile")
         let uid = mobile?.pointee.pw_uid ?? 501
         let gid = mobile?.pointee.pw_gid ?? 501
-        // mode and owner set after mkdir: it applies the umask
-        guard mkdir(home, 0o755) == 0, chown(home, uid, gid) == 0, chmod(home, 0o755) == 0 else {
-            let reason = String(cString: strerror(errno))
-            emit(.failure(.installationStopped(detail: "Could not make \(home): \(reason)")))
-            return 1
+        var applying = false
+        for directory in [home, documents, documents + "/" + IrisinWire.appDataFolderName] {
+            var info = stat()
+            let exists = lstat(directory, &info) == 0
+            if exists, info.st_mode & S_IFMT != S_IFDIR {
+                emit(.failure(.installationStopped(detail: "\(directory) is not a directory")))
+                return 1
+            }
+            let handsBack = exists && directory == documents && info.st_uid == 0
+            guard !exists || handsBack else { continue }
+            if !applying {
+                emit(.phase(.applying))
+                applying = true
+            }
+            // mode and owner set after mkdir: it applies the umask
+            let made = (exists || mkdir(directory, 0o755) == 0)
+                && lchown(directory, uid, gid) == 0
+                && lchmod(directory, 0o755) == 0
+            guard made else {
+                let reason = String(cString: strerror(errno))
+                emit(.failure(.installationStopped(detail: "Could not make \(directory) for mobile: \(reason)")))
+                return 1
+            }
+            emit(.notice(exists ? "Gave \(directory) back to mobile" : "Made \(directory) for mobile"))
         }
-        emit(.notice("Made home \(home) for mobile"))
+        if !applying {
+            emit(.notice("Home \(home) is ready"))
+        }
         return 0
     }
 

@@ -50,14 +50,29 @@ end.
 - **The wire carries jobs, never commands.** `InstallerJob` is a closed enum:
   an ordered package transaction (prepared files and identities), rebuild the
   icon cache, respring, bootstrap or boot out Irisin's own daemon, reload
-  AirDrop, enter safe mode, make mobile's home. The daemon jobs carry no path
-  or label: the helper derives its own installed plist, and the home from the
-  layout (`<jbroot>/var/mobile` on roothide, where icli registers apps' HOME
-  and a bootstrap need not have it). The helper validates
+  AirDrop, enter safe mode, make the app's data folder. The daemon jobs carry
+  no path or label: the helper derives its own installed plist, and the home
+  from the layout (`<jbroot>/var/mobile` on roothide, where icli registers
+  apps' HOME and a bootstrap need not have it). The helper validates
   package inputs and composes script arguments itself from those fields.
   There is no `exec(path, argv)` and there will not be one: a root daemon
   that can be talked into running a command is a root shell for whoever can
   talk to it.
+- **The app's data lives in `~/Documents/wiki.qaq.irisin`, and the package
+  makes it.** An app without a container shares mobile's home with every
+  other one, so its data goes in a folder named for its bundle id — the
+  isolation a sandbox's container would give — inside a `Documents` mobile
+  owns, which a container would have had too. The postinst (dpkg, as root)
+  and irisind's `prepareUserHome` (which the app asks for when it cannot make
+  the folder) follow one rule: each missing level of home, `Documents` and the
+  folder is made and handed to mobile on its own, a level that exists is left
+  alone, and no level is followed through a symlink. Never `mkdir -p` as
+  root: 4.3.4 through 4.5.25 did, and on a bootstrap with no `Documents` it
+  left `Documents` root's, so every other app without a container could keep
+  nothing there (a roothide iPad's iGhostVT lost its log to it). Both hand a
+  root-owned `Documents` back to mobile. The vphone never showed it: vphoned
+  installs Irisin without dpkg, so the postinst never ran there. The siblings
+  and the platformize-app-ios template do the same in their postinst.
 - **The transcript is typed.** The helper writes one `InstallerEvent` per
   line (`InstallerOutput` frames it as JSON): phases, a progress count,
   package steps (verifying, removing, unpacking, configuring, triggering),

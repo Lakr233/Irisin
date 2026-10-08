@@ -4,12 +4,13 @@
 //
 
 import Foundation
+import IrisinProtocol
 
 /// Where this install keeps its state. Read from every thread, decided once.
 nonisolated let documentsDirectory: URL = FileManager
     .default
     .urls(for: .documentDirectory, in: .userDomainMask)[0]
-    .appendingPathComponent("wiki.qaq.irisin")
+    .appendingPathComponent(IrisinWire.appDataFolderName)
 
 /// Deletes what Irisin created for itself when "Reset on Next Launch" is on
 /// in the Settings app (`Settings.bundle`): `documentsDirectory` (the

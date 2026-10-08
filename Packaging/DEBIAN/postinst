@@ -3,14 +3,45 @@
 # roothide (whose dpkg relocates rootful paths into the randomized bootstrap
 # root) and /var/jb for rootless.
 
-# The app runs as mobile and keeps its state here. Some bootstraps leave
-# Documents owned by root, where mobile cannot make the directory itself and
-# the app stops at launch (issue 124). The path is the same on both flavors:
-# roothide's sh reads it inside the bootstrap, as the app does.
-data=/var/mobile/Documents/wiki.qaq.irisin
-mkdir -p "$data" && chown 501:501 "$data" || {
-    echo "warning: $data could not be prepared for Irisin." >&2
+# The app has no container, so its home is mobile's, shared with every other
+# app without one: inside the jbroot on roothide (whose sh reads /var/mobile
+# there, as the app does), the system's own on rootless. A sandbox would hand
+# it a Documents folder of its own; here the shared Documents is made for
+# mobile when missing, and the app keeps its data in a folder named for its
+# bundle id inside it, so no two such apps write into each other's. dpkg runs
+# this as root, so each missing level is made and handed to mobile on its
+# own: `mkdir -p` leaves every level above the last one root's, and mobile
+# can then make nothing beside it. A level that exists is left as it is, and
+# a symlink is never followed: mobile could plant one to have root hand it
+# some other directory. irisind's prepareUserHome does the same.
+app_data=/var/mobile/Documents/wiki.qaq.irisin
+mobile_dir() {
+    if [ -L "$1" ]; then
+        return 1
+    fi
+    if [ -d "$1" ]; then
+        return 0
+    fi
+    mkdir -m 0755 "$1" && chown -h 501:501 "$1"
 }
+for directory in /var/mobile /var/mobile/Documents "$app_data"; do
+    mobile_dir "$directory" || {
+        echo "warning: $directory could not be prepared for mobile." >&2
+        break
+    }
+done
+
+# 4.3.4 through 4.5.25 made the data folder with `mkdir -p` instead, and on a
+# bootstrap with no Documents that left Documents itself root's: every app
+# without a container then found it so and could keep nothing there. It goes
+# back to mobile, the owner a stock iOS gives it.
+documents=/var/mobile/Documents
+if [ ! -L "$documents" ] && [ -d "$documents" ] &&
+    [ "$(stat -c %u "$documents" 2>/dev/null)" = 0 ]; then
+    chown -h 501:501 "$documents" || {
+        echo "warning: $documents could not be given back to mobile." >&2
+    }
+fi
 
 helper=@PREFIX@/usr/libexec/irisin-install
 if [ -x "$helper" ]; then

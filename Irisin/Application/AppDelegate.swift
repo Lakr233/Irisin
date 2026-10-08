@@ -33,18 +33,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private static func prepareEnvironment() {
         // MARK: - Document
 
-        // A fallback for a missing home, and only for that: a normal install
-        // has one and never gets here. Our home is whatever the
-        // LaunchServices record says; on roothide icli registers it inside
-        // the bootstrap, which need not have var/mobile, and mobile cannot
-        // make it there: the helper can.
-        if !FileManager.default.fileExists(atPath: NSHomeDirectory()) {
-            requestHomeFromDaemon()
-        }
+        // The postinst makes the data folder at install, so a normal launch
+        // finds it. When it cannot be made here — a home that is missing
+        // (on roothide icli registers it inside the bootstrap, which need
+        // not have var/mobile), or a Documents that is root's — the helper
+        // makes the missing levels for mobile, as the postinst does, and the
+        // folder is tried once more.
         let reset = resetApplicationDataIfRequested()
         do {
-            let created = Result {
-                try FileManager.default.createDirectory(at: documentsDirectory, withIntermediateDirectories: true)
+            let make = {
+                Result {
+                    try FileManager.default.createDirectory(at: documentsDirectory, withIntermediateDirectories: true)
+                }
+            }
+            var created = make()
+            if case .failure = created {
+                requestHomeFromDaemon()
+                created = make()
             }
             var isDir = ObjCBool(false)
             let exists = FileManager.default.fileExists(atPath: documentsDirectory.path, isDirectory: &isDir)
@@ -129,7 +134,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     /// lives in the home, so the outcome goes to NSLog; a failure is left to
     /// the documents check after it.
     private static func requestHomeFromDaemon(timeout: TimeInterval = 15) {
-        NSLog("[Irisin] home %@ is missing, asking irisind to make it", NSHomeDirectory())
+        NSLog("[Irisin] %@ cannot be made, asking irisind to prepare it", documentsDirectory.path)
         let finished = DispatchSemaphore(value: 0)
         Task.detached {
             defer { finished.signal() }
