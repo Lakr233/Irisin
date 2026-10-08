@@ -33,6 +33,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private static func prepareEnvironment() {
         // MARK: - Document
 
+        // Our home is whatever the LaunchServices record says. On roothide
+        // icli registers it inside the bootstrap, which need not have
+        // var/mobile, and mobile cannot make it there: the helper can.
+        if !FileManager.default.fileExists(atPath: NSHomeDirectory()) {
+            requestHomeFromDaemon()
+        }
         let reset = resetApplicationDataIfRequested()
         do {
             let created = Result {
@@ -115,6 +121,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 Dog.shared.join("Env", "\(key): \(value)", level: .verbose)
             }
         #endif
+    }
+
+    /// Runs `prepareUserHome` and waits for it, `timeout` at most. The log
+    /// lives in the home, so the outcome goes to NSLog; a failure is left to
+    /// the documents check after it.
+    private static func requestHomeFromDaemon(timeout: TimeInterval = 15) {
+        NSLog("[Irisin] home %@ is missing, asking irisind to make it", NSHomeDirectory())
+        let finished = DispatchSemaphore(value: 0)
+        Task.detached {
+            defer { finished.signal() }
+            do {
+                let transcript = try await PrivilegedBackend.link.run(.prepareUserHome)
+                for await event in transcript.events {
+                    NSLog("[Irisin] %@", event.description)
+                }
+            } catch {
+                NSLog("[Irisin] could not ask irisind for a home: %@", String(describing: error))
+            }
+        }
+        if finished.wait(timeout: .now() + timeout) == .timedOut {
+            NSLog("[Irisin] irisind did not make a home within %.0f seconds", timeout)
+        }
     }
 
     func application(

@@ -27,6 +27,9 @@ public enum InstallerJob: Codable, Equatable, Sendable {
     /// SIGSEGV to SpringBoard, sent by the helper itself: the jailbreak's
     /// tweak-free safe mode.
     case enterSafeMode
+    /// Make mobile's home where this bootstrap's apps are registered with it,
+    /// when it is missing. The helper derives the path; none crosses the wire.
+    case prepareUserHome
 
     /// Every package of ours starts with this, on both bootstraps.
     public static let selfIdentityPrefix = "wiki.qaq.irisin"
@@ -40,6 +43,7 @@ public enum InstallerJob: Codable, Equatable, Sendable {
         case .bootoutIrisinDaemon: "bootoutIrisinDaemon"
         case .reloadAirDrop: "reloadAirDrop"
         case .enterSafeMode: "enterSafeMode"
+        case .prepareUserHome: "prepareUserHome"
         }
     }
 }

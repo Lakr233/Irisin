@@ -50,8 +50,10 @@ end.
 - **The wire carries jobs, never commands.** `InstallerJob` is a closed enum:
   an ordered package transaction (prepared files and identities), rebuild the
   icon cache, respring, bootstrap or boot out Irisin's own daemon, reload
-  AirDrop, enter safe mode. The daemon jobs carry no path or label: the helper
-  derives its own installed plist. The helper validates
+  AirDrop, enter safe mode, make mobile's home. The daemon jobs carry no path
+  or label: the helper derives its own installed plist, and the home from the
+  layout (`<jbroot>/var/mobile` on roothide, where icli registers apps' HOME
+  and a bootstrap need not have it). The helper validates
   package inputs and composes script arguments itself from those fields.
   There is no `exec(path, argv)` and there will not be one: a root daemon
   that can be talked into running a command is a root shell for whoever can

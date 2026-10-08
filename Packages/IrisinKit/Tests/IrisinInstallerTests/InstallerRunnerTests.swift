@@ -70,6 +70,50 @@ final class InstallerRunnerTests: XCTestCase {
         XCTAssertEqual(events.filter { $0 == .phase(.completed) }.count, 2)
     }
 
+    func testPrepareUserHomeMakesTheJbrootHomeForMobile() throws {
+        // giving it to mobile takes root
+        try XCTSkipUnless(getuid() == 0)
+        let root = try Scratch.installRoot()
+        try FileManager.default.createDirectory(atPath: root + "/var", withIntermediateDirectories: true)
+        var events: [InstallerEvent] = []
+        let layout = BootstrapLayout(kind: .roothide(jbroot: root))
+        let runner = InstallerRunner(installRoot: root, layout: layout, emit: { events.append($0) }) { _, _ in 0 }
+        XCTAssertEqual(runner.run(.prepareUserHome), 0)
+        var info = stat()
+        XCTAssertEqual(stat(root + "/var/mobile", &info), 0)
+        XCTAssertEqual(info.st_mode & S_IFMT, S_IFDIR)
+        XCTAssertEqual(info.st_mode & 0o777, 0o755)
+        XCTAssertEqual(info.st_uid, getpwnam("mobile")?.pointee.pw_uid ?? 501)
+        XCTAssertTrue(events.contains(.phase(.completed)))
+    }
+
+    func testPrepareUserHomeLeavesAnExistingHome() throws {
+        let root = try Scratch.installRoot()
+        try FileManager.default.createDirectory(atPath: root + "/var/mobile", withIntermediateDirectories: true)
+        chmod(root + "/var/mobile", 0o700)
+        var events: [InstallerEvent] = []
+        let layout = BootstrapLayout(kind: .roothide(jbroot: root))
+        let runner = InstallerRunner(installRoot: root, layout: layout, emit: { events.append($0) }) { _, _ in 0 }
+        XCTAssertEqual(runner.run(.prepareUserHome), 0)
+        var info = stat()
+        XCTAssertEqual(stat(root + "/var/mobile", &info), 0)
+        XCTAssertEqual(info.st_mode & 0o777, 0o700)
+        XCTAssertEqual(info.st_uid, getuid())
+        XCTAssertFalse(events.contains(.phase(.applying)))
+        XCTAssertTrue(events.contains(.phase(.completed)))
+    }
+
+    func testPrepareUserHomeRefusesAFileInItsPlace() throws {
+        let root = try Scratch.installRoot()
+        try FileManager.default.createDirectory(atPath: root + "/var", withIntermediateDirectories: true)
+        try Data().write(to: URL(fileURLWithPath: root + "/var/mobile"))
+        var events: [InstallerEvent] = []
+        let layout = BootstrapLayout(kind: .roothide(jbroot: root))
+        let runner = InstallerRunner(installRoot: root, layout: layout, emit: { events.append($0) }) { _, _ in 0 }
+        XCTAssertEqual(runner.run(.prepareUserHome), 1)
+        XCTAssertFalse(events.contains(.phase(.completed)))
+    }
+
     func testRespringUsesRegistrar() throws {
         let root = try Scratch.installRoot()
         let registrar = RegistrarStandIn()

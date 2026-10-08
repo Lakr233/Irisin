@@ -85,6 +85,8 @@ public final class InstallerRunner {
             // The jailbreak's tweak-free safe mode: SpringBoard crashing on
             // SIGSEGV is what its injection library watches for.
             signal("SpringBoard", SIGSEGV)
+        case .prepareUserHome:
+            prepareUserHome()
         }
         if status == 0 {
             emit(.phase(.completed))
@@ -331,6 +333,46 @@ public final class InstallerRunner {
             emit(.notice("Graceful respring unavailable (\(outcome.reason)); restarting backboardd"))
             return signal("backboardd", SIGTERM, announced: false)
         }
+    }
+
+    /// mobile's home as this bootstrap's apps are registered with it: inside
+    /// the jbroot on roothide, where icli sets HOME as roothide's uicache
+    /// does, and the system's own elsewhere.
+    private var userHome: String {
+        if case .roothide = layout.kind {
+            layout.resolve("/var/mobile")
+        } else {
+            "/var/mobile"
+        }
+    }
+
+    /// Makes `userHome` for mobile when it is missing; one that exists is
+    /// left as it is. A roothide bootstrap need not have `var/mobile`, the
+    /// jbroot's `var` belongs to root, and an app whose home is missing
+    /// cannot make it or keep anything.
+    private func prepareUserHome() -> Int32 {
+        let home = userHome
+        var info = stat()
+        if stat(home, &info) == 0 {
+            guard info.st_mode & S_IFMT == S_IFDIR else {
+                emit(.failure(.installationStopped(detail: "\(home) is not a directory")))
+                return 1
+            }
+            emit(.notice("Home \(home) is there"))
+            return 0
+        }
+        emit(.phase(.applying))
+        let mobile = getpwnam("mobile")
+        let uid = mobile?.pointee.pw_uid ?? 501
+        let gid = mobile?.pointee.pw_gid ?? 501
+        // mode and owner set after mkdir: it applies the umask
+        guard mkdir(home, 0o755) == 0, chown(home, uid, gid) == 0, chmod(home, 0o755) == 0 else {
+            let reason = String(cString: strerror(errno))
+            emit(.failure(.installationStopped(detail: "Could not make \(home): \(reason)")))
+            return 1
+        }
+        emit(.notice("Made home \(home) for mobile"))
+        return 0
     }
 
     /// `kill(2)` for every process by that name. 1 when there was none, the
