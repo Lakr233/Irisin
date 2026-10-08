@@ -14,7 +14,7 @@ let package = Package(
         .library(name: "MarkdownParser", targets: ["MarkdownParser"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Lakr233/Litext", from: "3.5.0"),
+        .package(url: "https://github.com/Lakr233/Litext", from: "3.6.3"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.7.1"),
         .package(url: "https://github.com/swiftlang/swift-cmark", from: "0.9.0"),
         .package(url: "https://github.com/nicklockwood/LRUCache", from: "1.3.0"),
