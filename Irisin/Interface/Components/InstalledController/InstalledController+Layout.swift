@@ -91,7 +91,11 @@ extension InstalledController {
             // list and grid alike: the date is measured from the page's edge
             // and starts where the rows do, whatever either kind of section
             // would make of its own insets
-            section.supplementaryContentInsetsReference = .none
+            if #available(iOS 16, *) {
+                section.supplementaryContentInsetsReference = .none
+            } else {
+                section.supplementariesFollowContentInsets = false
+            }
             header.contentInsets = NSDirectionalEdgeInsets(
                 top: 0,
                 leading: Self.horizontalInset,

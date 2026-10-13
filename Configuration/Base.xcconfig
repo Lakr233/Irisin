@@ -7,7 +7,7 @@
 // Whatever number is here is a promise the SDK will try to break for you: the
 // linker believes the SDK's availability metadata, and where that is wrong
 // the app dies in dyld before `main` on the old device. See AGENTS.md.
-IPHONEOS_DEPLOYMENT_TARGET = 16.0
+IPHONEOS_DEPLOYMENT_TARGET = 15.0
 MACOSX_DEPLOYMENT_TARGET = 13.0
 
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon

@@ -116,11 +116,11 @@ nonisolated enum SystemTranslator {
 
     /// The engine's pairs, once it has answered with some: the list is the
     /// system's and does not change while the app runs.
-    private static let knownPairs = OSAllocatedUnfairLock<[Pair]?>(initialState: nil)
+    private static let knownPairs = LockedState<[Pair]?>(initialState: nil)
 
     /// How long the engine gets to answer before it counts as a failure.
     /// translationd drops a client it rejects without calling anything back.
-    private static let patience: Duration = .seconds(20)
+    private static let patience: TimeInterval = 20
 
     private static let engine: (translator: NSObject.Type, request: NSObject.Type)? = {
         let paths = [
@@ -146,7 +146,7 @@ nonisolated enum SystemTranslator {
         _ start: (@escaping @Sendable (T?) -> Void) -> Void
     ) async -> T? {
         await withCheckedContinuation { (continuation: CheckedContinuation<T?, Never>) in
-            let answered = OSAllocatedUnfairLock(initialState: false)
+            let answered = LockedState(initialState: false)
             let finish: @Sendable (T?) -> Void = { value in
                 let first = answered.withLock { done in
                     defer { done = true }
@@ -156,7 +156,7 @@ nonisolated enum SystemTranslator {
                     continuation.resume(returning: value)
                 }
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(Int(patience.components.seconds))) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + patience) {
                 finish(nil)
             }
             start(finish)
@@ -178,8 +178,8 @@ nonisolated enum SystemTranslator {
         let pairs: [Pair]? = await answer { finish in
             let block: Block1 = { list in
                 finish((list as? [NSObject])?.compactMap { pair in
-                    guard let source = pair.value(forKey: "sourceLocale") as? Locale,
-                          let target = pair.value(forKey: "targetLocale") as? Locale
+                    guard let source = pair.valueIfAnswered(forKey: "sourceLocale") as? Locale,
+                          let target = pair.valueIfAnswered(forKey: "targetLocale") as? Locale
                     else {
                         return nil
                     }
@@ -201,11 +201,11 @@ nonisolated enum SystemTranslator {
         return await answer { finish in
             let block: Block1 = { result in
                 guard let result = result as? NSObject,
-                      result.value(forKey: "isConfident") as? Bool == true
+                      result.valueIfAnswered(forKey: "isConfident") as? Bool == true
                 else {
                     return finish(nil)
                 }
-                finish(result.value(forKey: "dominantLanguage") as? Locale)
+                finish(result.valueIfAnswered(forKey: "dominantLanguage") as? Locale)
             }
             _ = (engine.translator as AnyObject).perform(
                 selector,
@@ -228,6 +228,13 @@ nonisolated enum SystemTranslator {
         let initialize = unsafeBitCast(method_getImplementation(method), to: Initialize.self)
         guard let request = initialize(allocated, initializer, pair.source as NSLocale, pair.target as NSLocale)?
             .takeRetainedValue() as? NSObject
+        else {
+            throw Failure.unavailable
+        }
+
+        // a key the class does not have raises, and nothing catches it; the
+        // engine is the system's private one and may differ by release
+        guard ["setText:", "setForcedOfflineTranslation:"].allSatisfy({ request.responds(to: NSSelectorFromString($0)) })
         else {
             throw Failure.unavailable
         }
@@ -276,11 +283,26 @@ nonisolated enum SystemTranslator {
     /// 0 for different languages, 1 for the same language, 2 when the script
     /// agrees too (Simplified is not Traditional), 3 when the region does.
     private static func matches(_ one: Locale, _ other: Locale) -> Int {
+        guard #available(iOS 16, *) else {
+            let lhs = Locale.IdentifierParts(one.identifier)
+            let rhs = Locale.IdentifierParts(other.identifier)
+            guard let language = lhs.language, language == rhs.language else { return 0 }
+            guard lhs.script == rhs.script else { return 1 }
+            return lhs.region != nil && lhs.region == rhs.region ? 3 : 2
+        }
         let lhs = Locale.Language(identifier: one.identifier)
         let rhs = Locale.Language(identifier: other.identifier)
         guard let language = lhs.languageCode, language == rhs.languageCode else { return 0 }
         let scripts = [lhs, rhs].map { Locale.Language(identifier: $0.maximalIdentifier).script }
         guard scripts[0] == scripts[1] else { return 1 }
         return lhs.region != nil && lhs.region == rhs.region ? 3 : 2
+    }
+}
+
+private nonisolated extension NSObject {
+    /// `value(forKey:)` for a key the object has a getter for, nil for one it
+    /// does not, where KVC would raise `NSUnknownKeyException`.
+    func valueIfAnswered(forKey key: String) -> Any? {
+        responds(to: NSSelectorFromString(key)) ? value(forKey: key) : nil
     }
 }

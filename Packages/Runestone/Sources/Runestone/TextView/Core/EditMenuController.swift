@@ -11,16 +11,31 @@ protocol EditMenuControllerDelegate: AnyObject {
 final class EditMenuController: NSObject {
     weak var delegate: EditMenuControllerDelegate?
 
-    private var editMenuInteraction: UIEditMenuInteraction?
+    @available(iOS 16, *)
+    private var editMenuInteraction: UIEditMenuInteraction? {
+        _editMenuInteraction as? UIEditMenuInteraction
+    }
+
+    private var _editMenuInteraction: Any?
+    private weak var menuView: UIView?
 
     func setupEditMenu(in view: UIView) {
-        let editMenuInteraction = UIEditMenuInteraction(delegate: self)
-        self.editMenuInteraction = editMenuInteraction
-        view.addInteraction(editMenuInteraction)
+        menuView = view
+        if #available(iOS 16, *) {
+            let editMenuInteraction = UIEditMenuInteraction(delegate: self)
+            _editMenuInteraction = editMenuInteraction
+            view.addInteraction(editMenuInteraction)
+        } else {
+            setupMenuController()
+        }
     }
 
     func dismissEditMenu() {
-        editMenuInteraction?.dismissMenu()
+        if #available(iOS 16, *) {
+            editMenuInteraction?.dismissMenu()
+        } else if let menuView {
+            UIMenuController.shared.hideMenu(from: menuView)
+        }
     }
 
     func presentEditMenu(from view: UIView, forTextIn range: NSRange) {
@@ -28,10 +43,14 @@ final class EditMenuController: NSObject {
         let endCaretRect = caretRect(at: range.location + range.length)
         let menuWidth = min(endCaretRect.maxX - startCaretRect.minX, view.frame.width)
         let menuRect = CGRect(x: startCaretRect.minX, y: startCaretRect.minY, width: menuWidth, height: startCaretRect.height)
-        let point = CGPoint(x: menuRect.midX, y: menuRect.minY)
-        let configuration = UIEditMenuConfiguration(identifier: nil, sourcePoint: point)
-        configuration.preferredArrowDirection = .down
-        editMenuInteraction?.presentEditMenu(with: configuration)
+        if #available(iOS 16, *) {
+            let point = CGPoint(x: menuRect.midX, y: menuRect.minY)
+            let configuration = UIEditMenuConfiguration(identifier: nil, sourcePoint: point)
+            configuration.preferredArrowDirection = .down
+            editMenuInteraction?.presentEditMenu(with: configuration)
+        } else {
+            UIMenuController.shared.showMenu(from: view, rect: menuRect)
+        }
     }
 
     func editMenu(for textRange: UITextRange, suggestedActions: [UIMenuElement]) -> UIMenu? {
@@ -55,6 +74,15 @@ private extension EditMenuController {
         delegate?.editMenuController(self, caretRectAt: location) ?? .zero
     }
 
+    private func setupMenuController() {
+        // iOS 15 has no UIEditMenuInteraction; the shared menu controller
+        // offers Replace through the responder chain instead.
+        let selector = NSSelectorFromString("replaceTextInSelectedHighlightedRange")
+        UIMenuController.shared.menuItems = [
+            UIMenuItem(title: L10n.Menu.ItemTitle.replace, action: selector),
+        ]
+    }
+
     private func replaceActionIfAvailable(for range: NSRange) -> UIAction? {
         guard let highlightedRange = highlightedRange(for: range), canReplaceText(in: highlightedRange) else {
             return nil
@@ -67,6 +95,7 @@ private extension EditMenuController {
     }
 }
 
+@available(iOS 16, *)
 extension EditMenuController: UIEditMenuInteractionDelegate {
     func editMenuInteraction(
         _: UIEditMenuInteraction,

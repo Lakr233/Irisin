@@ -2,7 +2,7 @@
 
 ## Modern. Fast. Beautiful.
 
-Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 16 or later. It works with both rootless jailbreaks, such as Dopamine, and roothide.
+Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 15 or later. It works with both rootless jailbreaks, such as Dopamine, and roothide.
 
 ![Preview](Resources/main.jpeg)
 

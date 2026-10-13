@@ -104,12 +104,14 @@ nonisolated enum DepictionTranslation {
     }
 
     /// Block markers a line opens with: heading, list item, quote.
+    @available(iOS 16, *)
     private static var lineMarker: Regex<Substring> {
         #/^(?:\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?))+/#
     }
 
     /// What must come back exactly as written: code spans, a link's or an
     /// image's target, html tags and bare addresses.
+    @available(iOS 16, *)
     private static var heldBack: Regex<Substring> {
         #/`[^`]+`|!?\[|\]\([^)]*\)|\]|<[^>]+>|https?:\/\/\S+/#
     }
@@ -117,6 +119,7 @@ nonisolated enum DepictionTranslation {
     /// Emphasis around a run of text. An engine moves the markers apart from
     /// their words, where they stop being emphasis and print as asterisks,
     /// so a translated line gives its emphasis up.
+    @available(iOS 16, *)
     private static var emphasis: Regex<(Substring, Substring, Substring)> {
         #/(\*\*\*|\*\*|\*|__|~~)(\S(?:.*?\S)?)\1/#
     }
@@ -135,7 +138,7 @@ nonisolated enum DepictionTranslation {
             }
             guard fence == nil else { return line }
 
-            let marker = line.prefixMatch(of: lineMarker).map { String($0.output) } ?? ""
+            let marker = lineMarkerPrefix(of: line)
             let rewritten = rewrite(line: line, after: marker, transform)
             // a line the engine left alone is not said twice; a paragraph's
             // translation is a paragraph of its own, a list item's the next item
@@ -148,15 +151,64 @@ nonisolated enum DepictionTranslation {
         let body = String(line.dropFirst(marker.count))
         var rewritten = marker
         var cursor = body.startIndex
-        for match in body.matches(of: heldBack) {
-            rewritten += rewrite(plain: withoutEmphasis(body[cursor ..< match.range.lowerBound]), transform)
-            rewritten += body[match.range]
-            cursor = match.range.upperBound
+        for range in heldBackRanges(in: body) {
+            rewritten += rewrite(plain: withoutEmphasis(body[cursor ..< range.lowerBound]), transform)
+            rewritten += body[range]
+            cursor = range.upperBound
         }
         return rewritten + rewrite(plain: withoutEmphasis(body[cursor...]), transform)
     }
 
     private static func withoutEmphasis(_ text: Substring) -> String {
-        String(text.replacing(emphasis) { $0.output.2 })
+        if #available(iOS 16, *) {
+            return String(text.replacing(emphasis) { $0.output.2 })
+        }
+        return Legacy.withoutEmphasis(String(text))
+    }
+
+    private static func lineMarkerPrefix(of line: String) -> String {
+        if #available(iOS 16, *) {
+            return line.prefixMatch(of: lineMarker).map { String($0.output) } ?? ""
+        }
+        return Legacy.lineMarkerPrefix(of: line)
+    }
+
+    private static func heldBackRanges(in body: String) -> [Range<String.Index>] {
+        if #available(iOS 16, *) {
+            return body.matches(of: heldBack).map(\.range)
+        }
+        return Legacy.heldBackRanges(in: body)
+    }
+
+    /// The three patterns above through NSRegularExpression, for iOS 15,
+    /// which has no Swift Regex. Same patterns, same answers:
+    /// `DepictionTranslationLegacyTests` holds the two to each other.
+    enum Legacy {
+        private static let lineMarker = expression(#"^(?:\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?))+"#)
+        private static let heldBack = expression(#"`[^`]+`|!?\[|\]\([^)]*\)|\]|<[^>]+>|https?://\S+"#)
+        private static let emphasis = expression(#"(\*\*\*|\*\*|\*|__|~~)(\S(?:.*?\S)?)\1"#)
+
+        private static func expression(_ pattern: String) -> NSRegularExpression {
+            // literals, checked by the tests
+            try! NSRegularExpression(pattern: pattern)
+        }
+
+        static func lineMarkerPrefix(of line: String) -> String {
+            let whole = NSRange(line.startIndex..., in: line)
+            guard let match = lineMarker.firstMatch(in: line, options: .anchored, range: whole),
+                  let range = Range(match.range, in: line)
+            else { return "" }
+            return String(line[range])
+        }
+
+        static func heldBackRanges(in body: String) -> [Range<String.Index>] {
+            let whole = NSRange(body.startIndex..., in: body)
+            return heldBack.matches(in: body, range: whole).compactMap { Range($0.range, in: body) }
+        }
+
+        static func withoutEmphasis(_ text: String) -> String {
+            let whole = NSRange(text.startIndex..., in: text)
+            return emphasis.stringByReplacingMatches(in: text, range: whole, withTemplate: "$2")
+        }
     }
 }

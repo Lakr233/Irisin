@@ -70,7 +70,11 @@ enum ShareSheet {
             ? (item.rightBarButtonItems ?? []) + (item.leftBarButtonItems ?? [])
             : []
         let anchorItems = pageItems.filter { $0 === anchor?.barButtonItem }
-        if let item = (anchorItems + pageItems).first(where: { !$0.isHidden }) {
+        // below iOS 16 a bar button is hidden by leaving the bar, so every
+        // one still there is shown
+        if let item = (anchorItems + pageItems).first(where: { item in
+            if #available(iOS 16, *) { !item.isHidden } else { true }
+        }) {
             return .barButtonItem(item)
         }
         // A presenter with no view yet is never presented over

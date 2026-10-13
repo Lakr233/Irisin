@@ -21,7 +21,7 @@ enum AutomaticRefresh {
         guard loop == nil else { return }
         loop = Task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(60))
+                try? await Task.sleep(continuousSeconds: 60)
                 check()
             }
         }

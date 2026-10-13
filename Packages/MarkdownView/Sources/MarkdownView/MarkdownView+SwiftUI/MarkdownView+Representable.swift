@@ -20,6 +20,7 @@ struct MarkdownViewRepresentable: UIViewRepresentable, MarkdownViewRepresentable
         updateMarkdownTextView(uiView, coordinator: context.coordinator)
     }
 
+    @available(iOS 16, macOS 13, *)
     func sizeThatFits(
         _ proposal: ProposedViewSize,
         uiView: MarkdownTextView,

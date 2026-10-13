@@ -103,7 +103,7 @@ class UpdateController: UIViewController, UITableViewDelegate {
 
     /// Waits for the first list, up to `budget`, so the page is pushed with
     /// its rows in place; a slower list animates in after the push.
-    func prepare(within budget: Duration) async {
+    func prepare(within budget: TimeInterval) async {
         loadViewIfNeeded()
         await reloadTask?.wait(upTo: budget)
     }
@@ -112,7 +112,7 @@ class UpdateController: UIViewController, UITableViewDelegate {
     static func show(from host: UIViewController?) {
         let page = UpdateController()
         Task {
-            await page.prepare(within: .milliseconds(200))
+            await page.prepare(within: 0.2)
             host?.present(next: page)
         }
     }

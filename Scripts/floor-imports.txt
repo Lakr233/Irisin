@@ -1,0 +1,250 @@
+# Strong imports the iOS 15.0 floor allows although no SDK header declares them.
+# Scripts/check-floor-imports.py reads this for the app, irisind and
+# irisin-install. Everything down to the Irisin section is icli's own list
+# (scripts/floor-imports.txt there), since irisin-install links IcliKit.
+#
+# The linker resolves every symbol against the newest SDK's .tbd files, which
+# export what later systems added, and dyld refuses a binary at launch when a
+# strong import is missing from the running OS: xpc_user_sessions_get_foreground_uid
+# (iOS 16) shipped that way and stopped Xrash on iOS 15.8.6. SDK-declared APIs
+# are covered by building at the 15.0 triple, which weak-links anything newer;
+# a private symbol has no availability, so it is listed here only once it is
+# known to be exported by iOS 15.0. Anything later is resolved with dlsym.
+
+# Emitted by the compiler: Objective-C ARC and runtime entry points, all in
+# libobjc by iOS 14, and C/C++ runtime support.
+objc_alloc
+objc_alloc_init
+objc_allocWithZone
+objc_autorelease
+objc_autoreleasePoolPop
+objc_autoreleasePoolPush
+objc_autoreleaseReturnValue
+objc_opt_class
+objc_opt_isKindOfClass
+objc_opt_new
+objc_opt_respondsToSelector
+objc_opt_self
+objc_release
+objc_retain
+objc_retainAutorelease
+objc_retainAutoreleasedReturnValue
+objc_retainAutoreleaseReturnValue
+objc_retainBlock
+objc_storeStrong
+objc_unsafeClaimAutoreleasedReturnValue
+_objc_empty_cache
+__objc_personality_v0
+OBJC_EHTYPE_$_NSException
+NSConstantArray
+NSConstantDictionary
+NSConstantDoubleNumber
+NSConstantIntegerNumber
+__CFConstantStringClassReference
+__kCFBooleanFalse
+__kCFBooleanTrue
+__NSArray0__struct
+__NSDictionary0__struct
+__chkstk_darwin
+__memcpy_chk
+__stack_chk_fail
+__stack_chk_guard
+__strcat_chk
+__strlcpy_chk
+_Znwm
+_ZdlPv
+realpath$DARWIN_EXTSN
+
+# Private libSystem: syscall wrappers and libproc, present since iOS 5 or earlier.
+# (reboot3 is newer and weak-imported, so it is not listed.)
+csops
+memorystatus_control
+proc_name
+proc_pidpath
+# Private libxpc: launchctl's bootstrap pipe. _xpc_pipe_interface_routine is the
+# iOS 15.0 / macOS 12 entry point Procursus launchctl gates at exactly 15.0.
+_os_alloc_once_table
+_xpc_pipe_interface_routine
+xpc_strerror
+# Private UIKit, exported since iOS 4.
+_UICreateScreenUIImage
+
+# The Swift runtime's C entry points, which the compiler emits by name and does
+# not weak-link from availability: all in the libswiftCore iOS 12.2 began
+# shipping and the libswift_Concurrency iOS 15.0 added. A new one fails here
+# until someone checks it predates 15.0 (Xcode 27's swift_initBorrow is iOS 27).
+_swift_stdlib_operatingSystemVersion
+_swift_stdlib_strtod_clocale
+_swift_stdlib_strtof_clocale
+_swiftEmptyArrayStorage
+_swiftEmptyDictionarySingleton
+_swiftEmptySetSingleton
+swift_allocateGenericClassMetadata
+swift_allocateGenericValueMetadata
+swift_allocBox
+swift_allocError
+swift_allocObject
+swift_arrayDestroy
+swift_arrayInitWithCopy
+swift_arrayInitWithTakeBackToFront
+swift_arrayInitWithTakeFrontToBack
+swift_beginAccess
+swift_bridgeObjectRelease
+swift_bridgeObjectRelease_n
+swift_bridgeObjectRetain
+swift_bridgeObjectRetain_n
+swift_checkMetadataState
+swift_conformsToProtocol
+swift_deallocClassInstance
+swift_deallocObject
+swift_deletedMethodError
+swift_dynamicCast
+swift_dynamicCastClass
+swift_dynamicCastMetatype
+swift_dynamicCastObjCClass
+swift_dynamicCastObjCClassUnconditional
+swift_dynamicCastUnknownClassUnconditional
+swift_endAccess
+swift_errorInMain
+swift_errorRelease
+swift_errorRetain
+swift_getAssociatedConformanceWitness
+swift_getAssociatedTypeWitness
+swift_getAtKeyPath
+swift_getDynamicType
+swift_getEnumCaseMultiPayload
+swift_getErrorValue
+swift_getExistentialTypeMetadata
+swift_getForeignTypeMetadata
+swift_getFunctionTypeMetadata1
+swift_getFunctionTypeMetadata3
+swift_getGenericMetadata
+swift_getInitializedObjCClass
+swift_getKeyPath
+swift_getMetatypeMetadata
+swift_getObjCClassFromMetadata
+swift_getObjCClassMetadata
+swift_getObjectType
+swift_getSingletonMetadata
+swift_getTupleTypeMetadata2
+swift_getTypeByMangledNameInContext
+swift_getTypeByMangledNameInContextInMetadataState
+swift_getWitnessTable
+swift_initClassMetadata2
+swift_initEnumMetadataMultiPayload
+swift_initStackObject
+swift_initStaticObject
+swift_initStructMetadata
+swift_isEscapingClosureAtFileLocation
+swift_isUniquelyReferenced_nonNull_native
+swift_isUniquelyReferencedNonObjC_nonNull_bridgeObject
+swift_makeBoxUnique
+swift_once
+swift_release
+swift_release_n
+swift_retain
+swift_retain_n
+swift_setDeallocating
+swift_slowAlloc
+swift_slowDealloc
+swift_storeEnumTagMultiPayload
+swift_task_alloc
+swift_task_dealloc
+swift_task_switch
+swift_unknownObjectRelease
+swift_unknownObjectRelease_n
+swift_unknownObjectRetain
+swift_unknownObjectRetain_n
+swift_weakAssign
+swift_weakDestroy
+swift_weakInit
+swift_willThrow
+
+# Irisin, the app and its frameworks (WCDBSwift and the back-deployed
+# libswiftCompatibilitySpan among them) and the daemon.
+#
+# The C++ ABI, fortified libc and libobjc's weak references, properties and
+# autorelease pool, all in iOS 6 or earlier; dyld_stub_binder is classic dyld's.
+__dynamic_cast
+__gxx_personality_v0
+__memset_chk
+__strlcat_chk
+_objc_autoreleasePoolPop
+_objc_autoreleasePoolPush
+dyld_stub_binder
+objc_copyWeak
+objc_destroyWeak
+objc_getProperty
+objc_initWeak
+objc_loadWeakRetained
+objc_msgSendSuper2
+objc_setProperty_atomic
+objc_setProperty_atomic_copy
+objc_setProperty_nonatomic_copy
+# Declared through OS_OBJECT_DECL, which spells no class name: libdispatch's
+# queue class, iOS 6.
+OS_dispatch_queue
+# CoreFoundation's empty NSArray singleton, which Xcode 26's toolchain refers
+# to by name where Xcode 27's spells __NSArray0__struct. dlsym finds it on
+# iOS 15.8.6 (iPhone8,4).
+__NSArray0__
+# Private libproc and libxpc, long before iOS 15: the helper's process table,
+# and the audit token the daemon authenticates its peer by. The daemon's
+# entitlement lookup (xpc_copy_entitlement_for_token) is resolved with dlsym.
+proc_listpids
+xpc_connection_get_audit_token
+# More of the Swift runtime's C entry points. Each is defined in the
+# swift-5.5-RELEASE sources (stdlib/public, include/swift/Runtime), the
+# runtime iOS 15.0 shipped.
+_swift_stdlib_reportUnimplementedInitializer
+swift_asyncLet_begin
+swift_asyncLet_finish
+swift_asyncLet_get
+swift_continuation_await
+swift_continuation_init
+swift_deallocPartialClassInstance
+swift_demangle
+swift_dynamicCastClassUnconditional
+swift_dynamicCastObjCProtocolConditional
+swift_dynamicCastUnknownClass
+swift_getEnumTagSinglePayloadGeneric
+swift_getOpaqueTypeConformance
+swift_getTupleTypeLayout2
+swift_getTupleTypeMetadata
+swift_getTupleTypeMetadata3
+swift_initEnumMetadataSingleCase
+swift_initEnumMetadataSinglePayload
+swift_isaMask
+swift_isUniquelyReferenced_native
+swift_lookUpClassMethod
+swift_projectBox
+swift_readAtKeyPath
+swift_setAtReferenceWritableKeyPath
+swift_stdlib_random
+swift_storeEnumTagSinglePayloadGeneric
+swift_task_addCancellationHandler
+swift_task_create
+swift_task_future_wait_throwing
+swift_task_getMainExecutor
+swift_task_isCurrentExecutor
+swift_task_removeCancellationHandler
+swift_task_reportUnexpectedExecutor
+swift_taskGroup_destroy
+swift_taskGroup_initialize
+swift_unexpectedError
+swift_unknownObjectUnownedDestroy
+swift_unknownObjectUnownedInit
+swift_unknownObjectUnownedLoadStrong
+swift_unknownObjectWeakAssign
+swift_unknownObjectWeakCopyAssign
+swift_unknownObjectWeakCopyInit
+swift_unknownObjectWeakDestroy
+swift_unknownObjectWeakInit
+swift_unknownObjectWeakLoadStrong
+swift_unknownObjectWeakTakeAssign
+swift_unknownObjectWeakTakeInit
+swift_unownedRelease
+swift_unownedRetain
+swift_unownedRetainStrong
+swift_updateClassMetadata2
+swift_weakLoadStrong

@@ -78,7 +78,7 @@ final class QueuePackageCell: UITableViewCell {
         clipsToBounds = true
         // a state update would put the opaque colour back over the fill
         automaticallyUpdatesBackgroundConfiguration = false
-        var background = defaultBackgroundConfiguration()
+        var background = standardBackground()
         ground.backgroundColor = background.resolvedBackgroundColor(for: tintColor)
         ground.addSubview(progressFill)
         background.backgroundColor = .clear
@@ -117,8 +117,23 @@ final class QueuePackageCell: UITableViewCell {
         super.setHighlighted(highlighted, animated: animated)
         var state = configurationState
         state.isHighlighted = highlighted
-        let color = defaultBackgroundConfiguration().updated(for: state).resolvedBackgroundColor(for: tintColor)
+        let color = standardBackground().updated(for: state).resolvedBackgroundColor(for: tintColor)
         UIView.animate(withDuration: animated ? 0.2 : 0) { self.ground.backgroundColor = color }
+    }
+
+    /// The cell's stock background. iOS 15 has no
+    /// `defaultBackgroundConfiguration()`; there it is the grouped list
+    /// cell's, which the queue's inset grouped table uses, on the card
+    /// colour: a configuration with no colour resolves to the tint.
+    private func standardBackground() -> UIBackgroundConfiguration {
+        if #available(iOS 16, *) {
+            return defaultBackgroundConfiguration()
+        }
+        var background = UIBackgroundConfiguration.listGroupedCell()
+        if background.backgroundColor == nil {
+            background.backgroundColor = .cardBackground
+        }
+        return background
     }
 
     override func layoutSubviews() {

@@ -59,6 +59,7 @@ final class MarkdownViewCoordinator {
         pendingTheme = nil
     }
 
+    @available(iOS 16, macOS 13, *)
     func sizeThatFits(_ proposal: ProposedViewSize, for view: MarkdownTextView) -> CGSize? {
         // A zero-width proposal asks for the minimum width. Text can wrap to
         // any width, so answer with zero — reporting the current layout width

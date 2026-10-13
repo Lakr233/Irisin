@@ -91,7 +91,7 @@ final class DownloadArchiveController: UIViewController {
         // publisher on the statuses if the tick ever shows
         while downloads.isDownloading(url) {
             show(downloads.status(for: url))
-            try? await Task.sleep(for: .milliseconds(250))
+            try? await Task.sleep(continuousSeconds: 0.25)
             guard !Task.isCancelled else { return }
         }
         let status = downloads.status(for: url)

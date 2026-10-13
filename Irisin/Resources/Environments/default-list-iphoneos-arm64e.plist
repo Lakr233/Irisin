@@ -14,12 +14,20 @@
 		<string>https://roothide.github.io</string>
 	</dict>
 	<!--
-	  roothide's own Procursus build: 1800 is iOS 15, below the app's floor,
-	  and iOS 17 and later use 1900 too.
+	  roothide's own Procursus build: 1800 is iOS 15, and iOS 16 and later
+	  use 1900.
 	-->
 	<dict>
 		<key>source</key>
+		<string>deb https://roothide.github.io/procursus iphoneos-arm64e/1800 main</string>
+		<key>maximumSystemVersion</key>
+		<integer>15</integer>
+	</dict>
+	<dict>
+		<key>source</key>
 		<string>deb https://roothide.github.io/procursus iphoneos-arm64e/1900 main</string>
+		<key>minimumSystemVersion</key>
+		<integer>16</integer>
 	</dict>
 	<dict>
 		<key>source</key>

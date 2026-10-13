@@ -67,7 +67,9 @@ struct ShareSheetAnchorTests {
             let navigation = stage.page.navigationItem
             let items = (navigation.rightBarButtonItems ?? []) + (navigation.leftBarButtonItems ?? [])
             #expect(items.contains { $0 === item })
-            #expect(!item.isHidden)
+            if #available(iOS 16, *) {
+                #expect(!item.isHidden)
+            }
             #expect(stage.navigator.topViewController === stage.page)
             #expect(stage.navigator.navigationBar.window === stage.window)
             #expect(!stage.navigator.isNavigationBarHidden)
@@ -208,7 +210,9 @@ struct ShareSheetAnchorTests {
     @Test func aBarButtonOfAnotherPageIsNotPointedAt() async throws {
         try await withStage { stage in
             let stranger = UIBarButtonItem(systemItem: .action)
-            #expect(!stranger.isHidden)
+            if #available(iOS 16, *) {
+                #expect(!stranger.isHidden)
+            }
             try expectCentred(pointedPopover(for: PopoverAnchor(stranger), over: stage.page), on: stage)
 
             let pageItem = UIBarButtonItem(systemItem: .done)
@@ -258,6 +262,8 @@ struct ShareSheetAnchorTests {
         }
     }
 
+    // a bar button hides itself from iOS 16; below it, it leaves the bar
+    @available(iOS 16, *)
     @Test func aHiddenBarButtonGivesWayToOneThatShows() async throws {
         try await withStage { stage in
             let hidden = UIBarButtonItem(systemItem: .action)
@@ -271,6 +277,8 @@ struct ShareSheetAnchorTests {
         }
     }
 
+    // a bar button hides itself from iOS 16; below it, it leaves the bar
+    @available(iOS 16, *)
     @Test func aHiddenBarButtonAloneGivesWayToTheMiddleOfThePage() async throws {
         try await withStage { stage in
             let hidden = UIBarButtonItem(systemItem: .action)
@@ -383,6 +391,8 @@ struct ShareSheetAnchorTests {
 
     /// Through the function the app calls, on either device. The iPhone's
     /// sheet is no popover, so the decision is asked for there as well.
+    // a bar button hides itself from iOS 16; below it, it leaves the bar
+    @available(iOS 16, *)
     @Test func theSheetAlwaysLeavesPointed() async throws {
         try await withStage { stage in
             let hidden = UIBarButtonItem(systemItem: .action)
@@ -447,7 +457,7 @@ struct ShareSheetAnchorTests {
             stage.page.present(modal, animated: false)
             // on screen a turn of the run loop later, animated or not
             for _ in 0 ..< 50 where shown.viewIfLoaded?.window == nil {
-                try await Task.sleep(for: .milliseconds(20))
+                try await Task.sleep(nanoseconds: 20_000_000)
             }
 
             #expect(ShareSheet.presentableController(for: stage.page) === shown)
@@ -455,7 +465,7 @@ struct ShareSheetAnchorTests {
 
             ShareSheet.present(["text"], anchor: PopoverAnchor(button(on: stage)), from: stage.page)
             for _ in 0 ..< 50 where shown.presentedViewController == nil {
-                try await Task.sleep(for: .milliseconds(20))
+                try await Task.sleep(nanoseconds: 20_000_000)
             }
             #expect(stage.page.presentedViewController === modal)
             let sheet = try #require(shown.presentedViewController as? UIActivityViewController)

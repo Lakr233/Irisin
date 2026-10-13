@@ -21,9 +21,9 @@ tables alone were 5 MB of the app's binary.
   `TreeSitterParser`, `TreeSitterQuery`, `TreeSitterQueryCursor` and
   `TreeSitterTree` hold typed pointers instead of `OpaquePointer` to match.
   The xcframework's `Script/assemble.py` makes the same change.
-- `EditMenuController` keeps only its `UIEditMenuInteraction` path, and
-  `TextView` dismisses that menu instead of `UIMenuController`'s: the
-  pre-iOS 16 path is dead code at this package's floor and warns.
+- `TextView` dismisses the edit menu through `EditMenuController`, which
+  keeps upstream's two paths: `UIEditMenuInteraction` on iOS 16 and later,
+  `UIMenuController` below it.
 - The themes read their colours from code instead of asset catalogs, and
   `HighlightName` no longer prints the names it does not know.
 

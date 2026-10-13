@@ -107,7 +107,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// show: its report is the sheet, and closing the report closes it.
     static func show(_ request: Request, from host: UIViewController) async {
         let controller = QueueChangeController(request: request)
-        await controller.prepare(within: .milliseconds(200))
+        await controller.prepare(within: 0.2)
         let root = controller.failure.map {
             report(of: $0, alone: true, recoveryPackage: controller.recoveryPackage, recoveryRemoval: controller.recoveryRemoval)
         } ?? controller
@@ -170,7 +170,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         fatalError()
     }
 
-    private func prepare(within budget: Duration) async {
+    private func prepare(within budget: TimeInterval) async {
         await work?.wait(upTo: budget)
     }
 

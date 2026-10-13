@@ -73,7 +73,10 @@ class WelcomeController: UIViewController {
             detail: "Install an older version if a repository still offers it."
         ),
         .init(
-            symbol: "questionmark.bubble",
+            // iOS 16's symbol; iOS 15 draws nothing for it
+            symbol: {
+                if #available(iOS 16, *) { "questionmark.bubble" } else { "text.bubble" }
+            }(),
             title: "Troubleshoot",
             detail: "When an install fails, see what happened and what to try next."
         ),

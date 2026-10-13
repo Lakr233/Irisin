@@ -1,6 +1,6 @@
 # Irisin — Agent Notes
 
-APT package manager for jailbroken iOS 16+, roothide and rootless bootstraps
+APT package manager for jailbroken iOS 15+, roothide and rootless bootstraps
 both. **iOS only.** The app runs as `mobile` and never becomes root; the
 bundled `irisind` LaunchDaemon starts `irisin-install`, which installs
 package files natively and, as root, tells LaunchServices about app bundles
@@ -434,8 +434,11 @@ end.
   Runestone keeps the bash and JSON grammars alone, and MarkdownView is
   UIKit only, with no math and no code highlighting. A grammar or a feature
   put back is paid for in the app's binary.
-  Every local package declares iOS 16, the app's own floor and what
-  `IcliKit` asks of IrisinKit and everything above it. PackageDepiction's views are
+  Every local package declares iOS 15, the app's own floor and what
+  `IcliKit` asks of IrisinKit and everything above it;
+  `Scripts/check-floor-sources.py` fails `make check` on one that does
+  not, on an SF Symbol newer than the floor, and on a recommended list
+  without one Procursus suite for each iOS release from the floor up. PackageDepiction's views are
   laid out with SnapKit and configured with Then, like the app: a depiction
   is Auto Layout throughout, so its height is its own and nothing measures it.
   Everything with a usable upstream release is a remote package reference.
@@ -576,6 +579,18 @@ is `/var/jb/var/log/irisin-install.log`.
   `irisin-install` before every package is made and fails on a runtime
   symbol, library, or build version above the deployment target; a fix to
   it goes to the template first.
+- **A strong import the floor lacks stops the process in dyld, and the
+  build never says so.** icli's `xpc_user_sessions_get_foreground_uid`
+  (iOS 16) stopped Xrash on iOS 15.8.6 before `main`. `make deb` runs
+  `Scripts/check-floor-imports.py` over the app, `irisind` and
+  `irisin-install` after the audit: every strong import must be declared
+  outside a comment in an iPhoneOS SDK header (the compiler weak-links
+  those from their availability) or listed in `Scripts/floor-imports.txt`,
+  and no library iOS 16 or later introduced may be loaded strongly. A
+  private symbol is listed only once iOS 15.0 is known to export it;
+  otherwise it is looked up with `dlsym`, as `irisind` does
+  `xpc_copy_entitlement_for_token`, with SecTask behind it. The list's top
+  half is icli's own; keep the two in step.
 - **The project is built with Xcode 27 and CI has 26.6.** The runner image
   has no Xcode 27, so one thing is a workaround and comes out the day it
   does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and

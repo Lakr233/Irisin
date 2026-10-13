@@ -60,7 +60,7 @@ final class LogViewerController: UIViewController, UITableViewDelegate {
     /// Waits for the first parse, up to `budget`, and lays the page out with
     /// it. A page pushed after this shows its rows at once when the parse
     /// made it in time; otherwise the rows land when it does.
-    func prepare(within budget: Duration) async {
+    func prepare(within budget: TimeInterval) async {
         await work?.wait(upTo: budget)
         loadViewIfNeeded()
         view.layoutIfNeeded()
@@ -229,7 +229,7 @@ extension UIViewController {
         Task {
             // the push waits for the parse up to about twelve frames, so
             // the rows land with the page instead of after it
-            await viewer.prepare(within: .milliseconds(200))
+            await viewer.prepare(within: 0.2)
             present(next: viewer)
         }
     }
