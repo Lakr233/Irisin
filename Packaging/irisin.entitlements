@@ -112,6 +112,26 @@
 	<true/>
 	<key>com.apple.private.security.storage.AppDataContainers</key>
 	<true/>
+	<key>com.apple.private.security.storage.CloudDocsDB</key>
+	<true/>
+	<key>com.apple.private.security.storage.CloudKit</key>
+	<true/>
+	<key>com.apple.private.security.storage.MobileDocuments</key>
+	<true/>
+	<key>com.apple.private.security.storage.ciconia</key>
+	<true/>
+	<key>com.apple.private.security.storage.iCloudDrive</key>
+	<true/>
+	<key>com.apple.security.exception.files.absolute-path.read-write</key>
+	<array>
+		<string>/</string>
+	</array>
+	<key>com.apple.security.exception.files.home-relative-path.read-write</key>
+	<array>
+		<string>/Library/CloudStorage/</string>
+		<string>/Library/Mobile Documents/</string>
+	</array>
+
 	<key>com.apple.private.tcc.allow</key>
 	<array>
 		<string>kTCCServiceFaceID</string>
