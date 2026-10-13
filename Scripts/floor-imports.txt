@@ -116,7 +116,10 @@ swift_getEnumCaseMultiPayload
 swift_getErrorValue
 swift_getExistentialTypeMetadata
 swift_getForeignTypeMetadata
+swift_getFunctionTypeMetadata1
+swift_getFunctionTypeMetadata3
 swift_getGenericMetadata
+swift_getInitializedObjCClass
 swift_getKeyPath
 swift_getMetatypeMetadata
 swift_getObjCClassFromMetadata
@@ -140,6 +143,7 @@ swift_once
 swift_release
 swift_release_n
 swift_retain
+swift_retain_n
 swift_setDeallocating
 swift_slowAlloc
 swift_slowDealloc
@@ -180,6 +184,10 @@ objc_setProperty_nonatomic_copy
 # Declared through OS_OBJECT_DECL, which spells no class name: libdispatch's
 # queue class, iOS 6.
 OS_dispatch_queue
+# CoreFoundation's empty NSArray singleton, which Xcode 26's toolchain refers
+# to by name where Xcode 27's spells __NSArray0__struct. dlsym finds it on
+# iOS 15.8.6 (iPhone8,4).
+__NSArray0__
 # Private libproc and libxpc, long before iOS 15: the helper's process table,
 # and the audit token the daemon authenticates its peer by. The daemon's
 # entitlement lookup (xpc_copy_entitlement_for_token) is resolved with dlsym.
@@ -200,7 +208,6 @@ swift_dynamicCastClassUnconditional
 swift_dynamicCastObjCProtocolConditional
 swift_dynamicCastUnknownClass
 swift_getEnumTagSinglePayloadGeneric
-swift_getInitializedObjCClass
 swift_getOpaqueTypeConformance
 swift_getTupleTypeLayout2
 swift_getTupleTypeMetadata
@@ -212,7 +219,6 @@ swift_isUniquelyReferenced_native
 swift_lookUpClassMethod
 swift_projectBox
 swift_readAtKeyPath
-swift_retain_n
 swift_setAtReferenceWritableKeyPath
 swift_stdlib_random
 swift_storeEnumTagSinglePayloadGeneric

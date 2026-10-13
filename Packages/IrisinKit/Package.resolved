@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/owngoal-dev/icli.git",
       "state" : {
-        "branch" : "ios15-floor",
-        "revision" : "6794bbad051cfada4d2c0383f681f324da355f12"
+        "revision" : "5e2000e410fa8632c487bd7839c8e84f86359fc7",
+        "version" : "0.8.2"
       }
     },
     {
