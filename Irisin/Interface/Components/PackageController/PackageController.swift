@@ -61,8 +61,12 @@ class PackageController: UIViewController {
         $0.rowHeight = UITableView.automaticDimension
         $0.estimatedRowHeight = 200
         // a row follows the constraints inside it (the photo's height, a
-        // depiction that grew) without being told
-        $0.selfSizingInvalidation = .enabledIncludingConstraints
+        // depiction that grew) without being told; iOS 15 has no such
+        // thing, and PackageRowCell's height mismatch is how a row there
+        // is measured again
+        if #available(iOS 16, *) {
+            $0.selfSizingInvalidation = .enabledIncludingConstraints
+        }
         $0.sectionHeaderTopPadding = 0
         for row in Row.allCases {
             $0.register(PackageRowCell.self, forCellReuseIdentifier: row.rawValue)
@@ -103,11 +107,11 @@ class PackageController: UIViewController {
     /// How long after it loads a page takes to settle: a photo that must be
     /// fetched is not asked for sooner, so the banner resizes on a page
     /// that has stopped moving.
-    private static let settlingTime: Duration = .seconds(2.5)
+    private static let settlingTime: TimeInterval = 2.5
 
     /// When this page has settled, counted from `viewDidLoad`. A cached
     /// photo does not wait for it.
-    private(set) var bannerPhotoDeadline = ContinuousClock.now
+    private(set) var bannerPhotoDeadline = ContinuousDeadline.now
 
     /// The size of the photo the banner is laid out for, which follows the
     /// photo on show through `resizeBanner`: a layout pass that happens to

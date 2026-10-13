@@ -478,7 +478,7 @@ final class PackageQueue {
         heldChange = Task { [weak self] in
             do {
                 while Self.isRefreshing {
-                    try await Task.sleep(for: Self.settleDelay)
+                    try await Task.sleep(continuousSeconds: Self.settleDelay)
                 }
             } catch {
                 return
@@ -619,7 +619,7 @@ final class PackageQueue {
 
     /// How long the packages stay still before the pool is read again: a
     /// refresh writes one repository after another.
-    private static let settleDelay: Duration = .seconds(2)
+    private static let settleDelay: TimeInterval = 2
 
     /// The packages moved: the pool is read again once they stop, and not
     /// while a refresh is still writing them or an operation runs, which
@@ -635,7 +635,7 @@ final class PackageQueue {
         }
         preflightDelay = Task { [weak self] in
             do {
-                try await Task.sleep(for: Self.settleDelay)
+                try await Task.sleep(continuousSeconds: Self.settleDelay)
                 // at launch the refresh of what is out of date is queued a
                 // moment after the engines are up: not reading until then
                 // keeps a pool that refresh would make stale at once
@@ -643,7 +643,7 @@ final class PackageQueue {
                     || RepositoryCenter.default.obtainUpdateRemain() > 0
                     || Installer.shared.inProcessingQueue
                 {
-                    try await Task.sleep(for: Self.settleDelay)
+                    try await Task.sleep(continuousSeconds: Self.settleDelay)
                 }
             } catch {
                 return

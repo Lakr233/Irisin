@@ -146,7 +146,12 @@ enum MarkdownContentLocale {
         if let cached = cjkLanguageByLocale[key] {
             return cached
         }
-        let language = normalizedLanguage(locale.language)
+        let language: String
+        if #available(iOS 16, *) {
+            language = normalizedLanguage(locale.language)
+        } else {
+            language = normalizedLanguage(identifier: locale.identifier)
+        }
         cjkLanguageByLocale[key] = language
         return language
     }
@@ -171,6 +176,7 @@ enum MarkdownContentLocale {
     ///
     /// Any language that is not Chinese, Japanese or Korean falls back to
     /// Simplified Chinese, as it always has.
+    @available(iOS 16, *)
     static func normalizedLanguage(_ language: Locale.Language) -> String {
         switch language.languageCode {
         case .japanese?:
@@ -192,6 +198,34 @@ enum MarkdownContentLocale {
             return "zh-Hant"
         }
         return "zh-Hant-\(region.identifier)"
+    }
+
+    /// ``normalizedLanguage(_:)`` for iOS 15, which has no
+    /// `Locale.Language`: the identifier's own components, and Chinese
+    /// without a script is Traditional only where its likely subtags say so
+    /// (Taiwan, Hong Kong, Macau).
+    static func normalizedLanguage(identifier: String) -> String {
+        let parts = Locale.components(fromIdentifier: identifier)
+        switch parts[NSLocale.Key.languageCode.rawValue] {
+        case "ja":
+            return "ja"
+        case "ko":
+            return "ko"
+        case "zh":
+            break
+        default:
+            return "zh-Hans"
+        }
+        let region = parts[NSLocale.Key.countryCode.rawValue]
+        let script = parts[NSLocale.Key.scriptCode.rawValue]
+            ?? (["TW", "HK", "MO"].contains(region ?? "") ? "Hant" : "Hans")
+        guard script == "Hant" else {
+            return "zh-Hans"
+        }
+        guard let region, region != "TW" else {
+            return "zh-Hant"
+        }
+        return "zh-Hant-\(region)"
     }
 
     private static func characterRanges(in string: String) -> [NSRange] {

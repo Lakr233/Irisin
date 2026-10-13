@@ -13,7 +13,7 @@ import PackageDescription
 /// third-party may reach the daemon: launchd caps it at 6 MB.
 let package = Package(
     name: "IrisinKit",
-    platforms: [.iOS(.v16), .macOS(.v13)],
+    platforms: [.iOS(.v15), .macOS(.v13)],
     products: [
         .library(name: "IrisinProtocol", targets: ["IrisinProtocol"]),
         .library(name: "IrisinInstaller", type: .static, targets: ["IrisinInstaller"]),
@@ -23,7 +23,7 @@ let package = Package(
     dependencies: [
         // Our own LaunchServices and SpringBoard code, linked into the helper
         // as a library: app registration and the graceful respring. iOS only.
-        .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.8.0"),
+        .package(url: "https://github.com/owngoal-dev/icli.git", branch: "ios15-floor"),
         // Reads Mach-O for the adapter, as it does for Fila's inspector: where
         // a load command is, how long, what it says. It writes nothing; the
         // adapter's own code rewrites and signs. The adapter's alone.

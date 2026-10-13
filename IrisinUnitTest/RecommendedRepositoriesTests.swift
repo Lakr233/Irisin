@@ -22,12 +22,13 @@ struct RecommendedRepositoriesTests {
 
     @Test func bundleListsReadForEveryBootstrap() throws {
         let directory = try #require(Bundle.main.resourceURL)
-        for majorVersion in 16 ... 26 {
+        for majorVersion in 15 ... 26 {
             let rootlessLines = RecommendedRepositories.lines(in: directory, architecture: rootless, majorVersion: majorVersion)
             #expect(rootlessLines.filter { $0.contains("apt.procurs.us") }.count == 1)
             #expect(rootlessLines.allSatisfy { RepositorySource(line: $0) != nil })
             let roothideLines = RecommendedRepositories.lines(in: directory, architecture: roothide, majorVersion: majorVersion)
             #expect(roothideLines.contains("https://roothide.github.io"))
+            #expect(roothideLines.filter { $0.contains("roothide.github.io/procursus") }.count == 1)
             #expect(roothideLines.allSatisfy { RepositorySource(line: $0) != nil })
         }
         #expect(RecommendedRepositories.lines(in: directory, architecture: rootless, majorVersion: 17)
@@ -36,10 +37,16 @@ struct RecommendedRepositoriesTests {
 
     @Test func procursusSuiteFollowsTheSystemVersion() throws {
         let directory = try #require(Bundle.main.resourceURL)
-        let suites = [16: "1900", 17: "2000", 18: "3000", 26: "3000"]
+        let suites = [15: "1800", 16: "1900", 17: "2000", 18: "3000", 26: "3000"]
         for (majorVersion, suite) in suites {
             #expect(RecommendedRepositories.lines(in: directory, architecture: rootless, majorVersion: majorVersion)
                 .contains("deb https://apt.procurs.us \(suite) main"))
+        }
+        // roothide's own build has 1800 for iOS 15 and 1900 for the rest
+        let roothideSuites = [15: "1800", 16: "1900", 17: "1900", 26: "1900"]
+        for (majorVersion, suite) in roothideSuites {
+            #expect(RecommendedRepositories.lines(in: directory, architecture: roothide, majorVersion: majorVersion)
+                .contains("deb https://roothide.github.io/procursus iphoneos-arm64e/\(suite) main"))
         }
     }
 

@@ -14,7 +14,15 @@
 	-->
 	<dict>
 		<key>source</key>
+		<string>deb https://apt.procurs.us 1800 main</string>
+		<key>maximumSystemVersion</key>
+		<integer>15</integer>
+	</dict>
+	<dict>
+		<key>source</key>
 		<string>deb https://apt.procurs.us 1900 main</string>
+		<key>minimumSystemVersion</key>
+		<integer>16</integer>
 		<key>maximumSystemVersion</key>
 		<integer>16</integer>
 	</dict>

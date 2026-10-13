@@ -61,6 +61,7 @@ extension PackageController {
     /// all there is, the text untouched otherwise.
     /// The address is dropped from the text because it does not fit.
     nonisolated static func contact(_ field: String) -> (text: String, action: String?) {
+        guard #available(iOS 16, *) else { return legacyContact(field) }
         let address = #/[^<>\s@]+@[^<>\s@]+/#
         if let match = field.wholeMatch(of: #/\s*(?<name>.*?)\s*<(?<address>[^<>\s@]+@[^<>\s@]+)>\s*/#) {
             let name = String(match.name)
@@ -72,6 +73,33 @@ extension PackageController {
         }
         if let match = field.trimmingCharacters(in: .whitespaces).wholeMatch(of: address) {
             return (String(match.output), "mailto:\(match.output)")
+        }
+        return (field, nil)
+    }
+
+    /// `contact(_:)` through NSRegularExpression, for iOS 15, which has no
+    /// Swift Regex. Same patterns, same answers; the tests hold the two to
+    /// each other.
+    nonisolated static func legacyContact(_ field: String) -> (text: String, action: String?) {
+        func whole(_ pattern: String, _ text: String) -> [String]? {
+            // literals, checked by the tests; \A and \z, since ICU's $
+            // also matches before a final newline and wholeMatch does not
+            let expression = try! NSRegularExpression(pattern: #"\A(?:"# + pattern + #")\z"#)
+            let range = NSRange(text.startIndex..., in: text)
+            guard let match = expression.firstMatch(in: text, range: range) else { return nil }
+            return (0 ..< match.numberOfRanges).map { index in
+                Range(match.range(at: index), in: text).map { String(text[$0]) } ?? ""
+            }
+        }
+        let address = #"[^<>\s@]+@[^<>\s@]+"#
+        if let groups = whole(#"\s*(.*?)\s*<("# + address + #")>\s*"#, field) {
+            return (groups[1].isEmpty ? groups[2] : groups[1], "mailto:\(groups[2])")
+        }
+        if let groups = whole(#"\s*(.*?)\s*<(https?://[^<>\s]+)>\s*"#, field) {
+            return (groups[1].isEmpty ? groups[2] : groups[1], groups[2])
+        }
+        if let groups = whole(address, field.trimmingCharacters(in: .whitespaces)) {
+            return (groups[0], "mailto:\(groups[0])")
         }
         return (field, nil)
     }

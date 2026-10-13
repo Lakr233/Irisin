@@ -64,6 +64,7 @@ XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh
 DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 DEB_VERIFIER        := $(ROOT_DIR)/Scripts/verify-deb.sh
 FLOOR_AUDIT         := $(ROOT_DIR)/Scripts/audit-ios-floor.sh
+FLOOR_IMPORTS       := $(ROOT_DIR)/Scripts/check-floor-imports.py
 VERSION_APPLIER    := $(ROOT_DIR)/Scripts/apply-version.sh
 DEVICE_INSTALLER    := $(ROOT_DIR)/Scripts/install-device.sh
 
@@ -152,7 +153,7 @@ check:
 	done
 	@test -f "$(CONTROL_TEMPLATE)" || { echo "error: Debian control template is missing" >&2; exit 66; }
 	@test -f "$(PACKAGE_DIR)/Package.swift" || { echo "error: Packages/IrisinKit/Package.swift is missing" >&2; exit 66; }
-	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(FLOOR_AUDIT)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
+	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(FLOOR_AUDIT)" "$(FLOOR_IMPORTS)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
 		test -x "$$script" || { echo "error: $$script is not executable" >&2; exit 66; }; \
 	done
 	@for xcconfig in Version Base Size Development Release; do \
@@ -213,6 +214,11 @@ check:
 		[[ -n "$$names" ]] && echo "$$names" >&2; \
 		exit 65; \
 	fi
+	@# The floor is kept where the compiler does not look: every local
+	@# package's platforms, SF Symbols, and a Procursus suite recommended
+	@# for each iOS release from the floor up.
+	@test -x "$(ROOT_DIR)/Scripts/check-floor-sources.py" || { echo "error: check-floor-sources.py is not executable" >&2; exit 66; }
+	@"$(ROOT_DIR)/Scripts/check-floor-sources.py" "$(MINIMUM_IOS_VERSION)" "$(ROOT_DIR)"
 	@# What the user reads says custom firmware, in every language.
 	@"$(ROOT_DIR)/Scripts/check-wording.py" "$(ROOT_DIR)"
 	@# The manual quotes the app's controls by name, and a control renamed in
@@ -300,6 +306,10 @@ deb: build
 
 _package-deb:
 	"$(FLOOR_AUDIT)" "$(MINIMUM_IOS_VERSION)" "$(APP_BUNDLE)" "$(DAEMON_BINARY)" "$(HELPER_BINARY)"
+	@# A strong import no SDK header declares has no availability for the
+	@# compiler to weak-link by: each one is listed once the floor is known
+	@# to export it, or looked up with dlsym. The list is for iOS 15.0.
+	"$(FLOOR_IMPORTS)" "$(ROOT_DIR)/Scripts/floor-imports.txt" "$(APP_BUNDLE)" "$(DAEMON_BINARY)" "$(HELPER_BINARY)"
 	"$(DEB_PACKAGER)" \
 		"$(APP_BUNDLE)" \
 		"$(DAEMON_BINARY)" \

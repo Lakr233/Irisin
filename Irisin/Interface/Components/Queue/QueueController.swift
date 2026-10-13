@@ -318,10 +318,23 @@ final class QueueController: UIViewController, UITableViewDelegate {
         }
         executeButton.tintColor = autoInstall ? .swipeDelete : nil
         executeButton.isEnabled = stage != .blocked
-        executeButton.isHidden = !queued || busy
-        busyItem.isHidden = !queued || !busy
-        // the queue is not cleared from under a patch
-        menuItem.isHidden = !queued || stage == .patching
+        let shown = [
+            (executeButton, !queued || busy),
+            (busyItem, !queued || !busy),
+            // the queue is not cleared from under a patch
+            (menuItem, !queued || stage == .patching),
+        ]
+        if #available(iOS 16, *) {
+            for (item, hidden) in shown {
+                item.isHidden = hidden
+            }
+        } else {
+            // iOS 15 cannot hide a bar button; the bar holds the shown ones
+            let items = shown.filter { !$0.1 }.map(\.0)
+            if items.map(ObjectIdentifier.init) != (navigationItem.rightBarButtonItems ?? []).map(ObjectIdentifier.init) {
+                navigationItem.rightBarButtonItems = items
+            }
+        }
     }
 
     // MARK: - Export
@@ -331,18 +344,20 @@ final class QueueController: UIViewController, UITableViewDelegate {
     private func exportAction() -> UIAction {
         let installs = PackageQueue.shared.plan?.install ?? []
         let files = installs.compactMap { package in package.fileOnDisk.map { (package, $0) } }
-        let action = UIAction(
-            title: String(localized: "Export All Packages"),
-            image: UIImage(systemName: "square.and.arrow.up")
-        ) { [weak self] _ in self?.export(files) }
-        if installs.isEmpty {
-            action.attributes = .disabled
-            action.subtitle = String(localized: "The queue installs nothing.")
+        // said in the initializer: UIAction's subtitle setter is iOS 16
+        let reason: String? = if installs.isEmpty {
+            String(localized: "The queue installs nothing.")
         } else if files.count < installs.count {
-            action.attributes = .disabled
-            action.subtitle = String(localized: "Available once the downloads finish.")
+            String(localized: "Available once the downloads finish.")
+        } else {
+            nil
         }
-        return action
+        return UIAction(
+            title: String(localized: "Export All Packages"),
+            subtitle: reason,
+            image: UIImage(systemName: "square.and.arrow.up"),
+            attributes: reason == nil ? [] : .disabled
+        ) { [weak self] _ in self?.export(files) }
     }
 
     private func export(_ files: [(Package, URL)]) {
@@ -408,7 +423,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
         else { return }
         let page = QueuePackageController(change: change)
         opening = Task { [weak self] in
-            await page.prepare(within: .milliseconds(200))
+            await page.prepare(within: 0.2)
             guard let self else { return }
             opening = nil
             // the page was left while the package was read
@@ -724,7 +739,7 @@ final class QueueController: UIViewController, UITableViewDelegate {
                 return String(localized: "The download was interrupted.")
             }
             progress()
-            try? await Task.sleep(for: .milliseconds(250))
+            try? await Task.sleep(continuousSeconds: 0.25)
         }
         return nil
     }

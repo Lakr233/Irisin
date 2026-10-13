@@ -477,16 +477,16 @@ extension RepositoryCenter {
                 return .featured(value)
             }
             group.addTask {
-                try? await Task.sleep(for: .seconds(request.optionalBudget))
+                try? await sleepCountingWhileAsleep(request.optionalBudget)
                 return .cutoff
             }
             group.addTask {
                 for await grace in cutoff {
-                    try? await Task.sleep(for: .seconds(grace))
+                    try? await sleepCountingWhileAsleep(grace)
                     return .cutoff
                 }
                 // the catalogue's files never came: the budget decides
-                try? await Task.sleep(for: .seconds(request.optionalBudget))
+                try? await sleepCountingWhileAsleep(request.optionalBudget)
                 return .cutoff
             }
             var parts = OptionalParts()
@@ -792,4 +792,15 @@ private struct SearchPathProbe: Sendable {
     let packages: [String: Package]
     /// the index files it was read from
     let read: [URL]
+}
+
+/// `Task.sleep(for: .seconds(seconds))` on iOS 16 and later, which counts
+/// while the device sleeps; iOS 15 has no `Duration`, and there the uptime
+/// clock's nanoseconds stand in.
+private func sleepCountingWhileAsleep(_ seconds: TimeInterval) async throws {
+    if #available(iOS 16, macOS 13, *) {
+        try await Task.sleep(for: .seconds(seconds))
+    } else {
+        try await Task.sleep(nanoseconds: UInt64(max(0, seconds) * 1_000_000_000))
+    }
 }

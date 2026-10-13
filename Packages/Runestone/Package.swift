@@ -9,7 +9,7 @@ let package = Package(
     name: "Runestone",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v16),
+        .iOS(.v15),
     ],
     products: [
         .library(name: "Runestone", targets: ["Runestone"]),

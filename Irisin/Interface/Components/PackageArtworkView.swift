@@ -110,7 +110,7 @@ final class PackageArtworkView: UIView {
     /// A picture SDWebImage has cached loads at once; one that must be
     /// fetched is not asked for before `deadline`, so it cannot land in the
     /// middle of the transition that brings its page in.
-    func load(_ url: URL?, uncachedNotBefore deadline: ContinuousClock.Instant? = nil) {
+    func load(_ url: URL?, uncachedNotBefore deadline: ContinuousDeadline? = nil) {
         pendingLoad?.cancel()
         pendingLoad = nil
         // under a picture that fades in, the old one fades out over the
@@ -128,7 +128,7 @@ final class PackageArtworkView: UIView {
             return
         }
         pendingLoad = Task { [weak self] in
-            try? await Task.sleep(until: deadline, clock: .continuous)
+            try? await deadline.sleep()
             guard !Task.isCancelled else { return }
             self?.fetch(url)
         }

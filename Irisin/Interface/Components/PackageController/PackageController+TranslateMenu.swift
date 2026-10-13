@@ -95,8 +95,13 @@ extension PackageController {
             let isChosen = switch (locale, chosen) {
             case (nil, nil): true
             case let (locale?, chosen?):
-                Locale.Language(identifier: locale.identifier)
-                    .isEquivalent(to: Locale.Language(identifier: chosen.identifier))
+                if #available(iOS 16, *) {
+                    Locale.Language(identifier: locale.identifier)
+                        .isEquivalent(to: Locale.Language(identifier: chosen.identifier))
+                } else {
+                    Locale.IdentifierParts(locale.identifier)
+                        .isEquivalent(to: Locale.IdentifierParts(chosen.identifier))
+                }
             default: false
             }
             return UIAction(title: title, state: isChosen ? .on : .off) { [weak self] _ in
