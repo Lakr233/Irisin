@@ -87,7 +87,7 @@ struct RemovedBundleTests {
                 false
             }
         })
-        #expect(registrar.requests == [.unregister(bundle: bundle.path), .refresh(directory: applications(fixture))])
+        #expect(registrar.requests == [.unregister(bundle: bundle.path)])
     }
 
     /// An installed app is registered at its kernel path, whatever the
@@ -106,7 +106,7 @@ struct RemovedBundleTests {
         let runner = registrar.runner(installRoot: fixture.root.path, layout: layout) { events.append($0) }
         #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
         let bundle = fixture.root.appendingPathComponent("Applications/Example.app").path
-        #expect(registrar.requests == [.register(bundle: bundle), .refresh(directory: applications(fixture))])
+        #expect(registrar.requests == [.register(bundle: bundle)])
         #expect(registrar.registry == [bundle])
         #expect(events.contains(.phase(.registeringApplications)))
         #expect(events.last == .phase(.completed))
@@ -130,7 +130,6 @@ struct RemovedBundleTests {
         #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
         let spelled = link.path + "/Applications/Example.app"
         #expect(registrar.registry == [spelled])
-        try FileManager.default.removeItem(at: fixture.root.appendingPathComponent("Applications/Example.app"))
         _ = try makeBundle(fixture)
         let digest = try PackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
         #expect(runner.run(.transaction(.init(install: [], remove: [package.identity], statusDigest: digest))) == 0)
@@ -153,7 +152,6 @@ struct RemovedBundleTests {
         let bundle = fixture.root.appendingPathComponent("Applications/Example.app").path
         #expect(events.contains(.warning(.registrationFailed(bundle: bundle, detail: "register failed"))))
         #expect(events.contains(.warning(.homeScreenNeedsAttention)))
-        #expect(registrar.requests.last == .refresh(directory: applications(fixture)))
         #expect(events.last == .phase(.completed))
     }
 
@@ -161,13 +159,12 @@ struct RemovedBundleTests {
     /// still happens.
     @Test func failedIconCleanupKeepsHuskAndWarns() throws {
         let fixture = try NativeInstallFixture()
-        let bundle = try makeBundle(fixture, nested: true)
+        let (package, bundle) = try installApplication(fixture)
         let registrar = RegistrarStandIn(behavior: .refuse, registered: [bundle.path])
         var events: [InstallerEvent] = []
         let runner = registrar.runner(installRoot: fixture.root.path, layout: .init(kind: .roothide(jbroot: fixture.root.path))) { events.append($0) }
-        let package = try fixture.package(files: ["usr/share/example": "installed"])
-        #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
-        #expect(try fixture.status() == "install ok installed")
+        #expect(try runner.run(.transaction(removing: package, fixture)) == 0)
+        #expect(try fixture.status() == nil)
         #expect(FileManager.default.fileExists(atPath: bundle.path))
         #expect(events.contains(.warning(.homeScreenNeedsAttention)))
         #expect(events.contains {
@@ -177,7 +174,7 @@ struct RemovedBundleTests {
                 false
             }
         })
-        #expect(registrar.requests.last == .refresh(directory: applications(fixture)))
+        #expect(registrar.requests == [.unregister(bundle: bundle.path)])
         #expect(events.contains(.phase(.completed)))
     }
 
@@ -208,13 +205,12 @@ struct RemovedBundleTests {
 
     @Test func fileAppearingDuringUnregisterIsPreservedAndReported() throws {
         let fixture = try NativeInstallFixture()
-        let bundle = try makeBundle(fixture)
+        let (package, bundle) = try installApplication(fixture)
         let registrar = RegistrarStandIn(behavior: .newFile, registered: [bundle.path])
         var events: [InstallerEvent] = []
         let runner = registrar.runner(installRoot: fixture.root.path, layout: .init(kind: .roothide(jbroot: fixture.root.path))) { events.append($0) }
-        let package = try fixture.package(files: ["usr/share/example": "installed"])
-        #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
-        #expect(try fixture.status() == "install ok installed")
+        #expect(try runner.run(.transaction(removing: package, fixture)) == 0)
+        #expect(try fixture.status() == nil)
         #expect(try String(contentsOf: bundle.appendingPathComponent("new-file"), encoding: .utf8) == "keep\n")
         #expect(events.contains {
             if case .warning(.leftoverBundle) = $0 {
@@ -240,6 +236,58 @@ struct RemovedBundleTests {
         #expect(FileManager.default.fileExists(atPath: unrelated.path))
     }
 
+    /// A transaction asks LaunchServices about what it changed and nothing
+    /// else: a bundle it did not touch is not registered again, a husk an
+    /// older run left stays for Rebuild Icon Cache, and the directory is
+    /// never refreshed whole.
+    @Test func untouchedBundlesAndOldHusksAreLeftAlone() throws {
+        let fixture = try NativeInstallFixture()
+        let husk = try makeBundle(fixture)
+        let other = fixture.root.appendingPathComponent("Applications/Other.app")
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        try Data("other".utf8).write(to: other.appendingPathComponent("Info.plist"))
+        let registrar = RegistrarStandIn(registered: [husk.path, other.path])
+        var events: [InstallerEvent] = []
+        let runner = registrar.runner(installRoot: fixture.root.path, layout: .init(kind: .roothide(jbroot: fixture.root.path))) { events.append($0) }
+        let package = try fixture.package(files: ["usr/share/example": "installed"])
+        #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
+        #expect(registrar.requests.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: husk.path))
+        #expect(!events.contains(.phase(.registeringApplications)))
+        #expect(events.last == .phase(.completed))
+    }
+
+    /// A bundle no package list names, made or rewritten while the run was
+    /// on (a maintainer script's), is registered all the same, and one
+    /// whose Info.plist went with it is unregistered.
+    @Test func bundlesChangedOutsideTheListsAreRegistered() throws {
+        let fixture = try NativeInstallFixture()
+        let applications = fixture.root.appendingPathComponent("Applications")
+        let rewritten = applications.appendingPathComponent("Rewritten.app")
+        let emptied = applications.appendingPathComponent("Emptied.app")
+        for bundle in [rewritten, emptied] {
+            try FileManager.default.createDirectory(at: bundle, withIntermediateDirectories: true)
+            try Data("before".utf8).write(to: bundle.appendingPathComponent("Info.plist"))
+        }
+        let made = applications.appendingPathComponent("Made.app")
+        let registrar = RegistrarStandIn(registered: [rewritten.path, emptied.path])
+        // What a maintainer script would do, while the run is on: the
+        // first notice comes after the helper has looked at the directory.
+        var scripted = false
+        let runner = registrar.runner(installRoot: fixture.root.path, layout: .init(kind: .roothide(jbroot: fixture.root.path))) { event in
+            guard case .notice = event, !scripted else { return }
+            scripted = true
+            try? FileManager.default.createDirectory(at: made, withIntermediateDirectories: true)
+            try? Data("made".utf8).write(to: made.appendingPathComponent("Info.plist"))
+            try? Data("after, longer".utf8).write(to: rewritten.appendingPathComponent("Info.plist"))
+            try? FileManager.default.removeItem(at: emptied.appendingPathComponent("Info.plist"))
+        }
+        let package = try fixture.package(files: ["usr/share/example": "installed"])
+        #expect(runner.run(.transaction(.init(install: [package], remove: []))) == 0)
+        #expect(registrar.requests == [.register(bundle: made.path), .register(bundle: rewritten.path), .unregister(bundle: emptied.path)])
+        #expect(!FileManager.default.fileExists(atPath: emptied.path))
+    }
+
     @Test func dryRunDoesNotTouchIconsOrHusks() throws {
         let fixture = try NativeInstallFixture()
         let bundle = try makeBundle(fixture)
@@ -249,6 +297,18 @@ struct RemovedBundleTests {
         #expect(runner.run(.transaction(.init(install: [package], remove: [], dryRun: true))) == 0)
         #expect(FileManager.default.fileExists(atPath: bundle.path))
         #expect(registrar.requests.isEmpty)
+    }
+
+    /// A package that owns `Applications/Example.app`, installed, with the
+    /// `.jbroot` links roothide leaves beside its executables.
+    private func installApplication(_ fixture: NativeInstallFixture) throws -> (InstallerJob.Transaction.Item, URL) {
+        let directories = ["Applications", "Applications/Example.app", "Applications/Example.app/Frameworks", "Applications/Example.app/Frameworks/Example.framework"]
+        let package = try fixture.package(
+            files: ["Applications/Example.app/Info.plist": "identity", "Applications/Example.app/Frameworks/Example.framework/Example": "binary"],
+            links: directories.map { PreparedEntry(path: $0, kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0) }
+        )
+        try fixture.run(install: [package], layout: .init(kind: .roothide(jbroot: fixture.root.path)))
+        return (package, try makeBundle(fixture, nested: true))
     }
 
     private func applications(_ fixture: NativeInstallFixture) -> String {
@@ -262,5 +322,13 @@ struct RemovedBundleTests {
             try FileManager.default.createSymbolicLink(atPath: path.appendingPathComponent(".jbroot").path, withDestinationPath: fixture.root.path)
         }
         return bundle
+    }
+}
+
+private extension InstallerJob {
+    /// The removal of one installed package, against the status it left.
+    static func transaction(removing package: InstallerJob.Transaction.Item, _ fixture: NativeInstallFixture) throws -> InstallerJob {
+        let digest = try PackageArchive.sha256(Data(contentsOf: fixture.database.appendingPathComponent("status")))
+        return .transaction(.init(install: [], remove: [package.identity], statusDigest: digest))
     }
 }

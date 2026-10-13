@@ -113,7 +113,7 @@ public final class InstallerRunner {
     // MARK: - Transaction
 
     private func runTransaction(_ transaction: InstallerJob.Transaction) -> Int32 {
-        let applicationsBefore = Set(directoryEntries(applicationsDirectory))
+        let applicationsBefore = applicationBundles()
         emit(.notice("Install root \(installRoot.isEmpty ? "/" : installRoot)"))
         emit(.notice("Applications directory \(applicationsDirectory)"))
 
@@ -142,6 +142,7 @@ public final class InstallerRunner {
         if !transaction.dryRun,
            !reconcileApplications(
                previous: applicationsBefore,
+               current: applicationBundles(),
                installed: installedApplications(of: transaction.install.map(\.identity))
            )
         {
@@ -178,21 +179,40 @@ public final class InstallerRunner {
         return applications
     }
 
-    /// Tell LaunchServices about the bundles that came and went, clear the
-    /// husks a removal leaves behind (empty directories and roothide's
-    /// `.jbroot` links beside former executables), then let icli reconcile
-    /// the whole directory once for the ghosts an older transaction left.
+    /// What each `.app` directly under the applications directory looked
+    /// like, by name: its `Info.plist`'s identity and change time, or nil
+    /// for a bundle without one (a husk).
+    private func applicationBundles() -> [String: BundleStamp?] {
+        var bundles = [String: BundleStamp?]()
+        for name in directoryEntries(applicationsDirectory) where name.hasSuffix(".app") {
+            bundles[name] = BundleStamp(infoPlist: applicationsDirectory + "/" + name + "/Info.plist")
+        }
+        return bundles
+    }
+
+    /// Tell LaunchServices about the bundles that came and went, and clear
+    /// the husks a removal leaves behind (empty directories and roothide's
+    /// `.jbroot` links beside former executables). Only what this run
+    /// changed is touched, never the whole directory: an app the packages'
+    /// lists name, and, for a bundle a maintainer script made or rewrote
+    /// that no list names, every bundle whose `Info.plist` is not the one
+    /// it was before. Ghosts an older run left are Rebuild Icon Cache's.
     ///
-    /// An updated app at its old path is registered by name: `refresh`
-    /// skips a path whose registered bundle identifier and build have not
-    /// changed, a package can change an app without changing its build, and
+    /// An updated app at its old path is registered by name: a package can
+    /// change an app without changing its build or its `Info.plist`, and
     /// re-registering is what makes LaunchServices reread the bundle.
     /// Registration is verified by icli itself (it reads LaunchServices back
     /// after every call), so `.done` here means the record is there.
-    private func reconcileApplications(previous: Set<String>, installed: Set<String>) -> Bool {
+    private func reconcileApplications(
+        previous: [String: BundleStamp?],
+        current: [String: BundleStamp?],
+        installed: Set<String>
+    ) -> Bool {
         var succeeded = true
         var removed: [String] = []
-        for name in previous.filter({ $0.hasSuffix(".app") }).sorted() {
+        // A bundle this run took the Info.plist from; a husk that was one
+        // before the run is left for Rebuild Icon Cache.
+        for (name, stamp) in previous.sorted(by: { $0.key < $1.key }) where stamp != nil && (current[name] ?? nil) == nil {
             let path = applicationsDirectory + "/" + name
             do {
                 if try RemovedApplicationBundle.isGone(path) {
@@ -203,10 +223,13 @@ public final class InstallerRunner {
                 succeeded = false
             }
         }
-        guard !installed.isEmpty || !removed.isEmpty else { return succeeded }
+        var changed = Set(installed.map { layout.resolve($0) })
+        for (name, stamp) in current where stamp != nil && previous[name] != stamp {
+            changed.insert(applicationsDirectory + "/" + name)
+        }
+        guard !changed.isEmpty || !removed.isEmpty else { return succeeded }
         emit(.phase(.registeringApplications))
-        for application in installed.sorted() {
-            let path = layout.resolve(application)
+        for path in changed.sorted() {
             let outcome = registrar.register(bundleAt: path)
             switch outcome {
             case .done:
@@ -233,11 +256,6 @@ public final class InstallerRunner {
                 emit(.warning(.leftoverBundle(path: path, detail: String(describing: error))))
                 succeeded = false
             }
-        }
-        let refreshed = registrar.refresh(directory: applicationsDirectory)
-        if !refreshed.succeeded {
-            emit(.warning(.refreshFailed(detail: refreshed.reason)))
-            succeeded = false
         }
         return succeeded
     }
@@ -418,5 +436,28 @@ public final class InstallerRunner {
 
     private func directoryEntries(_ path: String) -> [String] {
         (try? FileManager.default.contentsOfDirectory(atPath: path)) ?? []
+    }
+}
+
+/// An `Info.plist` as `stat(2)` saw it: a file written in place moves its
+/// change time, one replaced by a new bundle is another inode.
+struct BundleStamp: Equatable {
+    let device: dev_t
+    let inode: ino_t
+    let size: off_t
+    let changed: timespec
+
+    init?(infoPlist path: String) {
+        var info = stat()
+        guard stat(path, &info) == 0 else { return nil }
+        device = info.st_dev
+        inode = info.st_ino
+        size = info.st_size
+        changed = info.st_ctimespec
+    }
+
+    static func == (lhs: BundleStamp, rhs: BundleStamp) -> Bool {
+        lhs.device == rhs.device && lhs.inode == rhs.inode && lhs.size == rhs.size
+            && lhs.changed.tv_sec == rhs.changed.tv_sec && lhs.changed.tv_nsec == rhs.changed.tv_nsec
     }
 }
