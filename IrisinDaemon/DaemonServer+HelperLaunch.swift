@@ -7,6 +7,23 @@ extension DaemonServer {
     /// the job as JSON on standard input, and one pipe for everything it
     /// prints. Returns the read end of that pipe.
     static func startHelper(at helper: String, job: InstallerJob) throws -> Int32 {
+        var output: [Int32] = [-1, -1]
+        guard pipe(&output) == 0 else { throw IrisinFailure(errno: errno) }
+        do {
+            try spawnHelper(at: helper, job: job, standardOutput: output[1], package: nil)
+        } catch {
+            close(output[0]); close(output[1])
+            throw error
+        }
+        close(output[1])
+        return output[0]
+    }
+
+    /// Starts `irisin-install` the same way for an external transaction:
+    /// everything it prints goes to `standardOutput` (the transaction's
+    /// journal), and `package`, when there is one, is its descriptor 3. The
+    /// caller keeps and closes both of its own descriptors.
+    static func spawnHelper(at helper: String, job: InstallerJob, standardOutput: Int32, package: Int32?) throws {
         var info = stat()
         guard stat(helper, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == 0,
               info.st_mode & (S_IWGRP | S_IWOTH) == 0
@@ -16,19 +33,17 @@ extension DaemonServer {
         let payload = try job.encoded()
 
         var input: [Int32] = [-1, -1]
-        var output: [Int32] = [-1, -1]
         guard pipe(&input) == 0 else { throw IrisinFailure(errno: errno) }
-        guard pipe(&output) == 0 else {
-            close(input[0]); close(input[1])
-            throw IrisinFailure(errno: errno)
-        }
 
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
         defer { posix_spawn_file_actions_destroy(&actions) }
         posix_spawn_file_actions_adddup2(&actions, input[0], STDIN_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, output[1], STDOUT_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, output[1], STDERR_FILENO)
+        posix_spawn_file_actions_adddup2(&actions, standardOutput, STDOUT_FILENO)
+        posix_spawn_file_actions_adddup2(&actions, standardOutput, STDERR_FILENO)
+        if let package {
+            posix_spawn_file_actions_adddup2(&actions, package, InstallerJob.External.packageDescriptor)
+        }
 
         var attributes: posix_spawnattr_t?
         posix_spawnattr_init(&attributes)
@@ -53,10 +68,8 @@ extension DaemonServer {
         var pid: pid_t = 0
         let spawned = posix_spawn(&pid, helper, &actions, &attributes, &argv, &envp)
         close(input[0])
-        close(output[1])
         guard spawned == 0 else {
             close(input[1])
-            close(output[0])
             throw IrisinFailure(errno: spawned, path: helper)
         }
 
@@ -74,6 +87,5 @@ extension DaemonServer {
             }
         }
         close(input[1])
-        return output[0]
     }
 }

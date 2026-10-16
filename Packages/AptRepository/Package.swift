@@ -37,6 +37,7 @@ let package = Package(
                 // targets named `libarchive` do not resolve.
                 .product(name: "ArchiveKit", package: "libarchive.xcframework"),
                 .product(name: "IrisinProtocol", package: "IrisinKit"),
+                .product(name: "IrisinPreparation", package: "IrisinKit"),
                 .product(name: "WCDBSwift", package: "wcdb.xcframework"),
                 "LRUCache",
             ]

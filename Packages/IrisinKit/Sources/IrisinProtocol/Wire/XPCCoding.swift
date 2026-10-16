@@ -46,4 +46,59 @@
             return try decode(Data(bytes: bytes, count: count))
         }
     }
+    public extension ExternalTransaction.Record {
+        /// A transaction's state into a reply: `txid`, `kind`, `state`,
+        /// `next`, and `exit`, `package`, `pkgver`, `failure`, `failtext`
+        /// when there is one.
+        func encode(into reply: xpc_object_t) {
+            xpc_dictionary_set_string(reply, IrisinWire.Key.transaction, transaction)
+            xpc_dictionary_set_string(reply, IrisinWire.Key.kind, request.kind.rawValue)
+            xpc_dictionary_set_string(reply, IrisinWire.Key.state, state.rawValue)
+            xpc_dictionary_set_uint64(reply, IrisinWire.Key.nextSequence, nextSequence)
+            if let exitStatus {
+                xpc_dictionary_set_int64(reply, IrisinWire.Key.exitStatus, Int64(exitStatus))
+            }
+            if let identity = package?.identity ?? request.identity {
+                xpc_dictionary_set_string(reply, IrisinWire.Key.packageIdentity, identity)
+            }
+            if let version = package?.version {
+                xpc_dictionary_set_string(reply, IrisinWire.Key.packageVersion, version)
+            }
+            if let failure {
+                if let problem = failure.problem {
+                    xpc_dictionary_set_string(reply, IrisinWire.Key.failure, problem)
+                }
+                xpc_dictionary_set_string(reply, IrisinWire.Key.failureText, failure.text)
+            }
+        }
+    }
+
+    public extension ExternalTransaction.Event {
+        /// One event as a dictionary: `seq`, `kind`, `text`, `raw`, and
+        /// whichever of `phase`, `step`, `package`, `pkgver`, `done`,
+        /// `total`, `exit` and `failure` (the problem) it has.
+        func encoded() -> xpc_object_t {
+            let event = xpc_dictionary_create(nil, nil, 0)
+            xpc_dictionary_set_uint64(event, IrisinWire.Key.sequence, sequence)
+            xpc_dictionary_set_string(event, IrisinWire.Key.kind, kind)
+            xpc_dictionary_set_string(event, IrisinWire.Key.text, text)
+            xpc_dictionary_set_string(event, IrisinWire.Key.raw, raw)
+            let strings: [(String, String?)] = [
+                (IrisinWire.Key.phase, phase), (IrisinWire.Key.step, step),
+                (IrisinWire.Key.packageIdentity, identity), (IrisinWire.Key.packageVersion, version),
+                (IrisinWire.Key.failure, problem),
+            ]
+            for case let (key, value?) in strings {
+                xpc_dictionary_set_string(event, key, value)
+            }
+            let numbers: [(String, Int64?)] = [
+                (IrisinWire.Key.completed, completed), (IrisinWire.Key.total, total),
+                (IrisinWire.Key.exitStatus, exitStatus),
+            ]
+            for case let (key, value?) in numbers {
+                xpc_dictionary_set_int64(event, key, value)
+            }
+            return event
+        }
+    }
 #endif

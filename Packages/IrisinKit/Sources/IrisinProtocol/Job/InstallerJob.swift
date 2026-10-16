@@ -30,6 +30,10 @@ public enum InstallerJob: Codable, Equatable, Sendable {
     /// Make mobile's home where this bootstrap's apps are registered with it,
     /// when it is missing. The helper derives the path; none crosses the wire.
     case prepareUserHome
+    /// A transaction another package's program submitted under its own id
+    /// (`submitInstall`, `removePackage`). Started by the daemon alone,
+    /// never through `run`.
+    case external(External)
 
     /// Every package of ours starts with this, on both bootstraps.
     public static let selfIdentityPrefix = "wiki.qaq.irisin"
@@ -44,6 +48,7 @@ public enum InstallerJob: Codable, Equatable, Sendable {
         case .reloadAirDrop: "reloadAirDrop"
         case .enterSafeMode: "enterSafeMode"
         case .prepareUserHome: "prepareUserHome"
+        case .external: "external"
         }
     }
 }
@@ -59,6 +64,10 @@ public extension InstallerJob {
     /// path must be absolute, NUL-free and end in `.deb`; whether it exists is
     /// the daemon's question, answered after `realpath`.
     func validate() throws {
+        if case let .external(external) = self {
+            try external.validate()
+            return
+        }
         guard case let .transaction(transaction) = self else { return }
         guard !transaction.stages.isEmpty else {
             throw IrisinFailure(code: .invalidRequest)
@@ -148,7 +157,7 @@ public extension InstallerJob {
     }
 
     /// Exactly 64 lowercase hexadecimal digits.
-    private static func isSHA256Hex(_ text: String) -> Bool {
+    static func isSHA256Hex(_ text: String) -> Bool {
         text.count == 64 && text.utf8.allSatisfy { (48 ... 57).contains($0) || (97 ... 102).contains($0) }
     }
 

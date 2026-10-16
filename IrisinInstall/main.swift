@@ -58,7 +58,13 @@ try? FileManager.default.createDirectory(
     withIntermediateDirectories: true
 )
 let logDescriptor: Int32
-if case .transaction = job {
+// an external client's transaction is a transaction too; its own journal is
+// this process's standard output
+let startsFreshLog = switch job {
+case .transaction, .external: true
+default: false
+}
+if startsFreshLog {
     rename(logPath, logPath + ".previous")
     logDescriptor = open(logPath, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0o644)
 } else {

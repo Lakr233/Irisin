@@ -14,7 +14,9 @@ The single idea the design hangs off: **the daemon starts one helper for one
 closed job and hands the app the helper's output pipe.** No command line ever
 crosses the XPC boundary, the daemon keeps no state, and the helper runs in
 its own session so the package that replaces this app still installs to the
-end.
+end. Another package's program (Apelin's session host first) installs the
+same way through the external operations, where the helper writes into a
+transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.md`.
 
 ## Hard rules
 
@@ -57,7 +59,10 @@ end.
   package inputs and composes script arguments itself from those fields.
   There is no `exec(path, argv)` and there will not be one: a root daemon
   that can be talked into running a command is a root shell for whoever can
-  talk to it.
+  talk to it. An external client's operations are closed the same way: a
+  package by descriptor, a removal by id, a respring, each under a
+  transaction id it chose (`InstallerJob.external` carries the id and the
+  digest or package id, never a path).
 - **The app's data lives in `~/Documents/wiki.qaq.irisin`, and the package
   makes it.** An app without a container shares mobile's home with every
   other one, so its data goes in a folder named for its bundle id — the
@@ -113,10 +118,17 @@ end.
   with a `rebuildIconCache` job. A fix
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.
-- **Peer authentication is the whole trust boundary.** Audit token, then the
-  `wiki.qaq.irisin.client`, `platform-application` and `no-sandbox`
-  entitlements, then the executable on disk equal to the installed app and
-  root-owned. Before the first request field is read.
+- **Peer authentication is the whole trust boundary.** Audit token (pid > 1,
+  euid 0 or 501), then the `wiki.qaq.irisin.client`, `platform-application`
+  and `no-sandbox` entitlements, each strictly true, then the executable on
+  disk: canonical (`realpath`, a NUL refused first), inside the install root
+  by component or on the read-only volume at `/`, every directory from the
+  install root down owned by root or a system account and writable by no one
+  else, the file regular, root-owned, owner-executable and not group- or
+  world-writable (`ExecutableAdmission`). Irisin's own app keeps its exact-path
+  rule beside that. Before the first request field is read. This trusts
+  every installed package that meets the checks; the entitlement is
+  eligibility, not identity (Decisions below).
 - **The daemon's absence is never surfaced as an error.** It is on-demand: a
   miss means launchd has not started it yet. `PrivilegedBackend.start()` keeps
   asking; a build with no daemon beside its bundle settles on the local
@@ -259,7 +271,10 @@ end.
   dependency into `irisin-install`.** The daemon links `IrisinProtocol`
   and nothing else. The helper links `IrisinProtocol`,
   `IrisinInstaller` and, through it, `IcliKit`, which is ours and brings
-  libarchive with it. Nothing else is added to either.
+  libarchive with it, and `IrisinPreparation`, which reads a submitted
+  `.deb` with that same libarchive. Nothing else is added to either.
+  `Packages/IrisinExternalClient`, the library other packages vendor into
+  their own root process, links system libraries alone.
 - **User-facing text is a `String.LocalizationValue` spelled out in
   English** (`String(localized: "Clear Downloads")`, `presentNotice(title:
   "Error")`), resolved against `Localizable.xcstrings`. No `NSLocalizedString`,
@@ -423,11 +438,16 @@ end.
   operation page's reduction of the transcript (`OperationMonitor`,
   `OperationPackages`), queue resolution, notification bindings, the path
   list and the depiction's contact parsing.
-- `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`),
+- `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`,
+  `ExecutableAdmission`, `ExternalTransaction`),
   `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),
-  `IrisinClient` (`DaemonLink`, `JobTranscript`), `IrisinAdapter`
-  (`PackageAdapter`, `PackageAdapters`, `BootstrapArchitecture`), each with
-  `swift test`.
+  `IrisinPreparation` (`DebianPreparation`, a `.deb` into a prepared tree,
+  the app's and the helper's), `IrisinClient` (`DaemonLink`,
+  `JobTranscript`), `IrisinAdapter` (`PackageAdapter`, `PackageAdapters`,
+  `BootstrapArchitecture`), each with `swift test`.
+- `Packages/IrisinExternalClient/` — the external clients' library and its C
+  shim, no dependency on the rest of Irisin; `IrisinExternalContractTests`
+  in IrisinKit holds its wire to `IrisinProtocol`'s.
 - `Packages/<Name>/` — in-house or locally modified libraries
   (AptRepository, PackageDepiction, ...). Runestone and MarkdownView are
   vendored and cut down for size, and each README says from what and how:
@@ -443,6 +463,40 @@ end.
   is Auto Layout throughout, so its height is its own and nothing measures it.
   Everything with a usable upstream release is a remote package reference.
 - `Configuration/`, `Packaging/`, `Scripts/`, `Makefile` — build inputs.
+
+## Decisions
+
+- **External clients (4.7).** irisind serves programs other than Irisin's
+  app so that other packages install through Irisin rather than through
+  dpkg behind its back (Apelin's session host first). Admission is a place
+  and a shape, not a name: see the trust-boundary rule above and
+  `Documentation/ExternalClients.md`. **The trust model: any installed
+  package whose root-owned program meets the checks is trusted, not Apelin
+  alone.** A package that can install, sign itself and leave a root-owned
+  executable in root-owned directories is already a trusted participant;
+  `wiki.qaq.irisin.client` is the public contract for third-party clients
+  and says only that a program means to be one. It is not an identity and
+  isolates no installed package from another. If that isolation is ever
+  needed, it takes an identity a package cannot declare for itself, decided
+  afresh, never another entitlement name.
+- **External transactions live on disk, not in the daemon.**
+  `<root>/var/lib/irisin/transactions/<id>/`, root's, 0700: the request, the
+  helper's journal (its standard output, one `InstallerOutput` line per
+  event, line n is event n, read back by sequence), the installed package's
+  id and version. The daemon takes an exclusive `flock` on the journal that
+  the helper inherits, so a journal with no `exit` that nobody holds is an
+  interrupted run. `mkdir` makes an id taken: the same id and request twice
+  answers from the record and installs once; a different request is
+  `conflict`. Records go a week after their last event.
+- **A submitted package is copied before it is read.** The client's
+  descriptor reaches the helper as descriptor 3; the helper copies it from
+  offset 0 into the transaction's directory, hashes the copy, refuses one
+  that does not match the client's digest, and prepares and installs only
+  the copy, removed when the run ends. The helper decodes it as root, unlike
+  an app download, which is decoded as mobile: the client is a trusted root
+  participant and the package's maintainer scripts run as root regardless.
+  No resolver: missing dependencies fail at verifying, a removal never takes
+  dependents with it, Irisin's own packages are refused.
 
 ## Strings
 

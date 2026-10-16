@@ -25,17 +25,18 @@ import IrisinProtocol
 final class DaemonServer: @unchecked Sendable {
     private static let idleExitDelay: DispatchTimeInterval = .seconds(3)
 
-    private let controlQueue = DispatchQueue(
+    let controlQueue = DispatchQueue(
         label: "wiki.qaq.irisin.daemon.control",
         qos: .utility,
         autoreleaseFrequency: .workItem
     )
-    private let installRoot: String
-    private let helperPath: String
+    let installRoot: String
+    let helperPath: String
     private let authenticator: PeerAuthenticator
     /// Keeps the activated listener alive; nothing reads it.
     private var listener: xpc_connection_t?
-    private var peers = Set<ObjectIdentifier>()
+    /// Each admitted peer's executable, by connection.
+    private var peers: [ObjectIdentifier: String] = [:]
     private var idleGeneration: UInt64 = 0
     private var nextJobIdentifier: UInt64 = 1
 
@@ -72,15 +73,14 @@ final class DaemonServer: @unchecked Sendable {
 
     private func accept(_ event: xpc_object_t) {
         guard xpc_get_type(event) == IrisinXPC.typeConnection else { return }
-        guard let pid = authenticator.authenticate(event) else {
-            log.warning("peer rejected")
+        guard let peer = authenticator.authenticate(event) else {
             xpc_connection_cancel(event)
             scheduleIdleExit()
             return
         }
-        log.info("peer accepted pid \(pid)")
+        log.info("peer accepted pid \(peer.pid) \(peer.executable, privacy: .public)")
         let key = ObjectIdentifier(event as AnyObject)
-        peers.insert(key)
+        peers[key] = peer.executable
         xpc_connection_set_target_queue(event, controlQueue)
         xpc_connection_set_event_handler(event) { [weak self] message in
             autoreleasepool { self?.handle(message, connection: event, key: key) }
@@ -89,7 +89,7 @@ final class DaemonServer: @unchecked Sendable {
     }
 
     private func handle(_ message: xpc_object_t, connection: xpc_connection_t, key: ObjectIdentifier) {
-        guard peers.contains(key) else { return }
+        guard let client = peers[key] else { return }
         guard xpc_get_type(message) == IrisinXPC.typeDictionary else {
             // The connection errors arrive here.
             peerInvalidated(key)
@@ -105,7 +105,7 @@ final class DaemonServer: @unchecked Sendable {
             else {
                 throw IrisinFailure(code: .invalidRequest)
             }
-            try perform(operation, message: message, into: reply)
+            try perform(operation, message: message, into: reply, client: client)
             xpc_dictionary_set_int64(reply, IrisinWire.Key.code, IrisinReplyCode.success.rawValue)
         } catch let failure as IrisinFailure {
             failure.encode(into: reply)
@@ -126,12 +126,22 @@ final class DaemonServer: @unchecked Sendable {
         }
     }
 
-    private func perform(_ operation: IrisinOperation, message: xpc_object_t, into reply: xpc_object_t) throws {
+    private func perform(
+        _ operation: IrisinOperation,
+        message: xpc_object_t,
+        into reply: xpc_object_t,
+        client: String
+    ) throws {
         switch operation {
         case .hello:
             xpc_dictionary_set_string(reply, IrisinWire.Key.installRoot, installRoot)
         case .run:
             let job = try InstallerJob.decode(from: message)
+            // An external transaction has a directory, a journal and a
+            // package descriptor that only its own operation sets up.
+            if case .external = job {
+                throw IrisinFailure(code: .invalidRequest)
+            }
             let resolved = try resolve(job)
             let descriptor = try Self.startHelper(at: helperPath, job: resolved)
             let identifier = nextJobIdentifier
@@ -142,6 +152,8 @@ final class DaemonServer: @unchecked Sendable {
             xpc_dictionary_set_uint64(reply, IrisinWire.Key.jobIdentifier, identifier)
         case .goodbye:
             break
+        case .serviceInfo, .submitInstall, .transactionStatus, .transactionEvents, .removePackage, .respring:
+            try performExternal(operation, message: message, into: reply, client: client)
         }
     }
 
@@ -175,7 +187,7 @@ final class DaemonServer: @unchecked Sendable {
     // MARK: - Lifetime
 
     private func peerInvalidated(_ key: ObjectIdentifier) {
-        peers.remove(key)
+        peers.removeValue(forKey: key)
         scheduleIdleExit()
     }
 

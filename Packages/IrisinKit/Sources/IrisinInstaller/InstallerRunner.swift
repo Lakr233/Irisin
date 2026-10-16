@@ -16,9 +16,12 @@ import IrisinProtocol
 /// `layout.resolve`, spelled the same way whether it is being registered or
 /// unregistered: icli matches LaunchServices records by path.
 public final class InstallerRunner {
-    private let installRoot: String
-    private let layout: BootstrapLayout
-    private let emit: (InstallerEvent) -> Void
+    let installRoot: String
+    let layout: BootstrapLayout
+    let emit: (InstallerEvent) -> Void
+    /// Where an external install's package arrives: descriptor 3, which the
+    /// daemon passed through. The harness hands a file of its own.
+    var externalPackageDescriptor = InstallerJob.External.packageDescriptor
     private let registrar: ApplicationRegistrar
     private let daemonManager: LaunchDaemon
     /// `ProcessTable.signal`, except in the harness: a Mac running a
@@ -87,6 +90,8 @@ public final class InstallerRunner {
             signal("SpringBoard", SIGSEGV)
         case .prepareUserHome:
             prepareUserHome()
+        case let .external(external):
+            runExternal(external)
         }
         if status == 0 {
             emit(.phase(.completed))
@@ -112,7 +117,7 @@ public final class InstallerRunner {
 
     // MARK: - Transaction
 
-    private func runTransaction(_ transaction: InstallerJob.Transaction) -> Int32 {
+    func runTransaction(_ transaction: InstallerJob.Transaction) -> Int32 {
         let applicationsBefore = applicationBundles()
         emit(.notice("Install root \(installRoot.isEmpty ? "/" : installRoot)"))
         emit(.notice("Applications directory \(applicationsDirectory)"))

@@ -1,0 +1,9 @@
+// `XPC_TYPE_*` and `XPC_ERROR_CONNECTION_*` are C macros over libSystem
+// globals. In Swift the same spellings resolve to accessors in
+// /usr/lib/swift/libswiftXPC.dylib, which iOS 15 does not have, and one use
+// makes that library a required load. So they are read through C here, and
+// the client's Swift never names them.
+module CIrisinExternalXPC [system] {
+    header "shim.h"
+    export *
+}

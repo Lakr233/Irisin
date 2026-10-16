@@ -7,7 +7,8 @@ import PackageDescription
 ///
 /// irisind links IrisinProtocol only. irisin-install links
 /// IrisinProtocol + IrisinInstaller, and through the installer our own
-/// icli (`IcliKit`), on iOS alone. The app links IrisinProtocol +
+/// icli (`IcliKit`), on iOS alone, and `IrisinPreparation`, which reads a
+/// `.deb` with the libarchive icli already brings. The app links IrisinProtocol +
 /// IrisinClient + IrisinAdapter, and calls IrisinInstaller only in
 /// the simulator. Nothing here imports UIKit and nothing
 /// third-party may reach the daemon: launchd caps it at 6 MB.
@@ -19,11 +20,16 @@ let package = Package(
         .library(name: "IrisinInstaller", type: .static, targets: ["IrisinInstaller"]),
         .library(name: "IrisinClient", targets: ["IrisinClient"]),
         .library(name: "IrisinAdapter", targets: ["IrisinAdapter"]),
+        .library(name: "IrisinPreparation", targets: ["IrisinPreparation"]),
     ],
     dependencies: [
         // Our own LaunchServices and SpringBoard code, linked into the helper
         // as a library: app registration and the graceful respring. iOS only.
         .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.8.5"),
+        // icli's own libarchive, named here for `IrisinPreparation`: the same
+        // package, so the helper gains no second copy, and the app already
+        // links it through AptRepository.
+        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.0"),
         // Reads Mach-O for the adapter, as it does for Fila's inspector: where
         // a load command is, how long, what it says. It writes nothing; the
         // adapter's own code rewrites and signs. The adapter's alone.
@@ -35,6 +41,9 @@ let package = Package(
         // Xcode drops the constraint of a dependency no target uses; MachOKit
         // links it regardless. Goes when MachOKit asks for 0.3.0 itself.
         .package(url: "https://github.com/p-x9/swift-fileio-extra.git", from: "0.3.0"),
+        // The external clients' library, for the test that holds its wire to
+        // IrisinProtocol's. Nothing that ships links it from here.
+        .package(path: "../IrisinExternalClient"),
     ],
     targets: [
         // The SDK's XPC constants, read through C so nothing links the Swift
@@ -45,12 +54,24 @@ let package = Package(
         // side. Free of anything platform-specific beyond XPC.
         .target(name: "IrisinProtocol", dependencies: ["CIrisinXPC"]),
 
+        // A `.deb` into the prepared tree the helper installs from. The app
+        // runs it as mobile on what it downloaded; the helper on a package an
+        // external client submitted.
+        .target(
+            name: "IrisinPreparation",
+            dependencies: [
+                "IrisinProtocol",
+                .product(name: "ArchiveKit", package: "libarchive.xcframework"),
+            ]
+        ),
+
         // What `irisin-install` does as root: the dpkg transaction and the
         // maintenance actions, each with a fixed argv composed here.
         .target(
             name: "IrisinInstaller",
             dependencies: [
                 "IrisinProtocol",
+                "IrisinPreparation",
                 .product(name: "IcliKit", package: "icli", condition: .when(platforms: [.iOS])),
             ]
         ),
@@ -79,6 +100,10 @@ let package = Package(
         .testTarget(name: "IrisinProtocolTests", dependencies: ["IrisinProtocol"]),
         .testTarget(name: "IrisinInstallerTests", dependencies: ["IrisinInstaller"]),
         .testTarget(name: "IrisinClientTests", dependencies: ["IrisinClient"]),
+        .testTarget(
+            name: "IrisinExternalContractTests",
+            dependencies: ["IrisinProtocol", .product(name: "IrisinExternalClient", package: "IrisinExternalClient")]
+        ),
         .testTarget(
             name: "IrisinAdapterTests",
             dependencies: ["IrisinAdapter", .product(name: "MachOKit", package: "MachOKit")],

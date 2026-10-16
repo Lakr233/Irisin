@@ -4,8 +4,9 @@ import Foundation
 import IrisinProtocol
 
 /// Executes the resolver's closed stages without invoking apt or dpkg. Archive
-/// decoding stays in the app; only verified blobs, scripts and metadata reach
-/// this implementation. The standard dpkg database remains authoritative.
+/// decoding stays in the app (or, for an external client's package, in
+/// `InstallerRunner.runExternal` before this runs); only verified blobs,
+/// scripts and metadata reach this implementation. The standard dpkg database remains authoritative.
 ///
 /// What it says while it works is an `InstallerEvent` per line: the phase it
 /// is in, each package step with a running count, every script it starts and

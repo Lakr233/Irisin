@@ -8,6 +8,9 @@
       location = "group:Packages/IrisinKit">
    </FileRef>
    <FileRef
+      location = "group:Packages/IrisinExternalClient">
+   </FileRef>
+   <FileRef
       location = "group:Packages/AptRepository">
    </FileRef>
    <FileRef
