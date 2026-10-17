@@ -62,12 +62,15 @@ The Mach service `wiki.qaq.irisin.service`, on-demand: looking it up starts
 the daemon, which exits about three seconds after its last client leaves.
 A client connects with `xpc_connection_create_mach_service(name, queue, 0)`
 and sends each request with `xpc_connection_send_message_with_reply`.
-`XPC_ERROR_CONNECTION_INVALID` means the service is absent or refused this
-program (the daemon cancels a connection it does not admit); a client keeps
-trying for a while before it concludes either, as the daemon may simply not
-have started yet. `XPC_ERROR_CONNECTION_INTERRUPTED` means the daemon went
-away (idle exit, or Irisin updating itself); ask again on the same
-connection or a new one. No state is lost: transactions live on disk.
+A refused program learns nothing about why: the daemon cancels the peer
+connection, and on a device every request on it then fails with
+`XPC_ERROR_CONNECTION_INTERRUPTED`, the same error a daemon that went away
+(idle exit, or Irisin updating itself) gives. `XPC_ERROR_CONNECTION_INVALID`
+means no such service. So a client asks again for a while, and if every
+attempt is interrupted it reads irisind's log, where each refusal is one
+line with its reason (`peer rejected: <path> untrustedDirectory(...)`,
+`untrustedFile`, `outsideTrustedPlaces`, `lacks a client entitlement`). No
+state is lost to an interruption: transactions live on disk.
 
 Every request is a dictionary with:
 
@@ -261,8 +264,9 @@ for try await event in irisin.follow(id) { /* event.kind, event.text, ... */ }
 status = try await irisin.status(of: id)              // .succeeded / .failed / .interrupted
 ```
 
-`IrisinClientError.Code` adds to the reply codes: `serviceUnavailable` (the
-connection was refused or the service does not exist), `connectionInterrupted`,
+`IrisinClientError.Code` adds to the reply codes: `serviceUnavailable` (no
+such service), `connectionInterrupted` (the daemon went away, or refused this
+program: on a device the two look the same),
 `serviceTooOld` and `malformedReply`. `follow` retries a dropped connection for
 about a minute, so a daemon replaced mid-run loses nothing.
 

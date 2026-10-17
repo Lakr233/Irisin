@@ -84,13 +84,14 @@ public struct IrisinClientError: Error, Equatable, Sendable, CustomStringConvert
         case conflict // 5
         /// A reply code this client does not know.
         case unknownReply(Int64)
-        /// The connection was refused or the service does not exist: Irisin
-        /// is not installed, or its daemon did not admit this program.
-        /// irisind is on-demand; a client keeps retrying for a while before
-        /// it concludes either.
+        /// The service does not exist: Irisin is not installed, or its
+        /// daemon is not loaded. irisind is on-demand; a client keeps
+        /// retrying for a while before it concludes that.
         case serviceUnavailable
         /// The connection dropped before the reply. The daemon exits when
-        /// idle and may be replaced by an update; ask again.
+        /// idle and may be replaced by an update; ask again. A daemon that
+        /// refused this program also looks like this, on every request:
+        /// irisind's log says why.
         case connectionInterrupted
         /// The daemon answered `serviceInfo` as an unknown operation: an
         /// Irisin older than 4.7, with no external operations at all.
