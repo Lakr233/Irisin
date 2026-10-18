@@ -86,7 +86,7 @@ struct OwnApplicationTests {
 
         let registrar = RegistrarStandIn(registered: [bundle(fixture)])
         let runner = runner(fixture, registrar)
-        #expect(runner.run(try transaction(fixture, install: [irisin(fixture, version: "2", bundle: "Irisin.app")])) == 0)
+        #expect(runner.run(try transaction(fixture, install: [irisin(fixture, version: "2", bundle: "Renamed.app")])) == 0)
         #expect(registrar.requests.isEmpty)
         runner.finishAfterExit { _ in }
         #expect(registrar.requests == [.unregister(bundle: bundle(fixture))])
