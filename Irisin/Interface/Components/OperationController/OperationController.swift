@@ -42,6 +42,9 @@ final class OperationController: UIViewController, UITableViewDelegate {
     private lazy var icons = PackageIconCache { [weak self] in self?.reconfigure() }
     private(set) var monitor: OperationMonitor?
     let ignoresScriptFailures: Bool
+    /// The run this one tried again changed the tweaks. This run reads the
+    /// directories only after that, and would not see it on its own.
+    private let followsTweakChange: Bool
     private var subscriptions = Set<AnyCancellable>()
     /// The row the list last scrolled to, so it follows a package once.
     private var followed: String?
@@ -49,6 +52,11 @@ final class OperationController: UIViewController, UITableViewDelegate {
     /// offers Hide. The operation keeps running and its log stays on disk.
     private var stallWatchdog: Timer?
     private static let stallInterval: TimeInterval = 120
+    /// When the page appeared. A text button set in the bar while it still
+    /// settles from Try Again's push came up white on white on iOS 26, so
+    /// the closing button waits until the page has been up this long.
+    private var appearedAt: Date?
+    private static let barSettleInterval: TimeInterval = 1
     /// Under the list while every row is done and the helper still works:
     /// triggers, the home screen, the app reading the database back. Always
     /// in place so fading it moves nothing. The label fades, not the footer:
@@ -133,8 +141,9 @@ final class OperationController: UIViewController, UITableViewDelegate {
         }
     }
 
-    init(operation: Installer.OperationPayload) {
+    init(operation: Installer.OperationPayload, followsTweakChange: Bool = false) {
         self.operation = operation
+        self.followsTweakChange = followsTweakChange
         // read now: a finished operation empties the queue
         changes = QueueChange.changes(
             of: operation.plan,
@@ -225,6 +234,7 @@ final class OperationController: UIViewController, UITableViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         guard monitor == nil else { return }
+        appearedAt = Date()
         let monitor = Installer.shared.beginOperation(operation: operation)
         self.monitor = monitor
         bind(monitor)
@@ -372,13 +382,26 @@ final class OperationController: UIViewController, UITableViewDelegate {
                 applySnapshot()
                 updateFinishingFooter()
                 view.setNeedsLayout()
-                finishOperation(succeeded: outcome.succeeded, requiresExit: monitor.requiresExit)
+                let settled = Self.barSettleInterval - Date().timeIntervalSince(appearedAt ?? .distantPast)
+                Task { [weak self] in
+                    if settled > 0 {
+                        try? await Task.sleep(seconds: settled)
+                    }
+                    guard let self else { return }
+                    finishOperation(succeeded: outcome.succeeded, ending: ending(of: monitor))
+                }
                 UIAccessibility.post(
                     notification: .announcement,
                     argument: outcome.succeeded ? String(localized: "Operation completed.") : statusContent().text
                 )
             }
             .store(in: &subscriptions)
+    }
+
+    /// The monitor's, but a sheet whose earlier run changed the tweaks
+    /// still has them to load when this one changed none.
+    private func ending(of monitor: OperationMonitor) -> OperationMonitor.Ending {
+        monitor.ending == .close && followsTweakChange ? .reloadHomeScreen : monitor.ending
     }
 
     private func refreshVisibleRows() {
@@ -460,7 +483,11 @@ final class OperationController: UIViewController, UITableViewDelegate {
                     message: manager.blocked ?? (report.isEmpty ? fallback : report)
                 )
             }
-            navigationController?.pushViewController(OperationController(operation: payload), animated: true)
+            let next = OperationController(
+                operation: payload,
+                followsTweakChange: followsTweakChange || monitor?.changedTweaks == true
+            )
+            navigationController?.pushViewController(next, animated: true)
         }
     }
 

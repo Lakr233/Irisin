@@ -77,9 +77,35 @@ final class OperationMonitor {
         packages = OperationPackages(stages: operation.transaction.stages)
     }
 
+    /// What the page's button does once the operation is over.
+    enum Ending: Equatable {
+        /// Closes the page.
+        case close
+        /// The tweak directories changed, and the home screen loads them
+        /// only as it starts: reload it, or skip that for now.
+        case reloadHomeScreen
+        /// The transaction replaced this app, which registers itself and
+        /// leaves. Registering stops the app, so nothing can follow it, a
+        /// reload of the home screen included.
+        case updateApp
+    }
+
+    /// Whether the run left the tweak directories different, as it finished.
+    private(set) var changedTweaks = false
+
     /// Whether finishing means leaving: the transaction replaced this app.
     var requiresExit: Bool {
         operation.transaction.touchesSelf && !operation.transaction.dryRun
+    }
+
+    var ending: Ending {
+        if requiresExit {
+            .updateApp
+        } else if changedTweaks {
+            .reloadHomeScreen
+        } else {
+            .close
+        }
     }
 
     /// The outcome, once there is one.
@@ -135,10 +161,12 @@ final class OperationMonitor {
     }
 
     /// The summary becomes the last row, then the outcome is published: a
-    /// subscriber that reacts to the outcome sees the complete log. A reason
-    /// the helper already said as its failure is not said twice.
-    func finish(_ result: Outcome) {
+    /// subscriber that reacts to the outcome sees the complete log and the
+    /// ending. A reason the helper already said as its failure is not said
+    /// twice.
+    func finish(_ result: Outcome, changedTweaks: Bool = false) {
         guard outcome == nil else { return }
+        self.changedTweaks = changedTweaks
         switch result {
         case .succeeded:
             lines.append(String(localized: "Operation completed."))

@@ -93,7 +93,15 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `InstallerEvent+Console` spells them in the user's language. The
   operation page is the queue's list with a ring per row and nothing else
   that moves; a failure offers Try Again as a small link below the list,
-  which runs the re-solved queue in a new controller in the same sheet. A
+  which runs the re-solved queue in a new controller in the same sheet. The
+  button that closes it is the monitor's `Ending`: Done, Done that leaves
+  after an update of Irisin, or Reload Home Screen when the run, failed or
+  not, left the tweak loader's directories different (`TweakInjection`,
+  read before the helper starts and after the installed list is read back;
+  a daemon a tweak injects into is the tweak's own to restart). Touch and
+  hold has Skip for Now, and a run Try Again follows keeps the change. An
+  update of Irisin stays Done: registering stops the app, so nothing can
+  follow it. A
   footnote under the list fades in while the helper finishes after the last row, and the helper's
   lines are on the log page and on the failed package's page, never on the
   list. The

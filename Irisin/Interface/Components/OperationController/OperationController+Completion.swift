@@ -45,35 +45,61 @@ extension OperationController {
                 UIAction(
                     title: String(localized: "Reload Home Screen"),
                     image: UIImage(systemName: "arrow.clockwise")
-                ) { [weak self] _ in
-                    self?.dismiss(animated: true) {
-                        UIApplication.prepareForExitAndSuspend()
-                        Task { await PrivilegedBackend.run(.respring) }
-                    }
-                },
+                ) { [weak self] _ in self?.reloadHomeScreen() },
             ]),
         ]
     }
 
-    func finishOperation(succeeded: Bool, requiresExit: Bool) {
+    func finishOperation(succeeded: Bool, ending: OperationMonitor.Ending) {
         // the status row says how it went; this button only says what it does
-        let close = UIBarButtonItem(
-            image: UIImage(systemName: "checkmark"),
-            primaryAction: UIAction { [weak self] _ in
-                guard let self else { return }
-                if requiresExit {
-                    exitForUpgrade()
-                } else {
-                    dismiss(animated: true)
+        let button = switch ending {
+        case .reloadHomeScreen:
+            reloadButton()
+        case .close, .updateApp:
+            UIBarButtonItem(
+                image: UIImage(systemName: "checkmark"),
+                primaryAction: UIAction { [weak self] _ in
+                    guard let self else { return }
+                    if ending == .updateApp {
+                        exitForUpgrade()
+                    } else {
+                        dismiss(animated: true)
+                    }
                 }
-            }
-        )
-        close.style = .done
-        close.accessibilityLabel = String(localized: "Done")
-        close.accessibilityValue = succeeded
+            ).then { $0.accessibilityLabel = String(localized: "Done") }
+        }
+        button.style = .done
+        button.accessibilityValue = succeeded
             ? String(localized: "Operation completed.")
             : String(localized: "Operation failed. Try again.")
-        navigationItem.rightBarButtonItems = [close]
+        navigationItem.rightBarButtonItems = [button]
+    }
+
+    /// The tweaks changed: a tap reloads the home screen, and touching and
+    /// holding offers to close the page without it.
+    private func reloadButton() -> UIBarButtonItem {
+        let reason = String(localized: "Changed tweaks take effect after the home screen reloads.")
+        let button = UIBarButtonItem(
+            title: String(localized: "Reload Home Screen"),
+            image: nil,
+            primaryAction: UIAction { [weak self] _ in self?.reloadHomeScreen() },
+            menu: UIMenu(title: reason, children: [
+                UIAction(
+                    title: String(localized: "Skip for Now"),
+                    image: UIImage(systemName: "xmark")
+                ) { [weak self] _ in self?.dismiss(animated: true) },
+            ])
+        )
+        button.accessibilityHint = reason
+        return button
+    }
+
+    /// The page closes, then the home screen restarts and this app with it.
+    private func reloadHomeScreen() {
+        dismiss(animated: true) {
+            UIApplication.prepareForExitAndSuspend()
+            Task { await PrivilegedBackend.run(.respring) }
+        }
     }
 
     private func rebuildIcons() {

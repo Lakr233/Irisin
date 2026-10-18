@@ -265,7 +265,7 @@ final class Installer {
         inProcessingQueue = true
         PackageQueue.shared.operationBegan()
         Task {
-            let outcome = await perform(operation, monitor: monitor)
+            let (outcome, changedTweaks) = await perform(operation, monitor: monitor)
             // released before the outcome is published: whoever awaits the
             // outcome may begin the next operation straight away, and the
             // queue is settled before anyone looks at it
@@ -275,15 +275,20 @@ final class Installer {
                 succeeded: outcome.succeeded,
                 dryRun: operation.transaction.dryRun
             )
-            monitor.finish(outcome)
+            monitor.finish(outcome, changedTweaks: changedTweaks)
         }
         return monitor
     }
 
-    private func perform(_ operation: OperationPayload, monitor: OperationMonitor) async -> OperationMonitor.Outcome {
+    /// How the run ended, and whether it left the tweak directories
+    /// different, failed or not: what it finished stays installed.
+    private func perform(
+        _ operation: OperationPayload,
+        monitor: OperationMonitor
+    ) async -> (OperationMonitor.Outcome, changedTweaks: Bool) {
         guard await (try? PackageQueue.currency(of: operation.plan, index: PackageCenter.default.index)) == .current
         else {
-            return .failed(String(localized: "Packages changed. Review the changes and try again."))
+            return (.failed(String(localized: "Packages changed. Review the changes and try again.")), false)
         }
 
         Dog.shared.join(
@@ -301,6 +306,7 @@ final class Installer {
             // without one, the refusal that follows says it all
             monitor.append(PrivilegedBackend.localizedStatus)
         }
+        let tweaks = await TweakInjection.read()
         let status = await PrivilegedBackend.run(.transaction(operation.transaction)) { event in
             await monitor.record(event)
         }
@@ -324,7 +330,8 @@ final class Installer {
         }
         await PackageCenter.default.reloadLocalPackages(installedFrom: sources)
 
-        return .init(status: status, failure: monitor.failure)
+        let changedTweaks = await TweakInjection.read() != tweaks
+        return (.init(status: status, failure: monitor.failure), changedTweaks)
     }
 
     private nonisolated static func reset(_ location: URL) throws {
