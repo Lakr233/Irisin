@@ -88,7 +88,15 @@ final class Triggers {
 
     /// dpkg's `trig_path_activate`: every file trigger whose path is one
     /// of these or a parent of one.
+    ///
+    /// Save Irisin's own app bundle and the directories above it, in Irisin's
+    /// own package: a trigger on the applications directory is uikittools'
+    /// `uicache -a`, which registers the bundle that changed, and registering
+    /// the running app stops it in the middle of its own update. The app
+    /// registers itself as it exits (`InstallerJob.registerOwnApplication`).
     func activateFileTriggers(_ paths: [String], by identity: String) throws {
+        let selfPackage = scripts.selfPackage
+        let paths = identity == selfPackage.identity ? paths.filter { !selfPackage.coversApplication($0) } : paths
         guard !paths.isEmpty else { return }
         for trigger in try registrations().keys
             where trigger.hasPrefix("/") && paths.contains(where: { $0 == trigger || $0.hasPrefix(trigger + "/") })

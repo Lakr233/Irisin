@@ -29,11 +29,15 @@ extension InstallerRunner {
         }
         switch external.action {
         case let .install(sha256):
-            return installExternal(sha256: sha256, directory: directory)
+            return installExternal(sha256: sha256, directory: directory, transaction: external.transaction)
         case let .remove(identity):
             emit(.notice("Removing \(identity) for an external client"))
             do {
-                return try runTransaction(.init(install: [], remove: [identity], statusDigest: currentStatusDigest()))
+                return try runTransaction(
+                    .init(install: [], remove: [identity], statusDigest: currentStatusDigest()),
+                    client: .external,
+                    clientTransaction: external.transaction
+                )
             } catch {
                 emit(.failure(.installationStopped(detail: String(describing: error))))
                 return 1
@@ -41,7 +45,7 @@ extension InstallerRunner {
         }
     }
 
-    private func installExternal(sha256: String, directory: String) -> Int32 {
+    private func installExternal(sha256: String, directory: String, transaction id: String) -> Int32 {
         let archive = URL(fileURLWithPath: directory + "/" + ExternalTransaction.File.archive)
         let prepared = URL(fileURLWithPath: directory + "/" + ExternalTransaction.File.prepared)
         // The run's journal and records stay; the package does not.
@@ -90,7 +94,7 @@ extension InstallerRunner {
             emit(.failure(.installationStopped(detail: String(describing: error))))
             return 1
         }
-        return runTransaction(transaction)
+        return runTransaction(transaction, client: .external, clientTransaction: id)
     }
 
     /// The architecture dpkg on this bootstrap installs, or nil where any

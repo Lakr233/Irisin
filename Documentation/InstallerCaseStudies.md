@@ -4,6 +4,69 @@ Failures of the native installer that reached a device, what caused them,
 and what now keeps them from coming back. Each one names the dpkg or apt
 behavior the fix follows. See `NativeInstaller.md` for the installer itself.
 
+## Irisin closing during its own update (2026-10-18)
+
+### What happened
+
+Updating Irisin to 4.7.0 from the app closed the app partway through, before
+the operation page showed how the update went. Registering an app with
+LaunchServices can stop it while it runs (icli's `registerApp` says so), and
+a self-update of Irisin registered the running `irisin.app` three times:
+
+1. **Irisin's own postinst** piped `rebuildIconCache` into the helper, which
+   is icli's `refreshApps` over `/Applications`: the bundle's build changed,
+   so it was registered again, in the middle of the transaction.
+2. **uikittools' file trigger.** `interest /Applications` in its
+   `triggers`; its postinst runs `uicache -a` when anything under
+   `/Applications` changes, Irisin's own bundle included.
+3. **The helper itself** registered every bundle the run changed
+   (`reconcileApplications`) once the database had committed. A removal of
+   Irisin unregistered it the same way, before the transcript ended.
+
+### What changed (4.7.1)
+
+- The helper puts `IRISIN_INSTALLER_VERSION`, `_BUILD`, `_PROTOCOL`,
+  `_CLIENT` (and `_TRANSACTION` for an external client) in every maintainer
+  script's environment (`InstallerIdentity`; the version is the helper's own
+  Info.plist, linked into the binary). dpkg sets none of them. Irisin's
+  postinst skips its `rebuildIconCache` when the version is set; under dpkg,
+  Sileo or Zebra it still registers the app.
+- `SelfPackage` knows Irisin's bundles: those in the archive that places the
+  helper and in its installed list (a renamed bundle on both sides), or in
+  the list of the package being removed that has the helper. Never by name.
+  Files in those bundles, and the directories above them, activate no file
+  trigger for Irisin's own package. Its other files still do.
+- `reconcileApplications` leaves Irisin's bundles alone. An updated one is
+  registered by the new `registerOwnApplication` job, which the app sends
+  from its Updating App alert as it exits. An app stopped before then finds
+  LaunchServices one build behind at the next launch and asks once per
+  build (`OwnRegistration`). A removed one is unregistered by
+  `finishAfterExit`, after the helper has written `exit` and closed the pipe.
+- The transaction's log is opened with `O_APPEND`: the helper the postinst
+  starts appends to the same file, and the transaction's own descriptor
+  wrote over those lines at its offset.
+
+Tests: `OwnApplicationTests` (each fails with the fix taken out, save the
+environment ones). The postinst was run on a Mac with a stand-in helper,
+with and without the variable.
+
+### On the vphones
+
+On both vphones (iOS 26.6.2 and 27.0.1, RootHide) the 4.7.0 → 4.7.1 update
+registered the running app three times and the app kept its pid: there the
+registration does not stop it. Whether it does depends on the system, so
+the fix stays whatever the vphone shows. `dpkg -i` of 4.7.1 over itself
+registered the app through the postinst as before (build 474 read back from
+LaunchServices).
+
+### Still open
+
+- **The 4.7.0 → 4.7.1 update** runs 4.7.1's postinst under 4.7.0's helper,
+  which sets no variable and still registers the bundle: that one update can
+  still close the app.
+- **Updating from 4.7.1 through the app** was not run on a device before
+  the release.
+
 ## ElleKit and the tweaks around it (2026-09-18)
 
 ### What happened

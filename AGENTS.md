@@ -51,8 +51,9 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   Everything privileged is an `InstallerJob` sent through `PrivilegedBackend`.
 - **The wire carries jobs, never commands.** `InstallerJob` is a closed enum:
   an ordered package transaction (prepared files and identities), rebuild the
-  icon cache, respring, bootstrap or boot out Irisin's own daemon, reload
-  AirDrop, enter safe mode, make the app's data folder. The daemon jobs carry
+  icon cache, register Irisin's own app, respring, bootstrap or boot out
+  Irisin's own daemon, reload AirDrop, enter safe mode, make the app's data
+  folder. The daemon jobs carry
   no path or label: the helper derives its own installed plist, and the home
   from the layout (`<jbroot>/var/mobile` on roothide, where icli registers
   apps' HOME and a bootstrap need not have it). The helper validates
@@ -115,7 +116,17 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   signed with for this work is in `Packaging/irisin-install.entitlements`,
   the helper's alone; the daemon gets none of it. The package's own postinst
   first pipes `bootstrapIrisinDaemon` into the helper, then registers the app
-  with a `rebuildIconCache` job. A fix
+  with a `rebuildIconCache` job, except under Irisin's own helper, which sets
+  `IRISIN_INSTALLER_*` in every maintainer script's environment (dpkg sets
+  none). **A transaction never registers or unregisters Irisin's own
+  bundle:** depending on the system, LaunchServices stops the app it
+  registers, halfway through its own update. The helper skips the bundle
+  (found through the list that has the helper, never by name), and so do
+  the file triggers of Irisin's own package (uikittools' `uicache -a` on
+  `/Applications`). The app sends `registerOwnApplication` from its
+  Updating App alert as it exits, and at the next launch, once per build,
+  when LaunchServices still has an older build. A removed bundle is
+  unregistered after the transcript's `exit` (`finishAfterExit`). A fix
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.
 - **Peer authentication is the whole trust boundary.** Audit token (pid > 1,

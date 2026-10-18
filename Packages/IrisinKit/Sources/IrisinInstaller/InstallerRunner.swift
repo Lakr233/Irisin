@@ -27,19 +27,32 @@ public final class InstallerRunner {
     /// `ProcessTable.signal`, except in the harness: a Mac running a
     /// simulator has a backboardd of its own that a test must not touch.
     private let signalProcesses: (String, Int32) -> Int
+    /// What the scripts read as `IRISIN_INSTALLER_*`.
+    let identity: InstallerIdentity
+    /// Irisin's own bundles, by kernel path, that the transaction took
+    /// away: unregistering one stops the app, so it waits for
+    /// `finishAfterExit`.
+    private var removedOwnApplications: [String] = []
 
     public convenience init(
         installRoot: String,
         layout: BootstrapLayout? = nil,
+        identity: InstallerIdentity = .current,
         emit: @escaping (InstallerEvent) -> Void
     ) {
         #if targetEnvironment(simulator)
             // The simulator shares the Mac's process table: a real signal
             // would reach the host's sharingd and every booted simulator's
             // SpringBoard. One process is counted and none is touched.
-            self.init(installRoot: installRoot, layout: layout, emit: emit) { _, _ in 1 }
+            self.init(installRoot: installRoot, layout: layout, identity: identity, emit: emit) { _, _ in 1 }
         #else
-            self.init(installRoot: installRoot, layout: layout, emit: emit, signalProcesses: ProcessTable.signal)
+            self.init(
+                installRoot: installRoot,
+                layout: layout,
+                identity: identity,
+                emit: emit,
+                signalProcesses: ProcessTable.signal
+            )
         #endif
     }
 
@@ -48,6 +61,7 @@ public final class InstallerRunner {
     init(
         installRoot: String,
         layout: BootstrapLayout?,
+        identity: InstallerIdentity = .current,
         emit: @escaping (InstallerEvent) -> Void,
         registrar: ((ApplicationRegistrar.Request) throws -> [String: Any])? = nil,
         daemonManager: ((LaunchDaemon.Request) throws -> Void)? = nil,
@@ -56,6 +70,7 @@ public final class InstallerRunner {
         self.installRoot = installRoot
         self.layout = layout ?? BootstrapLayout(installRoot: installRoot)
         self.emit = emit
+        self.identity = identity
         self.signalProcesses = signalProcesses
         self.registrar = ApplicationRegistrar(perform: registrar ?? ApplicationRegistrar.live(emit: emit))
         self.daemonManager = LaunchDaemon(perform: daemonManager ?? LaunchDaemon.live(emit: emit))
@@ -76,6 +91,8 @@ public final class InstallerRunner {
             runTransaction(transaction)
         case .rebuildIconCache:
             rebuildIconCache()
+        case .registerOwnApplication:
+            registerOwnApplication()
         case .respring:
             respring()
         case .bootstrapIrisinDaemon:
@@ -117,12 +134,23 @@ public final class InstallerRunner {
 
     // MARK: - Transaction
 
-    func runTransaction(_ transaction: InstallerJob.Transaction) -> Int32 {
+    /// `client` and an external client's `clientTransaction` id are what the
+    /// scripts read in `IRISIN_INSTALLER_*`.
+    func runTransaction(
+        _ transaction: InstallerJob.Transaction,
+        client: InstallerIdentity.Client = .app,
+        clientTransaction: String? = nil
+    ) -> Int32 {
         let applicationsBefore = applicationBundles()
         emit(.notice("Install root \(installRoot.isEmpty ? "/" : installRoot)"))
         emit(.notice("Applications directory \(applicationsDirectory)"))
 
-        let installer = PackageInstaller(installRoot: installRoot, layout: layout, emit: emit)
+        let installer = PackageInstaller(
+            installRoot: installRoot,
+            layout: layout,
+            installerEnvironment: identity.environment(client: client, transaction: clientTransaction),
+            emit: emit
+        )
         // Irisin's own files replaced the daemon, which leaves when its
         // executable does; its postinst loads the new one, but may not have
         // had a shell to run in, and a run that stopped later never reached
@@ -148,7 +176,8 @@ public final class InstallerRunner {
            !reconcileApplications(
                previous: applicationsBefore,
                current: applicationBundles(),
-               installed: installedApplications(of: transaction.install.map(\.identity))
+               installed: installedApplications(of: transaction.install.map(\.identity)),
+               own: Set(installer.selfApplications.map { layout.resolve($0) })
            )
         {
             emit(.warning(.homeScreenNeedsAttention))
@@ -166,22 +195,50 @@ public final class InstallerRunner {
         for entry in directoryEntries(infoDirectory) where entry.hasSuffix(".list") {
             lists[entry.lowercased()] = entry
         }
-        let applicationsPrefix = layout.bootstrapPath("/Applications/")
         var applications = Set<String>()
         for identity in identities {
             guard let file = lists[(identity + ".list").lowercased()],
                   let contents = try? String(contentsOfFile: infoDirectory + "/" + file, encoding: .utf8)
             else { continue }
-            for line in contents.split(separator: "\n") {
-                let path = line.trimmingCharacters(in: .whitespaces)
-                // A tweak may put files inside another app's bundle; only a
-                // bundle directly under Applications is something to register.
-                guard path.hasSuffix(".app"), path.utf8.starts(with: applicationsPrefix.utf8),
-                      !path.utf8.dropFirst(applicationsPrefix.utf8.count).contains(0x2F) else { continue }
-                applications.insert(path)
-            }
+            applications.formUnion(self.applications(inList: contents))
         }
         return applications
+    }
+
+    /// The bundles directly under Applications that a `.list` names. A tweak
+    /// may put files inside another app's bundle; only a bundle directly
+    /// under Applications is something to register.
+    private func applications(inList contents: String) -> Set<String> {
+        let applicationsPrefix = layout.bootstrapPath("/Applications/")
+        var applications = Set<String>()
+        for line in contents.split(separator: "\n") {
+            let path = line.trimmingCharacters(in: .whitespaces)
+            guard path.hasSuffix(".app"), path.utf8.starts(with: applicationsPrefix.utf8),
+                  !path.utf8.dropFirst(applicationsPrefix.utf8.count).contains(0x2F) else { continue }
+            applications.insert(path)
+        }
+        return applications
+    }
+
+    /// Irisin's own app bundles, as kernel paths: those in the installed
+    /// list that has this helper in it, whatever the package and the bundle
+    /// are called. Empty where no list has it (a bootstrap that installed
+    /// Irisin without dpkg's database). A transaction has `SelfPackage`'s.
+    private func ownApplications() -> Set<String> {
+        let infoDirectory = layout.resolve(layout.bootstrapPath("/Library/dpkg/info"))
+        let helper = layout.bootstrapPath(IrisinWire.helperPath)
+        // Irisin's own name first, then every list: the name is a shortcut,
+        // never the rule.
+        let prefix = InstallerJob.selfIdentityPrefix
+        let entries = directoryEntries(infoDirectory).filter { $0.hasSuffix(".list") }
+            .sorted { $0.hasPrefix(prefix) && !$1.hasPrefix(prefix) }
+        for entry in entries {
+            guard let contents = try? String(contentsOfFile: infoDirectory + "/" + entry, encoding: .utf8),
+                  contents.split(separator: "\n").contains(where: { $0.trimmingCharacters(in: .whitespaces) == helper })
+            else { continue }
+            return Set(applications(inList: contents).map { layout.resolve($0) })
+        }
+        return []
     }
 
     /// What each `.app` directly under the applications directory looked
@@ -208,10 +265,17 @@ public final class InstallerRunner {
     /// re-registering is what makes LaunchServices reread the bundle.
     /// Registration is verified by icli itself (it reads LaunchServices back
     /// after every call), so `.done` here means the record is there.
+    ///
+    /// Irisin's own bundles (`own`, kernel paths) are left alone: registering
+    /// or unregistering the running app stops it before it has read the end
+    /// of the run. An updated one the app registers as it exits
+    /// (`registerOwnApplication`); a removed one waits for the app to be gone
+    /// (`finishAfterExit`).
     private func reconcileApplications(
         previous: [String: BundleStamp?],
         current: [String: BundleStamp?],
-        installed: Set<String>
+        installed: Set<String>,
+        own: Set<String>
     ) -> Bool {
         var succeeded = true
         var removed: [String] = []
@@ -231,6 +295,17 @@ public final class InstallerRunner {
         var changed = Set(installed.map { layout.resolve($0) })
         for (name, stamp) in current where stamp != nil && previous[name] != stamp {
             changed.insert(applicationsDirectory + "/" + name)
+        }
+        for path in changed.intersection(own).sorted() {
+            changed.remove(path)
+            emit(.notice("Left \(path) for Irisin to register as it exits"))
+        }
+        removed.removeAll { name in
+            let path = applicationsDirectory + "/" + name
+            guard own.contains(path) else { return false }
+            removedOwnApplications.append(path)
+            emit(.notice("Left \(path) to unregister once this run has ended"))
+            return true
         }
         guard !changed.isEmpty || !removed.isEmpty else { return succeeded }
         emit(.phase(.registeringApplications))
@@ -341,6 +416,51 @@ public final class InstallerRunner {
             return 1
         }
         return 0
+    }
+
+    /// Irisin's own bundles registered, the ones a transaction that updated
+    /// them left for the app to ask for as it exits: registering the app
+    /// stops it, which is how it leaves.
+    private func registerOwnApplication() -> Int32 {
+        let bundles = ownApplications().filter { BundleStamp(infoPlist: $0 + "/Info.plist") != nil }
+        guard !bundles.isEmpty else {
+            emit(.failure(.installationStopped(detail: "No installed package lists Irisin's app bundle")))
+            return 1
+        }
+        emit(.phase(.registeringApplications))
+        var status: Int32 = 0
+        for path in bundles.sorted() {
+            let outcome = registrar.register(bundleAt: path)
+            switch outcome {
+            case .done:
+                emit(.notice("Registered \(path)"))
+            case .failed:
+                emit(.failure(.registrationFailed(bundle: path, detail: outcome.reason)))
+                status = 1
+            }
+        }
+        return status
+    }
+
+    /// What waits until the transcript has ended: Irisin's own bundles a
+    /// removal took away, unregistered and cleared once the app has read the
+    /// end of the run, since unregistering stops it. `log` is the log alone;
+    /// the pipe is closed by then.
+    public func finishAfterExit(log: (InstallerEvent) -> Void) {
+        for path in removedOwnApplications {
+            let outcome = registrar.unregister(bundleAt: path)
+            guard outcome.succeeded else {
+                log(.warning(.unregistrationFailed(bundle: path, detail: outcome.reason)))
+                continue
+            }
+            log(.notice("Unregistered \(path)"))
+            do {
+                try RemovedApplicationBundle.removeHusk(path)
+            } catch {
+                log(.warning(.leftoverBundle(path: path, detail: String(describing: error))))
+            }
+        }
+        removedOwnApplications = []
     }
 
     /// The graceful respring through icli; failing that, backboardd is asked

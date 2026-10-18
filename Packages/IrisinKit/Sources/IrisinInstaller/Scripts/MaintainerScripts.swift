@@ -27,6 +27,8 @@ struct MaintainerScripts {
     /// with a link is the case (`Documentation/InstallerCaseStudies.md`), and
     /// it is here rather than at the seventeen places that run a script.
     let forgetPaths: () -> Void
+    /// `IRISIN_INSTALLER_*` (`InstallerIdentity`), which dpkg never sets.
+    let installerEnvironment: [String: String]
 
     func run(
         _ member: String,
@@ -98,7 +100,7 @@ struct MaintainerScripts {
     }
 
     private func environment(member: String, identity: String, architecture: String?) -> [String: String] {
-        layout.rootEnvironment.merging([
+        layout.rootEnvironment.merging(installerEnvironment) { _, installer in installer }.merging([
             "DPKG_ROOT": scriptRoot,
             "DPKG_ADMINDIR": layout.scriptPath(database.directory.path),
             "DPKG_MAINTSCRIPT_PACKAGE": identity,
@@ -115,20 +117,64 @@ final class SelfPackage {
     private static let toleratedScripts: Set<String> = ["postinst", "prerm", "postrm"]
 
     private(set) var identity: String?
+    /// Whether the transaction installs it, rather than only removes it:
+    /// only then are its scripts' failures tolerated.
+    private(set) var placing = false
+    /// The app bundles it places directly under the applications
+    /// directory, spelled as its entries are (no leading `/`): Irisin's own
+    /// app, whatever the bundle is called.
+    private(set) var applications: Set<String> = []
 
     /// Picks the archive that places `helperPath`, spelled as packages
     /// spell it, by the identity the transaction gives it: the one scripts
     /// and the database go by, whatever case its control file writes. A
     /// package that ships that path replaces the helper, so counting it as
-    /// Irisin grants it nothing it did not already have.
-    func find(in archives: [String: PackageArchive], helperPath: String) {
-        let path = String(helperPath.drop { $0 == "/" })
-        identity = archives.first { _, archive in
-            archive.package.entries.contains { $0.path == path }
-        }?.key
+    /// Irisin grants it nothing it did not already have. Failing that, the
+    /// package among `removing` whose installed list has it, so a removal
+    /// leaves the running app's bundle alone too.
+    ///
+    /// Its bundles are the ones its installed list and its archive name
+    /// between them: an update that renames the bundle takes the old one
+    /// away and puts the new one in.
+    func find(
+        in archives: [String: PackageArchive],
+        removing: [String],
+        database: PackageDatabase,
+        helperPath: String,
+        applicationsPath: String
+    ) {
+        let relative = String(helperPath.drop { $0 == "/" })
+        let placed = archives.first { _, archive in
+            archive.package.entries.contains { $0.path == relative }
+        }
+        placing = placed != nil
+        identity = placed?.key ?? removing.first { name in
+            (try? database.files(name).contains(helperPath)) == true
+        }
+        guard let identity else { return }
+        let paths = ((try? database.files(identity)) ?? []) + (placed?.value.package.entries.map(\.path) ?? [])
+        let prefix = String(applicationsPath.drop { $0 == "/" }) + "/"
+        applications = Set(paths.compactMap { path in
+            let path = path.drop { $0 == "/" }
+            guard path.hasPrefix(prefix) else { return nil }
+            let bundle = path.dropFirst(prefix.count).prefix { $0 != "/" }
+            return bundle.hasSuffix(".app") ? prefix + bundle : nil
+        })
+    }
+
+    /// Whether `path`, spelled as a package spells it with a leading `/`,
+    /// is one of its app bundles, inside one, or a directory above one:
+    /// what a file trigger on the applications directory would have to
+    /// register the running app for.
+    func coversApplication(_ path: String) -> Bool {
+        let path = String(path.drop { $0 == "/" })
+        guard !path.isEmpty else { return !applications.isEmpty }
+        return applications.contains { bundle in
+            path == bundle || path.hasPrefix(bundle + "/") || bundle.hasPrefix(path + "/")
+        }
     }
 
     func tolerates(_ member: String, of identity: String) -> Bool {
-        identity == self.identity && Self.toleratedScripts.contains(member)
+        placing && identity == self.identity && Self.toleratedScripts.contains(member)
     }
 }

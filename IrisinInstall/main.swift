@@ -66,7 +66,10 @@ default: false
 }
 if startsFreshLog {
     rename(logPath, logPath + ".previous")
-    logDescriptor = open(logPath, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0o644)
+    // Appending too: a maintainer script's own helper (Irisin's postinst)
+    // writes to this log while the transaction holds it, and a write at
+    // this descriptor's offset would overwrite what it wrote.
+    logDescriptor = open(logPath, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND | O_CLOEXEC, 0o644)
 } else {
     logDescriptor = open(logPath, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0o644)
 }
@@ -78,14 +81,19 @@ let clock: DateFormatter = {
     return formatter
 }()
 
-/// The pipe gets the event; the log gets the time and the plain-text line.
-func emit(_ event: InstallerEvent) {
-    writeEvent(event)
+/// The log gets the time and the plain-text line.
+func log(_ event: InstallerEvent) {
     // a ring's hundred ticks are for the screen, not for the record
     if case .packageProgress = event {
         return
     }
     writeAll(logDescriptor, Data((clock.string(from: Date()) + " " + event.description + "\n").utf8))
+}
+
+/// The pipe gets the event, and the log its line.
+func emit(_ event: InstallerEvent) {
+    writeEvent(event)
+    log(event)
 }
 
 guard let job else {
@@ -95,6 +103,10 @@ guard let job else {
 }
 
 emit(.started(.init(job: job.name, uid: getuid(), installRoot: installRoot)))
-let status = InstallerRunner(installRoot: installRoot, emit: emit).run(job)
+let runner = InstallerRunner(installRoot: installRoot, emit: emit)
+let status = runner.run(job)
 emit(.exit(status))
+// The reader sees the end of the run before anything that would stop it.
+close(STDOUT_FILENO)
+runner.finishAfterExit(log: log)
 exit(status)

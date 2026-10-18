@@ -52,10 +52,10 @@ final class NativeInstallFixture {
         return .init(identity: identity, path: deb.path, preparedPath: staging.path, preparedSHA256: PackageArchive.sha256(data))
     }
 
-    func run(install: [InstallerJob.Transaction.Item] = [], remove: [String] = [], autoInstalled: [String] = [], dryRun: Bool = false, allowSystemRemoval: Bool = false, ignoreScriptFailures: Bool = false, recoveryMode: Bool = false, layout: BootstrapLayout = .init(kind: .none), emit: @escaping (InstallerEvent) -> Void = { _ in }) throws {
+    func run(install: [InstallerJob.Transaction.Item] = [], remove: [String] = [], autoInstalled: [String] = [], dryRun: Bool = false, allowSystemRemoval: Bool = false, ignoreScriptFailures: Bool = false, recoveryMode: Bool = false, layout: BootstrapLayout = .init(kind: .none), installerEnvironment: [String: String] = [:], emit: @escaping (InstallerEvent) -> Void = { _ in }) throws {
         let status = (try? Data(contentsOf: database.appendingPathComponent("status"))) ?? Data()
         let transaction = InstallerJob.Transaction(install: install, remove: remove, dryRun: dryRun, autoInstalled: autoInstalled, statusDigest: PackageArchive.sha256(status), allowSystemRemoval: allowSystemRemoval, ignoreScriptFailures: ignoreScriptFailures, recoveryMode: recoveryMode)
-        let installer = PackageInstaller(installRoot: root.path, layout: layout, databaseDirectory: database, scriptRoot: root.path, emit: emit)
+        let installer = PackageInstaller(installRoot: root.path, layout: layout, databaseDirectory: database, scriptRoot: root.path, installerEnvironment: installerEnvironment, emit: emit)
         try installer.run(transaction)
     }
 

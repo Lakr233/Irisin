@@ -92,17 +92,9 @@ extension OperationController {
     }
 
     private func exitForUpgrade() {
-        let progress = progressAlert(
-            title: "Updating App…",
-            message: "Preparing the app update. The app will exit when it finishes."
+        OwnRegistration.finishUpdate(
+            from: self,
+            registering: monitor?.operation.transaction.installsSelf ?? false
         )
-        present(progress, animated: true) {
-            Task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                UIApplication.prepareForExitAndSuspend()
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                exit(0)
-            }
-        }
     }
 }

@@ -68,5 +68,12 @@ public extension InstallerJob {
         public var touchesSelf: Bool {
             (install.map(\.identity) + remove).contains { $0.hasPrefix(InstallerJob.selfIdentityPrefix) }
         }
+
+        /// Whether it installs the app itself, rather than only removing it:
+        /// the helper then leaves the app's registration for the app to ask
+        /// for as it exits (`InstallerJob.registerOwnApplication`).
+        public var installsSelf: Bool {
+            install.contains { $0.identity.hasPrefix(InstallerJob.selfIdentityPrefix) }
+        }
     }
 }

@@ -56,7 +56,13 @@ fi
 # sends, handed over on standard input. It finds the bootstrap root from its
 # own path, so no rootful path is spelled here: on roothide that path must
 # stay unspoken. Its transcript is JSON for the app and is also in its log.
-if [ -x "$helper" ]; then
+#
+# Not when Irisin's own helper runs this script (it sets
+# IRISIN_INSTALLER_VERSION, dpkg never does): that is Irisin updating
+# itself, and registering the running app would stop it halfway through.
+# The helper registers the other apps the run changed, and the app asks for
+# its own registration as it exits.
+if [ -x "$helper" ] && [ -z "${IRISIN_INSTALLER_VERSION:-}" ]; then
     echo '{"rebuildIconCache":{}}' | "$helper" >/dev/null || {
         echo "warning: irisin.app was not registered with LaunchServices." >&2
         echo "warning: run 'uicache -a' yourself, or the Irisin icon will not appear." >&2

@@ -14,6 +14,12 @@ public enum InstallerJob: Codable, Equatable, Sendable {
     /// Unregister and remove the husks of removed apps, then icli's refresh
     /// over the bootstrap's applications directory.
     case rebuildIconCache
+    /// Register Irisin's own app bundle, the one a transaction that updated
+    /// it leaves alone: registering a running app stops it, so the app asks
+    /// for this as it leaves (`OperationController.exitForUpgrade`). The
+    /// helper finds the bundle in the list of the package that placed it;
+    /// no path crosses the wire.
+    case registerOwnApplication
     /// icli's graceful respring, and a signal to backboardd when it fails.
     case respring
     /// Replace and start the installed Irisin LaunchDaemon with the plist
@@ -42,6 +48,7 @@ public enum InstallerJob: Codable, Equatable, Sendable {
         switch self {
         case .transaction: "transaction"
         case .rebuildIconCache: "rebuildIconCache"
+        case .registerOwnApplication: "registerOwnApplication"
         case .respring: "respring"
         case .bootstrapIrisinDaemon: "bootstrapIrisinDaemon"
         case .bootoutIrisinDaemon: "bootoutIrisinDaemon"

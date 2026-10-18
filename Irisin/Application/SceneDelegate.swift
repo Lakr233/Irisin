@@ -35,6 +35,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = InterfaceHostController()
         window.makeKeyAndVisible()
         window.layoutIfNeeded()
+        finishOwnRegistrationIfStale()
 
         // created from user activity
         if let userActivity = options.userActivities.first ?? session.stateRestorationActivity {
@@ -219,6 +220,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             target.patternLocation = url
             target.openedInPlace = inPlace
             await interface()?.pageStack?.pushViewController(target, animated: true)
+        }
+    }
+
+    /// An update that stopped the app before it asked for its own
+    /// registration is finished once the daemon answers (`OwnRegistration`).
+    private func finishOwnRegistrationIfStale() {
+        Task {
+            for await backend in PrivilegedBackend.backendUpdates.values where backend != nil {
+                guard backend?.isPrivileged == true, let interface = await interface() else { return }
+                OwnRegistration.finishIfStale(from: interface.presentedViewController ?? interface)
+                return
+            }
         }
     }
 

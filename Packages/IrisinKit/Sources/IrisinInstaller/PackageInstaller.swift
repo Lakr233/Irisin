@@ -17,18 +17,26 @@ public final class PackageInstaller {
     private let layout: BootstrapLayout
     private let databaseDirectory: URL
     private let scriptRoot: String
+    /// `IRISIN_INSTALLER_*` for every maintainer script a run starts
+    /// (`InstallerIdentity`): who installs, for which client.
+    private let installerEnvironment: [String: String]
     private let emit: (InstallerEvent) -> Void
     /// Whether the last run put Irisin's own package (the one that ships
     /// this helper) on disk at the version it installs, whether or not the
     /// run went on to succeed. Its files replaced the daemon, which exits
     /// when its executable is replaced, so `InstallerRunner` loads it again.
     public private(set) var placedSelf = false
+    /// Irisin's own app bundles, in the bootstrap's spelling, when the last
+    /// run installed or removed Irisin: what its list had and its archive
+    /// places.
+    public private(set) var selfApplications: Set<String> = []
 
     public init(
         installRoot: String,
         layout: BootstrapLayout,
         databaseDirectory: URL? = nil,
         scriptRoot: String = "",
+        installerEnvironment: [String: String] = [:],
         emit: @escaping (InstallerEvent) -> Void
     ) {
         root = URL(fileURLWithPath: installRoot.isEmpty ? "/" : installRoot).resolvingSymlinksInPath()
@@ -36,11 +44,13 @@ public final class PackageInstaller {
         self.databaseDirectory = databaseDirectory
             ?? URL(fileURLWithPath: layout.resolve(layout.bootstrapPath("/Library/dpkg")))
         self.scriptRoot = scriptRoot
+        self.installerEnvironment = installerEnvironment
         self.emit = emit
     }
 
     public func run(_ transaction: InstallerJob.Transaction) throws {
         placedSelf = false
+        selfApplications = []
         try InstallerJob.transaction(transaction).validate()
         emit(.phase(.preparing))
         // A bootstrap that has not written its database yet gets one; the
@@ -66,6 +76,7 @@ public final class PackageInstaller {
             scriptRoot: scriptRoot,
             ignoreScriptFailures: transaction.ignoreScriptFailures || transaction.recoveryMode,
             recoveryMode: transaction.recoveryMode,
+            installerEnvironment: installerEnvironment,
             emit: emit
         )
         if !transaction.dryRun {
@@ -73,7 +84,14 @@ public final class PackageInstaller {
         }
         emit(.phase(.verifying))
         let archives = try work.prepare(transaction.install)
-        work.selfPackage.find(in: archives, helperPath: layout.bootstrapPath(IrisinWire.helperPath))
+        work.selfPackage.find(
+            in: archives,
+            removing: transaction.remove,
+            database: work.database,
+            helperPath: layout.bootstrapPath(IrisinWire.helperPath),
+            applicationsPath: layout.bootstrapPath("/Applications")
+        )
+        selfApplications = Set(work.selfPackage.applications.map { "/" + $0 })
         defer {
             if !transaction.dryRun, let identity = work.selfPackage.identity,
                let fields = work.database.records[identity], PackageDatabase.isPresent(fields),

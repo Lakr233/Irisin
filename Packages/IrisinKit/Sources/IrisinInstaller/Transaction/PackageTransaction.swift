@@ -21,6 +21,7 @@ final class PackageTransaction {
         scriptRoot: String,
         ignoreScriptFailures: Bool,
         recoveryMode: Bool,
+        installerEnvironment: [String: String],
         emit: @escaping (InstallerEvent) -> Void
     ) throws {
         database = try PackageDatabase(directory: databaseDirectory)
@@ -34,7 +35,8 @@ final class PackageTransaction {
             emit: emit,
             ignoreScriptFailures: ignoreScriptFailures,
             selfPackage: selfPackage,
-            forgetPaths: { [filesystem] in filesystem.forgetPaths() }
+            forgetPaths: { [filesystem] in filesystem.forgetPaths() },
+            installerEnvironment: installerEnvironment
         )
         triggers = Triggers(database: database, scripts: scripts)
         self.recoveryMode = recoveryMode
