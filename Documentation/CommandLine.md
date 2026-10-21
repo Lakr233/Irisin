@@ -57,7 +57,7 @@ adds it in the app.
 |---|---|
 | `search <words>` | full-text search of the catalogue |
 | `show <package>` | every repository's record of it, and the installed one |
-| `list [--installed \| --upgradable]` | |
+| `list [--upgradable]` | installed packages, or those with an update |
 | `install <package \| ./file.deb>...` | resolve, download, prepare, run |
 | `remove <package>...` | resolve, run |
 | `upgrade` | every update the Updates page would list |
