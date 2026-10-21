@@ -14,7 +14,11 @@ Admission (`IrisinDaemon/PeerAuthenticator.swift`,
 `IrisinProtocol/Wire/ExecutableAdmission.swift`) runs before the first request
 field is read, on the kernel's audit token:
 
-1. pid above 1; effective uid 0 (root) or 501 (mobile).
+1. pid above 1; effective uid 0 (root). Irisin's own app alone is also
+   served as 501 (mobile), by its exact path (below). A client mobile could
+   run would install as root for whoever runs it, so raising privilege is
+   the user's to do (`sudo`) or the client's own as a root daemon, never
+   this service's.
 2. Three entitlements, each a boolean `true`:
    `wiki.qaq.irisin.client`, `platform-application`,
    `com.apple.private.security.no-sandbox`.
@@ -278,5 +282,7 @@ constants to `IrisinProtocol`'s.
 The program needs, in its own entitlements, `wiki.qaq.irisin.client`,
 `platform-application` and `com.apple.private.security.no-sandbox`, all
 `true`; it must be installed root-owned and not group- or world-writable, in
-root-owned directories that no one else can write, inside the bootstrap. Its
-package should depend on `wiki.qaq.irisin (>= 4.7.0)`.
+root-owned directories that no one else can write, inside the bootstrap, and
+it must call as root: a root daemon of its own, or a program the user ran
+with `sudo`. Its package should depend on the first Irisin that requires a
+root caller (from 4.7.0 on, a mobile caller was served too).

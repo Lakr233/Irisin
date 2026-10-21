@@ -19,7 +19,10 @@ import XPC
 /// 3. the executable `proc_pidpath` names, canonicalised, admitted by
 ///    `ExecutableAdmission` (inside the install root or on the system
 ///    volume, in directories and a file no one but root could have changed),
-///    or Irisin's own app at its exact path, root-owned, as before 4.7.
+///    or Irisin's own app at its exact path, root-owned, as before 4.7;
+/// 4. euid root for every program but Irisin's own app. A client that
+///    mobile could run would install as root for whoever runs it; raising
+///    privilege is the user's to do (`sudo`), never this service's.
 ///
 /// This trusts every installed package whose root-owned program carries the
 /// entitlements, not Irisin alone: `Documentation/ExternalClients.md`.
@@ -67,6 +70,10 @@ struct PeerAuthenticator {
         }
         switch admission.admit(clientPath) {
         case let .success(admitted):
+            guard token.val.1 == 0 else {
+                log.warning("peer rejected: \(admitted, privacy: .public) euid \(token.val.1), not root")
+                return nil
+            }
             return Peer(pid: pid, executable: admitted)
         case let .failure(refusal):
             log.warning(
