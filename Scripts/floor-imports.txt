@@ -114,6 +114,7 @@ swift_getAtKeyPath
 swift_getDynamicType
 swift_getEnumCaseMultiPayload
 swift_getErrorValue
+swift_getExistentialMetatypeMetadata
 swift_getExistentialTypeMetadata
 swift_getForeignTypeMetadata
 swift_getFunctionTypeMetadata1
