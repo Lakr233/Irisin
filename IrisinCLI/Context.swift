@@ -35,8 +35,27 @@ struct Context {
             installRoot: installRoot,
             architecture: architecture,
             mobile: (account.pointee.pw_uid, home),
-            data: home.appendingPathComponent(dataFolder, isDirectory: true)
+            data: Self.appData(installRoot: installRoot, home: home)
         )
+    }
+
+    /// The folder the app keeps its catalogue in, under the home it was
+    /// given. icli registers an app's HOME as `<jbroot>/var/mobile` on
+    /// RootHide and as mobile's own elsewhere, and a RootHide device whose
+    /// app was registered before that keeps mobile's: of the two, the one
+    /// with a catalogue, and of two catalogues the one written last.
+    private static func appData(installRoot: String, home: URL) -> URL {
+        let candidates = [
+            URL(fileURLWithPath: installRoot + "/var/mobile", isDirectory: true),
+            home,
+        ].map { $0.appendingPathComponent(dataFolder, isDirectory: true) }
+        func written(_ folder: URL) -> Date? {
+            ["apt.db-wal", "apt.db"].lazy.compactMap { name in
+                (try? FileManager.default.attributesOfItem(atPath: folder.appendingPathComponent(name).path))?[.modificationDate] as? Date
+            }.first
+        }
+        let found = candidates.compactMap { folder in written(folder).map { (folder, $0) } }
+        return found.max { $0.1 < $1.1 }?.0 ?? candidates.last!
     }
 
     /// The bootstrap the installed app was packaged for, as the app reads it
@@ -122,7 +141,7 @@ struct Context {
             return index
         } catch let unavailable as CatalogueUnavailable {
             throw CommandFailure.unavailable(
-                "Irisin's catalogue is not ready (\(unavailable.file): \(unavailable.reason)). Open Irisin once, then try again."
+                "Irisin's catalogue is not ready (\(shellPath(unavailable.file)): \(unavailable.reason)). Open Irisin once, then try again."
             )
         }
     }

@@ -215,6 +215,7 @@ swift_getTupleTypeMetadata3
 swift_initEnumMetadataSingleCase
 swift_initEnumMetadataSinglePayload
 swift_isaMask
+swift_isClassType
 swift_isUniquelyReferenced_native
 swift_lookUpClassMethod
 swift_projectBox

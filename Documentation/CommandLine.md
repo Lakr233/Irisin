@@ -23,9 +23,9 @@ audit token is the kernel's.
 
 ## What it reads, and how
 
-Everything the app knows is under mobile's `Documents/wiki.qaq.irisin`
-(the folder is found through `getpwnam("mobile")`, never `HOME`, which is
-`/var/root` under sudo):
+Everything the app knows is under its `Documents/wiki.qaq.irisin` (found
+from the install root and `getpwnam("mobile")`, never `HOME`, which is
+`/var/root` under sudo; see "How it runs"):
 
 | what | how `irisin-cli` reads it |
 |---|---|
@@ -107,9 +107,11 @@ floor is not known to export, and `check-floor-imports.py` refuses them.
 On RootHide the user's shell is vroot-linked and `irisin-cli` is not: a
 path typed as `/x` is read as `<jbroot>/x` and `/rootfs/x` as `/x`
 (`Context.userPath`), and every path a message names is spelled the
-shell's way (`Context.shellPath`). The app's data is mobile's real home,
-`/var/mobile/Documents/wiki.qaq.irisin`, which the shell sees as
-`/rootfs/var/mobile/...`.
+shell's way (`Context.shellPath`). The app's data is under the HOME icli
+registered it with: `<jbroot>/var/mobile` on RootHide, though an app
+registered before that keeps mobile's real home (the shell's
+`/rootfs/var/mobile`). `Context.appData` takes the one with a catalogue,
+and of two the one written last.
 
 ## Locks, crashes and what `irisin-cli` leaves behind
 
