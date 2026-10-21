@@ -57,7 +57,7 @@ public final class PackageCenter {
 
     /// update blocker
     private let blockedUpdateStore = AptSetting<[String]>(
-        key: "\(kPackageCenterIdentity).blockedUpdateTable",
+        key: UpdatePreferenceKey.blockedUpdates,
         defaultValue: []
     )
     public var blockedUpdateTable: [String] {
@@ -71,7 +71,7 @@ public final class PackageCenter {
 
     /// updates an adapter would have to rewrite, off until the user asks
     private let offersAdaptedUpdatesStore = AptSetting<Bool>(
-        key: "\(kPackageCenterIdentity).offersAdaptedUpdates",
+        key: UpdatePreferenceKey.offersAdaptedUpdates,
         defaultValue: false
     )
     public var offersAdaptedUpdates: Bool {
@@ -117,4 +117,12 @@ public final class PackageCenter {
         index.blockedUpdateTable = blockedUpdateStore.wrappedValue
         index.offersAdaptedUpdates = offersAdaptedUpdatesStore.wrappedValue
     }
+}
+
+/// Where the center keeps what the user said about updates: read by the
+/// center, and by `PackageIndex.restoreUpdatePreferences(from:)` for a
+/// process that reads the same storage without one.
+enum UpdatePreferenceKey {
+    static let blockedUpdates = "\(kPackageCenterIdentity).blockedUpdateTable"
+    static let offersAdaptedUpdates = "\(kPackageCenterIdentity).offersAdaptedUpdates"
 }

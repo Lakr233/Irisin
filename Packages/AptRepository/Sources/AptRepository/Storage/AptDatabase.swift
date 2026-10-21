@@ -15,8 +15,11 @@ import WCDBSwift
 /// that would serialise away the concurrency WCDB exists to provide.
 final class AptDatabase: @unchecked Sendable {
     nonisolated static let shared = AptDatabase(
-        at: AptEnvironment.current.workingLocation.appendingPathComponent("apt.db")
+        at: AptEnvironment.current.workingLocation.appendingPathComponent(fileName)
     )
+
+    /// The database's name under the working location.
+    static let fileName = "apt.db"
 
     enum Table {
         static let repository = "repository"
@@ -37,8 +40,13 @@ final class AptDatabase: @unchecked Sendable {
     /// compared with another of the same database.
     let identity = UUID()
 
+    /// A reader of another process's catalogue (`init(readingAt:)`): no
+    /// write reaches the file through it.
+    let isReadOnly: Bool
+
     init(at url: URL) {
         database = Database(at: url)
+        isReadOnly = false
         database.add(tokenizer: BuiltinTokenizer.Verbatim)
         database.setAutoMergeFTS5Index(enable: true)
         // The source list and where each package was installed from are
@@ -60,16 +68,39 @@ final class AptDatabase: @unchecked Sendable {
         }
     }
 
+    /// The catalogue another process writes, opened for reading only: none
+    /// of what `init(at:)` does first, since creating a table, merging the
+    /// search index and the backup each write. The tokenizer is registered
+    /// all the same: a MATCH tokenizes its key with the table's tokenizer,
+    /// and registering one is in memory alone. WAL hands every read the
+    /// last committed write while the writer goes on.
+    init(readingAt url: URL) {
+        database = Database(at: url, readOnly: true)
+        database.add(tokenizer: BuiltinTokenizer.Verbatim)
+        isReadOnly = true
+    }
+
     func resolutionCatalogue() throws -> (packages: [Package], revision: Int64) {
         var packages: [Package] = []
         var revision: Int64 = 0
-        try database.run(transaction: { handle in
+        try readTogether { handle in
             let rows: [PackageRow] = try handle.getObjects(fromTable: Table.package)
             let row: ResolutionRevisionRow? = try handle.getObject(fromTable: Table.resolutionRevision)
             packages = rows.map(\.package)
             revision = row?.revision ?? 0
-        })
+        }
         return (packages, revision)
+    }
+
+    /// Reads that must all see the same commit. WCDB's transaction begins
+    /// IMMEDIATE, a write lock a read-only handle cannot take; a reader
+    /// begins DEFERRED, the shared lock alone, and ends without a commit.
+    private func readTogether(_ body: @escaping (Handle) throws -> Void) throws {
+        guard isReadOnly else { return try database.run(transaction: body) }
+        let handle = try database.getHandle()
+        try handle.exec(StatementBegin().begin(.deferred))
+        defer { try? handle.exec(StatementRollback()) }
+        try body(handle)
     }
 
     func resolutionRevision() throws -> Int64 {
@@ -89,6 +120,14 @@ final class AptDatabase: @unchecked Sendable {
     }
 
     private func write(resolutionChanged: Bool = false, _ body: @escaping (Handle) throws -> Void) {
+        // nothing that opens a reader calls a write; one that did would be
+        // refused by SQLite anyway, and is a bug to hear about, not a file
+        // to change
+        guard !isReadOnly else {
+            assertionFailure("a write reached a read-only catalogue")
+            aptLog(Self.self, "write refused: the catalogue is open read-only", level: .critical)
+            return
+        }
         do {
             try database.run(transaction: { handle in
                 try body(handle)
