@@ -9,48 +9,37 @@
 import AptRepository
 import Dog
 import Foundation
+import IrisinVendor
 
 /// The identity the app presents to repositories and vendors.
 enum DeviceIdentity {
     /// Asked of MobileGestalt once; a made-up one for the process when it
     /// does not answer.
     static let udid: String = {
-        typealias MGCopyAnswerAddr = @convention(c) (CFString) -> CFString
-        var udid = ""
-        if let lookup = dlsym(dlopen("/usr/lib/libMobileGestalt.dylib", RTLD_GLOBAL | RTLD_LAZY), "MGCopyAnswer") {
-            let MGCopyAnswer = unsafeBitCast(lookup, to: MGCopyAnswerAddr.self)
-            udid = MGCopyAnswer("UniqueDeviceID" as CFString) as String
+        if let udid = VendorDevice.uniqueDeviceIdentifier() {
             Dog.shared.join("MGCopyAnswer", "UniqueDeviceID returned udid \(udid.count) long", level: .info)
+            return udid
         }
-        if udid.isEmpty {
-            let build = String((0 ..< 40).map { _ in "0123456789abcdef".randomElement()! })
-            Dog.shared.join(
-                "MGCopyAnswer",
-                "UniqueDeviceID lookup failed, using \(build) for requests",
-                level: .warning
-            )
-            udid = build
-        }
-        return udid
+        let build = String((0 ..< 40).map { _ in "0123456789abcdef".randomElement()! })
+        Dog.shared.join(
+            "MGCopyAnswer",
+            "UniqueDeviceID lookup failed, using \(build) for requests",
+            level: .warning
+        )
+        return build
     }()
 
     static var machine: String {
-        var systemInfo = utsname()
-        uname(&systemInfo)
-        let machineMirror = Mirror(reflecting: systemInfo.machine)
-        return machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8, value != 0 else { return identifier }
-            return identifier + String(UnicodeScalar(UInt8(value)))
-        }
+        VendorDevice.machine
     }
 
     static var firmware: String {
-        let version = ProcessInfo.processInfo.operatingSystemVersion
-        var text = "\(version.majorVersion).\(version.minorVersion)"
-        if version.patchVersion > 0 {
-            text += ".\(version.patchVersion)"
-        }
-        return text
+        VendorDevice.firmware
+    }
+
+    /// What a vendor is told about this device.
+    static var vendorDevice: VendorDevice {
+        VendorDevice(udid: udid, machine: machine, firmware: firmware)
     }
 
     static func applyNetworkingHeaders() {

@@ -15,6 +15,7 @@
 		CA10000000000000000001C0 /* AptRepository in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001C1 /* AptRepository */; };
 		CA10000000000000000001D0 /* Dog in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001D1 /* Dog */; };
 		CA10000000000000000001E0 /* IrisinAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001E1 /* IrisinAdapter */; };
+		CA10000000000000000001F0 /* IrisinVendor in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000001F1 /* IrisinVendor */; };
 		CA1000000000000000000200 /* PackageDepiction in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000201 /* PackageDepiction */; };
 		CA1000000000000000000270 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000271 /* SnapKit */; };
 		CA1000000000000000000280 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000281 /* SDWebImage */; };
@@ -102,6 +103,7 @@
 				CA1000000000000000000320 /* ScribbleLetter in Frameworks */,
 				CA10000000000000000001B0 /* IrisinClient in Frameworks */,
 				CA10000000000000000001E0 /* IrisinAdapter in Frameworks */,
+				CA10000000000000000001F0 /* IrisinVendor in Frameworks */,
 				CA10000000000000000001C0 /* AptRepository in Frameworks */,
 				A9B601A1DEFA4A3CAE324060 /* AptResolver in Frameworks */,
 				502F2D44304EBFBC006C2087 /* Then in Frameworks */,
@@ -189,6 +191,7 @@
 				CA10000000000000000001A1 /* IrisinProtocol */,
 				CA10000000000000000001B1 /* IrisinClient */,
 				CA10000000000000000001E1 /* IrisinAdapter */,
+				CA10000000000000000001F1 /* IrisinVendor */,
 				CA10000000000000000001C1 /* AptRepository */,
 				A9B601A1DEFA4A3CAE324061 /* AptResolver */,
 				CA10000000000000000001D1 /* Dog */,
@@ -862,6 +865,10 @@
 		CA10000000000000000001E1 /* IrisinAdapter */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = IrisinAdapter;
+		};
+		CA10000000000000000001F1 /* IrisinVendor */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrisinVendor;
 		};
 		CA1000000000000000000201 /* PackageDepiction */ = {
 			isa = XCSwiftPackageProductDependency;

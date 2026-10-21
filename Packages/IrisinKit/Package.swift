@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "IrisinClient", targets: ["IrisinClient"]),
         .library(name: "IrisinAdapter", targets: ["IrisinAdapter"]),
         .library(name: "IrisinPreparation", targets: ["IrisinPreparation"]),
+        .library(name: "IrisinVendor", targets: ["IrisinVendor"]),
     ],
     dependencies: [
         // Our own LaunchServices and SpringBoard code, linked into the helper
@@ -97,7 +98,14 @@ let package = Package(
             ]
         ),
 
+        // A paid repository's sign-in in the Keychain and the vendor's
+        // endpoints, for the app and the command line alike: one spelling
+        // of the Keychain names and one shape of every request, so the two
+        // cannot drift. Foundation and Security only.
+        .target(name: "IrisinVendor"),
+
         .testTarget(name: "IrisinProtocolTests", dependencies: ["IrisinProtocol"]),
+        .testTarget(name: "IrisinVendorTests", dependencies: ["IrisinVendor"]),
         .testTarget(name: "IrisinInstallerTests", dependencies: ["IrisinInstaller"]),
         .testTarget(name: "IrisinClientTests", dependencies: ["IrisinClient"]),
         .testTarget(
