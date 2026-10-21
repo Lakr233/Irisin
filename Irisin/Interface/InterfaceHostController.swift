@@ -66,7 +66,7 @@ class InterfaceHostController: UIViewController {
             // a link that opened the app gets its sheet; onboarding waits for
             // the next time the interface appears
             if WelcomeController.shouldPresent, presentedViewController == nil {
-                present(WelcomeController.makeNavigator(), animated: true)
+                present(WelcomeController.makeLaunchNavigator(), animated: true)
             }
         }
     }

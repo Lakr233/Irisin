@@ -32,20 +32,30 @@ class WelcomeController: UIViewController {
         return seen == 0 || OperationConfirmation.method != nil
     }
 
-    /// Onboarding, ready to present: this page in its own navigation stack,
-    /// or the confirmation page alone for a user who saw the rest before.
+    /// Onboarding from its first page, ready to present: what Settings'
+    /// Welcome Page opens, however much of it was seen before.
     static func makeNavigator() -> UINavigationController {
-        let controller: UIViewController
-        if seenVersionStore.wrappedValue >= 1, let method = OperationConfirmation.method {
-            controller = WelcomeConfirmationController(method: method) { page in
-                finish(page.navigationController)
-            }
-            controller.preferredContentSize = CGSize(width: 520, height: 620)
-        } else {
-            controller = WelcomeController()
-            controller.navigationItem.largeTitleDisplayMode = .never
+        let controller = WelcomeController()
+        controller.navigationItem.largeTitleDisplayMode = .never
+        return navigator(rootedAt: controller)
+    }
+
+    /// What launch presents when `shouldPresent`: onboarding from its first
+    /// page, or the confirmation page alone for a user who saw the rest
+    /// before version 2.
+    static func makeLaunchNavigator() -> UINavigationController {
+        guard seenVersionStore.wrappedValue >= 1, let method = OperationConfirmation.method else {
+            return makeNavigator()
         }
-        return UINavigationController(rootViewController: controller).then {
+        let page = WelcomeConfirmationController(method: method) { page in
+            finish(page.navigationController)
+        }
+        page.preferredContentSize = CGSize(width: 520, height: 620)
+        return navigator(rootedAt: page)
+    }
+
+    private static func navigator(rootedAt controller: UIViewController) -> UINavigationController {
+        UINavigationController(rootViewController: controller).then {
             // the first page has no title; the pages after it title it large
             $0.navigationBar.prefersLargeTitles = true
             $0.view.backgroundColor = WelcomeStyle.background
