@@ -53,13 +53,6 @@
 			remoteGlobalIDString = CA3000000000000000000010;
 			remoteInfo = "irisin-install";
 		};
-		CA8000000000000000000020 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = CA0000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CA8000000000000000000010;
-			remoteInfo = "irisin-cli";
-		};
 		CA7000000000000000000020 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CA0000000000000000000001 /* Project object */;
@@ -216,7 +209,6 @@
 			dependencies = (
 				CA2000000000000000000021 /* PBXTargetDependency */,
 				CA3000000000000000000021 /* PBXTargetDependency */,
-				CA8000000000000000000021 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CA1000000000000000000002 /* Irisin */,
@@ -486,11 +478,6 @@
 			isa = PBXTargetDependency;
 			target = CA3000000000000000000010 /* irisin-install */;
 			targetProxy = CA3000000000000000000020 /* PBXContainerItemProxy */;
-		};
-		CA8000000000000000000021 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = CA8000000000000000000010 /* irisin-cli */;
-			targetProxy = CA8000000000000000000020 /* PBXContainerItemProxy */;
 		};
 		CA7000000000000000000021 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

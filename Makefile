@@ -13,6 +13,7 @@ PROJECT             := $(ROOT_DIR)/Irisin.xcodeproj
 # the same name anywhere in the graph (Runestone, MarkdownView: vendored).
 WORKSPACE           := $(ROOT_DIR)/Irisin.xcworkspace
 SCHEME              := Irisin
+CLI_SCHEME          := irisin-cli
 CONFIGURATION       ?= Release
 # Not under /tmp: Xcode spells that /tmp while FileManager resolves it to
 # /private/tmp, and some package manifests strip checkout paths by string
@@ -284,12 +285,22 @@ build: harness compile
 compile: check
 	@$(MAKE) --no-print-directory _build-ios
 
+# irisin-cli is a build of its own. It and irisin-install are both tools
+# that link libarchive, and Xcode 26 copies a package's framework next to
+# each tool it links into: in one build graph the two copies land on the
+# same path, which it refuses as two commands making one file.
 _build-ios:
 	@echo "==> build $(BUILD_NUMBER)"
 	XCBUILD_LABEL=build-ios $(XCODEBUILD) \
 		$(if $(filter Release,$(CONFIGURATION)),-xcconfig "$(SIZE_CONFIG)") \
 		-configuration "$(CONFIGURATION)" \
 		-scheme "$(SCHEME)" \
+		-destination "generic/platform=iOS" \
+		build
+	XCBUILD_LABEL=build-cli $(XCODEBUILD) \
+		$(if $(filter Release,$(CONFIGURATION)),-xcconfig "$(SIZE_CONFIG)") \
+		-configuration "$(CONFIGURATION)" \
+		-scheme "$(CLI_SCHEME)" \
 		-destination "generic/platform=iOS" \
 		build
 
