@@ -138,7 +138,8 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.
 - **Peer authentication is the whole trust boundary.** Audit token (pid > 1,
-  euid 0 or 501), then the `wiki.qaq.irisin.client`, `platform-application`
+  euid 0; 501 only for Irisin's own app at its exact path, since a client
+  mobile could run would be root for whoever runs it), then the `wiki.qaq.irisin.client`, `platform-application`
   and `no-sandbox` entitlements, each strictly true, then the executable on
   disk: canonical (`realpath`, a NUL refused first), inside the install root
   by component or on the read-only volume at `/`, every directory from the
@@ -148,6 +149,14 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   rule beside that. Before the first request field is read. This trusts
   every installed package that meets the checks; the entitlement is
   eligibility, not identity (Decisions below).
+- **mobile reaches root only through the app, and the owner says yes.**
+  A change to the system is staged once the owner confirms it with Face ID,
+  Touch ID, Optic ID or the passcode (`OperationConfirmation`, on by
+  default, asked at Execute, Try Again and a recovery operation; a device
+  with no passcode is not asked). Every other client is root's, which the
+  user grants with `sudo`. `irisin-cli` (`Documentation/CommandLine.md`) is
+  such a client and has the app's Keychain groups, in the app's order
+  (`Scripts/check-cli-entitlements.py`).
 - **The daemon's absence is never surfaced as an error.** It is on-demand: a
   miss means launchd has not started it yet. `PrivilegedBackend.start()` keeps
   asking; a build with no daemon beside its bundle settles on the local
@@ -463,7 +472,9 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `IrisinPreparation` (`DebianPreparation`, a `.deb` into a prepared tree,
   the app's and the helper's), `IrisinClient` (`DaemonLink`,
   `JobTranscript`), `IrisinAdapter` (`PackageAdapter`, `PackageAdapters`,
-  `BootstrapArchitecture`), each with `swift test`.
+  `BootstrapArchitecture`), `IrisinVendor` (a paid repository's Keychain
+  names and every vendor request, the app's and `irisin-cli`'s alike, the
+  stored `secert` spelling included), each with `swift test`.
 - `Packages/IrisinExternalClient/` — the external clients' library and its C
   shim, no dependency on the rest of Irisin; `IrisinExternalContractTests`
   in IrisinKit holds its wire to `IrisinProtocol`'s.

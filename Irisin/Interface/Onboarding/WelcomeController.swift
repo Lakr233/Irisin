@@ -20,18 +20,31 @@ class WelcomeController: UIViewController {
         let detail: String.LocalizationValue
     }
 
-    /// Raise it when onboarding changes enough to be shown again.
-    private static let version = 1
+    /// Raise it when onboarding changes enough to be shown again. 2 added
+    /// the confirmation page, and a user who saw 1 is shown that alone.
+    private static let version = 2
     private static let seenVersionStore = Stored(key: "onboarding.seenVersion", defaultValue: 0)
 
     static var shouldPresent: Bool {
-        seenVersionStore.wrappedValue < version
+        let seen = seenVersionStore.wrappedValue
+        guard seen < version else { return false }
+        // a device with no passcode has nothing new for a user who saw 1
+        return seen == 0 || OperationConfirmation.method != nil
     }
 
-    /// Onboarding, ready to present: this page in its own navigation stack.
+    /// Onboarding, ready to present: this page in its own navigation stack,
+    /// or the confirmation page alone for a user who saw the rest before.
     static func makeNavigator() -> UINavigationController {
-        let controller = WelcomeController()
-        controller.navigationItem.largeTitleDisplayMode = .never
+        let controller: UIViewController
+        if seenVersionStore.wrappedValue >= 1, let method = OperationConfirmation.method {
+            controller = WelcomeConfirmationController(method: method) { page in
+                finish(page.navigationController)
+            }
+            controller.preferredContentSize = CGSize(width: 520, height: 620)
+        } else {
+            controller = WelcomeController()
+            controller.navigationItem.largeTitleDisplayMode = .never
+        }
         return UINavigationController(rootViewController: controller).then {
             // the first page has no title; the pages after it title it large
             $0.navigationBar.prefersLargeTitles = true
@@ -247,13 +260,23 @@ class WelcomeController: UIViewController {
     }
 
     private func showNextPage() {
-        let page = WelcomeRepositoriesController { [weak self] in self?.finish() }
+        let page = WelcomeRepositoriesController { [weak self] in Self.finish(self?.navigationController) }
         navigationController?.pushViewController(page, animated: true)
     }
 
+    /// The page after the repositories: the confirmation page where the
+    /// device has a way to confirm, then the caution page, which finishes.
+    static func pageAfterRepositories(onFinish: @escaping () -> Void) -> UIViewController {
+        let caution = { WelcomeCautionController(onFinish: onFinish) }
+        guard let method = OperationConfirmation.method else { return caution() }
+        return WelcomeConfirmationController(method: method) { page in
+            page.navigationController?.pushViewController(caution(), animated: true)
+        }
+    }
+
     /// Ends onboarding. The last page's button calls this.
-    private func finish() {
-        Self.seenVersionStore.wrappedValue = Self.version
-        navigationController?.dismiss(animated: true)
+    private static func finish(_ navigator: UINavigationController?) {
+        seenVersionStore.wrappedValue = version
+        navigator?.dismiss(animated: true)
     }
 }

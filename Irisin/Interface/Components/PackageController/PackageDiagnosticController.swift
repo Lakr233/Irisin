@@ -230,7 +230,7 @@ final class PackageDiagnosticController: UIViewController, UITableViewDelegate {
             message: "Checking packages…"
         )
         Task { [weak self] in
-            guard let self else { return }
+            guard await OperationConfirmation.confirm(), let self else { return }
             await withCheckedContinuation { ready in
                 present(progress, animated: true) { ready.resume() }
             }

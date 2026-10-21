@@ -74,7 +74,10 @@ class WelcomeRepositoriesController: UIViewController, UITableViewDelegate {
 
         let actionBar = WelcomeActionBar(title: String(localized: "Next")) { [weak self] in
             guard let self else { return }
-            navigationController?.pushViewController(WelcomeCautionController(onFinish: onFinish), animated: true)
+            navigationController?.pushViewController(
+                WelcomeController.pageAfterRepositories(onFinish: onFinish),
+                animated: true
+            )
         }
         view.addSubview(tableView)
         view.addSubview(actionBar)

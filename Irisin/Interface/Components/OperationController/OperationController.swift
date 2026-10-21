@@ -447,6 +447,11 @@ final class OperationController: UIViewController, UITableViewDelegate {
         retrying = true
         view.setNeedsLayout()
         Task { [weak self] in
+            guard await OperationConfirmation.confirm() else {
+                self?.retrying = false
+                self?.view.setNeedsLayout()
+                return
+            }
             let manager = PackageQueue.shared
             await manager.settled()
             guard let self, view.window != nil else { return }

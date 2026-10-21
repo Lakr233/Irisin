@@ -10,9 +10,20 @@ import AptRepository
 import UIKit
 
 extension SettingsController {
-    /// How packages are shown and handled.
+    /// How packages are shown and handled: the blocked updates, then the
+    /// switches, the owner's confirmation first.
     func packageItems() -> [SettingsItem] {
         let items: [SettingsItem?] = [
+            SettingsItem(
+                id: "package.blocked",
+                icon: "hand.raised.fill",
+                title: String(localized: "Blocked Updates"),
+                kind: .disclosure,
+                action: { [weak self] in
+                    self?.present(next: BlockUpdateController())
+                }
+            ),
+            confirmationItem(),
             SettingsItem(
                 id: "package.translate",
                 icon: "character.bubble",
@@ -39,15 +50,6 @@ extension SettingsController {
                         self?.dispatchValueUpdate()
                     }
                     self?.dispatchValueUpdate()
-                }
-            ),
-            SettingsItem(
-                id: "package.blocked",
-                icon: "hand.raised.fill",
-                title: String(localized: "Blocked Updates"),
-                kind: .disclosure,
-                action: { [weak self] in
-                    self?.present(next: BlockUpdateController())
                 }
             ),
             compatibilityUpdatesItem(),
@@ -106,6 +108,30 @@ extension SettingsController {
                     self?.dispatchValueUpdate()
                 }
                 // the switch goes back until the confirmation says otherwise
+                self?.dispatchValueUpdate()
+            }
+        )
+    }
+
+    /// Whether a change waits for the owner's Face ID, Touch ID, Optic ID
+    /// or passcode. Turned either way only once the owner confirms, so the
+    /// switch is no way around it; no row on a device with no passcode.
+    private func confirmationItem() -> SettingsItem? {
+        guard let method = OperationConfirmation.method else { return nil }
+        return SettingsItem(
+            id: "package.ownerConfirmation",
+            icon: method.symbol,
+            title: String(localized: "Require \(method.name)"),
+            kind: .toggle,
+            isOn: { OperationConfirmation.isEnabled },
+            setOn: { [weak self] isOn in
+                Task { [weak self] in
+                    if await OperationConfirmation.authenticate() {
+                        OperationConfirmation.isEnabled = isOn
+                    }
+                    self?.dispatchValueUpdate()
+                }
+                // the switch follows the stored value until the owner answers
                 self?.dispatchValueUpdate()
             }
         )

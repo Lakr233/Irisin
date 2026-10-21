@@ -668,6 +668,15 @@ final class QueueController: UIViewController, UITableViewDelegate {
         }
         stage = .staging
         staging = Task { [weak self] in
+            // the owner says yes before anything is staged; a cancel leaves
+            // the queue as it was, every file still here
+            guard await OperationConfirmation.confirm() else {
+                guard let self else { return }
+                staging = nil
+                committed = false
+                stage = .ready
+                return reload()
+            }
             let payload = await Installer.shared.createOperationPayload(
                 plan: plan,
                 bootstrapInstall: bootstrapInstall

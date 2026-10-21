@@ -92,6 +92,12 @@ class SettingsController: UITableViewController {
                     guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                     UIApplication.shared.open(url)
                 },
+                UIAction(
+                    title: String(localized: "Get Test Update"),
+                    image: UIImage(systemName: "shippingbox")
+                ) { [weak self] _ in
+                    self?.getTestUpdate()
+                },
                 // below a divider: the files this app hands out
                 UIMenu(options: .displayInline, children: [
                     ExportFile.menu(from: self) { [weak self] in

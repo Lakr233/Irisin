@@ -51,6 +51,38 @@ extension SettingsController {
         ]
     }
 
+    /// The newest build on GitHub, a pre-release included, opened as a
+    /// `.deb` handed to the app is: the package page installs it.
+    func getTestUpdate() {
+        let alert = progressAlert(
+            title: "Downloading…",
+            message: "Getting the newest build of Irisin from GitHub."
+        )
+        Task { [weak self] in
+            guard let self else { return }
+            await withCheckedContinuation { shown in
+                present(alert, animated: true) { shown.resume() }
+            }
+            let result: Result<URL, TestUpdate.Failure>
+            do throws(TestUpdate.Failure) {
+                result = try await .success(TestUpdate.download(architecture: PackagedArchitecture.architecture))
+            } catch {
+                result = .failure(error)
+            }
+            await alert.dismissFinishing(animated: true)
+            switch result {
+            case let .success(file):
+                let page = DebOpenController()
+                page.patternLocation = file
+                navigationController?.pushViewController(page, animated: true)
+            case .failure(.noPackage):
+                presentNotice(title: "No Test Update", message: "No build for this device is available yet.")
+            case .failure(.unreachable):
+                presentNotice(title: "Unable to Get Test Update", message: "Check your connection and try again.")
+            }
+        }
+    }
+
     /// Where to look, and whom to tell, when something went wrong.
     func supportItems() -> [SettingsItem] {
         [

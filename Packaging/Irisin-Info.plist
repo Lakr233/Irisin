@@ -65,6 +65,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Irisin uses Face ID to verify that you own this device before it changes packages.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>wiki.qaq.irisin.drop.package</string>
