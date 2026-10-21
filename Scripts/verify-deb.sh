@@ -42,6 +42,7 @@ for payload in \
     "/Applications/irisin.app/zh-Hans.lproj/Localizable.strings" \
     "/usr/libexec/irisind" \
     "/usr/libexec/irisin-install" \
+    "/usr/bin/irisin-cli" \
     "/Library/LaunchDaemons/wiki.qaq.irisind.plist"
 do
     grep -F ".$install_prefix$payload" <<<"$contents" >/dev/null || {
@@ -94,7 +95,8 @@ expect "App icon" \
 for binary in \
     "$installed/Applications/irisin.app/irisin" \
     "$installed/usr/libexec/irisind" \
-    "$installed/usr/libexec/irisin-install"
+    "$installed/usr/libexec/irisin-install" \
+    "$installed/usr/bin/irisin-cli"
 do
     if otool -l "$binary" | grep -E 'sectname __llvm_(prf|cov)' >/dev/null; then
         echo "error: $(basename "$binary") contains LLVM coverage instrumentation; rebuild with code coverage disabled" >&2
@@ -145,6 +147,10 @@ if grep -E '/icli$' <<<"$contents" >/dev/null; then
     echo "error: package ships a standalone icli" >&2
     exit 65
 fi
+# irisind serves irisin-cli as root only; a file mobile could change would
+# be root for whoever changed it.
+cli_mode="$(grep -E '[[:space:]]\./?'"${install_prefix#/}${install_prefix:+/}"'usr/bin/irisin-cli$' <<<"$contents" | awk '{print $1, $2}')"
+expect "irisin-cli mode and owner" "$cli_mode" "-rwxr-xr-x root/root"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app_info_plist" 2>/dev/null)" == Irisin ]] || {
     echo "error: the app bundle's CFBundleName is not Irisin" >&2
     exit 65

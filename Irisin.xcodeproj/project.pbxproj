@@ -27,6 +27,13 @@
 		CA1000000000000000000310 /* RunestoneThemeSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000311 /* RunestoneThemeSupport */; };
 		CA1000000000000000000320 /* ScribbleLetter in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000321 /* ScribbleLetter */; };
 		CA2000000000000000000040 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA2000000000000000000041 /* IrisinProtocol */; };
+		CA8000000000000000000040 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000041 /* IrisinProtocol */; };
+		CA8000000000000000000042 /* IrisinClient in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000043 /* IrisinClient */; };
+		CA8000000000000000000044 /* IrisinAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000045 /* IrisinAdapter */; };
+		CA8000000000000000000046 /* IrisinVendor in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000047 /* IrisinVendor */; };
+		CA8000000000000000000048 /* AptRepository in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000049 /* AptRepository */; };
+		CA800000000000000000004A /* AptResolver in Frameworks */ = {isa = PBXBuildFile; productRef = CA800000000000000000004B /* AptResolver */; };
+		CA800000000000000000004C /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = CA800000000000000000004D /* ArgumentParser */; };
 		CA3000000000000000000040 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA3000000000000000000041 /* IrisinProtocol */; };
 		CA3000000000000000000042 /* IrisinInstaller in Frameworks */ = {isa = PBXBuildFile; productRef = CA3000000000000000000043 /* IrisinInstaller */; };
 /* End PBXBuildFile section */
@@ -46,6 +53,13 @@
 			remoteGlobalIDString = CA3000000000000000000010;
 			remoteInfo = "irisin-install";
 		};
+		CA8000000000000000000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CA8000000000000000000010;
+			remoteInfo = "irisin-cli";
+		};
 		CA7000000000000000000020 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CA0000000000000000000001 /* Project object */;
@@ -58,6 +72,7 @@
 /* Begin PBXFileReference section */
 		CA1000000000000000000001 /* irisin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = irisin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA2000000000000000000001 /* irisind */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = irisind; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA8000000000000000000001 /* irisin-cli */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "irisin-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA3000000000000000000001 /* irisin-install */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "irisin-install"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA7000000000000000000001 /* IrisinUnitTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IrisinUnitTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -76,6 +91,11 @@
 		CA3000000000000000000002 /* IrisinInstall */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = IrisinInstall;
+			sourceTree = "<group>";
+		};
+		CA8000000000000000000002 /* IrisinCLI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = IrisinCLI;
 			sourceTree = "<group>";
 		};
 		CA4000000000000000000001 /* Configuration */ = {
@@ -133,6 +153,18 @@
 				CA3000000000000000000042 /* IrisinInstaller in Frameworks */,
 			);
 		};
+		CA8000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				CA8000000000000000000040 /* IrisinProtocol in Frameworks */,
+				CA8000000000000000000042 /* IrisinClient in Frameworks */,
+				CA8000000000000000000044 /* IrisinAdapter in Frameworks */,
+				CA8000000000000000000046 /* IrisinVendor in Frameworks */,
+				CA8000000000000000000048 /* AptRepository in Frameworks */,
+				CA800000000000000000004A /* AptResolver in Frameworks */,
+				CA800000000000000000004C /* ArgumentParser in Frameworks */,
+			);
+		};
 		CA7000000000000000000012 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -149,6 +181,7 @@
 				CA1000000000000000000002 /* Irisin */,
 				CA2000000000000000000002 /* IrisinDaemon */,
 				CA3000000000000000000002 /* IrisinInstall */,
+				CA8000000000000000000002 /* IrisinCLI */,
 				CA7000000000000000000002 /* IrisinUnitTest */,
 				CA0000000000000000000003 /* Products */,
 			);
@@ -160,6 +193,7 @@
 				CA1000000000000000000001 /* irisin.app */,
 				CA2000000000000000000001 /* irisind */,
 				CA3000000000000000000001 /* irisin-install */,
+				CA8000000000000000000001 /* irisin-cli */,
 				CA7000000000000000000001 /* IrisinUnitTest.xctest */,
 			);
 			name = Products;
@@ -182,6 +216,7 @@
 			dependencies = (
 				CA2000000000000000000021 /* PBXTargetDependency */,
 				CA3000000000000000000021 /* PBXTargetDependency */,
+				CA8000000000000000000021 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CA1000000000000000000002 /* Irisin */,
@@ -253,6 +288,32 @@
 			productReference = CA3000000000000000000001 /* irisin-install */;
 			productType = "com.apple.product-type.tool";
 		};
+		CA8000000000000000000010 /* irisin-cli */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA8000000000000000000030 /* Build configuration list for PBXNativeTarget "irisin-cli" */;
+			buildPhases = (
+				CA8000000000000000000011 /* Sources */,
+				CA8000000000000000000012 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				CA8000000000000000000002 /* IrisinCLI */,
+			);
+			name = "irisin-cli";
+			packageProductDependencies = (
+				CA8000000000000000000041 /* IrisinProtocol */,
+				CA8000000000000000000043 /* IrisinClient */,
+				CA8000000000000000000045 /* IrisinAdapter */,
+				CA8000000000000000000047 /* IrisinVendor */,
+				CA8000000000000000000049 /* AptRepository */,
+				CA800000000000000000004B /* AptResolver */,
+				CA800000000000000000004D /* ArgumentParser */,
+			);
+			productName = "irisin-cli";
+			productReference = CA8000000000000000000001 /* irisin-cli */;
+			productType = "com.apple.product-type.tool";
+		};
 		CA7000000000000000000010 /* IrisinUnitTest */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CA7000000000000000000030 /* Build configuration list for PBXNativeTarget "IrisinUnitTest" */;
@@ -291,6 +352,9 @@
 						CreatedOnToolsVersion = 27.0;
 					};
 					CA3000000000000000000010 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					CA8000000000000000000010 = {
 						CreatedOnToolsVersion = 27.0;
 					};
 					CA7000000000000000000010 = {
@@ -340,6 +404,7 @@
 				502F2D42304EBFBC006C2087 /* XCRemoteSwiftPackageReference "Then" */,
 				502F639B304F1353006C2087 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */,
+				CA600000000000000000000D /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -348,6 +413,7 @@
 				CA1000000000000000000010 /* Irisin */,
 				CA2000000000000000000010 /* irisind */,
 				CA3000000000000000000010 /* irisin-install */,
+				CA8000000000000000000010 /* irisin-cli */,
 				CA7000000000000000000010 /* IrisinUnitTest */,
 			);
 		};
@@ -398,6 +464,11 @@
 			files = (
 			);
 		};
+		CA8000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		CA7000000000000000000011 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -415,6 +486,11 @@
 			isa = PBXTargetDependency;
 			target = CA3000000000000000000010 /* irisin-install */;
 			targetProxy = CA3000000000000000000020 /* PBXContainerItemProxy */;
+		};
+		CA8000000000000000000021 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CA8000000000000000000010 /* irisin-cli */;
+			targetProxy = CA8000000000000000000020 /* PBXContainerItemProxy */;
 		};
 		CA7000000000000000000021 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -663,6 +739,42 @@
 			};
 			name = Release;
 		};
+		CA8000000000000000000031 /* Debug configuration for PBXNativeTarget "irisin-cli" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Applications/irisin.app/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "wiki.qaq.irisin-cli";
+				PRODUCT_NAME = "irisin-cli";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		CA8000000000000000000032 /* Release configuration for PBXNativeTarget "irisin-cli" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Applications/irisin.app/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "wiki.qaq.irisin-cli";
+				PRODUCT_NAME = "irisin-cli";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 		CA7000000000000000000031 /* Debug configuration for PBXNativeTarget "IrisinUnitTest" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -723,6 +835,14 @@
 			buildConfigurations = (
 				CA3000000000000000000031 /* Debug configuration for PBXNativeTarget "irisin-install" */,
 				CA3000000000000000000032 /* Release configuration for PBXNativeTarget "irisin-install" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		CA8000000000000000000030 /* Build configuration list for PBXNativeTarget "irisin-cli" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA8000000000000000000031 /* Debug configuration for PBXNativeTarget "irisin-cli" */,
+				CA8000000000000000000032 /* Release configuration for PBXNativeTarget "irisin-cli" */,
 			);
 			defaultConfigurationName = Release;
 		};
@@ -828,6 +948,14 @@
 				minimumVersion = 0.1.1;
 			};
 		};
+		CA600000000000000000000D /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -927,6 +1055,35 @@
 		CA3000000000000000000043 /* IrisinInstaller */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = IrisinInstaller;
+		};
+		CA8000000000000000000041 /* IrisinProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrisinProtocol;
+		};
+		CA8000000000000000000043 /* IrisinClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrisinClient;
+		};
+		CA8000000000000000000045 /* IrisinAdapter */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrisinAdapter;
+		};
+		CA8000000000000000000047 /* IrisinVendor */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = IrisinVendor;
+		};
+		CA8000000000000000000049 /* AptRepository */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AptRepository;
+		};
+		CA800000000000000000004B /* AptResolver */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AptResolver;
+		};
+		CA800000000000000000004D /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA600000000000000000000D /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

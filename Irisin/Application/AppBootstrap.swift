@@ -56,6 +56,10 @@ enum AppBootstrap {
             // MARK: - AUTOMATIC REFRESH
 
             AutomaticRefresh.start()
+
+            // MARK: - COMMAND LINE
+
+            CommandLineChanges.observe()
         }
     }
 

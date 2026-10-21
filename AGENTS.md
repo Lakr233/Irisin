@@ -460,6 +460,11 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   authentication, helper launch.
 - `IrisinInstall/` — the helper, product `irisin-install`: one job
   from standard input, the transcript on standard output.
+- `IrisinCLI/` — the command line, product `irisin-cli`, at
+  `<root>/usr/bin/irisin-cli`: root only, the app's catalogue read-only,
+  the queue cut down to one solve and one run, English only
+  (`Documentation/CommandLine.md`). It finds WCDB in the app's
+  `Frameworks` by `@executable_path/../../Applications/irisin.app/Frameworks`.
 - `IrisinUnitTest/` — test bundle hosted in the app (`@testable import
   irisin`), for what only makes sense against the app's own types:
   `Services/Downloads/Downloader` against a `URLProtocol` stub, the

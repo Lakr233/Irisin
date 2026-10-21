@@ -5,8 +5,8 @@ set -Eeuo pipefail
 scripts="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 repository_root="$(cd "$scripts/.." && pwd -P)"
 
-if [[ "$#" -ne 15 ]]; then
-    echo "usage: $0 <app> <daemon> <helper> <control> <app-entitlements> <daemon-entitlements> <launch-plist> <output-deb> <package-id> <version> <architecture> <flavor> <install-prefix> <minimum-ios> <helper-entitlements>" >&2
+if [[ "$#" -ne 17 ]]; then
+    echo "usage: $0 <app> <daemon> <helper> <control> <app-entitlements> <daemon-entitlements> <launch-plist> <output-deb> <package-id> <version> <architecture> <flavor> <install-prefix> <minimum-ios> <helper-entitlements> <cli> <cli-entitlements>" >&2
     exit 64
 fi
 
@@ -25,11 +25,14 @@ flavor="${12}"
 install_prefix="${13}"
 minimum_ios="${14}"
 helper_entitlements="${15}"
+cli_binary="${16}"
+cli_entitlements="${17}"
 
 [[ -d "$app_bundle" && -f "$app_bundle/Info.plist" ]] || { echo "error: incomplete app bundle" >&2; exit 66; }
 [[ -x "$daemon_binary" ]] || { echo "error: daemon binary is missing" >&2; exit 66; }
 [[ -x "$helper_binary" ]] || { echo "error: helper binary is missing" >&2; exit 66; }
-for input in "$control_template" "$app_entitlements" "$daemon_entitlements" "$helper_entitlements" "$launch_plist"; do
+[[ -x "$cli_binary" ]] || { echo "error: irisin-cli binary is missing" >&2; exit 66; }
+for input in "$control_template" "$app_entitlements" "$daemon_entitlements" "$helper_entitlements" "$cli_entitlements" "$launch_plist"; do
     [[ -f "$input" ]] || { echo "error: missing packaging input: $input" >&2; exit 66; }
 done
 [[ "$output_deb" == *.deb ]] || { echo "error: output must end in .deb" >&2; exit 64; }
@@ -50,7 +53,7 @@ esac
 
 # The daemon and the helper make path decisions on physical paths; a vroot
 # dependency would silently change that contract.
-if otool -L "$daemon_binary" "$helper_binary" | grep -q 'libvroot'; then
+if otool -L "$daemon_binary" "$helper_binary" "$cli_binary" | grep -q 'libvroot'; then
     echo "error: native daemon uses physical paths; unexpected vroot dependency" >&2
     exit 65
 fi
@@ -79,15 +82,17 @@ temporary_deb="$output_directory/.$output_name.tmp.$$"
 app_signed_entitlements="$(mktemp "${TMPDIR:-/tmp}/irisin-app-entitlements.XXXXXX")"
 daemon_signed_entitlements="$(mktemp "${TMPDIR:-/tmp}/irisin-daemon-entitlements.XXXXXX")"
 helper_signed_entitlements="$(mktemp "${TMPDIR:-/tmp}/irisin-helper-entitlements.XXXXXX")"
-trap 'rm -rf "$staging"; rm -f "$temporary_deb" "$app_signed_entitlements" "$daemon_signed_entitlements" "$helper_signed_entitlements"' EXIT
+cli_signed_entitlements="$(mktemp "${TMPDIR:-/tmp}/irisin-cli-entitlements.XXXXXX")"
+trap 'rm -rf "$staging"; rm -f "$temporary_deb" "$app_signed_entitlements" "$daemon_signed_entitlements" "$helper_signed_entitlements" "$cli_signed_entitlements"' EXIT
 chmod 0755 "$staging"
 
 debian="$staging/DEBIAN"
 installed_app="$staging$install_prefix/Applications/irisin.app"
 installed_daemon="$staging$install_prefix/usr/libexec/irisind"
 installed_helper="$staging$install_prefix/usr/libexec/irisin-install"
+installed_cli="$staging$install_prefix/usr/bin/irisin-cli"
 installed_plist="$staging$install_prefix/Library/LaunchDaemons/wiki.qaq.irisind.plist"
-mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")" "$(dirname "$installed_plist")"
+mkdir -p "$debian" "$(dirname "$installed_app")" "$(dirname "$installed_daemon")" "$(dirname "$installed_cli")" "$(dirname "$installed_plist")"
 /usr/bin/ditto "$app_bundle" "$installed_app"
 # CFBundleName is what the system's own sheets call the app (a vendor
 # sign-in reads "\"Irisin\" Wants to Use…"); Xcode derives it from the product
@@ -113,10 +118,11 @@ for list in "$installed_app"/default-list-*.plist; do
 done
 /usr/bin/ditto "$daemon_binary" "$installed_daemon"
 /usr/bin/ditto "$helper_binary" "$installed_helper"
+/usr/bin/ditto "$cli_binary" "$installed_cli"
 sed -e "s|@PREFIX@|$install_prefix|g" "$launch_plist" >"$installed_plist"
 rm -rf "$installed_app/_CodeSignature"
 rm -f "$installed_app/embedded.mobileprovision"
-chmod 0755 "$installed_daemon" "$installed_helper"
+chmod 0755 "$installed_daemon" "$installed_helper" "$installed_cli"
 chmod 0644 "$installed_plist"
 
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:0' "$installed_plist")" == "$install_prefix/usr/libexec/irisind" ]] || {
@@ -124,7 +130,15 @@ chmod 0644 "$installed_plist"
     exit 65
 }
 
-for binary in "$installed_app/$app_executable" "$installed_daemon" "$installed_helper"; do
+# irisin-cli runs WCDB, libsolv and libarchive from the app's own
+# Frameworks, by the one relative path that holds under rootless and
+# roothide alike: usr/bin and Applications are siblings in the install root.
+otool -l "$installed_cli" | grep -F 'path @executable_path/../../Applications/irisin.app/Frameworks' >/dev/null || {
+    echo "error: irisin-cli does not look for its frameworks in the app's bundle" >&2
+    exit 65
+}
+
+for binary in "$installed_app/$app_executable" "$installed_daemon" "$installed_helper" "$installed_cli"; do
     /usr/bin/strip -xS "$binary"
     for private_path in "$repository_root" "${GITHUB_WORKSPACE:-}" "${RUNNER_TEMP:-}"; do
         [[ -z "$private_path" || "$private_path" == / ]] && continue
@@ -142,9 +156,11 @@ ldid -S"$app_entitlements" -Cadhoc "$installed_app/$app_executable"
 # what icli needs to talk to LaunchServices and FrontBoard from inside it.
 ldid -S"$daemon_entitlements" -Cadhoc "$installed_daemon"
 ldid -S"$helper_entitlements" -Cadhoc "$installed_helper"
+ldid -S"$cli_entitlements" -Cadhoc "$installed_cli"
 ldid -e "$installed_app/$app_executable" >"$app_signed_entitlements"
 ldid -e "$installed_daemon" >"$daemon_signed_entitlements"
 ldid -e "$installed_helper" >"$helper_signed_entitlements"
+ldid -e "$installed_cli" >"$cli_signed_entitlements"
 
 require_true() {
     local plist="$1"
@@ -159,7 +175,14 @@ require_true() {
 # build that lost one would ship an app the daemon silently refuses to serve.
 for entitlement in platform-application com.apple.private.security.no-sandbox wiki.qaq.irisin.client; do
     require_true "$app_signed_entitlements" "$entitlement"
+    require_true "$cli_signed_entitlements" "$entitlement"
 done
+# irisin-cli finds a vendor sign-in only in the groups the app stored it
+# in, first group first (Scripts/check-cli-entitlements.py).
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :keychain-access-groups' "$cli_signed_entitlements" 2>/dev/null)" == "$(/usr/libexec/PlistBuddy -c 'Print :keychain-access-groups' "$app_signed_entitlements" 2>/dev/null)" ]] || {
+    echo "error: irisin-cli's keychain groups are not the app's" >&2
+    exit 65
+}
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.exception.mach-lookup.global-name:0' "$app_signed_entitlements")" == wiki.qaq.irisin.service ]] || {
     echo "error: app is missing the daemon mach lookup entitlement" >&2
     exit 65
@@ -203,6 +226,7 @@ contents="$(dpkg-deb --contents "$temporary_deb")"
 grep -F ".$install_prefix/Applications/irisin.app/irisin" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/libexec/irisind" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/usr/libexec/irisin-install" <<<"$contents" >/dev/null
+grep -F ".$install_prefix/usr/bin/irisin-cli" <<<"$contents" >/dev/null
 grep -F ".$install_prefix/Library/LaunchDaemons/wiki.qaq.irisind.plist" <<<"$contents" >/dev/null
 
 mv -f "$temporary_deb" "$output_deb"

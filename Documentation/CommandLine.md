@@ -1,10 +1,7 @@
 # The command line
 
-**Not in a release yet.** This is the design being built; what exists
-so far is underneath it: the read-only catalogue (`PackageIndex.readOnly`),
-the vendor sign-in and endpoints shared with the app (`IrisinVendor`), the
-command line's entitlements and the check that keeps them the app's, and
-irisind serving every client but the app only as root.
+From 4.7.4. The sources are `IrisinCLI/`, the Xcode target `irisin-cli`,
+with swift-argument-parser; its text is English and has no catalog.
 
 `<root>/usr/bin/irisin-cli` installs, removes and looks up packages from a
 shell, for the bootstraps that no longer ship apt or dpkg. It is a program of
@@ -51,7 +48,8 @@ as the last committed write left it while the app goes on refreshing.
 `irisin-cli` does not refresh repositories or add them. A refresh writes the
 catalogue, and the catalogue has one writer, the app. `irisin-cli` says when the
 catalogue was last refreshed and warns when that is more than a day ago;
-`irisin-cli repo add <url>` hands the app an `irisin://repository/add` link.
+`irisin-cli repo add <url>` prints the `irisin://repository/add` link that
+adds it in the app.
 
 ## Commands
 
@@ -63,7 +61,7 @@ catalogue was last refreshed and warns when that is more than a day ago;
 | `install <package \| ./file.deb>...` | resolve, download, prepare, run |
 | `remove <package>...` | resolve, run |
 | `upgrade` | every update the Updates page would list |
-| `repo list` / `repo add <url>` | the second opens the app |
+| `repo list` / `repo add <url>` | the second prints the app's link |
 | `vendor status <repo>` | signed in or not, and the account's purchases |
 | `vendor login <repo>` | prints the sign-in URL; the sign-in finishes in the app |
 | `vendor purchase <package>` | prints the purchase URL |
@@ -85,20 +83,33 @@ Text is English only: it is a shell tool, as apt is.
    catalogue, then `PackageResolver.resolve` with a `ResolutionRequest`. No
    `ResolutionPool`: one solve per run.
 2. **Download.** One `URLSession` download per package into a 0700
-   directory of root's (`<root>/var/tmp/irisin.<pid>`), with the app's
+   directory of root's (`$TMPDIR/irisin-cli.<pid>`), with the app's
    request headers and a signed-in vendor's download link. Nothing is cached
    and nothing is resumed; the file is checked with
    `Package.validateArchive`, as the app checks it.
-3. **Prepare.** `ArchiveStream.prepareDebianPackage`, then
-   `PackageAdapters.installed.adapt` for a package built for another
-   bootstrap. If an adapted package's control paragraph differs from the
-   preview the plan was solved with, the run stops before anything is sent
-   and says so; the app's Patch, which solves again, is not repeated here.
+3. **Prepare.** `ArchiveStream.prepareDebianPackage`. A plan that installs
+   a package built for another bootstrap is refused before anything
+   downloads: Compatibility Mode, with its Patch that solves again, is the
+   app's, and is not repeated here.
 4. **Run.** `InstallerJob.transaction` through `DaemonLink`, the same job
    the app sends, and the transcript printed as it arrives.
 5. **Tell the app.** A Darwin notification once the run ends, so a running
    app reads the installed list again. The install origins of what `irisin-cli`
    installed are not recorded: the catalogue is the app's to write.
+
+## How it runs
+
+Every command is synchronous: its async work runs on a detached task while
+the main thread waits (`ParsableCommand.blocking`). An async `main` imports
+`swift_task_asyncMainDrainQueue` and `swift_job_run`, which the iOS 15
+floor is not known to export, and `check-floor-imports.py` refuses them.
+
+On RootHide the user's shell is vroot-linked and `irisin-cli` is not: a
+path typed as `/x` is read as `<jbroot>/x` and `/rootfs/x` as `/x`
+(`Context.userPath`), and every path a message names is spelled the
+shell's way (`Context.shellPath`). The app's data is mobile's real home,
+`/var/mobile/Documents/wiki.qaq.irisin`, which the shell sees as
+`/rootfs/var/mobile/...`.
 
 ## Locks, crashes and what `irisin-cli` leaves behind
 
