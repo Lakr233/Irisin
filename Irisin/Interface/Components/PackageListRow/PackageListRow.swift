@@ -171,6 +171,12 @@ class PackageListRow: UIView {
             }
             .sink { [weak self] _ in self?.updateIndicator() }
             .store(in: &subscriptions)
+        // and the queue taking a package or letting it go redraws the rest
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
+            .receive(on: DispatchQueue.main)
+            .filter { [weak self] _ in self?.represent != nil }
+            .sink { [weak self] _ in self?.updateIndicator() }
+            .store(in: &subscriptions)
     }
 
     @available(*, unavailable)
@@ -287,42 +293,63 @@ class PackageListRow: UIView {
 
     func updateIndicator() {
         clearIndicator()
-        defer {
-            if let overrideIcon {
-                indicator.tintColor = overrideIcon.color
-                indicator.image = overrideIcon.image
-            }
-        }
         badgedVersion = installedVersion
+        guard let represent else { return }
+        Self.drawBadge(on: indicator, for: represent, installedVersion: badgedVersion)
+        if let overrideIcon {
+            indicator.tintColor = overrideIcon.color
+            indicator.image = overrideIcon.image
+        }
+        Self.drawQueueBadge(on: indicator, for: represent)
+    }
+
+    /// What the queue is about to do to the package, over every other mark
+    /// in the corner: an arrow into the queue for an install, a cross for a
+    /// removal. Nothing when the queue leaves it.
+    static func drawQueueBadge(on indicator: UIImageView, for package: Package) {
+        guard let plan = PackageQueue.shared.plan else { return }
+        // a reinstall or an update is in both lists, and it is an install
+        if plan.install.contains(where: { $0.identity == package.identity }) {
+            indicator.tintColor = .queuedInstall
+            indicator.image = .fluent(.arrowRightCircle24Filled)
+        } else if plan.remove.contains(where: { $0.identity == package.identity }) {
+            indicator.tintColor = .queuedRemoval
+            indicator.image = UIImage(systemName: "xmark.circle.fill")
+        } else {
+            return
+        }
+        indicator.backgroundColor = .versionBadgeBacking
+    }
+
+    /// The corner of a package's icon: what the package is against the
+    /// installed version, an update, the same, an older one or a version
+    /// that cannot be compared, on a backing that says it is installed at
+    /// all. Every list that draws a package draws it so, the search's too.
+    static func drawBadge(on indicator: UIImageView, for package: Package, installedVersion: String?) {
         // a build this bootstrap cannot install, even through an adapter,
         // is neither an update nor the installed version: no badge
-        if let represent, represent.isSupportedOnDevice {
-            if let badgedVersion {
-                indicator.backgroundColor = .versionBadgeBacking
-                // against the versions that may be an update, as the Updates
-                // page judges them
-                if let currentCellVersion = represent.version(
-                    comparedWith: badgedVersion,
-                    accepted: PackageCenter.default.index.updateArchitectures
-                ) {
-                    let compare = Package.compareVersion(currentCellVersion, b: badgedVersion)
-                    switch compare {
-                    case .aIsBiggerThenB:
-                        indicator.tintColor = .updateAvailable
-                        indicator.image = .fluent(.arrowUpCircle24Filled)
-                    case .aIsEqualToB:
-                        indicator.tintColor = .upToDate
-                        indicator.image = .fluent(.checkmarkCircle24Filled)
-                    case .aIsSmallerThenB:
-                        indicator.tintColor = .versionOlder
-                        indicator.image = .fluent(.arrowUpCircle24Filled)
-                            .sd_flippedImage(withHorizontal: false, vertical: true)
-                    case .invalidParameter:
-                        indicator.tintColor = .versionInvalid
-                        indicator.image = .fluent(.errorCircle24Filled)
-                    }
-                }
-            }
+        guard package.isSupportedOnDevice, let installedVersion else { return }
+        indicator.backgroundColor = .versionBadgeBacking
+        // against the versions that may be an update, as the Updates
+        // page judges them
+        guard let version = package.version(
+            comparedWith: installedVersion,
+            accepted: PackageCenter.default.index.updateArchitectures
+        ) else { return }
+        switch Package.compareVersion(version, b: installedVersion) {
+        case .aIsBiggerThenB:
+            indicator.tintColor = .updateAvailable
+            indicator.image = .fluent(.arrowUpCircle24Filled)
+        case .aIsEqualToB:
+            indicator.tintColor = .upToDate
+            indicator.image = .fluent(.checkmarkCircle24Filled)
+        case .aIsSmallerThenB:
+            indicator.tintColor = .versionOlder
+            indicator.image = .fluent(.arrowUpCircle24Filled)
+                .sd_flippedImage(withHorizontal: false, vertical: true)
+        case .invalidParameter:
+            indicator.tintColor = .versionInvalid
+            indicator.image = .fluent(.errorCircle24Filled)
         }
     }
 

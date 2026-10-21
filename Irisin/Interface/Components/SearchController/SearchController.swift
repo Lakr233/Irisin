@@ -77,9 +77,20 @@ class SearchController: UITableViewController {
 
     private var subscriptions = Set<AnyCancellable>()
 
+    /// What the page opens on, answered before it appears: the Installed
+    /// page hands its search over this way.
+    private var initialQuery: String?
+
     /// Grouped so the section headers scroll with the rows instead of floating.
     init() {
         super.init(style: .grouped)
+    }
+
+    /// A page of its own that opens on `query`, with the results already
+    /// under it and the keyboard down.
+    convenience init(query: String) {
+        self.init()
+        initialQuery = query.isEmpty ? nil : query
     }
 
     @available(*, unavailable)
@@ -111,6 +122,10 @@ class SearchController: UITableViewController {
             searchController.obscuresBackgroundDuringPresentation = false
             navigationItem.searchController = searchController
             navigationItem.hidesSearchBarWhenScrolling = false
+            if let initialQuery {
+                searchController.searchBar.text = initialQuery
+                updateSearchResults(for: searchController)
+            }
         }
 
         // centred in what the keyboard leaves
@@ -144,10 +159,11 @@ class SearchController: UITableViewController {
     private var hasFocusedSearchBar = false
 
     /// The keyboard comes up the first time the screen is entered; coming
-    /// back from a result leaves the results where they were.
+    /// back from a result leaves the results where they were. A page that
+    /// opened on a query has results to read, not a field to fill.
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard host == nil, !hasFocusedSearchBar else { return }
+        guard host == nil, initialQuery == nil, !hasFocusedSearchBar else { return }
         hasFocusedSearchBar = true
         searchController.searchBar.becomeFirstResponder()
     }
@@ -245,6 +261,24 @@ class SearchController: UITableViewController {
             return nil
         }
         return nil
+    }
+
+    /// A package row swipes as every package list does: Install or Update
+    /// first, Remove last, run as the package menu runs them.
+    override func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        guard let object = result(at: indexPath) else { return nil }
+        let package: Package? = switch object.associatedValue {
+        case let .installed(package): PackageMenu.requestPackage(for: package)
+        case let .package(identity, repository): PackageCenter.default.obtainPackage(with: identity, in: repository)
+        case .repository, .author: nil
+        }
+        guard let package else { return nil }
+        return PackageMenu.swipeConfiguration(for: package, from: self) { [weak tableView] in
+            tableView?.cellForRow(at: indexPath).map { PopoverAnchor($0) }
+        }
     }
 
     override func tableView(

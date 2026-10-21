@@ -53,6 +53,8 @@ extension DashboardController {
             snapshot.appendItems(items, toSection: section.title)
         }
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
+        // an open swipe belongs to a cell, which the diff may move
+        gridSwipe.close(animated: false)
         diffableDataSource.apply(snapshot, animatingDifferences: animatingDifferences)
         if snapshot.numberOfItems == 0 {
             emptyStateLabel.text = RepositoryCenter.default.obtainRepositoryCount() == 0

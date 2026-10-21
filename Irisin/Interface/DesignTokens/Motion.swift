@@ -38,6 +38,23 @@ extension UIView {
     }
 }
 
+extension UIView {
+    /// How a grid cell's swipe opens and closes once the finger lets go
+    /// (`GridSwipeInteraction`): a spring with no overshoot, picked up from
+    /// wherever the content is.
+    static func animateSwipe(_ changes: @escaping () -> Void, completion: @escaping (Bool) -> Void) {
+        animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 1,
+            initialSpringVelocity: 0,
+            options: [.beginFromCurrentState, .allowUserInteraction],
+            animations: changes,
+            completion: completion
+        )
+    }
+}
+
 extension UIProgressView {
     /// The bar's own animation is not the one above. Forward it moves like
     /// every other progress; backward, or off screen, it jumps.

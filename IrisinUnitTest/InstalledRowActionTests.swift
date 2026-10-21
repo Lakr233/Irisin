@@ -95,6 +95,23 @@ struct InstalledRowActionTests {
         }
     }
 
+    /// A repository's row swipes to what the user came to the list for
+    /// first, Install or Update, and Remove last.
+    @Test(arguments: [
+        ("2.0", ["update", "remove"]),
+        ("1.0", ["reinstall", "remove"]),
+    ])
+    func catalogueRowPutsTheRequestFirst(offered: String, swipe: [String]) throws {
+        try withInstalledRow(offered: offered) { _, remote in
+            #expect(PackageMenu.swipeActions(forCatalogue: remote).map(\.descriptor.rawValue) == swipe)
+            let repository = try #require(remote.repoRef)
+            let new = Package(identity: "test.catalogue-row", payload: ["1.0": [
+                "architecture": "all", "filename": "pool/new-1.0.deb",
+            ]], repoRef: repository)
+            #expect(PackageMenu.swipeActions(forCatalogue: new).map(\.descriptor) == [.install])
+        }
+    }
+
     /// An update the user blocked is not one a selection takes, and the swipe
     /// does not offer it either.
     @Test

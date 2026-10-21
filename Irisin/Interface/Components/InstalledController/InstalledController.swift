@@ -128,9 +128,10 @@ class InstalledController: UICollectionViewController {
                     withReuseIdentifier: footerId,
                     for: indexPath
                 )
-                (view as? ListFootnoteView)?.label.text = footerText
-                view.isHidden = isEmpty
-                footerView = view as? ListFootnoteView
+                if let view = view as? ListFootnoteView {
+                    configureFooter(view)
+                    footerView = view
+                }
                 return view
             }
             let view = collectionView.dequeueReusableSupplementaryView(
@@ -153,6 +154,13 @@ class InstalledController: UICollectionViewController {
     /// empty list has its one section and no header over it.
     private(set) var showsHeaders = false
 
+    /// The rows are laid out in columns, where only `gridSwipe` swipes
+    /// them; a single column is a list section, which swipes its own.
+    var laysOutGrid = false
+    private(set) lazy var gridSwipe = GridSwipeInteraction(collectionView: collectionView) { [weak self] in
+        self?.gridSwipeActions(at: $0)
+    }
+
     var isEmpty: Bool {
         dataSource.allSatisfy(\.packages.isEmpty)
     }
@@ -171,6 +179,8 @@ class InstalledController: UICollectionViewController {
         // changes once the rows have, and the layout is made again then.
         let headers = sortOption == .lastModification && !isEmpty
         let reshaped = headers != showsHeaders
+        // an open swipe belongs to a cell, which the diff may move
+        gridSwipe.close(animated: false)
         diffableDataSource.apply(
             snapshot,
             animatingDifferences: !reshaped && collectionView.shouldAnimateDiff
@@ -180,9 +190,14 @@ class InstalledController: UICollectionViewController {
             collectionView.collectionViewLayout.invalidateLayout()
         }
         // the footer is not a row: a diff never redraws it, so tell it
-        // directly. Over an empty list it would sit on the empty state.
-        footerView?.label.text = footerText
-        footerView?.isHidden = isEmpty
+        // directly. A link that came or went changes its height.
+        if let footerView {
+            let linked = footerView.linkTitle != nil
+            configureFooter(footerView)
+            if (footerView.linkTitle != nil) != linked {
+                collectionView.collectionViewLayout.invalidateLayout()
+            }
+        }
         // a row that left the list left the selection
         updateSelectionItems()
         rebuildMoreMenu()
@@ -222,6 +237,20 @@ class InstalledController: UICollectionViewController {
         let shown = dataSource.flatMap(\.packages)
         let sections = Set(shown.map(Self.section(of:))).count
         return String(localized: "Packages: \(shown.count) · Sections: \(sections)")
+    }
+
+    /// The count, and under it while a search narrows the list a link that
+    /// takes the same text to the Search page, which looks through every
+    /// repository. Over an empty list the count would sit on the empty
+    /// state and only the link stays: no installed match is when it helps.
+    private func configureFooter(_ view: ListFootnoteView) {
+        let query = searchController.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        view.label.text = isEmpty ? nil : footerText
+        view.linkTitle = query.isEmpty ? nil : String(localized: "Search All Repositories")
+        view.linkAction = { [weak self] in
+            self?.present(next: SearchController(query: query))
+        }
+        view.isHidden = isEmpty && query.isEmpty
     }
 
     let formatter = DateFormatter().then {

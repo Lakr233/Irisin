@@ -27,6 +27,7 @@ extension InstalledController {
         collectionView.backgroundColor = .clear
         collectionView.allowsMultipleSelectionDuringEditing = true
         collectionView.register(InstalledPackageCell.self, forCellWithReuseIdentifier: cellId)
+        _ = gridSwipe
         collectionView.register(
             PackageSectionHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,

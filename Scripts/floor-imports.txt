@@ -228,6 +228,9 @@ swift_task_create
 swift_task_future_wait_throwing
 swift_task_getMainExecutor
 swift_task_isCurrentExecutor
+swift_task_localValueGet
+swift_task_localValuePop
+swift_task_localValuePush
 swift_task_removeCancellationHandler
 swift_task_reportUnexpectedExecutor
 swift_taskGroup_destroy

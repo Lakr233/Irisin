@@ -143,6 +143,15 @@ extension DashboardController {
         packagePreview(in: collectionView, at: indexPath)
     }
 
+    /// Install or Update first, Remove last: the package menu's own
+    /// actions, as every package list swipes.
+    func swipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard case let .package(_, package) = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
+        return PackageMenu.swipeConfiguration(for: package, from: self) { [weak self] in
+            self?.collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
+        }
+    }
+
     /// A dashboard cell draws its icon at its own edge, so the preview gives
     /// back the 4pt a package row keeps on either side.
     private func packagePreview(in collectionView: UICollectionView, at indexPath: IndexPath) -> UITargetedPreview? {

@@ -102,12 +102,25 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         return cell
     }
 
+    /// Set around a swipe's action (`PackageMenu.swipeConfiguration`): the
+    /// row the user swiped is all they saw, so an answer that changes the
+    /// queue by that package alone joins it without the sheet, and one
+    /// that brings anything along still shows it (`takeIfPlain`).
+    @TaskLocal static var takesPlainChanges = false
+
     /// Presents the sheet, after waiting a moment for the solver so a quick
     /// answer lands with it. A request that cannot be met has no changes to
     /// show: its report is the sheet, and closing the report closes it.
+    /// Under `takesPlainChanges` the wait is longer, since an answer that
+    /// needs no sheet shows none.
     static func show(_ request: Request, from host: UIViewController) async {
         let controller = QueueChangeController(request: request)
-        await controller.prepare(within: 0.2)
+        if takesPlainChanges {
+            await controller.prepare(within: 1)
+            if await controller.takeIfPlain() { return }
+        } else {
+            await controller.prepare(within: 0.2)
+        }
         let root = controller.failure.map {
             report(of: $0, alone: true, recoveryPackage: controller.recoveryPackage, recoveryRemoval: controller.recoveryRemoval)
         } ?? controller
@@ -373,6 +386,51 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         }
     }
 
+    /// Takes the answer without the sheet when there is nothing in it to
+    /// read or decide: the queue changes by the requested package alone, no
+    /// notice, no unneeded package to tick, nothing that installs in
+    /// compatibility mode for the first time, and the catalogue it was
+    /// solved with is still the one there is. Everything else, a solve
+    /// still running included, is the sheet's, which `show` presents.
+    private func takeIfPlain() async -> Bool {
+        guard work == nil, failure == nil, let proposal, proposal.notices.isEmpty else { return false }
+        let (changes, dropped) = diff
+        let plain = switch request {
+        case let .actions(actions):
+            dropped.isEmpty && changes.count == 1
+                && Set(actions.map(\.identity)) == [changes[0].package.identity]
+        case let .withdraw(identity):
+            changes.isEmpty && dropped.map(\.package.identity) == [identity]
+        case .updateAll:
+            false
+        }
+        guard plain else { return false }
+        if proposal.plan?.remove.isEmpty == false, !unneeded.isEmpty {
+            return false
+        }
+        let queued = Set(PackageQueue.shared.plan?.install.map(\.identity) ?? [])
+        if let plan = proposal.plan,
+           plan.install.contains(where: { plan.snapshot.adapts($0) && !queued.contains($0.identity) })
+        {
+            return false
+        }
+        switch await PackageQueue.shared.currency(of: proposal) {
+        case .current:
+            guard PackageQueue.shared.commit(proposal) else {
+                solve()
+                return false
+            }
+            announce()
+            return true
+        case .moved:
+            solve()
+            return false
+        case .withdrawn:
+            // Confirm asks to check again, in the sheet
+            return false
+        }
+    }
+
     /// The proposal becomes the queue, and the sheet leaves.
     private func take(_ proposal: PackageQueue.Proposal) {
         guard PackageQueue.shared.commit(proposal) else {
@@ -382,6 +440,11 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         // the commit's own notification is not a reason to solve again
         subscriptions.removeAll()
         dismiss(animated: true)
+        announce()
+    }
+
+    /// What the queue was just told, at the top of the screen.
+    private func announce() {
         let withdrawn = if case .withdraw = request {
             true
         } else {

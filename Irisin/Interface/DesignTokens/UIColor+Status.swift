@@ -53,6 +53,12 @@ extension UIColor {
     /// A version that cannot be compared with the installed one.
     static let versionInvalid = UIColor.systemRed
 
+    /// The queue installs the package: the badge's arrow into it.
+    static let queuedInstall = UIColor.systemIndigo
+
+    /// The queue removes the package: the badge's cross.
+    static let queuedRemoval = UIColor.systemRed
+
     /// The new version in an update row's "old → new" line.
     static let versionHighlight = UIColor.orange
 

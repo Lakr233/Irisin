@@ -32,6 +32,12 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
 
     var cellLimit = 16
 
+    /// A flow layout has no list section: every package on the page swipes
+    /// through this, as a list row would.
+    private(set) lazy var gridSwipe = GridSwipeInteraction(collectionView: collectionView) { [weak self] in
+        self?.swipeActions(at: $0)
+    }
+
     /// A package can sit in more than one section; the row is scoped to its section.
     nonisolated enum Item: Hashable {
         case package(section: String, Package)
@@ -127,6 +133,7 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
             PackageCollectionCell.self,
             forCellWithReuseIdentifier: packageCellID
         )
+        _ = gridSwipe
 
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
         collectionView.addSubview(refreshControl)

@@ -10,7 +10,7 @@ import AptRepository
 import Then
 import UIKit
 
-class PackageCollectionController: UIViewController, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class PackageCollectionController: UIViewController, UICollectionViewDelegate {
     var dataSource: [Package] = [] {
         didSet {
             if isViewLoaded {
@@ -22,7 +22,14 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
     let searchController = UISearchController()
     let cellId = UUID().uuidString
     let headerId = UUID().uuidString
-    var collectionViewCellSizeCache = PackageListRow.minimumSize
+
+    /// The rows are laid out in columns, where only `gridSwipe` swipes
+    /// them; a single column is a list section, which swipes its own.
+    private var laysOutGrid = false
+    private lazy var gridSwipe = GridSwipeInteraction(collectionView: collectionView) { [weak self] in
+        guard let self, laysOutGrid else { return nil }
+        return swipeActions(at: $0)
+    }
 
     /// Sections are their header text; the plain list is one untitled section.
     private(set) lazy var diffableDataSource: UICollectionViewDiffableDataSource<String, Package> = {
@@ -70,19 +77,95 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             snapshot.deleteSections(snapshot.sectionIdentifiers.filter { snapshot.numberOfItems(inSection: $0) == 0 })
         }
         snapshot.reconfigureItems(survivingFrom: diffableDataSource.snapshot())
+        // an open swipe belongs to a cell, which the diff may move
+        gridSwipe.close(animated: false)
         diffableDataSource.apply(snapshot, animatingDifferences: collectionView.shouldAnimateDiff)
         updateGuiderOpacity()
     }
 
-    let collectionView: UICollectionView = {
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        flowLayout.scrollDirection = UICollectionView.ScrollDirection.vertical
-        flowLayout.minimumInteritemSpacing = 0.0
-        let view = UICollectionView(frame: CGRect(), collectionViewLayout: flowLayout)
-        view.backgroundColor = .clear
-        return view
-    }()
+    private(set) lazy var collectionView = UICollectionView(
+        frame: CGRect(),
+        collectionViewLayout: makeLayout()
+    ).then {
+        $0.backgroundColor = .clear
+        // above the first row and below the last, as the flow layout had it
+        $0.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
+    }
+
+    /// The rows' edge, the page's own before it was a compositional layout.
+    static let horizontalInset: CGFloat = 15
+    /// The gap between two rows.
+    static let rowSpacing: CGFloat = 10
+
+    /// One column is a list, whose rows swipe; a width that fits more is
+    /// the grid, where a long press has the same actions. As the Installed
+    /// page lays out.
+    private func makeLayout() -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { [weak self] index, environment in
+            self?.makeSection(at: index, in: environment)
+        }
+    }
+
+    private func makeSection(
+        at index: Int,
+        in environment: NSCollectionLayoutEnvironment
+    ) -> NSCollectionLayoutSection {
+        let width = environment.container.effectiveContentSize.width - Self.horizontalInset * 2
+        let (cellSize, itemsPerRow) = PackageListRow.layout(inWidth: width)
+        laysOutGrid = itemsPerRow > 1
+        let section: NSCollectionLayoutSection
+        if itemsPerRow < 2 {
+            var list = UICollectionLayoutListConfiguration(appearance: .plain)
+            list.showsSeparators = false
+            list.backgroundColor = .clear
+            list.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
+                self?.swipeActions(at: indexPath)
+            }
+            section = .list(using: list, layoutEnvironment: environment)
+        } else {
+            let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
+                widthDimension: .absolute(cellSize.width),
+                heightDimension: .fractionalHeight(1)
+            ))
+            let group = NSCollectionLayoutGroup.horizontal(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .absolute(cellSize.height)
+                ),
+                subitems: [item]
+            )
+            // what is left of the width goes between the columns
+            group.interItemSpacing = .flexible(0)
+            section = NSCollectionLayoutSection(group: group)
+        }
+        section.interGroupSpacing = Self.rowSpacing
+        section.contentInsets = NSDirectionalEdgeInsets(
+            top: 0,
+            leading: Self.horizontalInset,
+            bottom: 0,
+            trailing: Self.horizontalInset
+        )
+        if let title = diffableDataSource.sectionIdentifier(for: index), !title.isEmpty {
+            section.boundarySupplementaryItems = [NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .absolute(20)
+                ),
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )]
+        }
+        return section
+    }
+
+    /// Install or Update first, Remove last: the package menu's own
+    /// actions, as every package list swipes.
+    private func swipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard let package = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
+        return PackageMenu.swipeConfiguration(for: package, from: self) { [weak self] in
+            self?.collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
+        }
+    }
 
     let emptyElementGuider = UIImageView().then {
         $0.tintColor = .placeholderGlyph
@@ -126,6 +209,7 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
 
         collectionView.alwaysBounceVertical = true
         collectionView.dataSource = diffableDataSource
+        _ = gridSwipe
         collectionView.delegate = self
         collectionView.register(PackageCollectionCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(
@@ -138,7 +222,6 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             x.edges.equalToSuperview()
         }
 
-        updateCellSize()
         applySnapshot()
 
         view.addSubview(emptyElementGuider)
@@ -164,11 +247,12 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
         }
     }
 
-    /// Before the collection view lays out, never after it: a size that
-    /// arrives a turn late leaves a frame of `PackageListRow.minimumSize` cells.
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        updateCellSize()
+    /// A row is as tall as its text: a new text size is a new layout.
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        if previous?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            collectionView.collectionViewLayout.invalidateLayout()
+        }
     }
 
     /// What the page is showing, one package a line.
@@ -183,33 +267,6 @@ class PackageCollectionController: UIViewController, UICollectionViewDelegate, U
             named: "packages-\(ExportFile.stamp()).txt",
             from: self
         )
-    }
-
-    func updateCellSize() {
-        let inset: CGFloat = 15
-        collectionView.contentInset = UIEdgeInsets(top: 10, left: inset, bottom: 10, right: inset)
-        let size = PackageListRow
-            // we are not inside UICollectionViewController
-            // so don't use collectionView.contentSize
-            // otherwise it will load all of the cells when boot
-            .layout(inWidth: view.frame.width - inset * 2).size
-        // asked on every layout pass; only a new size is worth a new layout
-        guard size != collectionViewCellSizeCache else { return }
-        collectionViewCellSizeCache = size
-        collectionView.collectionViewLayout.invalidateLayout()
-    }
-
-    func collectionView(_: UICollectionView, layout _: UICollectionViewLayout, sizeForItemAt _: IndexPath) -> CGSize {
-        collectionViewCellSizeCache
-    }
-
-    func collectionView(
-        _: UICollectionView,
-        layout _: UICollectionViewLayout,
-        referenceSizeForHeaderInSection section: Int
-    ) -> CGSize {
-        guard let title = diffableDataSource.sectionIdentifier(for: section), !title.isEmpty else { return .zero }
-        return CGSize(width: 300, height: 20)
     }
 
     // didHighlightItemAt removed because we have add preview

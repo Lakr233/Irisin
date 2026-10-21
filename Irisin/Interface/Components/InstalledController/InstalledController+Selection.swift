@@ -16,6 +16,7 @@ extension InstalledController {
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         collectionView.isEditing = editing
+        gridSwipe.close(animated: animated)
         if editing {
             // the system's Done, made for each edit: one that has left the
             // bar comes back to it without its glyph

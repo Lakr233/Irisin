@@ -15,14 +15,14 @@ extension InstalledController {
     /// One column is a list, whose rows swipe; a width that fits more is
     /// the grid every package page lays out, where a long press has the
     /// same actions. The count is the layout's own footer, after the last
-    /// section whichever that is.
+    /// section whichever that is, as tall as its lines: a search adds one.
     func makeLayout() -> UICollectionViewLayout {
         let configuration = UICollectionViewCompositionalLayoutConfiguration()
         configuration.boundarySupplementaryItems = [
             NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1),
-                    heightDimension: .absolute(ListFootnoteView.height)
+                    heightDimension: .estimated(ListFootnoteView.height)
                 ),
                 elementKind: UICollectionView.elementKindSectionFooter,
                 alignment: .bottom
@@ -44,6 +44,7 @@ extension InstalledController {
         let (cellSize, itemsPerRow) = PackageListRow.layout(inWidth: width)
         let rowHeight = InstalledPackageCell.rowHeight
 
+        laysOutGrid = itemsPerRow > 1
         let section: NSCollectionLayoutSection
         if itemsPerRow < 2 {
             var list = UICollectionLayoutListConfiguration(appearance: .plain)
@@ -115,25 +116,14 @@ extension InstalledController {
     private func swipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard !isEditing, let row = diffableDataSource.itemIdentifier(for: indexPath) else { return nil }
         let (package, actions) = PackageMenu.swipeActions(forInstalled: row)
-        guard !actions.isEmpty else { return nil }
-        let configuration = UISwipeActionsConfiguration(actions: actions.map { action in
-            let removes = action.descriptor == .remove || action.descriptor == .dequeue
-            let item = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
-                completion(true)
-                guard let self else { return }
-                // the row, for an action that ends in a popover
-                let anchor = collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
-                Task { await action.block(package, self, anchor) }
-            }
-            // the menu's own symbol and name, as the sidebar's rows swipe
-            item.image = action.descriptor.icon()
-            item.accessibilityLabel = action.descriptor.describe()
-            item.backgroundColor = removes ? .swipeDelete : .swipeRefresh
-            return item
-        })
-        // a request is never made by a swipe that went too far
-        configuration.performsFirstActionWithFullSwipe = false
-        return configuration
+        return PackageMenu.swipeConfiguration(for: package, actions: actions, from: self) { [weak self] in
+            self?.collectionView.cellForItem(at: indexPath).map { PopoverAnchor($0) }
+        }
+    }
+
+    /// The same swipe in a grid, where the list's is not drawn.
+    func gridSwipeActions(at indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        laysOutGrid ? swipeActions(at: indexPath) : nil
     }
 
     // MARK: - TEXT SIZE

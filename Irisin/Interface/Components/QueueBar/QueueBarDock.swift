@@ -52,7 +52,11 @@ final class QueueBarDock {
             x.centerX.equalTo(guide)
             x.width.lessThanOrEqualTo(QueueBarView.maximumWidth)
             x.width.equalTo(guide).inset(16).priority(.high)
-            bottom = x.bottom.equalToSuperview().inset(QueueBarView.spacing).constraint
+            bottom = x.bottom.equalToSuperview().inset(QueueBarView.spacing).priority(999).constraint
+            // above the keyboard while there is one: a search with the
+            // queue busy still shows the way to it. Without a keyboard the
+            // guide is the safe area's bottom, which `bottomInset` clears.
+            x.bottom.lessThanOrEqualTo(host.view.keyboardLayoutGuide.snp.top).offset(-QueueBarView.spacing)
         }
         bar.alpha = 0
         bar.isHidden = true

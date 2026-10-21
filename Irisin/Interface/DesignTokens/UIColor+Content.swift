@@ -53,6 +53,10 @@ extension UIColor {
     static let swipeRefresh = UIColor(hex: 0x7A95DF)
     static let swipeShare = UIColor(hex: 0xBA82D0)
 
+    /// The symbol on a swipe action the app draws itself, a grid cell's
+    /// (`GridSwipeTray`); a list row's are the system's.
+    static let swipeGlyph = UIColor.white
+
     /// A bar button that deletes the selection.
     static let destructiveAction = UIColor.systemRed
 

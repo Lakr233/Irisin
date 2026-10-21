@@ -20,6 +20,13 @@ class SearchCell: UITableViewCell {
         $0.contentMode = .scaleAspectFit
     }
 
+    /// The installed mark in the icon's corner, as every package list has it.
+    let indicator = UIImageView().then {
+        $0.backgroundColor = .clear
+        $0.layer.cornerRadius = 8
+        $0.clipsToBounds = true
+    }
+
     let title = UILabel().then {
         $0.font = .bodyEmphasized
         $0.clipsToBounds = false
@@ -58,6 +65,17 @@ class SearchCell: UITableViewCell {
                 insertValue(with: shown)
             }
             .store(in: &subscriptions)
+        // the queue's mark comes and goes with the queue
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let shown else { return }
+                switch shown.associatedValue {
+                case .package, .installed: insertValue(with: shown)
+                case .repository, .author: return
+                }
+            }
+            .store(in: &subscriptions)
 
         selectionStyle = .gray
 
@@ -66,6 +84,7 @@ class SearchCell: UITableViewCell {
             $0.spacing = 1
         }
         contentView.addSubview(image)
+        contentView.addSubview(indicator)
         contentView.addSubview(text)
 
         backgroundColor = .clear
@@ -81,6 +100,13 @@ class SearchCell: UITableViewCell {
             x.leading.equalTo(contentView.snp.leading).offset(20)
             x.height.equalTo(33)
             x.width.equalTo(33)
+        }
+
+        indicator.snp.makeConstraints { x in
+            x.centerX.equalTo(image.snp.right).offset(-4)
+            x.centerY.equalTo(image.snp.bottom).offset(-4)
+            x.height.equalTo(16)
+            x.width.equalTo(16)
         }
 
         text.snp.makeConstraints { x in
@@ -111,6 +137,9 @@ class SearchCell: UITableViewCell {
         describe.attributedText = nil
         describe.text = ""
         describe.textColor = .textSubtitle
+        indicator.image = nil
+        indicator.backgroundColor = .clear
+        accessibilityValue = nil
     }
 
     /// The row's three lines joined: what a list reads at this stop.
@@ -140,9 +169,19 @@ class SearchCell: UITableViewCell {
         // MARK: - AUTHOR
 
         case let .author(name):
-            title.text = name
+            // the name as the package page shows it, the address or the
+            // link after it folded away
+            let shown = PackageController.contact(name).text
+            title.text = shown
             subtitle.text = String(localized: "Packages by this author")
             image.showIcon(.fluent(.peopleSearch24Regular))
+            // the match is on the title already; only one inside what was
+            // folded away needs the line that says where it is
+            if shown.lowercased().contains(result.underKey) {
+                accessibilityTraits = .button
+                updateAccessibilityLabel()
+                return
+            }
 
         // MARK: - INSTALLED
 
@@ -219,5 +258,10 @@ class SearchCell: UITableViewCell {
             subtitle.text = description
         }
         image.showIcon(of: package)
+        let installed = PackageCenter.default.obtainPackageInstallationInfo(with: package.identity)?.version
+        PackageListRow.drawBadge(on: indicator, for: package, installedVersion: installed)
+        PackageListRow.drawQueueBadge(on: indicator, for: package)
+        // the mark is drawn; this says it
+        accessibilityValue = installed == nil ? nil : String(localized: "Installed")
     }
 }
