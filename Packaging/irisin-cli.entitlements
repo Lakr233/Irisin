@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	The entitlements of irisin-cli, the command line (Documentation/CommandLine.md): a client
+	of irisind, which serves it only as root; the app's Keychain groups in the
+	app's order, so a vendor sign-in the app stored without naming a group is
+	found here too; and the network. Nothing of the helper's. The groups and
+	the client keys are checked against Packaging/irisin.entitlements by
+	Scripts/check-cli-entitlements.py: a change to one is a change to both.
+-->
+<plist version="1.0">
+<dict>
+	<key>application-identifier</key>
+	<string>wiki.qaq.irisin</string>
+	<key>platform-application</key>
+	<true/>
+	<key>wiki.qaq.irisin.client</key>
+	<true/>
+	<key>com.apple.private.security.no-sandbox</key>
+	<true/>
+	<key>com.apple.private.security.no-container</key>
+	<true/>
+	<key>com.apple.private.system-keychain</key>
+	<true/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>com.apple.mobilesafari</string>
+		<string>wiki.qaq.irisin</string>
+	</array>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>
