@@ -90,7 +90,11 @@ struct MachOBinary {
             guard 8 + count * MemoryLayout<fat_arch>.size <= data.count,
                   case let .fat(fat) = try MachOKit.loadFromFile(url: url)
             else { throw MachOFailure.malformed }
-            let arches = fat.arches.map(\.layout)
+            // a 32-bit fat header, so MachOKit reads every entry as a `FatArch`
+            let arches = try fat.arches.map { arch in
+                guard let arch = arch as? FatArch else { throw MachOFailure.malformed }
+                return arch.layout
+            }
             for arch in arches {
                 // `lipo` writes no alignment above 2^15, and one slice per
                 // exponent above that is another gigabyte of padding to lay

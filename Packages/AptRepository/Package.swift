@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Lakr233/libsolv.xcframework", from: "0.1.1"),
-        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.0"),
+        .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.1"),
         .package(path: "../IrisinKit"),
         // Prebuilt WCDB (sqlite + sqlcipher + the C++ core in one dynamic
         // framework). The catalogue lives in its database; see Storage/.

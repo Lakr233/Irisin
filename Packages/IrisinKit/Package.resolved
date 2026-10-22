@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/owngoal-dev/icli.git",
       "state" : {
-        "revision" : "815ef234df5461b8eb9455931d38cb1c37992fe6",
-        "version" : "0.8.5"
+        "revision" : "217dc37e55ef44bf6a0739358f2486e660b05d40",
+        "version" : "0.9.2"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/libarchive.xcframework.git",
       "state" : {
-        "revision" : "82687c75e530917b7fbeb15cd5f9369524637155",
-        "version" : "1.0.0"
+        "revision" : "554c59260965ac6afac43cfa6e813ea73917ac9d",
+        "version" : "1.0.1"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/p-x9/MachOKit.git",
       "state" : {
-        "revision" : "773e10797abc53914b94c2ee8c6f40f5da0b06eb",
-        "version" : "0.52.2"
+        "revision" : "f0c6565435659aeb23369810874578d5344d13b7",
+        "version" : "0.55.0"
       }
     },
     {

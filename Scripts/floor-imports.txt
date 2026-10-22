@@ -20,6 +20,11 @@ objc_autorelease
 objc_autoreleasePoolPop
 objc_autoreleasePoolPush
 objc_autoreleaseReturnValue
+objc_copyWeak
+objc_destroyWeak
+objc_initWeak
+objc_loadWeakRetained
+objc_msgSendSuper2
 objc_opt_class
 objc_opt_isKindOfClass
 objc_opt_new
@@ -97,6 +102,7 @@ swift_checkMetadataState
 swift_conformsToProtocol
 swift_deallocClassInstance
 swift_deallocObject
+swift_deallocPartialClassInstance
 swift_deletedMethodError
 swift_dynamicCast
 swift_dynamicCastClass
@@ -113,6 +119,7 @@ swift_getAssociatedTypeWitness
 swift_getAtKeyPath
 swift_getDynamicType
 swift_getEnumCaseMultiPayload
+swift_getEnumTagSinglePayloadGeneric
 swift_getErrorValue
 swift_getExistentialMetatypeMetadata
 swift_getExistentialTypeMetadata
@@ -149,6 +156,7 @@ swift_setDeallocating
 swift_slowAlloc
 swift_slowDealloc
 swift_storeEnumTagMultiPayload
+swift_storeEnumTagSinglePayloadGeneric
 swift_task_alloc
 swift_task_dealloc
 swift_task_switch
@@ -164,8 +172,8 @@ swift_willThrow
 # Irisin, the app and its frameworks (WCDBSwift and the back-deployed
 # libswiftCompatibilitySpan among them) and the daemon.
 #
-# The C++ ABI, fortified libc and libobjc's weak references, properties and
-# autorelease pool, all in iOS 6 or earlier; dyld_stub_binder is classic dyld's.
+# The C++ ABI, fortified libc and libobjc's properties and autorelease pool,
+# all in iOS 6 or earlier; dyld_stub_binder is classic dyld's.
 __dynamic_cast
 __gxx_personality_v0
 __memset_chk
@@ -173,12 +181,7 @@ __strlcat_chk
 _objc_autoreleasePoolPop
 _objc_autoreleasePoolPush
 dyld_stub_binder
-objc_copyWeak
-objc_destroyWeak
 objc_getProperty
-objc_initWeak
-objc_loadWeakRetained
-objc_msgSendSuper2
 objc_setProperty_atomic
 objc_setProperty_atomic_copy
 objc_setProperty_nonatomic_copy
@@ -203,12 +206,10 @@ swift_asyncLet_finish
 swift_asyncLet_get
 swift_continuation_await
 swift_continuation_init
-swift_deallocPartialClassInstance
 swift_demangle
 swift_dynamicCastClassUnconditional
 swift_dynamicCastObjCProtocolConditional
 swift_dynamicCastUnknownClass
-swift_getEnumTagSinglePayloadGeneric
 swift_getOpaqueTypeConformance
 swift_getTupleTypeLayout2
 swift_getTupleTypeMetadata
@@ -223,7 +224,6 @@ swift_projectBox
 swift_readAtKeyPath
 swift_setAtReferenceWritableKeyPath
 swift_stdlib_random
-swift_storeEnumTagSinglePayloadGeneric
 swift_task_addCancellationHandler
 swift_task_create
 swift_task_future_wait_throwing

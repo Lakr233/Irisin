@@ -876,7 +876,7 @@
 			repositoryURL = "https://github.com/apple/swift-collections.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.7.1;
+				minimumVersion = 1.7.3;
 			};
 		};
 		CA6000000000000000000001 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
@@ -940,7 +940,7 @@
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.1;
+				minimumVersion = 1.8.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
