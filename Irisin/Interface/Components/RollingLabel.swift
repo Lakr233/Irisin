@@ -34,20 +34,26 @@ final class RollingLabel: UIView {
         }
     }
 
+    // A row may set these on every refresh of its value: only a change
+    // restyles, since restyling ends the transition in flight.
     var font: UIFont = .body {
-        didSet { restyle() }
+        didSet { if font != oldValue { restyle() } }
     }
 
     var textColor: UIColor = .label {
-        didSet { restyle() }
+        didSet { if textColor != oldValue { restyle() } }
     }
 
     var textAlignment: Alignment = .leading {
-        didSet { restyle() }
+        didSet { if textAlignment != oldValue { restyle() } }
     }
 
     /// Shows each change of the text at once while set.
     var disablesAnimations = false
+
+    /// The layout direction the alignment was resolved for: a label is
+    /// styled before it joins a window, whose direction it then follows.
+    private var resolvedRightToLeft = false
 
     private let label = LTXAnimatableLabel().then {
         $0.animator = LTXNumericTransitionAnimator()
@@ -79,6 +85,9 @@ final class RollingLabel: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if textAlignment != .center, isRightToLeft != resolvedRightToLeft {
+            apply(animated: false)
+        }
         let height = label.sizeThatFits(CGSize(width: bounds.width, height: .greatestFiniteMagnitude)).height
         label.frame = CGRect(x: 0, y: (bounds.height - height) / 2, width: bounds.width, height: height)
     }
@@ -92,7 +101,8 @@ final class RollingLabel: UIView {
 
     private func apply(animated: Bool) {
         let paragraph = NSMutableParagraphStyle()
-        let rightToLeft = effectiveUserInterfaceLayoutDirection == .rightToLeft
+        let rightToLeft = isRightToLeft
+        resolvedRightToLeft = rightToLeft
         paragraph.alignment = switch textAlignment {
         case .leading: rightToLeft ? .right : .left
         case .center: .center
@@ -104,5 +114,9 @@ final class RollingLabel: UIView {
             .paragraphStyle: paragraph,
         ]), animated: animated)
         setNeedsLayout()
+    }
+
+    private var isRightToLeft: Bool {
+        effectiveUserInterfaceLayoutDirection == .rightToLeft
     }
 }
