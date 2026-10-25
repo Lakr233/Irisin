@@ -28,7 +28,7 @@
 <div class="page"><main>
 
 <header class="article-cover">
-	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 7 of 8</span></p>
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 6 of 7</span></p>
 	<h1 class="page-title" lang="en">Settings and Exports</h1>
 	<div class="cover-divider"></div>
 </header>
@@ -53,11 +53,10 @@
 </section>
 
 <section class="chapter" id="packages"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M32 8L54 19L53 45L32 57L10 46L11 19Z"/><path d="M11 19L32 31L54 19M32 31L32 57"/><path class="icon-detail" d="M21 13L43 25L43 33"/></svg><span class="section-title-mark">Packages</span></h2>
-<p>The <span class="ui">Packages</span> section holds three or four rows that control how packages are shown and handled.</p>
+<p>The <span class="ui">Packages</span> section holds three rows that control how packages are shown and handled.</p>
 <ul>
 	<li><span class="ui">Auto Translate</span> is a switch. While it is on, Irisin shows a package's page as written, then again in your language. When you turn it on, Irisin first checks that your device can translate. If it cannot, you see <span class="ui">Unable to Translate</span> and the switch stays off. See <a href="../translation/#auto-translate">Auto Translate</a>.</li>
 	<li><span class="ui">Blocked Updates</span> opens the list of updates you have blocked. The trash button at the top of that list asks <span class="ui">Clear Blocked Updates?</span> and then unblocks all of them at once. See <a href="../updates/#block-an-update">Block an Update</a>.</li>
-	<li><span class="ui">Compatibility Updates</span> is a switch, and the row exists only on roothide, where Irisin can convert rootless packages. While it is off, a newer version of a package you installed in compatibility mode is not offered as an update. Turning it on asks <span class="ui">Allow Compatibility Updates?</span> first. See <a href="../updates/#compatibility-updates">Compatibility Updates</a>.</li>
 	<li><span class="ui">Power Operations</span> is a switch that lets you remove packages the system requires. Turning it on asks <span class="ui">Allow Power Operations?</span> with this warning: <span class="ui">Removing a package the system requires can stop the custom firmware or this app from working.</span> See <a href="../troubleshooting/#power-operations">Power Operations</a>.</li>
 </ul>
 <p>A switch that asks first <span class="editorial-mark">stays off until you tap <span class="ui">Allow</span></span>. It returns to off while the alert is open, and <span class="ui">Cancel</span> leaves it off. Turning any of these switches off takes effect at once, with no alert.</p>
@@ -118,11 +117,10 @@
 
 <section class="chapter" id="the-footer"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M15 7L41 8L51 18L50 56L14 55Z"/><path d="M41 8L41 18L51 18"/><path d="M21 37L43 37M21 44L43 45M21 51L36 51"/><path class="icon-detail" d="M21 22L32 22M21 29L28 29"/></svg><span class="section-title-mark">The Footer</span></h2>
 <p>Below the last section, <span class="ui">License</span> opens the notices of the open-source components Irisin ships. Each row names a component with its license and version, and tapping one shows the full text.</p>
-<p>Under <span class="ui">License</span> are four or five gray lines that identify this copy of Irisin and what it runs on. <span class="editorial-mark">A report should quote them</span>, in this order:</p>
+<p>Under <span class="ui">License</span> are four gray lines that identify this copy of Irisin and what it runs on. <span class="editorial-mark">A report should quote them</span>, in this order:</p>
 <ul>
 	<li>Irisin's identifier, <code>wiki.qaq.irisin</code>, then the version, then the build number in parentheses.</li>
 	<li>The architecture and the bootstrap, for example <code>iphoneos-arm64 · rootless</code>.</li>
-	<li>On roothide only, a line such as <span class="ui" data-key="Also installs packages for %@">Also installs packages for iphoneos-arm64</span>. It names the architecture that compatibility mode converts. On rootless this line does not exist.</li>
 	<li>The iOS version and the device model, for example <code>iOS 17.0 · iPhone14,2</code>.</li>
 	<li>The installer's line, which is last.</li>
 </ul>
@@ -134,8 +132,8 @@
 </section>
 
 <nav class="manual-pager" aria-label="Chapters">
-	<a class="pager-prev" rel="prev" href="../translation/"><small>Previous · Chapter 6</small><strong>Translation</strong></a>
-	<a class="pager-next" rel="next" href="../troubleshooting/"><small>Next · Chapter 8</small><strong>When Something Fails</strong></a>
+	<a class="pager-prev" rel="prev" href="../translation/"><small>Previous · Chapter 5</small><strong>Translation</strong></a>
+	<a class="pager-next" rel="next" href="../troubleshooting/"><small>Next · Chapter 7</small><strong>When Something Fails</strong></a>
 </nav>
 
 <footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
@@ -148,7 +146,6 @@
 		<li><a href="../repositories/">Repositories</a></li>
 		<li><a href="../packages/">Finding and Installing Packages</a></li>
 		<li><a href="../updates/">Updates</a></li>
-		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
 		<li><a href="../translation/">Translation</a></li>
 		<li><a href="./" aria-current="page">Settings and Exports</a><ol class="manual-nav-tasks">
 			<li><a href="#vendor-accounts" data-chapter-link="vendor-accounts">Vendor Accounts</a></li>

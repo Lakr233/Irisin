@@ -24,8 +24,8 @@ extension PackageMenu {
             block: resolveInstallRequest,
             eligibleForPerform: { package in
                 guard let queued = PackageQueue.shared.queuedPackage(of: package.identity),
-                      package.localFileURL != nil
-                      || (package.isSupportedOnDevice && package.obtainDownloadLink() != PackageBadUrl),
+                      package.isSupportedOnDevice,
+                      package.localFileURL != nil || package.obtainDownloadLink() != PackageBadUrl,
                       let version = package.latestVersion,
                       let requested = PackageCenter.default.trim(package: package, toVersion: version)
                 else { return false }
@@ -36,7 +36,7 @@ extension PackageMenu {
             descriptor: .directInstall,
             block: resolveInstallRequest,
             eligibleForPerform: { package in
-                package.localFileURL != nil
+                package.localFileURL != nil && package.isSupportedOnDevice
                     && PackageCenter.default.obtainPackageInstallationInfo(with: package.identity) == nil
             }
         ),
@@ -60,7 +60,7 @@ extension PackageMenu {
             descriptor: .update,
             block: resolveInstallRequest,
             eligibleForPerform: { package in
-                if package.obtainDownloadLink() == PackageBadUrl {
+                if package.obtainDownloadLink() == PackageBadUrl || !package.isSupportedOnDevice {
                     return false
                 }
                 // this row is the candidate, whichever repository it is

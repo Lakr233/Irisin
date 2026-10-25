@@ -151,7 +151,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
               actions.count == 1,
               case let .install(package) = actions[0],
               package.localFileURL != nil,
-              package.supports(anyOf: AptEnvironment.current.installableArchitectures)
+              package.isSupportedOnDevice
         else { return nil }
         return package
     }
@@ -323,37 +323,17 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         unneeded[name, default: []].filter { !(ticked ?? []).contains($0) }
     }
 
-    /// `confirmed` are the packages the user already agreed to install in
-    /// compatibility mode, so an answer that moved asks only about the rest.
-    private func commit(confirmed: Set<String> = []) {
+    private func commit() {
         guard confirming == nil else { return }
         if let work {
             // a tick is still being solved: Confirm takes its answer
             Task { [weak self] in
                 await work.value
-                self?.commit(confirmed: confirmed)
+                self?.commit()
             }
             return
         }
         guard let proposal else { return }
-        // a package an adapter rewrites is asked about once, as it joins
-        let queued = Set(PackageQueue.shared.plan?.install.map(\.identity) ?? [])
-        let adapted = proposal.plan.map { plan in
-            plan.install.filter {
-                plan.snapshot.adapts($0) && !queued.contains($0.identity) && !confirmed.contains($0.identity)
-            }
-        } ?? []
-        guard adapted.isEmpty else {
-            let names = ListFormatter.localizedString(byJoining: adapted.map(name(of:)))
-            return presentConfirmation(
-                title: "Compatibility Mode",
-                message: "You are about to install software in compatibility mode (\(names)). These packages are converted automatically during installation to a format this system supports. This may cause problems and damage the system.",
-                confirmTitle: "Install Anyway",
-                destructive: true
-            ) { [weak self] in
-                self?.commit(confirmed: confirmed.union(adapted.map(\.identity)))
-            }
-        }
         // solved against the catalogue as it was: a refresh may have
         // written it since
         confirming = Task { [weak self] in
@@ -365,7 +345,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             guard work == nil, self.proposal?.plan?.id == proposal.plan?.id,
                   self.proposal?.cleanup == proposal.cleanup
             else {
-                return commit(confirmed: confirmed)
+                return commit()
             }
             switch currency {
             case .current:
@@ -388,9 +368,8 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
 
     /// Takes the answer without the sheet when there is nothing in it to
     /// read or decide: the queue changes by the requested package alone, no
-    /// notice, no unneeded package to tick, nothing that installs in
-    /// compatibility mode for the first time, and the catalogue it was
-    /// solved with is still the one there is. Everything else, a solve
+    /// notice, no unneeded package to tick, and the catalogue it was solved
+    /// with is still the one there is. Everything else, a solve
     /// still running included, is the sheet's, which `show` presents.
     private func takeIfPlain() async -> Bool {
         guard work == nil, failure == nil, let proposal, proposal.notices.isEmpty else { return false }
@@ -406,12 +385,6 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         }
         guard plain else { return false }
         if proposal.plan?.remove.isEmpty == false, !unneeded.isEmpty {
-            return false
-        }
-        let queued = Set(PackageQueue.shared.plan?.install.map(\.identity) ?? [])
-        if let plan = proposal.plan,
-           plan.install.contains(where: { plan.snapshot.adapts($0) && !queued.contains($0.identity) })
-        {
             return false
         }
         switch await PackageQueue.shared.currency(of: proposal) {
@@ -504,13 +477,6 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             // an emptied queue has nothing left to install
             if !unchanged, proposal.plan != nil {
                 lines.append(String(localized: "After you confirm, the queue prepares everything the install needs. Finish installing from the Queue page."))
-            }
-            // what Patch finds in the files may take packages out of the
-            // queue or bring some in
-            if !unchanged, let plan = proposal.plan,
-               plan.install.contains(where: { plan.snapshot.adapts($0) && PackageQueue.shared.patched[$0] == nil })
-            {
-                lines.append(String(localized: "Packages in compatibility mode are patched before they install. If patching changes the queue, review it again before you execute."))
             }
             let note = Section.note(lines.joined(separator: "\n\n"))
             snapshot.appendSections([note])

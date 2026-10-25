@@ -6,7 +6,7 @@
 import AptRepository
 import Dog
 import Foundation
-import IrisinAdapter
+import IrisinProtocol
 
 /// Irisin's side of AptRepository's seams. The package holds no opinion on
 /// where settings live or where logs go; this is where that gets decided.
@@ -18,23 +18,11 @@ nonisolated enum AptRepositoryBootstrap {
             dpkgStatusLocation: JailbreakRoot.path("/Library/dpkg/status"),
             aptExtendedStatesLocation: JailbreakRoot.path("/var/lib/apt/extended_states"),
             deviceArchitecture: { PackagedArchitecture.architecture },
-            installableArchitectures: { installableArchitectures },
             indexFallbacks: { BootstrapArchitecture.probeOrder.map(\.rawValue) },
-            adaptedManifestPreview: {
-                PackageAdapters.installed.resolveAdaptedPackageManifestPreview(
-                    control: $0,
-                    on: PackagedArchitecture.architecture
-                )
-            },
             storage: SettingStore(),
             logger: DogLogger()
         )
     }
-
-    /// The device's own architecture plus what the shipped adapters rewrite
-    /// into it. Both inputs are constants, so this is one.
-    static let installableArchitectures: Set<String> =
-        PackageAdapters.installed.installable(on: PackagedArchitecture.architecture)
 }
 
 /// Dog stamps, formats, hands the line to os_log and writes the file on the

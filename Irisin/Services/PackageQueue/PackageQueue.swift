@@ -11,7 +11,6 @@ import AptResolver
 import Combine
 import Dog
 import Foundation
-import IrisinAdapter
 import UIKit
 
 nonisolated extension Notification.Name {
@@ -55,12 +54,6 @@ final class PackageQueue {
     /// Lines the queue page closes with: held-back updates, diagnostics.
     private(set) var notices: [String] = []
     private(set) var revision = 0
-    /// The packages Patch has adapted, each with the tree staging hands the
-    /// helper and the control paragraph every solve from then on reads in
-    /// place of the adapter's preview; pruned as a package leaves the plan.
-    private(set) var patched: [Package: PatchedPackage] = [:]
-    /// Patch is running: nothing else starts one.
-    private var patching = false
 
     /// The Settings switch: a plan may remove Essential and Protected
     /// packages, and the helper is told to let them go. A queued plan is
@@ -153,170 +146,7 @@ final class PackageQueue {
         // this starts what the plan needs and stops what it no longer does,
         // except a download Download Archive is waiting for
         Downloads.shared.download(proposal.plan?.install ?? [])
-        prunePatched()
         return true
-    }
-
-    // MARK: - Patch
-
-    /// A package Patch adapted: the prepared tree staging hands the helper,
-    /// the digest of its rewritten manifest, and the control paragraph the
-    /// adapter left it with.
-    struct PatchedPackage {
-        let directory: URL
-        let manifestDigest: String
-        let control: [String: String]
-    }
-
-    /// What solving again after Patch did to the queue; both empty when the
-    /// plan is what it was.
-    struct PatchOutcome {
-        let left: [Package]
-        let joined: [Package]
-    }
-
-    struct PatchFailure: Error {
-        let message: String
-        /// A file of the plan is not on disk any more (a cached download
-        /// that no longer matched its hash was discarded): downloading
-        /// again is what repeats this, not patching again.
-        var missingDownload = false
-    }
-
-    /// The adapted packages the plan installs that Patch has not been
-    /// through. The queue page offers Patch while there are any and Execute
-    /// once there are none.
-    var unpatched: [Package] {
-        guard let plan else { return [] }
-        return plan.install.filter { plan.snapshot.adapts($0) && patched[$0] == nil }
-    }
-
-    /// Adapts every unpatched package of the plan, each file already on
-    /// disk, and keeps the trees for staging. The resolver solves an
-    /// adapted package as its adapter's preview says before anything is
-    /// downloaded, the compat layer in front of its Pre-Depends; the queue
-    /// is then solved again with the control paragraphs `adapt` wrote. One
-    /// whose file needs no compat layer (a theme: no Mach-O, no code for it
-    /// to load) has none there, so what the preview brought in,
-    /// rootless-compat and patchloader, leaves the queue before it runs,
-    /// and the outcome says so. The paragraph is the one on the tree that
-    /// installs, so the plan cannot disagree with what is installed. A
-    /// failure keeps what was patched before it. A queue that moved while
-    /// its files were adapted (the user's own change, a catalogue refresh)
-    /// is not Patch's doing and is not reported as its outcome: what the new
-    /// plan still has unpatched is the next tap's.
-    func patch() async -> Result<PatchOutcome, PatchFailure> {
-        guard let before = plan else { return .success(PatchOutcome(left: [], joined: [])) }
-        guard !patching, !Installer.shared.inProcessingQueue else {
-            return .failure(PatchFailure(message: Self.busy.message))
-        }
-        patching = true
-        defer { patching = false }
-        let location = Installer.shared.workingLocation.appendingPathComponent("Patched")
-        var moved = false
-        for package in unpatched {
-            guard plan?.id == before.id else {
-                moved = true
-                break
-            }
-            var file = package.localFileURL
-            if file == nil {
-                file = await Downloads.shared.downloadedFile(for: package)
-            }
-            guard let file else {
-                return .failure(PatchFailure(
-                    message: String(localized: "The download was interrupted."),
-                    missingDownload: true
-                ))
-            }
-            do {
-                patched[package] = try await Self.adapt(file, in: location.appendingPathComponent(UUID().uuidString))
-            } catch {
-                Dog.shared.join(self, "cannot patch \(package.identity): \(error)", level: .error)
-                return .failure(PatchFailure(
-                    message: (error as? AdaptationFailure)?.report
-                        ?? String(localized: "Unable to patch \(package.identity). Try again.")
-                ))
-            }
-        }
-        moved = moved || plan?.id != before.id
-        // the plan was solved under less than this: a proposal made before
-        // it no longer commits, and is solved again. A solve the packages
-        // moving under it threw away is tried again; one that failed is the
-        // queue's `blocked`, which the page shows
-        var tries = 0
-        while let plan, !isSolvedAsPatched(plan), blocked == nil, tries < 3 {
-            tries += 1
-            changed()
-            refreshTask?.cancel()
-            let task = Task { await refresh(force: true) }
-            refreshTask = task
-            await task.value
-            // a refresh the packages moving started in its place
-            await settled()
-        }
-        // a package that left the queue while it was being patched
-        prunePatched()
-        guard !moved else { return .success(PatchOutcome(left: [], joined: [])) }
-        let after = plan
-        func touched(_ plan: ResolutionPlan?) -> [Package] {
-            plan.map { $0.install + $0.remove } ?? []
-        }
-        let was = Set(touched(before).map(\.identity))
-        let now = Set(touched(after).map(\.identity))
-        return .success(PatchOutcome(
-            left: touched(before).filter { !now.contains($0.identity) },
-            joined: touched(after).filter { !was.contains($0.identity) }
-        ))
-    }
-
-    /// Trees of packages the plan no longer installs go, off the main actor:
-    /// a theme is thousands of files.
-    private func prunePatched() {
-        let installing = Set(plan?.install ?? [])
-        let stale = patched.filter { !installing.contains($0.key) }
-        guard !stale.isEmpty else { return }
-        for package in stale.keys {
-            patched[package] = nil
-        }
-        let directories = stale.values.map(\.directory)
-        Task.detached {
-            for directory in directories {
-                try? FileManager.default.removeItem(at: directory)
-            }
-        }
-    }
-
-    /// Whether every package of the plan that Patch has been through was
-    /// solved with the control paragraph it was left with.
-    private func isSolvedAsPatched(_ plan: ResolutionPlan) -> Bool {
-        plan.install.allSatisfy { plan.snapshot.adaptedManifests[$0] == patched[$0]?.control }
-    }
-
-    /// Prepares the file and adapts it in `directory`, as staging would.
-    @concurrent
-    private nonisolated static func adapt(_ file: URL, in directory: URL) async throws -> PatchedPackage {
-        do {
-            try FileManager.default.createDirectory(
-                at: directory.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            var digest = try ArchiveStream.prepareDebianPackage(at: file, in: directory)
-            if let adapted = try PackageAdapters.installed.adapt(
-                preparedPackageAt: directory,
-                on: PackagedArchitecture.architecture
-            ) {
-                digest = adapted
-            }
-            return try PatchedPackage(
-                directory: directory,
-                manifestDigest: digest,
-                control: PackageAdapters.installed.control(ofPreparedPackageAt: directory)
-            )
-        } catch {
-            try? FileManager.default.removeItem(at: directory)
-            throw error
-        }
     }
 
     /// The queue touches the package: asked for, ticked, or brought in.
@@ -387,7 +217,6 @@ final class PackageQueue {
         plan = nil
         notices = []
         blocked = nil
-        prunePatched()
         changed()
         Downloads.shared.cancelAll()
     }
@@ -508,9 +337,8 @@ final class PackageQueue {
     private func refresh(force: Bool = false) async {
         guard !Installer.shared.inProcessingQueue, let plan else { return }
         let revision = revision
-        // current means the packages did not move and nothing was learned
-        // about them since (`patch`)
-        if !force, isSolvedAsPatched(plan),
+        // current means the packages did not move
+        if !force,
            await (try? Self.isCurrent(plan: plan, index: PackageCenter.default.index)) == true
         {
             return
@@ -586,7 +414,6 @@ final class PackageQueue {
             let (plan, read) = try await Self.resolve(
                 request: request,
                 index: index,
-                adaptedManifests: patched.mapValues(\.control),
                 pool: prepared,
                 pinned: pinned
             )
@@ -664,11 +491,10 @@ final class PackageQueue {
         generations += 1
         let generation = generations
         let index = PackageCenter.default.index
-        let manifests = patched.mapValues(\.control)
         let previous = pool?.value
         // nobody waits for it yet; a solve that does raises it to its own
         let task = Task(priority: .utility) { [weak self] () -> ResolutionPool? in
-            let read = await Self.readPool(index: index, adaptedManifests: manifests, previous: previous)
+            let read = await Self.readPool(index: index, previous: previous)
             if let self {
                 adopt(read, generation: generation)
                 if poolRead?.generation == generation {
@@ -769,12 +595,10 @@ final class PackageQueue {
     private nonisolated static func resolve(
         request: ResolutionRequest,
         index: PackageIndex,
-        adaptedManifests: [Package: [String: String]],
         pool: ResolutionPool?,
         pinned: Bool
     ) async throws -> (ResolutionPlan, ResolutionPool?) {
-        var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: pool?.snapshot, evenIfWritten: pinned)
-        snapshot.adaptedManifests = adaptedManifests
+        let snapshot = try index.resolutionSnapshot(reusingCatalogueOf: pool?.snapshot, evenIfWritten: pinned)
         let served = pool?.serves(snapshot) == true
         var kept = pool
         let plan = try PackageResolver.resolve(request: request, snapshot: snapshot, keeping: &kept)
@@ -789,12 +613,10 @@ final class PackageQueue {
     @concurrent
     private nonisolated static func readPool(
         index: PackageIndex,
-        adaptedManifests: [Package: [String: String]],
         previous: ResolutionPool?
     ) async -> ResolutionPool? {
         do {
-            var snapshot = try index.resolutionSnapshot(reusingCatalogueOf: previous?.snapshot)
-            snapshot.adaptedManifests = adaptedManifests
+            let snapshot = try index.resolutionSnapshot(reusingCatalogueOf: previous?.snapshot)
             if let previous, previous.serves(snapshot) {
                 return previous
             }

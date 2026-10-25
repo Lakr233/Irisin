@@ -31,7 +31,7 @@ import Testing
         storedRelease: [String: String] = [:],
         indexes: [[String]] = [["Packages"]],
         behaving: [String: StubServer.Behavior] = [:],
-        suite: (distribution: String, components: [String], architectures: [String], installable: Set<String>)? = nil,
+        suite: (distribution: String, components: [String], architectures: [String])? = nil,
         configure: (inout RepositoryCenter.UpdateRequest) -> Void = { _ in }
     ) async -> RepositoryCenter.UpdateOutcome {
         _ = TestEnvironment.root
@@ -52,7 +52,6 @@ import Testing
         )
         if let suite {
             request.architectures = suite.architectures
-            request.installable = suite.installable
         }
         configure(&request)
         return await RepositoryCenter.performUpdate(request) { _, _ in }
@@ -136,31 +135,39 @@ import Testing
         #expect(alone.packages?.keys.sorted() == ["only-other", "shared"])
     }
 
-    /// The Release lists both directories and the server has one: the two
-    /// are not read together, and the one that is there is read on its own
-    /// before anything built for another bootstrap is.
-    @Test func aDirectoryTheReleaseListsAndTheServerLacksLeavesTheOther() async {
-        let own = "main/binary-iphoneos-arm64e/Packages"
-        let other = "main/binary-iphoneos-arm64/Packages"
+    /// A suite without the device's directory is read from the next one
+    /// that answers, for what it holds that installs here: a directory's
+    /// name is not the architecture of its packages. One that holds
+    /// nothing for the device is an empty catalogue, not a failed refresh.
+    @Test func theNextDirectoryIsReadForTheDevicesPackagesAlone() async {
         let legacy = "main/binary-iphoneos-arm/Packages"
-        let index = Data("Package: adaptable\nVersion: 1\nArchitecture: iphoneos-arm64\n".utf8)
-        let rootful = Data("Package: rootful\nVersion: 1\nArchitecture: iphoneos-arm\n".utf8)
-        let digest = SHA256.hash(data: index).map { String(format: "%02x", $0) }.joined()
-        let release = Data("""
-        Origin: Example
-        Date: \(Self.evening)
-        SHA256:
-         \(digest) \(index.count) \(own)
-         \(digest) \(index.count) \(other)
+        let index = Data("""
+        Package: native
+        Version: 1
+        Architecture: iphoneos-arm64
+
+        Package: foreign
+        Version: 1
+        Architecture: iphoneos-arm64e
 
         """.utf8)
         let outcome = await update(
-            host: "half-published.test",
-            serving: ["/Release": release, "/\(other)": index, "/\(legacy)": rootful],
-            indexes: [[own, other], [own], [other], [legacy]],
-            suite: ("stable", ["main"], ["iphoneos-arm64e", "iphoneos-arm64", "iphoneos-arm"], ["iphoneos-arm64e", "iphoneos-arm64"])
+            host: "legacy-directory.test",
+            serving: ["/\(legacy)": index],
+            indexes: [["main/binary-iphoneos-arm64/Packages"], [legacy]],
+            suite: ("stable", ["main"], ["iphoneos-arm64", "iphoneos-arm"])
         )
-        #expect(outcome.packages?.keys.sorted() == ["adaptable"])
+        #expect(outcome.packages?.keys.sorted() == ["native"])
+
+        let foreign = Data("Package: foreign\nVersion: 1\nArchitecture: iphoneos-arm64e\n".utf8)
+        let empty = await update(
+            host: "foreign-only.test",
+            serving: ["/\(legacy)": foreign],
+            indexes: [["main/binary-iphoneos-arm64/Packages"], [legacy]],
+            suite: ("stable", ["main"], ["iphoneos-arm64", "iphoneos-arm"])
+        )
+        #expect(empty.packages?.isEmpty == true)
+        #expect(empty.succeeded)
     }
 
     @Test func pageThatIsNoIndexReplacesNothing() async {

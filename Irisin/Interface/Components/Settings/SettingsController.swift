@@ -325,8 +325,8 @@ final class SettingsFooterView: UIView {
 
     /// What this build is and what it runs on: version and build number,
     /// the architecture the package was built for (or the one detected
-    /// when it was not packaged), the architectures an adapter lets it
-    /// install, the device, and the daemon's answer with its install root.
+    /// when it was not packaged), the device, and the daemon's answer with
+    /// its install root.
     func refresh() {
         let info = Bundle.main.infoDictionary
         let appVersion = info?["CFBundleShortVersionString"] as? String ?? "?"
@@ -337,10 +337,6 @@ final class SettingsFooterView: UIView {
             "\(Bundle.main.bundleIdentifier ?? "wiki.qaq.irisin") \(appVersion) (\(build))",
             "\(architecture) · \(layout)",
         ]
-        let adapted = AptRepositoryBootstrap.installableArchitectures.subtracting([architecture])
-        if !adapted.isEmpty {
-            lines.append(String(localized: "Also installs packages for \(adapted.sorted().joined(separator: ", "))"))
-        }
         lines.append("iOS \(DeviceIdentity.firmware) · \(DeviceIdentity.machine)")
         lines.append(PrivilegedBackend.localizedStatus)
         label.text = lines.joined(separator: "\n")

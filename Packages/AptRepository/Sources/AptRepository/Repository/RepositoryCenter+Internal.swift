@@ -41,9 +41,8 @@ extension RepositoryCenter {
         let suiteUrl: URL
         let distribution: String?
         let components: [String]
-        /// the bootstrap's index directories and what installs on it
+        /// the bootstrap's index directories
         var architectures = AptEnvironment.current.indexArchitectures
-        var installable = AptEnvironment.current.installableArchitectures
         /// How long the icon, the payment endpoint and the featured banners
         /// may take in all, and how much longer than the Release and the
         /// index they are waited for. What they bring is optional; the
@@ -58,8 +57,7 @@ extension RepositoryCenter {
                 distribution: distribution,
                 components: components,
                 release: release,
-                architectures: architectures,
-                installable: installable
+                architectures: architectures
             )
         }
     }
@@ -80,8 +78,10 @@ extension RepositoryCenter {
         /// this round leaves the host alone
         var hostUnreachable = false
 
+        /// an index was read; one with nothing for this bootstrap is an
+        /// empty catalogue, and replaces what the repository had
         var succeeded: Bool {
-            (packages?.count ?? 0) > 0
+            packages != nil
         }
     }
 
@@ -333,9 +333,10 @@ extension RepositoryCenter {
         return try work()
     }
 
-    /// An entry's indexes read and compiled into packages, nil when that
-    /// comes to nothing (a captive portal's page under HTTP 200 is no
-    /// catalogue), with the refresh queue told it is still moving.
+    /// An entry's indexes read and compiled into packages, nil when they
+    /// name no package at all (a captive portal's page under HTTP 200 is no
+    /// catalogue), with the refresh queue told it is still moving. An index
+    /// whose packages are all for another bootstrap is an empty catalogue.
     nonisolated static func compilePackageIndexes(
         _ indexes: [FetchedIndex],
         of bases: [URL],
@@ -346,8 +347,8 @@ extension RepositoryCenter {
     ) -> [String: Package]? {
         beating(networking.activity) {
             guard let body = readPackageIndexes(indexes, of: bases, suffix: suffix, digests: digests) else { return nil }
-            let packages = invokePackages(withContext: body, fromRepo: fromRepo)
-            return packages.isEmpty ? nil : packages
+            let read = readPackageIndex(body, fromRepo: fromRepo)
+            return read.entries == 0 ? nil : read.packages
         }
     }
 

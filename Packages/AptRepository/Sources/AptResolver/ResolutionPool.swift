@@ -42,9 +42,6 @@ public struct ResolutionPool: Sendable {
     let unreadable: [Package: ResolutionFailure.Reason]
     /// The same, in the order of `candidates`.
     let unreadableInOrder: [(Package, ResolutionFailure.Reason)]
-    /// Records an adapter would have to rewrite: they go to a repository
-    /// of their own.
-    let adapted: Set<Int>
     let universe: PackageUniverse
     /// Every relation's witnesses, which `definition(of:)` hands libsolv.
     let wiring: Wiring
@@ -80,7 +77,6 @@ public struct ResolutionPool: Sendable {
         var offered: [Package: Int] = [:]
         var recordOfCandidate: [Int?] = []
         var unreadable: [Package: ResolutionFailure.Reason] = [:]
-        var adapted = Set<Int>()
         // a refused installed package fails every request before the
         // candidates are looked at: there is no point reading them
         if !refused {
@@ -108,7 +104,7 @@ public struct ResolutionPool: Sendable {
                         payload: [version: package.payload[version]!],
                         repoRef: package.repoRef
                     )
-                    guard record.supports(anyOf: snapshot.installableArchitectures),
+                    guard record.supports(architecture: snapshot.architecture),
                           offered[record] == nil
                     else { continue }
                     offered[record] = candidates.count
@@ -123,9 +119,6 @@ public struct ResolutionPool: Sendable {
                 do {
                     try records.append(PoolPackage(reading: record, installed: false, in: snapshot))
                     recordOfCandidate.append(records.count - 1)
-                    if snapshot.adapts(record) {
-                        adapted.insert(records.count - 1)
-                    }
                 } catch {
                     recordOfCandidate.append(nil)
                     unreadable[record] = (error as? ResolutionFailure)?.reason ?? .unknown
@@ -139,7 +132,6 @@ public struct ResolutionPool: Sendable {
         unreadableInOrder = candidates.indices.compactMap { position in
             recordOfCandidate[position] == nil ? (candidates[position], unreadable[candidates[position]] ?? .unknown) : nil
         }
-        self.adapted = adapted
         self.records = records
         let universe = PackageUniverse(packages: records, architecture: snapshot.architecture)
         self.universe = universe
@@ -147,15 +139,13 @@ public struct ResolutionPool: Sendable {
     }
 
     /// Whether this pool is the one `snapshot` reads: the same catalogue
-    /// (database and revision), installed packages, architectures, origins
-    /// and adapted control paragraphs. A snapshot made by hand names no
+    /// (database and revision), installed packages, architecture and
+    /// origins. A snapshot made by hand names no
     /// database and is never served.
     public func serves(_ snapshot: ResolutionSnapshot) -> Bool {
         self.snapshot.sharesCatalogue(with: snapshot)
             && self.snapshot.architecture == snapshot.architecture
-            && self.snapshot.installableArchitectures == snapshot.installableArchitectures
             && self.snapshot.origins == snapshot.origins
-            && self.snapshot.adaptedManifests == snapshot.adaptedManifests
             && installedPackages == snapshot.installed.sorted(by: { $0.identity < $1.identity })
     }
 
@@ -166,7 +156,7 @@ public struct ResolutionPool: Sendable {
             guard case let .install(package) = action else { return true }
             return package.payload.allSatisfy { version, metadata in
                 let record = Package(identity: package.identity, payload: [version: metadata], repoRef: package.repoRef)
-                return !record.supports(anyOf: snapshot.installableArchitectures) || offered[record] != nil
+                return !record.supports(architecture: snapshot.architecture) || offered[record] != nil
             }
         }
     }

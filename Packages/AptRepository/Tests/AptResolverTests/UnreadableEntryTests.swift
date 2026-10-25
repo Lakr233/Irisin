@@ -7,7 +7,7 @@ import Testing
 /// Paragraphs whose relations dpkg refuses, as two repositories publish
 /// them (trimmed): `apt.cydiabc.top` ends a Depends with a comma, and
 /// `zlw555.github.io/repo` names `mobile substrate`, two words. A roothide
-/// device read the first two through the rootless adapter, the third as
+/// device once read the first two through a rootless adapter, the third as
 /// its own, and every install on it listed all three under its plan.
 struct UnreadableEntryTests {
     private static let index = """
@@ -65,8 +65,7 @@ struct UnreadableEntryTests {
         let snapshot = ResolutionSnapshot(
             packages: Self.broken + packages,
             installed: installed,
-            architecture: Self.roothide,
-            installableArchitectures: [Self.roothide, "iphoneos-arm64"]
+            architecture: Self.roothide
         )
         return try resolveBothWays(request: .init(actions: actions, updateAll: update), snapshot: snapshot)
     }
@@ -101,12 +100,12 @@ struct UnreadableEntryTests {
     }
 
     @Test func askingForOneByNameNamesWhatIsWrong() throws {
-        let wanted = try #require(Self.broken.first { $0.identity == "com.cydiabc.wchidechatavatars-rootless" })
+        let wanted = try #require(Self.broken.first { $0.identity == "wxipad" })
         do {
             _ = try solve([], actions: [.install(wanted)])
             Issue.record("A package whose relations do not parse installs nothing")
         } catch let failure as ResolutionFailure {
-            #expect(failure.reason == .unreadableMetadata(package: wanted.identity, version: "1.1-1"))
+            #expect(failure.reason == .unreadableMetadata(package: wanted.identity, version: "1.1.4"))
         }
     }
 }

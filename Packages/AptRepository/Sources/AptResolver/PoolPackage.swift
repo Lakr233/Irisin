@@ -10,18 +10,14 @@ struct PoolPackage: Sendable {
     let installed: Bool
     let fields: [String: String]
     let relations: [Group.Kind: [Group.Clause]]
-    /// What the solver is told: an adapted package arrives as the
-    /// bootstrap's own architecture, and libsolv drops any other.
+    /// What the solver is told: libsolv drops any architecture but the
+    /// bootstrap's own and `all`.
     let architecture: String
 
     /// An installed record dpkg left unfinished refuses every plan but the
     /// one whose `action` repairs it: installing it again, the repair the
     /// helper tells the user to make, or removing it, which dpkg refuses
     /// only while the record needs a reinstall.
-    ///
-    /// A package an adapter rewrites is read as it will be once rewritten:
-    /// the snapshot's architecture, and the control paragraph the adapter
-    /// wrote, or its preview of one while the file is not adapted yet.
     init(_ package: Package, installed: Bool, action: ResolutionAction? = nil, in snapshot: ResolutionSnapshot) throws {
         try self.init(reading: package, installed: installed, in: snapshot)
         if installed {
@@ -34,18 +30,14 @@ struct PoolPackage: Sendable {
     /// `ResolutionPool` keeps for every request.
     init(reading package: Package, installed: Bool, in snapshot: ResolutionSnapshot) throws {
         guard package.payload.count == 1, let version = package.latestVersion,
-              DebianVersion.isValid(version), var fields = package.latestMetadata
+              DebianVersion.isValid(version), let fields = package.latestMetadata
         else {
             throw ResolutionFailure(.unreadableVersion(package: package.identity))
-        }
-        let adapted = !installed && snapshot.adapts(package)
-        if adapted {
-            fields = snapshot.adaptedManifests[package] ?? snapshot.adaptedManifestPreview?(fields) ?? fields
         }
         // the field is a list to dpkg and to the catalogue; libsolv takes one
         // name and drops a package whose name is not the bootstrap's or `all`
         let listed = Package.architectures(in: fields)
-        architecture = if adapted || listed.contains(snapshot.architecture) {
+        architecture = if listed.contains(snapshot.architecture) {
             snapshot.architecture
         } else if listed.contains("all") {
             "all"

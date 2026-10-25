@@ -180,15 +180,12 @@ final class ReadOnlyCatalogueTests: XCTestCase {
     func testUpdatePreferencesComeFromTheCentersKeys() throws {
         let storage = MemoryStorage()
         try storage.write(key: UpdatePreferenceKey.blockedUpdates, value: JSONEncoder().encode(["com.example.sunset"]))
-        try storage.write(key: UpdatePreferenceKey.offersAdaptedUpdates, value: JSONEncoder().encode(true))
         defer {
             storage.write(key: UpdatePreferenceKey.blockedUpdates, value: nil)
-            storage.write(key: UpdatePreferenceKey.offersAdaptedUpdates, value: nil)
         }
         var read = try reader()
         read.restoreUpdatePreferences(from: storage)
         XCTAssertEqual(read.blockedUpdateTable, ["com.example.sunset"])
-        XCTAssertTrue(read.offersAdaptedUpdates)
     }
 }
 

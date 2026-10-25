@@ -8,26 +8,21 @@
 
 import Foundation
 
-/// How well one build of a package fits a bootstrap, best last.
+/// How well one build of a package fits a bootstrap, best last. A build for
+/// any other architecture has no fit: nothing here installs it.
 enum ArchitectureFit: Int, Comparable {
-    /// built for another bootstrap, and nothing here rewrites it
-    case foreign
-    /// an adapter rewrites it
-    case adaptable
     /// `all`
     case portable
     /// built for this bootstrap
     case native
 
-    init(of architectures: [String], device: String, installable: Set<String>) {
+    init?(of architectures: [String], device: String) {
         if architectures.contains(device) {
             self = .native
         } else if architectures.contains("all") {
             self = .portable
-        } else if architectures.contains(where: installable.contains) {
-            self = .adaptable
         } else {
-            self = .foreign
+            return nil
         }
     }
 
@@ -43,24 +38,31 @@ enum ArchitectureFit: Int, Comparable {
 /// `Package` holds one build per version, so each version keeps the build
 /// that fits this bootstrap best (`ArchitectureFit`), and of two that fit
 /// alike the one read first, which is the device's own index in a suite.
-/// A version is judged on its own: a newer one only an adapter installs
-/// stays beside an older native one, and what is an update is decided
-/// where updates are. Builds nothing here installs are kept only for a
-/// package with no other, so it still shows up and can say so.
+/// A build for another architecture is dropped: the catalogue lists only
+/// what installs here.
 /// - Parameters:
 ///   - original: parser, string
 ///   - fromRepo: repo reference
 ///   - device: the bootstrap's own architecture, the environment's if nil
-///   - installable: what installs on it, the environment's if nil
 /// - Returns: container
 func invokePackages(
     withContext original: String,
     fromRepo: URL? = nil,
-    device: String? = nil,
-    installable: Set<String>? = nil
+    device: String? = nil
 ) -> [String: Package] {
+    readPackageIndex(original, fromRepo: fromRepo, device: device).packages
+}
+
+/// `invokePackages`, and how many entries the index named before any was
+/// dropped: an index of packages for another bootstrap is a catalogue with
+/// nothing in it, not a page that is no catalogue at all.
+func readPackageIndex(
+    _ original: String,
+    fromRepo: URL? = nil,
+    device: String? = nil
+) -> (packages: [String: Package], entries: Int) {
+    var entries = 0
     let device = device ?? AptEnvironment.current.deviceArchitecture
-    let installable = installable ?? AptEnvironment.current.installableArchitectures
     typealias Build = (metadata: Package.Metadata, fit: ArchitectureFit)
     var builds = [String: [Package.Version: Build]]()
     original
@@ -82,21 +84,17 @@ func invokePackages(
                 )
                 return
             }
-            let fit = ArchitectureFit(
-                of: Package.architectures(in: metadata),
-                device: device,
-                installable: installable
-            )
+            entries += 1
+            guard let fit = ArchitectureFit(of: Package.architectures(in: metadata), device: device) else {
+                return
+            }
             if let existing = builds[id]?[ver], existing.fit >= fit {
                 return
             }
             builds[id, default: [:]][ver] = (metadata, fit)
         }
-    return builds.reduce(into: [:]) { result, entry in
-        let installs = entry.value.values.contains { $0.fit > .foreign }
-        let payload = entry.value
-            .filter { !installs || $0.value.fit > .foreign }
-            .mapValues(\.metadata)
-        result[entry.key] = Package(identity: entry.key, payload: payload, repoRef: fromRepo)
+    let packages = builds.reduce(into: [String: Package]()) { result, entry in
+        result[entry.key] = Package(identity: entry.key, payload: entry.value.mapValues(\.metadata), repoRef: fromRepo)
     }
+    return (packages, entries)
 }

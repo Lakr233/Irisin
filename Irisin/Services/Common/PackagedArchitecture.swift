@@ -7,15 +7,13 @@
 //
 
 import Foundation
-import IrisinAdapter
+import IrisinProtocol
 
 /// Which dpkg architecture the packages on this bootstrap carry, so
 /// AptRepository asks repositories for the flavour that will actually
 /// install. There is no override: a package of any other architecture does
 /// not install as built, so offering one would only produce a list of
-/// packages that fail; the ones an adapter rewrites are listed through
-/// `PackageAdapters.installable`. Read from AptRepository's threads, so
-/// nonisolated.
+/// packages that fail. Read from AptRepository's threads, so nonisolated.
 nonisolated enum PackagedArchitecture {
     /// The Info.plist key `package-deb.sh` fills in per flavor: the app is
     /// one binary packaged twice, and the package knows which bootstrap it

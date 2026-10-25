@@ -15,7 +15,6 @@ Irisin is a package manager for jailbroken iPhone and iPad on iOS and iPadOS 15 
 - Package pages that follow light and dark mode
 - Install any version a repository offers, and block updates for packages you want to keep as they are
 - Buy paid packages and sign in to your vendor accounts
-- On roothide, install rootless packages in Compatibility Mode, which refuses a package it cannot convert safely
 - Rebuild icons and reload the Home Screen from Settings
 - Update Irisin from inside Irisin
 - Available in 19 languages

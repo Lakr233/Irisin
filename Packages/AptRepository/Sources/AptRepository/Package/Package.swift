@@ -189,44 +189,33 @@ public struct Package: Codable, Hashable, Identifiable, Sendable {
         return kept.count == payload.count ? self : Package(identity: identity, payload: kept, repoRef: repoRef)
     }
 
-    /// The versions that are an update over `current`, nil when none is:
-    /// those built for `device` when one of them is newer, as the resolver
-    /// takes a build for this bootstrap ahead of a newer one an adapter
-    /// would rewrite, and otherwise all that `accepted` lets in.
-    public func update(over current: String, device: String, accepted: Set<String>) -> Package? {
-        [[device], accepted].lazy
-            .compactMap { versions(supportingAnyOf: $0) }
-            .first { Self.compareVersion($0.latestVersion ?? "", b: current) == .aIsBiggerThenB }
+    /// The versions built for `device` (or `all`), when the newest of them
+    /// is an update over `current`; nil otherwise.
+    public func update(over current: String, device: String) -> Package? {
+        versions(supportingAnyOf: [device])
+            .flatMap { Self.compareVersion($0.latestVersion ?? "", b: current) == .aIsBiggerThenB ? $0 : nil }
     }
 
     /// The version a list holds up against the `installed` one: the newest
-    /// that `accepted` lets be an update, since a record can hold a version
-    /// built for this bootstrap under a newer one only an adapter installs.
-    /// The installed one, when the record has it, is never behind itself,
-    /// whatever it was built for; a record with nothing accepted is read at
-    /// its newest, as ever.
-    public func version(comparedWith installed: String, accepted: Set<String>) -> String? {
-        let offered = (versions(supportingAnyOf: accepted) ?? self).latestVersion
+    /// built for `device`, since a record can hold a version built for this
+    /// bootstrap under a newer one built for another. The installed one,
+    /// when the record has it, is never behind itself, whatever it was
+    /// built for; a record with nothing for `device` is read at its
+    /// newest, as ever.
+    public func version(comparedWith installed: String, device: String) -> String? {
+        let offered = (versions(supportingAnyOf: [device]) ?? self).latestVersion
         let own = payload[installed] == nil ? nil : installed
         return [offered, own].compactMap(\.self).max { DebianVersion.compare($0, $1) < 0 }
     }
 
-    /// Whether dpkg on this bootstrap would install the newest version as
-    /// built, with no adapter in between.
+    /// Whether dpkg on this bootstrap would install the newest version.
     public func supports(architecture device: String) -> Bool {
         architectures.contains { $0 == "all" || $0 == device }
     }
 
-    /// Whether the newest version carries one of `accepted`, the bootstrap's
-    /// own architecture or one an adapter rewrites into it.
-    public func supports(anyOf accepted: Set<String>) -> Bool {
-        architectures.contains { $0 == "all" || accepted.contains($0) }
-    }
-
-    /// Whether the package installs on the bootstrap the app runs on, as
-    /// built or through an adapter.
+    /// Whether the package installs on the bootstrap the app runs on.
     public var isSupportedOnDevice: Bool {
-        supports(anyOf: AptEnvironment.current.installableArchitectures)
+        supports(architecture: AptEnvironment.current.deviceArchitecture)
     }
 
     public func propertyListEncoded() -> Data? {

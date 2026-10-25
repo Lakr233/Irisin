@@ -2,7 +2,6 @@ import AptRepository
 import AptResolver
 import Darwin
 import Foundation
-import IrisinAdapter
 import IrisinClient
 import IrisinProtocol
 
@@ -89,11 +88,6 @@ struct Pipeline {
     /// Downloads and prepares what the plan installs, sends the transaction
     /// and prints its transcript; the helper's exit status, thrown when not 0.
     func run(_ plan: ResolutionPlan, options: Options) async throws {
-        if let adapted = plan.install.first(where: { plan.snapshot.adapts($0) }) {
-            throw CommandFailure.refused(
-                "\(adapted.identity) is built for another bootstrap and installs only in Compatibility Mode. Install it from Irisin."
-            )
-        }
         let workspace = try Workspace.make()
         defer { workspace.remove() }
 

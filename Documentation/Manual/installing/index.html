@@ -28,7 +28,7 @@
 <div class="page"><main>
 
 <header class="article-cover">
-	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 1 of 8</span></p>
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 1 of 7</span></p>
 	<h1 class="page-title" lang="en">Installing Irisin</h1>
 	<div class="cover-divider"></div>
 </header>
@@ -62,7 +62,7 @@
 <p>Irisin requires iOS or iPadOS 15.0 or later. On an older system the package does not install.</p>
 <p>You get both packages from the Releases page of Irisin's GitHub repository, <code>https://github.com/Lakr233/Irisin/releases</code>. Each file is named <code>wiki.qaq.irisin_&lt;version&gt;_&lt;architecture&gt;.deb</code>, so <span class="editorial-mark">the architecture is in the file's name</span>. Download the file with the ending shown for your bootstrap in the figure above.</p>
 <p>Install the package, not the app alone. A copy of Irisin that reached your device without its package, for example by sideloading, <span class="editorial-mark">opens and browses, but installs nothing</span>. In that state the last line at the bottom of Settings reads <span class="ui">You can browse, but not install. Install the Irisin package.</span> For the fix, see <a href="../troubleshooting/#browsing-only">Browsing Only</a>.</p>
-<p>Do not convert Irisin with a patcher to make one package fit the other bootstrap. That includes Irisin's own compatibility mode, which refuses Irisin by name. A converted copy of Irisin still expects the bootstrap it was built for, so it stops at <span class="ui">Unsupported Architecture</span>. See <a href="../compatibility-mode/#what-is-refused">What Is Refused</a>.</p>
+<p>Do not convert Irisin with a patcher to make one package fit the other bootstrap. A converted copy of Irisin still expects the bootstrap it was built for, so it stops at <span class="ui">Unsupported Architecture</span>. Install the package built for your bootstrap instead.</p>
 </section>
 
 <section class="chapter" id="the-welcome-page"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M19 7Q16 7 16 11L15 49Q15 53 20 53L39 54Q44 54 44 49L45 12Q45 8 40 8Z"/><path d="M24 13L36 13M20 19L40 20L39 43L20 42Z"/><circle cx="30" cy="48" r="2"/><path class="icon-detail" d="M7 18L10 21M50 17L55 14M51 27L57 28"/></svg><span class="section-title-mark">The Welcome Page</span></h2>
@@ -77,12 +77,12 @@
 
 <h3>Add Repositories</h3>
 <p>A repository is an address that offers packages. The second page, <span class="ui">Add Repositories</span>, opens with a note you should read once: <span class="ui">A repository can include apps, plugins, themes, and ringtones. Anyone can host one, and <span class="editorial-mark">we cannot verify that its packages are safe</span>.</span></p>
-<p>The list under <span class="ui">Recommended Repositories</span> depends on your bootstrap. Each bootstrap gets six repositories, and the two lists are never mixed.</p>
+<p>The list under <span class="ui">Recommended Repositories</span> depends on your bootstrap, and the two lists are never mixed.</p>
 <ul>
-	<li>On both: Havoc (<code>https://havoc.app</code>), Chariz (<code>https://repo.chariz.com</code>), BigBoss, and OwnGoal Studio's own repository, <code>https://apt.owngoal.dev</code>.</li>
-	<li>On roothide only: <code>https://roothide.github.io</code> and roothide's build of Procursus.</li>
-	<li>On rootless only: Procursus (<code>https://apt.procurs.us</code>) and ElleKit (<code>https://ellekit.space</code>).</li>
+	<li>On roothide: <code>https://roothide.github.io</code>, roothide's build of Procursus, and OwnGoal Studio's own repository, <code>https://apt.owngoal.dev</code>.</li>
+	<li>On rootless: Procursus (<code>https://apt.procurs.us</code>), ElleKit (<code>https://ellekit.space</code>), Havoc (<code>https://havoc.app</code>), Chariz (<code>https://repo.chariz.com</code>), BigBoss, and OwnGoal Studio's own repository, <code>https://apt.owngoal.dev</code>.</li>
 </ul>
+<p>Havoc, Chariz and BigBoss publish packages for rootless only, so a roothide device is not offered them.</p>
 <p>To add from the list:</p>
 <ol>
 	<li>Wait a moment. Each row starts with a spinner and the repository's host name, then shows the repository's own name and icon once Irisin reaches it.</li>
@@ -161,7 +161,6 @@
 		<li><a href="../repositories/">Repositories</a></li>
 		<li><a href="../packages/">Finding and Installing Packages</a></li>
 		<li><a href="../updates/">Updates</a></li>
-		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
 		<li><a href="../translation/">Translation</a></li>
 		<li><a href="../settings/">Settings and Exports</a></li>
 		<li><a href="../troubleshooting/">When Something Fails</a></li>

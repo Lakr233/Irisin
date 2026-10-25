@@ -206,11 +206,10 @@ final class VendorAccount {
         session.start()
     }
 
-    /// The paid link for the build the resolver chose, not for the build a
-    /// repository would pick for this device: a package installed in
-    /// compatibility mode is another architecture's, and Havoc answers an
-    /// architecture it has no package for with whichever it does have —
-    /// the file then fails the hash the index published for ours.
+    /// The paid link for the build the resolver chose, named by its own
+    /// architecture: Havoc answers an architecture it has no package for
+    /// with whichever it does have — the file then fails the hash the index
+    /// published for ours.
     func queryDownloadLink(withPackage package: Package) async -> URL? {
         guard let represent = package.repoRef,
               let repo = RepositoryCenter

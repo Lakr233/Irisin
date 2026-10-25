@@ -1,7 +1,6 @@
 import AptRepository
 import Darwin
 import Foundation
-import IrisinAdapter
 import IrisinProtocol
 
 /// Where this run finds everything, decided once at the start of a command:
@@ -116,17 +115,12 @@ struct Context {
     /// location there would let a writable handle meet it.
     func bootstrapEnvironment(verbose: Bool) {
         let architecture = architecture
-        let installable = PackageAdapters.installed.installable(on: architecture)
         AptEnvironment.bootstrap(AptEnvironment(
             workingLocation: FileManager.default.temporaryDirectory.appendingPathComponent("irisin-cli-unused"),
             dpkgStatusLocation: statusFile,
             aptExtendedStatesLocation: path("/var/lib/apt/extended_states"),
             deviceArchitecture: { architecture },
-            installableArchitectures: { installable },
             indexFallbacks: { BootstrapArchitecture.probeOrder.map(\.rawValue) },
-            adaptedManifestPreview: {
-                PackageAdapters.installed.resolveAdaptedPackageManifestPreview(control: $0, on: architecture)
-            },
             storage: ReadOnlySettings(folder: data.appendingPathComponent("Settings", isDirectory: true)),
             logger: StandardErrorLogger(verbose: verbose)
         ))

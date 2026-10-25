@@ -457,43 +457,10 @@ ol.sk-notes { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none
  .sk-choice .sk-card { padding:15px 12px 13px; }
 }
 
-/* h. A branch off one step that only some queues take: the same button under
-   a condition. Dashed and secondary, so it does not read as a step of its own. */
-.sk-steps .sk-if { display:block; margin-top:9px; padding:4px 8px 3px; border:1.5px dashed var(--color-tertiary); border-radius:12px 5px 10px 6px / 6px 10px 5px 12px; color:var(--color-secondary); font-size:11.5px; line-height:1.45; }
-@container (max-width:600px) {
- .sk-steps .sk-if { flex-basis:100%; margin-top:8px; }
-}
-@container (max-width:380px) {
- .sk-steps .sk-if { margin-top:7px; padding:3px 7px 2px; }
-}
-
-/* i. The verdict ledger: what an adapter converts and what it refuses, side
-   by side, each row marked with the figure system's own check or cross. The
-   catalog's before-and-after carries one pipeline through its steps, not two
-   lists of verdicts. It is drawn with the paper's own card border, radii and
-   masks, and the accent stays on the check; it restacks to one column at
-   600px of figure width and tightens at 380px. */
-.sk-ledger { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; align-items:start; }
-.sk-ledger > div { min-width:0; padding:16px 15px 15px; border:1.5px solid var(--color-primary); border-radius:255px 15px 225px 15px / 15px 225px 15px 255px; background:var(--color-background); }
-.sk-ledger > div + div { border-radius:15px 225px 15px 255px / 255px 15px 225px 15px; }
-.sk-ledger > div > p { margin:0 0 12px; color:var(--color-secondary); font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
-.sk-ledger > div > ul { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
-.sk-ledger > div > ul > li { position:relative; margin:0; padding-left:22px; }
-.sk-ledger > div > ul > li::before { content:""; position:absolute; top:3px; left:0; width:13px; height:13px; background:var(--color-accent); -webkit-mask:var(--sk-check) center / contain no-repeat; mask:var(--sk-check) center / contain no-repeat; }
-.sk-ledger > div + div > ul > li::before { background:var(--color-ink); -webkit-mask-image:var(--sk-cross); mask-image:var(--sk-cross); }
-.sk-ledger strong { display:block; color:var(--color-ink); font-size:14px; line-height:1.35; }
-.sk-ledger span { display:block; margin-top:2px; color:var(--color-secondary); font-size:12px; line-height:1.45; }
-@container (max-width:600px) { .sk-ledger { grid-template-columns:minmax(0,1fr); gap:18px; } }
-@container (max-width:380px) {
- .sk-ledger > div { padding:14px 12px 12px; }
- .sk-ledger > div > ul > li { padding-left:19px; }
- .sk-ledger strong { font-size:13.5px; }
-}
-
 /* j. A control's name never breaks between two Han glyphs: a two-character
    name split over a line end reads as two words. Inside a figure's foot line
    and caption, a short name moves whole rather than break in two. */
-.sk-choice + .sk-foot .ui,.sk-ledger + .sk-foot .ui { white-space:nowrap; }
+.sk-choice + .sk-foot .ui { white-space:nowrap; }
 
 /* k. The site's root page has no "Manual" link, and that link is what pushes
    the header's right-hand side to the right. There the toggle does it. */
@@ -512,7 +479,7 @@ ol.sk-notes { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none
    The cover this style was built for announces a piece of writing: a
    dateline, a display title, a sparkle in the corner. A manual chapter
    answers a different question, "where am I", so it carries the trail back
-   to the contents, the chapter's place in the eight, and its title. The
+   to the contents, the chapter's place in the seven, and its title. The
    drawing stays where it means something: the figures, the icons on the
    headings, the marks in the prose. The sparkle and the arrow keep one
    page, the manual's own title page, which asks for a cover. */

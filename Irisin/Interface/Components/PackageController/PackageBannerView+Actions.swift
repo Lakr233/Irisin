@@ -30,7 +30,7 @@ extension PackageBannerView {
     func performQuickAction() {
         // the page, taken now: the banner may leave it while the action runs
         guard let host = parentViewController else { return }
-        guard package.isSupportedOnDevice || package.localFileURL != nil else {
+        guard package.isSupportedOnDevice else {
             PackageMenu.presentUnsupportedArchitecture(of: package, from: host)
             return
         }

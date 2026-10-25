@@ -238,12 +238,7 @@ class PackageController: UIViewController {
     }
 
     private func footerText() -> String {
-        let environment = AptEnvironment.current
-        let differs = !packageObject.supports(architecture: environment.deviceArchitecture)
         var footer = String(localized: "Architecture: \(packageObject.architectures.joined(separator: ", "))")
-        if differs, packageObject.supports(anyOf: environment.installableArchitectures) {
-            footer += "\n" + String(localized: "Installs in compatibility mode.")
-        }
         if depictionIsPartial {
             footer = String(localized: "Some of this package's content cannot be shown.") + "\n" + footer
         }

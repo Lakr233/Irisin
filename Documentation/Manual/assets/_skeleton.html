@@ -52,14 +52,14 @@
 
 <div class="page"><main>
 
-<!-- COVER of a chapter page: the trail back to the contents, this chapter's place in the eight,
+<!-- COVER of a chapter page: the trail back to the contents, this chapter's place in the seven,
      the h1 as plain text, the divider. No dateline (the footer keeps the date), no title mark,
-     no summary: eight hand-drawn underlines on eight chapter titles would read as eight blog posts.
+     no summary: seven hand-drawn underlines on seven chapter titles would read as seven blog posts.
      The sparkle and the arrow belong to .cover-title-page alone, the manual's own title page
      (index.html), which is the one page that keeps the style's cover with its cover-category,
      its title mark and its date. No other page carries that class. -->
 <header class="article-cover">
-	<p class="cover-trail"><a href="../">Manual</a><span>Chapter SLOT-N of 8</span></p>
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter SLOT-N of 7</span></p>
 	<h1 class="page-title" lang="en">SLOT Chapter Title</h1>
 	<div class="cover-divider"></div>
 </header>
@@ -71,7 +71,7 @@
 <!-- A CONTROL'S NAME is quoted from the app inside span.ui, exactly as the app spells it in this page's
      language (check-manual.py compares the span's text with the string catalog). No quotation marks,
      no 「」, no <strong>, no <code>. It may sit inside an underline or hold one:
-       <span class="editorial-mark">tap <span class="ui">Patch</span> first</span>
+       <span class="editorial-mark">tap <span class="ui">Execute</span> last</span>
        <span class="ui"><span class="editorial-mark">Reload Home Screen</span></span>
      On Chinese pages put a space between Han and Latin text by hand; nothing inserts it. -->
 <p>SLOT intro two. Open <span class="ui">Settings</span> and choose <span class="ui">Reload Home Screen</span>.</p>
@@ -153,7 +153,7 @@
 </div>
 
 <!-- RAIL: the manual's contents, one list, identical on every page except which entry is current.
-     The eight chapters are numbered by CSS, so no number is written here. The page you are on
+     The seven chapters are numbered by CSS, so no number is written here. The page you are on
      carries aria-current="page" and holds its own tasks in the nested ol.manual-nav-tasks, one
      link per section.chapter, in the page's order, with the text of its span.section-title-mark
      and its id in both href and data-chapter-link, so the script still follows your place.
@@ -172,7 +172,6 @@
 		<li><a href="../SLOT-5/">SLOT Chapter Five</a></li>
 		<li><a href="../SLOT-6/">SLOT Chapter Six</a></li>
 		<li><a href="../SLOT-7/">SLOT Chapter Seven</a></li>
-		<li><a href="../SLOT-8/">SLOT Chapter Eight</a></li>
 	</ol></nav>
 </aside>
 

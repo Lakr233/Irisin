@@ -21,31 +21,17 @@ func pkg(_ name: String, _ version: String = "1", _ fields: [String: String] = [
 /// installed package left out has no origin, so an update of everything
 /// takes it from any. The default follows every installed package to the
 /// fixtures' one repository. `auto` names the installed packages marked
-/// `Auto-Installed`. `adapting` names the architectures an adapter rewrites
-/// into the fixtures' `arm64`, `adaptedUpdates` whether an update of
-/// everything takes their newer versions, and `implied` the Pre-Depends its preview
-/// puts in front; `withoutImplied` the adapted packages whose file, once
-/// adapted, showed they get none.
-func solve(_ available: [Package], installed: [Package] = [], actions: [ResolutionAction], update: Bool = false, blocked: Set<String> = [], origins: [String: String]? = nil, auto: Set<String> = [], autoremove: Set<String> = [], allowSystemRemoval: Bool = false, adapting: Set<String> = [], adaptedUpdates: Bool = true, implied: String? = nil, withoutImplied: Set<Package> = []) throws -> ResolutionPlan {
+/// `Auto-Installed`.
+func solve(_ available: [Package], installed: [Package] = [], actions: [ResolutionAction], update: Bool = false, blocked: Set<String> = [], origins: [String: String]? = nil, auto: Set<String> = [], autoremove: Set<String> = [], allowSystemRemoval: Bool = false) throws -> ResolutionPlan {
     let origins = origins ?? Dictionary(uniqueKeysWithValues: installed.map { ($0.identity, "https://example.test/") })
-    var preview: ResolutionSnapshot.ManifestPreview?
-    if let implied {
-        preview = { fields in
-            fields.merging(["pre-depends": [implied, fields["pre-depends"]].compactMap(\.self).joined(separator: ", ")]) { $1 }
-        }
-    }
-    var snapshot = ResolutionSnapshot(
+    let snapshot = ResolutionSnapshot(
         packages: available,
         installed: installed,
         architecture: "arm64",
-        installableArchitectures: adapting.union(["arm64"]),
-        adaptedManifestPreview: preview,
         blockedUpdates: blocked,
-        offersAdaptedUpdates: adaptedUpdates,
         origins: origins.compactMapValues(URL.init(string:)),
         autoInstalled: auto
     )
-    snapshot.adaptedManifests = Dictionary(uniqueKeysWithValues: withoutImplied.map { ($0, $0.latestMetadata ?? [:]) })
     return try resolveBothWays(
         request: .init(actions: actions, updateAll: update, autoremove: autoremove, allowSystemRemoval: allowSystemRemoval),
         snapshot: snapshot
@@ -88,22 +74,17 @@ extension ResolutionSnapshot {
         packages: [Package]? = nil,
         installed: [Package]? = nil
     ) -> ResolutionSnapshot {
-        var copy = ResolutionSnapshot(
+        ResolutionSnapshot(
             packages: packages ?? self.packages,
             installed: installed ?? self.installed,
             architecture: architecture,
-            installableArchitectures: installableArchitectures,
-            adaptedManifestPreview: adaptedManifestPreview,
             blockedUpdates: blockedUpdates,
-            offersAdaptedUpdates: offersAdaptedUpdates,
             origins: origins,
             autoInstalled: autoInstalled,
             statusDigest: statusDigest,
             catalogueRevision: revision,
             catalogueIdentity: identity
         )
-        copy.adaptedManifests = adaptedManifests
-        return copy
     }
 }
 

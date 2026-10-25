@@ -59,7 +59,6 @@ public extension PackageIndex {
             storage.read(key: key).flatMap { try? JSONDecoder().decode(Value.self, from: $0) } ?? fallback
         }
         blockedUpdateTable = value(UpdatePreferenceKey.blockedUpdates, [])
-        offersAdaptedUpdates = value(UpdatePreferenceKey.offersAdaptedUpdates, false)
     }
 
     /// Every repository the catalogue lists.

@@ -10,7 +10,6 @@ import AptRepository
 import AptResolver
 import Dog
 import Foundation
-import IrisinAdapter
 import IrisinProtocol
 
 /// Turns one solved plan into one package transaction and runs it through
@@ -45,7 +44,7 @@ final class Installer {
         inProcessingQueue = true
         defer { inProcessingQueue = false }
         PackageQueue.shared.operationBegan()
-        var sources: [(Package, URL, PackageQueue.PatchedPackage?)] = []
+        var sources: [(Package, URL)] = []
         do {
             guard try await PackageQueue.currency(of: plan, index: PackageCenter.default.index) == .current else {
                 // read again, so the queue is solved against what moved and
@@ -62,7 +61,7 @@ final class Installer {
                 guard let file else {
                     throw MissingDownload(identity: package.identity)
                 }
-                sources.append((package, file, PackageQueue.shared.patched[package]))
+                sources.append((package, file))
             }
             let install = try await Self.stage(sources, at: workingLocation.appendingPathComponent(plan.id.uuidString))
             // checked again after the await: staging takes a while
@@ -117,7 +116,6 @@ final class Installer {
             PackageActionReport.shared.clear()
             PackageActionReport.shared.record(
                 (error as? ResolutionFailure)?.message
-                    ?? (error as? AdaptationFailure)?.report
                     ?? String(localized: "Unable to prepare the installation. Try again.")
             )
             Dog.shared.join(self, "Cannot prepare transaction: \(error)", level: .error)
@@ -126,13 +124,13 @@ final class Installer {
     }
 
     /// Stages one local package without asking the resolver to choose or
-    /// reject anything around it. The installer still validates the archive,
-    /// adapts its architecture when supported and protects file ownership;
+    /// reject anything around it. The installer still validates the archive
+    /// and protects file ownership;
     /// package relationships are bypassed and maintainer-script failures are
     /// tolerated by the resulting transaction.
     func createRecoveryOperationPayload(package: Package) async -> OperationPayload? {
         guard package.localFileURL != nil,
-              package.supports(anyOf: AptEnvironment.current.installableArchitectures)
+              package.isSupportedOnDevice
         else {
             PackageActionReport.shared.clear()
             PackageActionReport.shared.record(
@@ -191,42 +189,17 @@ final class Installer {
 
     @concurrent
     private nonisolated static func stage(
-        _ sources: [(Package, URL, PackageQueue.PatchedPackage?)],
+        _ sources: [(Package, URL)],
         at location: URL
     ) async throws -> [InstallerJob.Transaction.Item] {
         try reset(location)
         var result: [InstallerJob.Transaction.Item] = []
-        for (package, source, patched) in sources {
+        for (package, source) in sources {
             let destination = location.appendingPathComponent(package.identity + ".deb")
             try FileManager.default.copyItem(at: source, to: destination)
             let digest = try package.validateArchive(at: destination)
             let prepared = location.appendingPathComponent(package.identity + ".contents")
-            var manifestDigest: String
-            if let patched {
-                // Patch prepared and adapted this file already: its tree is
-                // what installs, and the helper checks it against the digest.
-                // A copy (a clone, on APFS), so the queue pruning its trees
-                // cannot take this one from under the helper
-                try FileManager.default.copyItem(at: patched.directory, to: prepared)
-                manifestDigest = patched.manifestDigest
-            } else {
-                manifestDigest = try ArchiveStream.prepareDebianPackage(at: destination, in: prepared)
-                // a package built for another bootstrap that Patch never saw
-                // (Try Again's re-solved queue) is rewritten here, as mobile,
-                // before the helper hears of it; the adapter's failure is
-                // this attempt's reason and no transaction starts
-                if let adapted = try PackageAdapters.installed.adapt(
-                    preparedPackageAt: prepared,
-                    on: PackagedArchitecture.architecture
-                ) {
-                    Dog.shared.join(
-                        "Installer",
-                        "adapted \(package.identity) for \(PackagedArchitecture.architecture)",
-                        level: .info
-                    )
-                    manifestDigest = adapted
-                }
-            }
+            let manifestDigest = try ArchiveStream.prepareDebianPackage(at: destination, in: prepared)
             result.append(.init(
                 identity: package.identity,
                 path: destination.path,

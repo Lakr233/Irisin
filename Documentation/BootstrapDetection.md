@@ -59,9 +59,9 @@ These are Debian package conventions, not an arm64/arm64e CPU probe.
 
 ## Installation contract and verification
 
-Irisin ships native packages for both supported bootstraps. Its compatibility
-adapter explicitly refuses to convert Irisin itself. A converted copy with
-a mismatching Info.plist stamp cannot start the engines, enter the main
+Irisin ships native packages for both supported bootstraps, and converts
+no package for another. A copy converted by an outside patcher, with a
+mismatching Info.plist stamp, cannot start the engines, enter the main
 interface, refresh packages, or process incoming links and imports.
 The stamp is a compatibility contract, not tamper-proof attestation:
 deliberately rewriting or removing it is outside this check's guarantee.
@@ -69,6 +69,4 @@ deliberately rewriting or removing it is outside this check's guarantee.
 `PackagedArchitectureTests` covers a bundle path inside a roothide root and
 the names that only look like one, relocated rootless paths, the rootfs API
 without a symlink, roothide with a compatibility alias, both directions of
-package mismatch, and matching/unpackaged builds. `PackageAdaptersTests`
-checks that refusing Irisin leaves the prepared manifest unchanged and
-still permits the native package.
+package mismatch, and matching/unpackaged builds.

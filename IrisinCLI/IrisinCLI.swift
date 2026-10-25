@@ -53,9 +53,8 @@ enum Session {
     static func candidate(_ name: String, in index: PackageIndex) -> Package? {
         let parts = name.split(separator: "=", maxSplits: 1).map(String.init)
         let identity = parts[0].lowercased()
-        let accepted = AptEnvironment.current.installableArchitectures
         let device = AptEnvironment.current.deviceArchitecture
-        let records = index.obtainPackageSummary(with: identity).values.compactMap { $0.versions(supportingAnyOf: accepted) }
+        let records = index.obtainPackageSummary(with: identity).values.compactMap { $0.versions(supportingAnyOf: [device]) }
         if parts.count == 2 {
             return records.lazy.compactMap { record in
                 record.payload[parts[1]].map { Package(identity: identity, payload: [parts[1]: $0], repoRef: record.repoRef) }

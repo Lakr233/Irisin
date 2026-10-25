@@ -28,7 +28,7 @@
 <div class="page"><main>
 
 <header class="article-cover">
-	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 3 of 8</span></p>
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 3 of 7</span></p>
 	<h1 class="page-title" lang="en">Finding and Installing Packages</h1>
 	<div class="cover-divider"></div>
 </header>
@@ -64,7 +64,8 @@
 		<tr><th scope="row"><span class="ui">Unsupported</span></th><td data-label="When You See It">The package is not built for this device.</td><td data-label="What a Tap Does">Queues nothing, and explains why.</td></tr>
 	</tbody>
 </table></div>
-<p>The explanation behind <span class="ui">Unsupported</span> is titled <span class="ui">Unsupported Architecture</span> and reads, for example, <span class="ui" data-key="This package is built for %@. This device uses %@. Choose a compatible package.">This package is built for iphoneos-arm64. This device uses iphoneos-arm64e. Choose a compatible package.</span> On roothide, a rootless package is not unsupported: see <a href="../compatibility-mode/">Compatibility Mode</a>.</p>
+<p>The explanation behind <span class="ui">Unsupported</span> is titled <span class="ui">Unsupported Architecture</span> and reads, for example, <span class="ui" data-key="This package is built for %@. This device uses %@. Choose a compatible package, or use Apelin to rebuild this one for this device.">This package is built for iphoneos-arm64. This device uses iphoneos-arm64e. Choose a compatible package, or use Apelin to rebuild this one for this device.</span></p>
+<p>Irisin lists only packages built for your device's architecture, or for every architecture (<code>all</code>). A package built for the other bootstrap is not listed at all. You meet <span class="ui">Unsupported</span> only on a <code>.deb</code> you opened yourself, or on a package already installed for the other bootstrap. Irisin does not convert packages. <span class="editorial-mark">Apelin can rebuild such a package</span> for this device.</p>
 <figure class="sk sk-shot"><div class="sk-paper">
 	<img class="shot-light" src="../assets/shots/en/packages-page-light.png" alt="A package's page: artwork, then a banner with the icon, name, version and size and an INSTALL button, then the description." width="1206" height="2622" loading="lazy" decoding="async">
 	<img class="shot-dark" src="../assets/shots/en/packages-page-dark.png" alt="A package's page: artwork, then a banner with the icon, name, version and size and an INSTALL button, then the description." width="1206" height="2622" loading="lazy" decoding="async">
@@ -105,12 +106,8 @@
 </ul>
 <p><span class="editorial-mark">While a package is in the queue, none of <span class="ui">Install</span>, <span class="ui">Update</span>, <span class="ui">Reinstall</span>, <span class="ui">Downgrade</span>, <span class="ui">Remove</span>, or <span class="ui">Direct Install</span> is offered.</span> Choose <span class="ui">Remove from Queue</span> first, then ask again.</p>
 <h3>When Irisin Recommends Another</h3>
-<p>Before the sheet opens for an install request, Irisin compares what your other repositories offer for the same package, and may stop you with one of two alerts.</p>
-<ul>
-	<li><span class="ui">Newer Version Available</span>: another repository has a newer version. The alert reads, for example, <span class="ui" data-key="You selected version %@. %@ offers version %@.">You selected version 1.0. Procursus offers version 1.1.</span> It never appears for a package whose updates you blocked.</li>
-	<li><span class="ui">Better Package Available</span>: on roothide, the version you chose would install in compatibility mode, and another repository has one built for this system.</li>
-</ul>
-<p>Both alerts have three buttons. <span class="ui">Select Recommended</span> opens the recommended package's page and <span class="editorial-mark">queues nothing; ask again there</span>. The second button goes ahead with what you chose, and is named after your request: <span class="ui">Install Anyway</span>, <span class="ui">Update Anyway</span>, <span class="ui">Downgrade Anyway</span>, <span class="ui">Reinstall Anyway</span>, or <span class="ui">Replace Anyway</span>. <span class="ui">Cancel</span> drops the request.</p>
+<p>Before the sheet opens for an install request, Irisin compares what your other repositories offer for the same package. When another repository has a newer version, it stops you with <span class="ui">Newer Version Available</span>. The alert reads, for example, <span class="ui" data-key="You selected version %@. %@ offers version %@.">You selected version 1.0. Procursus offers version 1.1.</span> It never appears for a package whose updates you blocked.</p>
+<p>The alert has three buttons. <span class="ui">Select Recommended</span> opens the recommended package's page and <span class="editorial-mark">queues nothing; ask again there</span>. The second button goes ahead with what you chose, and is named after your request: <span class="ui">Install Anyway</span>, <span class="ui">Update Anyway</span>, <span class="ui">Downgrade Anyway</span>, <span class="ui">Reinstall Anyway</span>, or <span class="ui">Replace Anyway</span>. <span class="ui">Cancel</span> drops the request.</p>
 <p>When a request names a package with no version that can be installed, Irisin stops with <span class="ui">Unable to Load Package</span> and the message <span class="ui">This package could not be loaded. Try a different repository.</span></p>
 </section>
 
@@ -144,9 +141,9 @@
 	<li><strong><span class="ui">Install</span></strong><span>on the package's page</span></li>
 	<li><strong><span class="ui">Confirm</span></strong><span>the <span class="ui">Queue Changes</span> sheet</span></li>
 	<li><strong><span class="ui">Queue</span></strong><span>the tab or floating bar</span></li>
-	<li><strong><span class="ui">Execute</span></strong><span>the queue's one button</span><span class="sk-if">or <span class="ui">Patch</span> first</span></li>
+	<li><strong><span class="ui">Execute</span></strong><span>the queue's one button</span></li>
 	<li class="sk-goal"><strong><span class="ui">Installing</span></strong><span>the operation page</span><em class="sk-ok"><span class="ui">Completed</span></em></li>
-</ol><p class="sk-foot">The downloads start at <span class="ui">Confirm</span> and run while the queue waits.</p></div><figcaption>From a package's page to a finished install. On roothide, the queue's one button reads <span class="ui">Patch</span> instead of <span class="ui">Execute</span> while a package in it still has to be converted.</figcaption></figure>
+</ol><p class="sk-foot">The downloads start at <span class="ui">Confirm</span> and run while the queue waits.</p></div><figcaption>From a package's page to a finished install.</figcaption></figure>
 <h3>The Queue Changes Sheet</h3>
 <p>The sheet is titled <span class="ui">Queue Changes</span>. It lists what your request would do, in groups, in this order: <span class="ui">Install</span>, <span class="ui">Update</span>, <span class="ui">Downgrade</span>, <span class="ui">Remove</span>, <span class="ui">Reinstall</span>. Within each kind, what you asked for comes first. What the plan brings along follows in a group of its own, such as <span class="ui" data-key="%@ (Dependencies)">Install (Dependencies)</span>.</p>
 <p>A row shows the package's name and, at its right edge, the version: <code>1.1</code> for an install or a reinstall, <code>1.0 → 1.1</code> for an update or a downgrade, and the installed version for a removal. Under the name it says how much is left to download (<span class="ui" data-key="%@ to download">2.1 MB to download</span>, left out when the file is already on your device), how much room it takes (<span class="ui" data-key="%@ on disk">6.4 MB on disk</span>), and, for a package you did not ask for, why it is there: <span class="ui" data-key="Required by %@">Required by OpenSSH</span>. A removal's name is red and struck through. A new install's name is green.</p>
@@ -159,7 +156,6 @@
 <p>When the change adds anything, the sheet's footer says <span class="ui">After you confirm, the queue prepares everything the install needs. Finish installing from the Queue page.</span> Tap <span class="ui">Confirm</span> to add exactly what the sheet shows. The sheet closes, a banner reports <span class="ui">Added to Queue</span>, and you stay on the page you were on. <span class="ui">Confirm</span> does not open the queue and <span class="editorial-mark">installs nothing</span>. To leave without changing anything, pull the sheet down. It has no cancel button.</p>
 <p><span class="ui">Open Queue</span> takes the place of <span class="ui">Confirm</span> when the change alters nothing. The sheet then holds one row, <span class="ui">Already in the queue</span> or <span class="ui">No changes</span>.</p>
 <p>If the change cannot be planned, there is no list. The sheet is a report titled <span class="ui">Unable to Prepare Installation</span>. See <a href="../troubleshooting/#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a>.</p>
-<p>On roothide, when the change installs a rootless package, <span class="ui">Confirm</span> first asks under the title <span class="ui">Compatibility Mode</span>, with <span class="ui">Install Anyway</span> and <span class="ui">Cancel</span>. The sheet's footer warns that the queue may change when the package is patched. See <a href="../compatibility-mode/#the-warning">The Warning</a>.</p>
 <h3>The Floating Bar</h3>
 <p>While there is a queue, a bar reading <span class="ui" data-key="Packages in Queue: %lld">Packages in Queue: 3</span> floats at the bottom of every page except the queue's own, clear of the tab bar. The number counts the packages the queue installs plus the ones it removes. Tap the bar to open the queue. The <span class="ui">Queue</span> tab is there while there is a queue, and carries the same number as its badge.</p>
 <h3>The Queue Page</h3>
@@ -173,15 +169,14 @@
 <p>A red row at the top of the list means the packages on your device changed, so the queue can no longer be planned as it stands. The row gives the reason. The action button is disabled until you change the queue, by taking a package out of it or clearing it.</p>
 </section>
 
-<section class="chapter" id="patch-and-execute"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="31" cy="33" r="23"/><path d="M25 21L45 33L24 45Z"/><path class="icon-detail" d="M53 9L57 5M57 17L62 16"/></svg><span class="section-title-mark">Patch and Execute</span></h2>
+<section class="chapter" id="execute"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><circle cx="31" cy="33" r="23"/><path d="M25 21L45 33L24 45Z"/><path class="icon-detail" d="M53 9L57 5M57 17L62 16"/></svg><span class="section-title-mark">Execute</span></h2>
 <p>The Queue page has one action button in its bar, and <span class="editorial-mark">its label tells you what is next</span>.</p>
 <ul>
 	<li><span class="ui">Execute</span> runs the queue.</li>
-	<li><span class="ui">Patch</span> appears in its place, on roothide, while a rootless package in the queue still has to be converted.</li>
+	<li><span class="ui">Queue Install</span> appears in its place while files are still downloading. Tap it and the queue runs when the last file arrives. The button then reads <span class="ui">Cancel Auto Install</span>, in red, which takes that back.</li>
 	<li><span class="ui">Retry</span> appears after a download failed or the queue could not be prepared.</li>
 </ul>
-<p>You do not have to wait for the downloads. Tap the button before they finish and it runs when the last file arrives. A spinner takes the button's place while Irisin works.</p>
-<p><span class="ui">Patch</span> converts the packages and may change the queue. When it does, an alert titled <span class="ui">Queue Changed</span> says what left and what joined, and the button reads <span class="ui">Execute</span> from then on. See <a href="../compatibility-mode/#patch-before-execute">Patch Before Execute</a>.</p>
+<p>You do not have to wait for the downloads. A spinner takes the button's place while Irisin works.</p>
 <p><span class="ui">Execute</span> opens the operation page, titled <span class="ui">Installing</span>, full screen on iPhone. When the title becomes <span class="ui">Completed</span>, the queue is cleared. The floating bar goes away, and so does the <span class="ui">Queue</span> tab once you leave it. After a failure the queue stays, planned again against what the run left on your device, so you can run what remains. For a run that ends on <span class="ui">Failed</span>, see <a href="../troubleshooting/#read-the-operation-page">Read the Operation Page</a>.</p>
 <p>Three messages can stop the button before anything runs.</p>
 <ul>
@@ -241,12 +236,11 @@
 			<li><a href="#choose-version" data-chapter-link="choose-version">Choose Version</a></li>
 			<li><a href="#download-archive" data-chapter-link="download-archive">Download Archive</a></li>
 			<li><a href="#the-queue" data-chapter-link="the-queue">The Queue</a></li>
-			<li><a href="#patch-and-execute" data-chapter-link="patch-and-execute">Patch and Execute</a></li>
+			<li><a href="#execute" data-chapter-link="execute">Execute</a></li>
 			<li><a href="#a-queued-packages-details" data-chapter-link="a-queued-packages-details">A Queued Package's Details</a></li>
 			<li><a href="#the-installed-page" data-chapter-link="the-installed-page">The Installed Page</a></li>
 		</ol></li>
 		<li><a href="../updates/">Updates</a></li>
-		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
 		<li><a href="../translation/">Translation</a></li>
 		<li><a href="../settings/">Settings and Exports</a></li>
 		<li><a href="../troubleshooting/">When Something Fails</a></li>

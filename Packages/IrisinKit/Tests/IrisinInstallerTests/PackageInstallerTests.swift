@@ -281,8 +281,8 @@ struct PackageInstallerTests {
         #expect(fixture.markings() == nil)
     }
 
-    /// A package that names `/var` — every rootless tweak an adapter
-    /// rewrites does, for the mirror under it — is removed without
+    /// A package that names `/var` — every rootless tweak converted for
+    /// roothide does, for the mirror under it — is removed without
     /// unlinking the jbroot's own `var`, a link to the container that holds
     /// the bootstrap's state. The path stays in the package's list, the way
     /// dpkg keeps a directory it could not remove.

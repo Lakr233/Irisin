@@ -522,8 +522,8 @@ final class PackageFilesystem {
         // `install` leaves such a link alone where a package lists the
         // directory (above, and `keepsDirectory`), so removal leaves it too
         // and keeps it in the list. dpkg unlinks it, and a roothide package
-        // that names `/var` — every package an adapter rewrites does, for
-        // the mirror under it — would take the bootstrap with it the moment
+        // that names `/var` — every package converted from rootless does,
+        // for the mirror under it — would take the bootstrap with it the moment
         // no other installed package happens to name `/var` as well. What
         // this costs is a link a package shipped itself staying behind.
         if info.st_mode & S_IFMT == S_IFLNK, isDirectory(url) {

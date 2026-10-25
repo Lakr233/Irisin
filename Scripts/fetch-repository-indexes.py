@@ -10,9 +10,8 @@ Irisin's refresh asks a roothide device's repositories for them, for
     swift run -c release ResolverProbe golden ../../build/resolver-catalogue plans.json [--pool]
 
 A flat repository is asked for <url>/Packages, a suite for
-<url>/dists/<suite>/<component>/binary-<arch>/Packages: iphoneos-arm64e and
-iphoneos-arm64 read together (the rootless adapter makes the second
-installable), then each alone, then iphoneos-arm, less what the Release says
+<url>/dists/<suite>/<component>/binary-<arch>/Packages: iphoneos-arm64e, then
+iphoneos-arm64, then iphoneos-arm, one at a time, less what the Release says
 the suite does not have. Each entry is tried under every compression the app
 knows, first that answers wins. The output directory gets indexes/<n>.txt,
 decompressed and joined by a blank line as the refresh joins a suite's, and
@@ -31,7 +30,6 @@ import sys
 import urllib.request
 
 PROBE = ["iphoneos-arm64e", "iphoneos-arm64", "iphoneos-arm"]
-INSTALLABLE = {"iphoneos-arm64e", "iphoneos-arm64"}
 SUFFIXES = ["bz2", "", "xz", "gz", "zst", "lzma"]
 # what the app sends (DeviceIdentity); some repositories answer nothing without
 HEADERS = {
@@ -105,10 +103,7 @@ def fetch(index, source):
         release = get(directory + "/Release")
         offered = architectures_listed(release.decode("utf-8", "replace")) if release else []
         chain = [a for a in PROBE if a in offered] or PROBE
-        together = [a for a in chain if a in INSTALLABLE]
-        groups = ([together] if len(together) > 1 else []) + [[a] for a in together]
-        groups += [[a] for a in chain if a not in INSTALLABLE]
-        entries = [[f"{directory}/{c}/binary-{a}/Packages" for a in group for c in components] for group in groups]
+        entries = [[f"{directory}/{c}/binary-{a}/Packages" for c in components] for a in chain]
     for bases in entries:
         read = read_entry(bases)
         if read:

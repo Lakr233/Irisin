@@ -109,7 +109,6 @@ public extension PackageCenter {
     nonisolated func newestPackage(of list: [Package], preferring preferred: URL? = nil) -> Package? {
         guard let first = list.first else { return nil }
         let device = AptEnvironment.current.deviceArchitecture
-        let installable = AptEnvironment.current.installableArchitectures
         let preferredRepo = preferred?.absoluteString
         typealias Candidate = (package: Package, version: String, exact: Bool, preferred: Bool, repo: String)
         // `architectures` splits the metadata field afresh on every read, so
@@ -120,7 +119,7 @@ public extension PackageCenter {
                   let version = trimmed.latestVersion
             else { return nil }
             let architectures = trimmed.architectures
-            guard architectures.contains(where: { $0 == "all" || installable.contains($0) }) else { return nil }
+            guard architectures.contains(where: { $0 == "all" || $0 == device }) else { return nil }
             let repo = trimmed.repoRef?.absoluteString ?? ""
             return (trimmed, version, architectures.contains(device), repo == preferredRepo, repo)
         }

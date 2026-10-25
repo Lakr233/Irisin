@@ -25,10 +25,6 @@ public struct PackageIndex: Sendable {
     /// identities the user asked never to be offered an update for
     public internal(set) var blockedUpdateTable: [String] = []
 
-    /// whether a newer version an adapter would have to rewrite counts as
-    /// an update; off, a converted package stays at the version it has
-    public internal(set) var offersAdaptedUpdates = false
-
     // MARK: - QUERIES
 
     /// grab every package identity, useful for search
@@ -169,8 +165,7 @@ public struct PackageIndex: Sendable {
     /// dpkg by hand) has no repository to keep to, so every repository's
     /// newer version is on offer, as apt would have it; installing one makes
     /// that repository the origin. A version built for another bootstrap is
-    /// an update only while `offersAdaptedUpdates` says so: what converted
-    /// once and works may not convert as well the next time.
+    /// never an update.
     /// - Parameters:
     ///   - identity: identity in string
     ///   - current: current version
@@ -186,25 +181,11 @@ public struct PackageIndex: Sendable {
     }
 
     /// What of a repository's record is an update over `current`, nil when
-    /// nothing is. Judged on the versions that may be one, not on the
-    /// newest: a repository can offer a version built for this bootstrap
-    /// under a newer one an adapter would have to rewrite, which is an
-    /// update only with `offersAdaptedUpdates`, and then only once the
-    /// native ones are behind.
+    /// nothing is. Judged on the versions built for this bootstrap, not on
+    /// the newest: a repository can offer one under a newer version built
+    /// for another.
     public func updateOffer(in record: Package, over current: String) -> Package? {
-        record.update(
-            over: current,
-            device: AptEnvironment.current.deviceArchitecture,
-            accepted: updateArchitectures
-        )
-    }
-
-    /// What a version may be built for and be an update: the bootstrap's
-    /// own, and what an adapter rewrites only with `offersAdaptedUpdates`.
-    public var updateArchitectures: Set<String> {
-        offersAdaptedUpdates
-            ? AptEnvironment.current.installableArchitectures
-            : [AptEnvironment.current.deviceArchitecture]
+        record.update(over: current, device: AptEnvironment.current.deviceArchitecture)
     }
 
     /// search with virtual package identity that provided by package in return value

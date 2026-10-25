@@ -55,35 +55,19 @@ public struct AptEnvironment: Sendable {
 
     private let readDeviceArchitecture: @Sendable () -> String
 
-    /// Every architecture a package may carry and still install here:
-    /// `deviceArchitecture` plus those the embedder's adapters rewrite into
-    /// it. `all` is always accepted and never listed. Decides what the
-    /// resolver may pick and which flavour of a package the catalogue
-    /// prefers; what a suite repository is asked for is `indexArchitectures`.
-    public var installableArchitectures: Set<String> {
-        readInstallableArchitectures()
-    }
-
-    private let readInstallableArchitectures: @Sendable () -> Set<String>
-
     /// The index directories a suite repository is probed for, in order:
     /// `deviceArchitecture` first, then the other bootstraps the embedder
-    /// knows. Those in `installableArchitectures` are read together as one
-    /// catalogue; the rest are reached one by one only when nothing before
-    /// them answered, so a suite with nothing that installs here still
-    /// lists what it has, and each package says whether it installs here
-    /// (`Repository.packageIndexUrls`). An installable architecture the
-    /// embedder leaves out of its fallbacks has no directory read.
+    /// knows. The rest are reached one by one only when nothing before
+    /// them answered: a suite may keep this bootstrap's packages under
+    /// another directory's name, as Procursus keeps its rootless ones in
+    /// `binary-iphoneos-arm` (`Repository.packageIndexUrls`). What is read
+    /// there is held to `deviceArchitecture` package by package.
     public var indexArchitectures: [String] {
         let device = deviceArchitecture
         return [device] + readIndexFallbacks().filter { $0 != device }
     }
 
     private let readIndexFallbacks: @Sendable () -> [String]
-
-    /// The embedder's adapters' preview of a package they rewrite; nil when
-    /// nothing is adapted. See `ResolutionSnapshot`.
-    public let adaptedManifestPreview: ResolutionSnapshot.ManifestPreview?
 
     public let storage: any AptStorage
     public let logger: any AptLogger
@@ -93,9 +77,7 @@ public struct AptEnvironment: Sendable {
         dpkgStatusLocation: String,
         aptExtendedStatesLocation: String? = nil,
         deviceArchitecture: @escaping @Sendable () -> String,
-        installableArchitectures: (@Sendable () -> Set<String>)? = nil,
         indexFallbacks: @escaping @Sendable () -> [String] = { [] },
-        adaptedManifestPreview: ResolutionSnapshot.ManifestPreview? = nil,
         storage: any AptStorage,
         logger: any AptLogger
     ) {
@@ -103,9 +85,7 @@ public struct AptEnvironment: Sendable {
         self.dpkgStatusLocation = dpkgStatusLocation
         self.aptExtendedStatesLocation = aptExtendedStatesLocation
         readDeviceArchitecture = deviceArchitecture
-        readInstallableArchitectures = installableArchitectures ?? { [deviceArchitecture()] }
         readIndexFallbacks = indexFallbacks
-        self.adaptedManifestPreview = adaptedManifestPreview
         self.storage = storage
         self.logger = logger
     }

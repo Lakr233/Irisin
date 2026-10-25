@@ -178,45 +178,19 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   whatever the run did, a `daemonNotLoaded` warning and never a failure.
   The app has the same helper as itself, so the first update into this
   rule still runs under the old one.
-- **A package built for another bootstrap is rewritten in the app, never
-  by the helper.** `IrisinAdapter` runs as `mobile` inside
-  `PackageQueue.patch` (and inside `Installer.stage` for a package Patch
-  never saw), after `prepareDebianPackage` and before the job is sent: it rewrites the prepared tree and hands back the new manifest
-  digest, and the helper installs what it is given. `PackageAdapters.installed`
-  is the switch: an adapter listed there makes its `source` architecture
-  installable (`AptEnvironment.installableArchitectures`); there is no
-  setting. One whose conversion is not written yet stays listed and throws
-  `AdaptationFailure.unavailable` at Patch, typed, spelled by the app.
-  `RootlessToRoothide` is roothide's own RootHidePatcher (`patch.sh`,
-  Compat Layer) in Swift, nothing spawned: tweaks, apps, programs, daemons
-  and hard links converted as the script converts them, and what it would
-  make otherwise (files outside `/var/jb`, conffiles, a list sed would
-  garble) refused with a typed failure, never installed as built. Its output
-  must equal the script's, blob for blob, save the one difference below
-  (`AdapterConformanceTests`, fed by `Scripts/adapter-reference.sh`, writes
-  it down in `compare`); Mach-O is read through MachOKit, and
-  ldid (AGPL) is matched byte for byte, never linked or ported, down to the
-  way its libplist reads the entitlements it merges. A property list's
-  paths are respelled on the parsed list, never by editing its text. It adds
-  the `rootless-compat` Pre-Depends to a package with a Mach-O in it and
-  never adds a repository. A package with none (a theme) gets no
-  Pre-Depends, the one place it parts from the script on purpose. What an
-  adapter adds to a package's relations is the adapter's to say, never a
-  string the resolver is handed: `resolveAdaptedPackageManifestPreview`
-  answers with the control paragraph it expects to leave, from the
-  catalogue's alone, and the resolver solves an adapted package as that
-  says before anything downloads. The file may show otherwise, so the
-  queue page offers Patch in place of Execute while the plan installs an
-  adapted package that has not been through it: `PackageQueue.patch` waits
-  for the files, adapts each once, keeps the tree for staging (which hands
-  it to the helper as it is and adapts only what Patch never saw) and
-  solves again with the control paragraphs `adapt` wrote, so
-  rootless-compat and patchloader leave a queue of themes before it runs.
-  A queue that is not what it was says so in an alert, and the button is
-  Execute from then on. On the same file the plan and the install never
-  disagree, since the paragraph solved with is the one installed. The queue
-  asks before an adapted package joins it (Compatibility Mode), and its
-  sheet says the queue may change at Patch.
+- **Only what the bootstrap installs is listed, and nothing is converted.**
+  The catalogue keeps a package's builds for the device's architecture and
+  for `all` (dpkg's architecture-independent packages: certificates,
+  keyrings, themes, metapackages) and drops every other build as the index
+  is read (`readPackageIndex`); a package with no build left is not listed.
+  A suite's directories are still probed past the device's own
+  (`BootstrapArchitecture.probeOrder`), since a directory's name is not the
+  architecture of what it holds (Procursus keeps its rootless packages in
+  `binary-iphoneos-arm`), and an index whose every entry is for another
+  bootstrap is an empty catalogue, not a failed refresh. There is no
+  adapter, no Patch step and no compatibility setting: 5.0 removed them,
+  with MachOKit. A `.deb` opened by hand or a record dpkg already has that
+  is built for another bootstrap says Unsupported and does not install.
   While files download the queue's button reads Queue Install, and once
   tapped Cancel Auto Install in the delete colour, which takes it back. On
   a system whose status has no `dpkg` the tap asks first
@@ -224,12 +198,6 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   Install Anyway, which reads the files' `control.tar` member names
   (`ArchiveStream.debianControlMembers`) and names the packages that run
   maintainer scripts before anything is staged, or Cancel.
-  A newer version an adapter would have to rewrite is not an update until
-  the user turns on Compatibility Updates (Settings, off, confirmed, and no
-  row where nothing is adapted): `PackageCenter.offersAdaptedUpdates` keeps
-  it out of the Updates page, the badge, the dashboard and the banner, and
-  the resolver locks it out of an update of everything without reporting
-  it held back. Asked for by name it installs as ever.
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by
   `package-deb.sh` per flavor; a build that was never packaged uses the
@@ -238,7 +206,7 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   that key with the independently detected bootstrap, alerts on a mismatch
   and does not open the interface.
   Install the matching official package; Irisin itself must not be converted
-  with a patcher, including its own compatibility adapter.
+  with a patcher.
 - **Translation is the system's engine, asked privately, and the json is
   what gets translated.** `SystemTranslator` speaks `_LTTranslator` (the
   same class from iOS 16 to 26; the public `TranslationSession` needs iOS 18
@@ -421,8 +389,8 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   no refresh or operation running) and kept on the main actor; a tap
   solves only its own jobs against it, a tenth of the time. A pool
   answers only a snapshot of the same database at the same catalogue
-  revision, with the same installed list, origins, architectures and
-  adapted paragraphs (`serves`), and a request for a package it does not
+  revision, with the same installed list, origins and architecture
+  (`serves`), and a request for a package it does not
   hold gets a pool of its own: anything else is read again, so a pool
   kept too long costs time, never a plan. It is the one place the
   catalogue stays in memory between solves, and a memory warning drops
@@ -472,12 +440,11 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `OperationPackages`), queue resolution, notification bindings, the path
   list and the depiction's contact parsing.
 - `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`,
-  `ExecutableAdmission`, `ExternalTransaction`),
+  `ExecutableAdmission`, `ExternalTransaction`, `BootstrapArchitecture`),
   `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),
   `IrisinPreparation` (`DebianPreparation`, a `.deb` into a prepared tree,
   the app's and the helper's), `IrisinClient` (`DaemonLink`,
-  `JobTranscript`), `IrisinAdapter` (`PackageAdapter`, `PackageAdapters`,
-  `BootstrapArchitecture`), `IrisinVendor` (a paid repository's Keychain
+  `JobTranscript`), `IrisinVendor` (a paid repository's Keychain
   names and every vendor request, the app's and `irisin-cli`'s alike, the
   stored `secert` spelling included), each with `swift test`.
 - `Packages/IrisinExternalClient/` — the external clients' library and its C

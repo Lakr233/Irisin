@@ -28,7 +28,7 @@
 <div class="page"><main>
 
 <header class="article-cover">
-	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 8 of 8</span></p>
+	<p class="cover-trail"><a href="../">Manual</a><span>Chapter 7 of 7</span></p>
 	<h1 class="page-title" lang="en">When Something Fails</h1>
 	<div class="cover-divider"></div>
 </header>
@@ -53,10 +53,9 @@
 		<tr><th scope="row">The operation page's title changes to <span class="ui">Failed</span></th><td data-label="What It Means">The run stopped at one package, and the packages before it stay changed.</td><td data-label="Where to Go"><a href="#read-the-operation-page">Read the Operation Page</a>, then <a href="#try-again">Try Again</a></td></tr>
 		<tr><th scope="row">A sheet is titled <span class="ui">Unable to Prepare Installation</span></th><td data-label="What It Means">Irisin could not plan the change, and nothing ran.</td><td data-label="Where to Go"><a href="#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a></td></tr>
 		<tr><th scope="row"><span class="ui">Unsupported Architecture</span> appears when Irisin opens, and the interface never loads</th><td data-label="What It Means">The Irisin package you installed is built for the other bootstrap.</td><td data-label="Where to Go"><a href="../installing/#if-it-says-unsupported-architecture">If It Says Unsupported Architecture</a></td></tr>
-		<tr><th scope="row">A package's button reads <span class="ui">Unsupported</span></th><td data-label="What It Means">The package is not built for this device.</td><td data-label="Where to Go"><a href="../packages/#a-packages-page">A Package's Page</a>, and <a href="../compatibility-mode/#what-it-is">Compatibility Mode</a> for rootless packages on roothide</td></tr>
-		<tr><th scope="row">A message mentions compatibility mode, or <span class="ui">Patch</span> fails</th><td data-label="What It Means">The package was refused before anything reached the installer, so nothing on the device changed.</td><td data-label="Where to Go"><a href="../compatibility-mode/#what-is-refused">What Is Refused</a></td></tr>
+		<tr><th scope="row">A package's button reads <span class="ui">Unsupported</span></th><td data-label="What It Means">The package is built for the other bootstrap. Irisin does not convert it; Apelin can rebuild it for this device.</td><td data-label="Where to Go"><a href="../packages/#a-packages-page">A Package's Page</a></td></tr>
 		<tr><th scope="row">A package's menu has no <span class="ui">Install</span>, <span class="ui">Update</span>, or <span class="ui">Remove</span></th><td data-label="What It Means">The menu offers only what fits the package's state, and none of the three while the package is in the queue.</td><td data-label="Where to Go"><a href="../packages/#the-package-menu">The Package Menu</a></td></tr>
-		<tr><th scope="row">An update does not show up</th><td data-label="What It Means">It comes from another repository, it is blocked, or it would have to be converted.</td><td data-label="Where to Go"><a href="../updates/#when-an-update-is-missing">When an Update Is Missing</a></td></tr>
+		<tr><th scope="row">An update does not show up</th><td data-label="What It Means">It comes from another repository, or it is blocked.</td><td data-label="Where to Go"><a href="../updates/#when-an-update-is-missing">When an Update Is Missing</a></td></tr>
 		<tr><th scope="row">The wrong package or version got installed</th><td data-label="What It Means">A package you did not want is a removal; a version you did not want is a downgrade.</td><td data-label="Where to Go"><a href="../packages/#the-installed-page">The Installed Page</a>, then <a href="../packages/#choose-version">Choose Version</a></td></tr>
 		<tr><th scope="row">A package cannot be removed</th><td data-label="What It Means">The system requires it, and Irisin refuses until you allow it.</td><td data-label="Where to Go"><a href="#power-operations">Power Operations</a></td></tr>
 		<tr><th scope="row">An installed app's icon is missing from the Home Screen</th><td data-label="What It Means">The packages changed, and the Home Screen was not updated with them; <span class="ui">Rebuild Icons</span> updates it.</td><td data-label="Where to Go"><a href="../settings/#system">System</a></td></tr>
@@ -196,7 +195,7 @@
 	<li>Tap <span class="ui">Install Anyway</span> or <span class="ui">Remove</span>, both in red, or <span class="ui">Cancel</span>.</li>
 	<li>Wait while <span class="ui">Preparing…</span> is shown. The operation page then opens under the red <span class="ui">Recovery Mode</span> banner, which stays for the whole run.</li>
 </ol>
-<p>The package's file is still verified and, on roothide, still converted. Only the dependency checks are skipped. <span class="ui">Try Again</span> on a failed recovery run retries the same package in Recovery Mode, not the queue. <span class="ui">Ignore Script Errors and Retry</span> is not offered there, since a recovery run already ignores them.</p>
+<p>The package's file is still verified. Only the dependency checks are skipped. <span class="ui">Try Again</span> on a failed recovery run retries the same package in Recovery Mode, not the queue. <span class="ui">Ignore Script Errors and Retry</span> is not offered there, since a recovery run already ignores them.</p>
 <p>Two refusals are possible. <span class="ui">This package cannot be installed in Recovery Mode on this system.</span> means the package has no file on the device, or is built for an architecture this device cannot install. <span class="ui">Unable to prepare the installation. Try again.</span> means the preparation failed and left no reason.</p>
 </section>
 
@@ -263,7 +262,7 @@
 </section>
 
 <nav class="manual-pager" aria-label="Chapters">
-	<a class="pager-prev" rel="prev" href="../settings/"><small>Previous · Chapter 7</small><strong>Settings and Exports</strong></a>
+	<a class="pager-prev" rel="prev" href="../settings/"><small>Previous · Chapter 6</small><strong>Settings and Exports</strong></a>
 </nav>
 
 <footer class="article-end"><a href="https://github.com/Lakr233/Irisin">Irisin on GitHub</a><p>With love from the OwnGoal Studio<time datetime="2026-09-20">September 20, 2026</time></p></footer>
@@ -276,7 +275,6 @@
 		<li><a href="../repositories/">Repositories</a></li>
 		<li><a href="../packages/">Finding and Installing Packages</a></li>
 		<li><a href="../updates/">Updates</a></li>
-		<li><a href="../compatibility-mode/">Compatibility Mode</a></li>
 		<li><a href="../translation/">Translation</a></li>
 		<li><a href="../settings/">Settings and Exports</a></li>
 		<li><a href="./" aria-current="page">When Something Fails</a><ol class="manual-nav-tasks">

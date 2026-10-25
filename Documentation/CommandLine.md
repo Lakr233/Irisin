@@ -32,7 +32,7 @@ from the install root and `getpwnam("mobile")`, never `HOME`, which is
 | repositories, packages, search, virtual packages | `apt.db`, opened read-only |
 | installed packages | dpkg's `status` file, read directly; the helper replaces it by `rename`, so a read never sees half of one |
 | auto-installed marks | `extended_states`, as the resolver reads it |
-| blocked updates, Compatibility Updates | the app's setting files, read |
+| blocked updates | the app's setting files, read |
 | vendor sign-in | the Keychain, read |
 
 **Root never creates or changes a file in mobile's folder.** A file root
@@ -87,10 +87,7 @@ Text is English only: it is a shell tool, as apt is.
    request headers and a signed-in vendor's download link. Nothing is cached
    and nothing is resumed; the file is checked with
    `Package.validateArchive`, as the app checks it.
-3. **Prepare.** `ArchiveStream.prepareDebianPackage`. A plan that installs
-   a package built for another bootstrap is refused before anything
-   downloads: Compatibility Mode, with its Patch that solves again, is the
-   app's, and is not repeated here.
+3. **Prepare.** `ArchiveStream.prepareDebianPackage`.
 4. **Run.** `InstallerJob.transaction` through `DaemonLink`, the same job
    the app sends, and the transcript printed as it arrives.
 5. **Tell the app.** A Darwin notification once the run ends, so a running

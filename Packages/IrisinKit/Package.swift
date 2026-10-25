@@ -9,8 +9,7 @@ import PackageDescription
 /// IrisinProtocol + IrisinInstaller, and through the installer our own
 /// icli (`IcliKit`), on iOS alone, and `IrisinPreparation`, which reads a
 /// `.deb` with the libarchive icli already brings. The app links IrisinProtocol +
-/// IrisinClient + IrisinAdapter, and calls IrisinInstaller only in
-/// the simulator. Nothing here imports UIKit and nothing
+/// IrisinClient, and calls IrisinInstaller only in the simulator. Nothing here imports UIKit and nothing
 /// third-party may reach the daemon: launchd caps it at 6 MB.
 let package = Package(
     name: "IrisinKit",
@@ -19,7 +18,6 @@ let package = Package(
         .library(name: "IrisinProtocol", targets: ["IrisinProtocol"]),
         .library(name: "IrisinInstaller", type: .static, targets: ["IrisinInstaller"]),
         .library(name: "IrisinClient", targets: ["IrisinClient"]),
-        .library(name: "IrisinAdapter", targets: ["IrisinAdapter"]),
         .library(name: "IrisinPreparation", targets: ["IrisinPreparation"]),
         .library(name: "IrisinVendor", targets: ["IrisinVendor"]),
     ],
@@ -31,17 +29,6 @@ let package = Package(
         // package, so the helper gains no second copy, and the app already
         // links it through AptRepository.
         .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.1"),
-        // Reads Mach-O for the adapter, as it does for Fila's inspector: where
-        // a load command is, how long, what it says. It writes nothing; the
-        // adapter's own code rewrites and signs. The adapter's alone.
-        .package(url: "https://github.com/p-x9/MachOKit.git", from: "0.55.0"),
-        // MachOKit's own dependency, named here only to hold it up: MachOKit
-        // takes swift-fileio from 0.13 and swift-fileio-extra from 0.2.2, and
-        // Xcode will pair swift-fileio 0.15 with extra 0.2.2, which does not
-        // build against it. 0.3.0 does. The adapter lists the product because
-        // Xcode drops the constraint of a dependency no target uses; MachOKit
-        // links it regardless. Goes when MachOKit asks for 0.3.0 itself.
-        .package(url: "https://github.com/p-x9/swift-fileio-extra.git", from: "0.3.0"),
         // The external clients' library, for the test that holds its wire to
         // IrisinProtocol's. Nothing that ships links it from here.
         .package(path: "../IrisinExternalClient"),
@@ -85,19 +72,6 @@ let package = Package(
         // there", and nothing names the module outside that condition.
         .target(name: "IrisinClient", dependencies: ["IrisinProtocol", "IrisinInstaller"]),
 
-        // Rewrites a prepared package built for one bootstrap into one for
-        // the bootstrap the app runs on, in the app, as `mobile`, before the
-        // job is sent. Linked by the app only: the helper installs what it is
-        // handed and never adapts anything.
-        .target(
-            name: "IrisinAdapter",
-            dependencies: [
-                "IrisinProtocol",
-                .product(name: "MachOKit", package: "MachOKit"),
-                .product(name: "FileIOBinary", package: "swift-fileio-extra"),
-            ]
-        ),
-
         // A paid repository's sign-in in the Keychain and the vendor's
         // endpoints, for the app and the command line alike: one spelling
         // of the Keychain names and one shape of every request, so the two
@@ -111,12 +85,6 @@ let package = Package(
         .testTarget(
             name: "IrisinExternalContractTests",
             dependencies: ["IrisinProtocol", .product(name: "IrisinExternalClient", package: "IrisinExternalClient")]
-        ),
-        .testTarget(
-            name: "IrisinAdapterTests",
-            dependencies: ["IrisinAdapter", .product(name: "MachOKit", package: "MachOKit")],
-            exclude: ["Fixtures/build.sh", "Fixtures/fixture.c"],
-            resources: [.copy("Fixtures/input"), .copy("Fixtures/expected")]
         ),
     ]
 )

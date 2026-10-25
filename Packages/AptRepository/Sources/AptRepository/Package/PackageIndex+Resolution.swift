@@ -40,10 +40,7 @@ public extension PackageIndex {
             packages: catalogue.packages,
             installed: installed,
             architecture: environment.deviceArchitecture,
-            installableArchitectures: environment.installableArchitectures,
-            adaptedManifestPreview: environment.adaptedManifestPreview,
             blockedUpdates: Set(blockedUpdateTable),
-            offersAdaptedUpdates: offersAdaptedUpdates,
             origins: db.installOrigins(),
             autoInstalled: environment.aptExtendedStatesLocation
                 .flatMap { FileManager.default.contents(atPath: $0) }
@@ -66,9 +63,7 @@ public extension PackageIndex {
             changes.insert(.catalogue)
         }
         if snapshot.architecture != AptEnvironment.current.deviceArchitecture
-            || snapshot.installableArchitectures != AptEnvironment.current.installableArchitectures
             || snapshot.blockedUpdates != Set(blockedUpdateTable)
-            || snapshot.offersAdaptedUpdates != offersAdaptedUpdates
         {
             changes.insert(.settings)
         }

@@ -79,33 +79,17 @@ public enum PackageResolver {
             try pool.records[index].admit(actions[pool.records[index].name])
         }
         let records = pool.records
-        // Which records an adapter would have to rewrite, by their index in
-        // `records`: they go to a repository of their own below.
-        let adapted = pool.adapted
         let universe = pool.universe
         let environment = try SolverEnvironment(distribution: .debian, architecture: snapshot.architecture)
         let installedRepository = try environment.addRepository(name: "installed")
         let availableRepository = try environment.addRepository(name: "available")
-        // A package built for this bootstrap beats one an adapter would have
-        // to rewrite, whatever their versions and repositories: libsolv
-        // prunes candidates by repository priority before version. The
-        // adapted one stays in the pool, so a dependency only it can satisfy
-        // still solves — dropping it answered such a dependency with a
-        // conflict whose every check read matched.
-        let adaptedRepository = try environment.addRepository(name: "adapted", priority: -1)
         try environment.setInstalledRepository(installedRepository)
         var ids: [PackageID] = []
         ids.reserveCapacity(records.count)
         let installed = Set(records.indices.filter { records[$0].installed })
         let installedByName = Dictionary(uniqueKeysWithValues: installed.map { (records[$0].name, $0) })
         for (index, record) in records.enumerated() {
-            let repository = if record.installed {
-                installedRepository
-            } else if adapted.contains(index) {
-                adaptedRepository
-            } else {
-                availableRepository
-            }
+            let repository = record.installed ? installedRepository : availableRepository
             try ids.append(environment.addPackage(pool.definition(of: index), to: repository))
         }
         var jobs: [Job] = []
@@ -162,14 +146,6 @@ public enum PackageResolver {
             {
                 jobs.append(Job(.lock, .package(ids[index])))
             }
-        }
-        // Updating everything leaves a converted package where it is unless
-        // the user asked otherwise: the newer version is kept out by name.
-        let frozen = request.updateAll && !snapshot.offersAdaptedUpdates
-            ? adapted.filter { installedByName[records[$0].name] != nil && !explicitInstall.contains($0) }
-            : []
-        for index in frozen.sorted() {
-            jobs.append(Job(.lock, .package(ids[index])))
         }
         if request.updateAll {
             jobs.append(Job(.update, .all))
@@ -285,8 +261,7 @@ public enum PackageResolver {
         var heldBack: [String] = []
         if request.updateAll {
             var newestAvailable: [String: String] = [:]
-            // a frozen version is not one the update left behind
-            for (index, record) in records.enumerated() where !record.installed && !frozen.contains(index) {
+            for record in records where !record.installed {
                 if newestAvailable[record.name].map({ DebianVersion.compare(record.version, $0) > 0 }) ?? true {
                     newestAvailable[record.name] = record.version
                 }

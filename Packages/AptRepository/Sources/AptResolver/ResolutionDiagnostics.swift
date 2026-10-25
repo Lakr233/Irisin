@@ -42,7 +42,7 @@ enum ResolutionDiagnostics {
             let candidate = Package(identity: package.identity, payload: [version: metadata], repoRef: package.repoRef)
             do {
                 let record = try PoolPackage(candidate, installed: false, in: snapshot)
-                let outcome: ResolutionCheck.Outcome = candidate.supports(anyOf: snapshot.installableArchitectures)
+                let outcome: ResolutionCheck.Outcome = candidate.supports(architecture: snapshot.architecture)
                     ? .matched
                     : .incompatibleArchitecture
                 checks.append(.init(
@@ -78,7 +78,7 @@ enum ResolutionDiagnostics {
                         requirement.elements.flatMap { universe.providers[$0.representPackage] ?? [] }
                     ).sorted()
                     let compatible = named.filter {
-                        records[$0].package.supports(anyOf: snapshot.installableArchitectures)
+                        records[$0].package.supports(architecture: snapshot.architecture)
                     }
                     let matching = universe.witnesses(requirement).filter { compatible.contains($0) }
                     let outcome: ResolutionCheck.Outcome = if !matching.isEmpty {

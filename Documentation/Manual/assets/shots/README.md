@@ -99,8 +99,6 @@ on the screen. Notifications stay off.
 | `updates-page` | Updates | **Installed** → the up-arrow, with older versions installed (step 5) | Two rows or more, each with installed version → new version and the repository, **Update All** in the bar |
 | `updates-update-all` | Updates | **Update All** | The **Queue Changes** sheet with one **Update** group and **Confirm** |
 | `updates-blocked` | Updates | Block one package's update, then **Settings** → **Packages** → **Blocked Updates** | The blocked package listed, the trash button in the bar |
-| `compatibility-unsupported` | Compatibility Mode | With `roothide.github.io` added, open a package built only for `iphoneos-arm64e` | The banner button reads UNSUPPORTED and the footer reads `Architecture: iphoneos-arm64e` |
-| `compatibility-unsupported-alert` | *(spare — no page uses it)* | Tap UNSUPPORTED on that page | The **Unsupported Architecture** alert, naming the package's architecture and the device's |
 | `translation-setting` | Translation | Dashboard → gear | The **Packages** group with **Auto Translate** on as its first row |
 | `translation-menu` | Translation | A package page → … → **Translate** | The submenu open: Original, Translated, Compared with one checked, then the two language rows with their values |
 | `translation-translated` | Translation | Auto Translate on, open a package whose page is written in another language | The line **This page is translated.** under the banner, the name in the banner translated, the navigation title as written |
