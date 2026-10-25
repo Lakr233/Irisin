@@ -663,12 +663,12 @@ extension RepositoryCenter {
         // One entry at a time, in order: what installs here first, then the
         // other bootstraps' indexes one by one. Within one, knock on
         // every compression suffix and keep the first that compiles to a
-        // non-empty index; cancelling the group stops the rest. Only worth
+        // catalogue, empty or not; cancelling the group stops the rest. Only worth
         // it when the server answered and the file name or its compression
         // was wrong.
         aptLog(Self.self, "update \(id) enter stage 3", level: .verbose)
 
-        if outcome.packages?.count ?? 0 < 1 {
+        if outcome.packages == nil {
             if noAnswer, !Task.isCancelled {
                 let index = preferredDownloads.values.first?.summary ?? "none"
                 aptLog(

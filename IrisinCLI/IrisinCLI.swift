@@ -54,7 +54,7 @@ enum Session {
         let parts = name.split(separator: "=", maxSplits: 1).map(String.init)
         let identity = parts[0].lowercased()
         let device = AptEnvironment.current.deviceArchitecture
-        let records = index.obtainPackageSummary(with: identity).values.compactMap { $0.versions(supportingAnyOf: [device]) }
+        let records = index.obtainPackageSummary(with: identity).values.compactMap { $0.versions(builtFor: device) }
         if parts.count == 2 {
             return records.lazy.compactMap { record in
                 record.payload[parts[1]].map { Package(identity: identity, payload: [parts[1]: $0], repoRef: record.repoRef) }
@@ -62,8 +62,8 @@ enum Session {
         }
         return records.max { a, b in
             let order = DebianVersion.compareStrings(a.latestVersion, b.latestVersion)
-            // a tie goes to the build this bootstrap installs as it is
-            return order != 0 ? order < 0 : !a.supports(architecture: device) && b.supports(architecture: device)
+            // a tie goes to the build for this bootstrap over an `all` one
+            return order != 0 ? order < 0 : !a.architectures.contains(device) && b.architectures.contains(device)
         }
     }
 

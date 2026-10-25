@@ -1,9 +1,8 @@
 import Foundation
 
 /// The bootstrap layouts a package can be built for, named by the dpkg
-/// architecture its control file carries. The name is the whole contract:
-/// where the files go, how a load command spells a library, whether a
-/// hard-coded path exists at runtime.
+/// architecture its control file carries. A package installs only on the
+/// bootstrap it names, or on any when it names `all`.
 public enum BootstrapArchitecture: String, Hashable, Sendable {
     /// Files at `/`, iOS 14 and before. Nothing installs it today.
     case rootful = "iphoneos-arm"

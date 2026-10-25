@@ -33,11 +33,10 @@ enum ArchitectureFit: Int, Comparable {
 
 /// invoke all metadata downloaded and build packages
 ///
-/// One repository may list the same package for several architectures, in
-/// one flat index or across a suite's `binary-` directories read as one. A
+/// One flat index may list the same package for several architectures. A
 /// `Package` holds one build per version, so each version keeps the build
 /// that fits this bootstrap best (`ArchitectureFit`), and of two that fit
-/// alike the one read first, which is the device's own index in a suite.
+/// alike the one read first.
 /// A build for another architecture is dropped: the catalogue lists only
 /// what installs here.
 /// - Parameters:

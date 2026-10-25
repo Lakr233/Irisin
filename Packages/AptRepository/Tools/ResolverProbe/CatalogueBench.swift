@@ -106,7 +106,7 @@ enum CatalogueBench {
             guard let package = byIdentity[identity]!.min(by: {
                 ($0.repoRef?.absoluteString ?? "") < ($1.repoRef?.absoluteString ?? "")
             }),
-                let versions = package.versions(supportingAnyOf: [device])
+                let versions = package.versions(builtFor: device)
             else { continue }
             let ordered = versions.payload.keys.sorted { DebianVersion.compare($0, $1) > 0 }
             let wantsOlder: Bool
@@ -229,7 +229,7 @@ enum CatalogueBench {
     static func goldenRequests(_ snapshot: ResolutionSnapshot) -> [Scenario] {
         var result = scenarios(snapshot).map { Scenario(name: $0.name, request: $0.request) }
         let installed = Set(snapshot.installed.map(\.identity))
-        let identities = Set(snapshot.packages.filter { $0.versions(supportingAnyOf: [device]) != nil }.map(\.identity))
+        let identities = Set(snapshot.packages.filter { $0.versions(builtFor: device) != nil }.map(\.identity))
             .subtracting(installed).sorted()
         var state: UInt64 = 20_260_924
         var picked: [String] = []

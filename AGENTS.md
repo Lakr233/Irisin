@@ -190,14 +190,11 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   bootstrap is an empty catalogue, not a failed refresh. There is no
   adapter, no Patch step and no compatibility setting: 5.0 removed them,
   with MachOKit. A `.deb` opened by hand or a record dpkg already has that
-  is built for another bootstrap says Unsupported and does not install.
-  While files download the queue's button reads Queue Install, and once
-  tapped Cancel Auto Install in the delete colour, which takes it back. On
-  a system whose status has no `dpkg` the tap asks first
-  (`QueueInstallChecks`): Bootstrap Install where the plan allows it,
-  Install Anyway, which reads the files' `control.tar` member names
-  (`ArchiveStream.debianControlMembers`) and names the packages that run
-  maintainer scripts before anything is staged, or Cancel.
+  is built for another bootstrap says Unsupported, and its alert suggests
+  rebuilding it with Apelin. A catalogue written before 5.0 keeps another
+  bootstrap's rows until its repository next refreshes, so the checks on
+  architecture that remain on catalogue reads (`isSupportedOnDevice`,
+  `versions(builtFor:)`, the pool's own) stay.
   The bootstrap the package was built for is
   `IrisinCurrentArchitecture` in the app's Info.plist, written by
   `package-deb.sh` per flavor; a build that was never packaged uses the
@@ -207,6 +204,14 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   and does not open the interface.
   Install the matching official package; Irisin itself must not be converted
   with a patcher.
+- **The queue's button says what its tap does.** Execute, and while files
+  download Queue Install, which once tapped reads Cancel Auto Install in
+  the delete colour and takes it back. On a system whose status has no
+  `dpkg` the tap asks first (`QueueInstallChecks`): Bootstrap Install where
+  the plan allows it, Install Anyway, which reads the files' `control.tar`
+  member names (`ArchiveStream.debianControlMembers`) and names the
+  packages that run maintainer scripts before anything is staged, or
+  Cancel.
 - **Translation is the system's engine, asked privately, and the json is
   what gets translated.** `SystemTranslator` speaks `_LTTranslator` (the
   same class from iOS 16 to 26; the public `TranslationSession` needs iOS 18

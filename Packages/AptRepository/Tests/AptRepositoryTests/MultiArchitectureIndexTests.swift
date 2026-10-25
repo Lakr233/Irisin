@@ -96,7 +96,7 @@ struct MultiArchitectureIndexTests {
         #expect(packages["bar"]?.repoRef?.absoluteString == "https://example.org")
     }
 
-    // MARK: versions(supportingAnyOf:)
+    // MARK: versions(builtFor:)
 
     @Test func versionsAreFilteredByTheirOwnBuild() {
         let foo = Package(identity: "foo", payload: [
@@ -104,9 +104,8 @@ struct MultiArchitectureIndexTests {
             "1.5": ["package": "foo", "version": "1.5", "architecture": "all"],
             "2.0": ["package": "foo", "version": "2.0", "architecture": Self.rootless],
         ])
-        #expect(foo.versions(supportingAnyOf: [Self.roothide])?.payload.keys.sorted() == ["1.0", "1.5"])
-        #expect(foo.versions(supportingAnyOf: [Self.roothide])?.latestVersion == "1.5")
-        #expect(foo.versions(supportingAnyOf: [Self.roothide, Self.rootless]) == foo)
+        #expect(foo.versions(builtFor: Self.roothide)?.payload.keys.sorted() == ["1.0", "1.5"])
+        #expect(foo.versions(builtFor: Self.roothide)?.latestVersion == "1.5")
     }
 
     // MARK: update(over:device:)

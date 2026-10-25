@@ -181,9 +181,8 @@ public struct PackageIndex: Sendable {
     }
 
     /// What of a repository's record is an update over `current`, nil when
-    /// nothing is. Judged on the versions built for this bootstrap, not on
-    /// the newest: a repository can offer one under a newer version built
-    /// for another.
+    /// nothing is. Judged on the versions built for this bootstrap: a
+    /// catalogue written before 5.0 may still hold another's.
     public func updateOffer(in record: Package, over current: String) -> Package? {
         record.update(over: current, device: AptEnvironment.current.deviceArchitecture)
     }

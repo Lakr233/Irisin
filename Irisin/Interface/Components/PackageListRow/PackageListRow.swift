@@ -326,7 +326,8 @@ class PackageListRow: UIView {
     /// that cannot be compared, on a backing that says it is installed at
     /// all. Every list that draws a package draws it so, the search's too.
     static func drawBadge(on indicator: UIImageView, for package: Package, installedVersion: String?) {
-        // a build this bootstrap cannot install is neither an update nor the installed version: no badge
+        // a build this bootstrap cannot install is neither an update nor
+        // the installed version: no badge
         guard package.isSupportedOnDevice, let installedVersion else { return }
         indicator.backgroundColor = .versionBadgeBacking
         // against the versions that may be an update, as the Updates

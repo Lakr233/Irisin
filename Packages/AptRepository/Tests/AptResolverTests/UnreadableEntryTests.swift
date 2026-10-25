@@ -6,9 +6,8 @@ import Testing
 
 /// Paragraphs whose relations dpkg refuses, as two repositories publish
 /// them (trimmed): `apt.cydiabc.top` ends a Depends with a comma, and
-/// `zlw555.github.io/repo` names `mobile substrate`, two words. A roothide
-/// device once read the first two through a rootless adapter, the third as
-/// its own, and every install on it listed all three under its plan.
+/// `zlw555.github.io/repo` names `mobile substrate`, two words. Every
+/// install on a device that read all three listed them under its plan.
 struct UnreadableEntryTests {
     private static let index = """
     Package: com.cydiabc.wchidechatavatars-rootless
@@ -16,7 +15,7 @@ struct UnreadableEntryTests {
     Section: 微信
     Maintainer: Nets
     Depends: mobilesubstrate,
-    Architecture: iphoneos-arm64
+    Architecture: iphoneos-arm64e
     Filename: ./debs/11522.deb
     Name: WCHideChatAvatars微信聊天隐藏头像-Rootless
 
@@ -25,7 +24,7 @@ struct UnreadableEntryTests {
     Section: 微信
     Maintainer: Nets
     Depends: mobilesubstrate,
-    Architecture: iphoneos-arm64
+    Architecture: iphoneos-arm64e
     Filename: ./debs/11566.deb
     Name: WCTimeLineMessageTail微信小尾巴-Rootless
 
