@@ -7,7 +7,6 @@
 //
 
 import AptRepository
-import GlyphixTextFx
 import Then
 import UIKit
 
@@ -38,7 +37,7 @@ final class QueuePackageCell: UITableViewCell {
         $0.hidesWhenStopped = true
     }
 
-    private let label = GlyphixTextLabel().then {
+    private let label = RollingLabel().then {
         $0.font = UIFont.footnote.monospacedDigitFont
         $0.textColor = .textSubtitle
         $0.textAlignment = .trailing

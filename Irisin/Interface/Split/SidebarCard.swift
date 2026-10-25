@@ -6,7 +6,6 @@
 //  Copyright © 2020 Lakr Aream. All rights reserved.
 //
 
-import GlyphixTextFx
 import UIKit
 
 class SidebarCard: UIView {
@@ -18,7 +17,7 @@ class SidebarCard: UIView {
 
     var badgeText: String? {
         set {
-            badgeLabel.text = newValue
+            badgeLabel.text = newValue ?? ""
             // the count beside the name, read as the card's value
             button.accessibilityValue = (newValue?.isEmpty ?? true) ? nil : newValue
         }
@@ -27,7 +26,7 @@ class SidebarCard: UIView {
         }
     }
 
-    private var badgeLabel = GlyphixTextLabel()
+    private var badgeLabel = RollingLabel()
 
     private let selectTitleColor: UIColor = .onAccent
     private let unselectTitleColor: UIColor = .textMuted

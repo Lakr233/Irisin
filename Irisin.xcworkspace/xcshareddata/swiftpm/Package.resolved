@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "choreographer",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/unixzii/Choreographer",
-      "state" : {
-        "revision" : "04dc84bfe380b8c5910ed7d0607765fddedd0460",
-        "version" : "0.2.0"
-      }
-    },
-    {
       "identity" : "displaylink",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/DisplayLink.git",
@@ -34,15 +25,6 @@
       "state" : {
         "revision" : "68e7bce39115914dcb280c702843c1da8d72e24d",
         "version" : "0.1.2"
-      }
-    },
-    {
-      "identity" : "glyphixtextfx",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ktiays/GlyphixTextFx",
-      "state" : {
-        "revision" : "0905b4b32a0eb5ef1937b79e5a39aec51ae50c2f",
-        "version" : "2.3.7"
       }
     },
     {
@@ -106,15 +88,6 @@
       "state" : {
         "revision" : "96d782a576273b73b277b577943a2a25b00b919e",
         "version" : "0.5.0"
-      }
-    },
-    {
-      "identity" : "respring",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ktiays/Respring",
-      "state" : {
-        "revision" : "2148e8fce312b4dcf76b8f909226b19f3ae38186",
-        "version" : "1.1.0"
       }
     },
     {
@@ -241,15 +214,6 @@
       "state" : {
         "revision" : "619a4ce1b5b3b59b14832ec5bbe414d542703469",
         "version" : "2.1.16"
-      }
-    },
-    {
-      "identity" : "with",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ktiays/With",
-      "state" : {
-        "revision" : "98edf55b91436b2c13a76fc2b66dc3b34627d8d4",
-        "version" : "2.1.5"
       }
     }
   ],

@@ -20,7 +20,7 @@
 		CA1000000000000000000270 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000271 /* SnapKit */; };
 		CA1000000000000000000280 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000281 /* SDWebImage */; };
 		CA1000000000000000000290 /* SPIndicator in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000291 /* SPIndicator */; };
-		CA10000000000000000002A0 /* GlyphixTextFx in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002A1 /* GlyphixTextFx */; };
+		CA10000000000000000002A0 /* LitextAnimation in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002A1 /* LitextAnimation */; };
 		CA10000000000000000002E0 /* AlertController in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002E1 /* AlertController */; };
 		CA10000000000000000002F0 /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002F1 /* Runestone */; };
 		CA1000000000000000000300 /* RunestoneLanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000301 /* RunestoneLanguageSupport */; };
@@ -126,7 +126,7 @@
 				CA1000000000000000000280 /* SDWebImage in Frameworks */,
 				502F639D304F1353006C2087 /* OrderedCollections in Frameworks */,
 				CA1000000000000000000290 /* SPIndicator in Frameworks */,
-				CA10000000000000000002A0 /* GlyphixTextFx in Frameworks */,
+				CA10000000000000000002A0 /* LitextAnimation in Frameworks */,
 				CA10000000000000000002E0 /* AlertController in Frameworks */,
 				CA10000000000000000002F0 /* Runestone in Frameworks */,
 				CA1000000000000000000300 /* RunestoneLanguageSupport in Frameworks */,
@@ -226,7 +226,7 @@
 				CA1000000000000000000271 /* SnapKit */,
 				CA1000000000000000000281 /* SDWebImage */,
 				CA1000000000000000000291 /* SPIndicator */,
-				CA10000000000000000002A1 /* GlyphixTextFx */,
+				CA10000000000000000002A1 /* LitextAnimation */,
 				CA10000000000000000002E1 /* AlertController */,
 				CA10000000000000000002F1 /* Runestone */,
 				CA1000000000000000000301 /* RunestoneLanguageSupport */,
@@ -390,7 +390,7 @@
 				CA6000000000000000000001 /* XCRemoteSwiftPackageReference "SnapKit" */,
 				CA6000000000000000000002 /* XCRemoteSwiftPackageReference "SDWebImage" */,
 				CA6000000000000000000003 /* XCRemoteSwiftPackageReference "SPIndicator" */,
-				CA6000000000000000000004 /* XCRemoteSwiftPackageReference "GlyphixTextFx" */,
+				CA6000000000000000000004 /* XCRemoteSwiftPackageReference "Litext" */,
 				CA6000000000000000000009 /* XCRemoteSwiftPackageReference "Dog" */,
 				CA600000000000000000000A /* XCRemoteSwiftPackageReference "AlertController" */,
 				502F2D42304EBFBC006C2087 /* XCRemoteSwiftPackageReference "Then" */,
@@ -903,12 +903,12 @@
 				minimumVersion = 1.6.5;
 			};
 		};
-		CA6000000000000000000004 /* XCRemoteSwiftPackageReference "GlyphixTextFx" */ = {
+		CA6000000000000000000004 /* XCRemoteSwiftPackageReference "Litext" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ktiays/GlyphixTextFx";
+			repositoryURL = "https://github.com/Lakr233/Litext";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.3.7;
+				minimumVersion = 3.6.5;
 			};
 		};
 		CA6000000000000000000009 /* XCRemoteSwiftPackageReference "Dog" */ = {
@@ -1004,10 +1004,10 @@
 			package = CA6000000000000000000003 /* XCRemoteSwiftPackageReference "SPIndicator" */;
 			productName = SPIndicator;
 		};
-		CA10000000000000000002A1 /* GlyphixTextFx */ = {
+		CA10000000000000000002A1 /* LitextAnimation */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CA6000000000000000000004 /* XCRemoteSwiftPackageReference "GlyphixTextFx" */;
-			productName = GlyphixTextFx;
+			package = CA6000000000000000000004 /* XCRemoteSwiftPackageReference "Litext" */;
+			productName = LitextAnimation;
 		};
 		CA10000000000000000002E1 /* AlertController */ = {
 			isa = XCSwiftPackageProductDependency;

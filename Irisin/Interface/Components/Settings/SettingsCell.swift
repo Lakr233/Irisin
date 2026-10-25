@@ -6,7 +6,6 @@
 //  Copyright © 2026 Lakr Aream. All rights reserved.
 //
 
-import GlyphixTextFx
 import SnapKit
 import Then
 import UIKit
@@ -140,7 +139,7 @@ final class SettingsDisclosureCell: SettingsCell {
 
 /// A row showing a value; the row opens the menu that changes it.
 final class SettingsValueCell: SettingsCell {
-    private let valueLabel = GlyphixTextLabel().then {
+    private let valueLabel = RollingLabel().then {
         $0.clipsToBounds = false
         $0.font = UIFont.rounded(.body, emphasized: true).monospacedDigitFont
         $0.textColor = .secondaryLabel
