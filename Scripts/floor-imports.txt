@@ -252,4 +252,8 @@ swift_unownedRelease
 swift_unownedRetain
 swift_unownedRetainStrong
 swift_updateClassMetadata2
+swift_weakCopyAssign
+swift_weakCopyInit
 swift_weakLoadStrong
+swift_weakTakeAssign
+swift_weakTakeInit

@@ -67,6 +67,16 @@ struct MultiArchitectureIndexTests {
         #expect(readPackageIndex("<html>captive portal</html>", device: Self.roothide).entries == 0)
     }
 
+    /// A repository read whole with nothing for this bootstrap is not one
+    /// that was never read: the first is empty, the second is broken.
+    @Test func anEmptyCatalogueIsNotABrokenRepository() {
+        var repository = Repository(source: RepositorySource(url: URL(string: "https://example.org")!))
+        #expect(repository.hasNoCatalogue)
+        repository.lastUpdatePackage = Date()
+        #expect(!repository.hasNoCatalogue)
+        #expect(repository.packageCount == 0)
+    }
+
     @Test func nativeBeatsAll() {
         let builds = [stanza("foo", "1.0", "all"), stanza("foo", "1.0", Self.roothide)]
         #expect(architecture(of: read(builds)["foo"], "1.0") == Self.roothide)

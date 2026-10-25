@@ -77,7 +77,7 @@ public extension RepositoryCenter {
         if isRepositoryPreparedForUpdate(withUrl: url) {
             return .pending
         }
-        if repo.packageCount < 1 {
+        if repo.hasNoCatalogue {
             return .failed
         }
         if Date().timeIntervalSince(repo.lastUpdatePackage) > Double(smartUpdateTimeInterval) {
@@ -254,12 +254,12 @@ public extension RepositoryCenter {
         dispatchUpdateOnCurrentCenter()
     }
 
-    /// Registered, not refreshing right now, and empty: what
+    /// Registered, not refreshing right now, and never read: what
     /// `cleanBrokenRepos` removes, for a screen that wants to say so first.
     func brokenRepositoryUrls() -> [URL] {
         repositories
             .values
-            .filter { $0.packageCount < 1 }
+            .filter(\.hasNoCatalogue)
             .filter { !isRepositoryPreparedForUpdate(withUrl: $0.url) }
             .map(\.url)
     }

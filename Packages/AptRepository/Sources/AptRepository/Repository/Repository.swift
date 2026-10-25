@@ -129,6 +129,13 @@ public struct Repository: TableCodable, Hashable, Identifiable, Sendable {
     public internal(set) var lastUpdatePackage = Date(timeIntervalSince1970: 0)
     public internal(set) var packageCount = 0
 
+    /// No refresh has read an index of this repository: it lists nothing
+    /// because nothing was read, not because it offers nothing for this
+    /// bootstrap, which a repository of another bootstrap's packages does.
+    public var hasNoCatalogue: Bool {
+        packageCount < 1 && lastUpdatePackage.timeIntervalSince1970 <= 0
+    }
+
     /// The Packages indexes to try, in the order tried, each entry read as
     /// one catalogue; a flat repository has a single entry of one index.
     /// The refresh reads the first entry that answers with packages.
