@@ -102,6 +102,13 @@ jobs:
       - name: Package and verify both flavours
         run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
 
+      # Apple TV (Documentation/AppleTV.md): irisind and irisin-install for
+      # RootHide on tvOS 17. Not built here, and so not released, until its
+      # package architecture is named: the placeholder is not one dpkg
+      # accepts. Its dSYMs are in Release-appletvos, beside iOS's.
+      # - name: Package and verify Apple TV
+      #   run: make deb-appletv CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+
       # Both flavours package the one build, and neither strip nor ldid touches
       # LC_UUID, so one set of dSYMs matches every shipped binary.
       - name: Archive dSYMs
