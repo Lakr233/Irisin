@@ -4,14 +4,17 @@ import Foundation
 import JavaScriptCore
 import Testing
 
-/// The page's `cipher.js`, run in JavaScriptCore, against the RFCs' vectors
+/// The page's `WebUI/src/cipher.js`, run in JavaScriptCore, against the RFCs' vectors
 /// and byte for byte against CryptoKit, which the server uses: the two sides must agree on every byte or nothing opens.
 @Suite(.serialized)
 struct CipherTests {
     private let context: JSContext
 
     init() throws {
-        let url = try #require(Bundle.module.url(forResource: "cipher", withExtension: "js", subdirectory: "Page"))
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent() // Tests/IrisinWebTests
+            .deletingLastPathComponent().deletingLastPathComponent() // Packages/IrisinWeb
+            .deletingLastPathComponent().deletingLastPathComponent() // the repository
+            .appendingPathComponent("WebUI/src/cipher.js")
         context = try #require(JSContext())
         context.exceptionHandler = { _, exception in
             Issue.record("JavaScript: \(exception?.toString() ?? "?")")

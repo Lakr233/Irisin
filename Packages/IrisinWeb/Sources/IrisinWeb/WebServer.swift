@@ -2,13 +2,15 @@ import Foundation
 import Network
 
 /// The page's server, on Network.framework: one request per connection, then
-/// the connection closes. The page and its words are served in the clear;
+/// the connection closes. The page is served in the clear, from `webRoot`;
 /// every call and stream is opened with this start's key before the
 /// responder sees it, and what does not open is refused (403) and answered
 /// nothing else.
 public final class WebServer: @unchecked Sendable {
     public let key: WebKey
     private let responder: any WebResponder
+    /// The built page (`WebUI/dist`, `irisin.app/WebUI`); nil serves none.
+    private let webRoot: URL?
     private let queue = DispatchQueue(label: "wiki.qaq.irisin.web")
     // Everything below is the queue's.
     private var listener: NWListener?
@@ -21,8 +23,9 @@ public final class WebServer: @unchecked Sendable {
     /// How long a request may take to arrive.
     static let requestTimeout: TimeInterval = 15
 
-    public init(responder: any WebResponder, key: WebKey = WebKey()) {
+    public init(responder: any WebResponder, webRoot: URL?, key: WebKey = WebKey()) {
         self.responder = responder
+        self.webRoot = webRoot
         self.key = key
     }
 
@@ -159,12 +162,6 @@ public final class WebServer: @unchecked Sendable {
         case ("GET", "/api/v1/hello"):
             let hello = JSONValue.object(["version": .integer(1), "salt": .string(key.salt.base64EncodedString())])
             send((try? hello.encoded()).map(HTTPResponse.json) ?? .status(500), on: connection)
-        case ("GET", "/api/v1/strings"):
-            Task {
-                let words = await responder.words()
-                let body = try? JSONValue.object(words.mapValues(JSONValue.string)).encoded()
-                queue.async { self.send(body.map(HTTPResponse.json) ?? .status(500), on: connection) }
-            }
         case ("POST", "/api/v1/call"):
             guard let (nonce, call) = open(request.body, for: .call), let op = call["op"]?.string else {
                 return send(.status(403), on: connection)
@@ -183,7 +180,7 @@ public final class WebServer: @unchecked Sendable {
             }
             stream(after: call["after"]?.integer ?? 0, nonce: nonce, on: connection)
         case ("GET", _):
-            send(WebPage.response(for: request.path) ?? .status(404), on: connection)
+            send(WebPage.response(for: request.path, in: webRoot) ?? .status(404), on: connection)
         default:
             send(.status(request.path.hasPrefix("/api/") ? 405 : 404), on: connection)
         }

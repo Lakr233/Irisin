@@ -75,6 +75,7 @@ XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh
 DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 DEB_VERIFIER        := $(ROOT_DIR)/Scripts/verify-deb.sh
 APPLETV_PACKAGER    := $(ROOT_DIR)/Scripts/package-appletv-deb.sh
+WEBUI_BUILDER       := $(ROOT_DIR)/Scripts/build-webui.sh
 APPLETV_VERIFIER    := $(ROOT_DIR)/Scripts/verify-appletv-deb.sh
 FLOOR_AUDIT         := $(ROOT_DIR)/Scripts/audit-ios-floor.sh
 FLOOR_IMPORTS       := $(ROOT_DIR)/Scripts/check-floor-imports.py
@@ -118,7 +119,7 @@ endif
 
 .PHONY: all help print-version print-build-number print-deb-path print-flavor \
 	set-version check harness test build compile sim _build-ios _package-deb \
-	_packages deb deb-roothide deb-rootless deb-all build-appletv deb-appletv \
+	_packages deb deb-roothide deb-rootless deb-all webui build-appletv deb-appletv \
 	_package-appletv install clean
 
 all: deb-all
@@ -133,6 +134,7 @@ help:
 	@echo "  sim         Build Debug and launch the app on the booted simulator"
 	@echo "  deb         Build, ad-hoc sign, package, and verify the .deb for FLAVOR (default roothide)"
 	@echo "  deb-all     Package both the roothide and the rootless .deb"
+	@echo "  webui       Build the browser page in WebUI/ into WebUI/dist (pnpm; the app's Build Web UI phase does the same)"
 	@echo "  build-appletv  Build irisind and irisin-install for tvOS (needs Xcode's tvOS platform)"
 	@echo "  deb-appletv    Package and verify the Apple TV .deb (RootHide; draft architecture)"
 	@echo "  install     Build for FLAVOR and update an installation on the device via iproxy"
@@ -171,7 +173,7 @@ check:
 	done
 	@test -f "$(CONTROL_TEMPLATE)" || { echo "error: Debian control template is missing" >&2; exit 66; }
 	@test -f "$(PACKAGE_DIR)/Package.swift" || { echo "error: Packages/IrisinKit/Package.swift is missing" >&2; exit 66; }
-	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(APPLETV_PACKAGER)" "$(APPLETV_VERIFIER)" "$(FLOOR_AUDIT)" "$(FLOOR_IMPORTS)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
+	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(APPLETV_PACKAGER)" "$(APPLETV_VERIFIER)" "$(WEBUI_BUILDER)" "$(FLOOR_AUDIT)" "$(FLOOR_IMPORTS)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
 		test -x "$$script" || { echo "error: $$script is not executable" >&2; exit 66; }; \
 	done
 	@for xcconfig in Version Base Size Development Release; do \
@@ -369,6 +371,14 @@ _package-deb:
 		"$(APP_VERSION)" \
 		"$(PACKAGE_ARCHITECTURE)" \
 		"$(INSTALL_PREFIX)"
+
+# The browser page served to manage the device (Documentation/WebManagement.md):
+# React + webpack in WebUI/, built with pnpm into WebUI/dist. The app target's
+# Build Web UI phase runs the same script and copies dist/ into irisin.app/WebUI;
+# this refreshes dist/ alone. `IRISIN_WEB_DEMO=1 swift test --package-path
+# Packages/IrisinWeb --filter WebUIDemo` serves it on the Mac with made-up answers.
+webui:
+	"$(WEBUI_BUILDER)"
 
 # IcliKit links IOKit, which tvOS ships and the AppleTVOS SDK leaves out; icli
 # makes the stub it links against from the iPhoneOS SDK. icli's own sources

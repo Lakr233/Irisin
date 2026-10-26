@@ -1,9 +1,10 @@
 // The page's own cryptography: SHA-256, HMAC-SHA256, HKDF-SHA256 (RFC 5869)
-// and ChaCha20-Poly1305 (RFC 8439), because a page served over plain HTTP is not
-// a secure context and is offered no WebCrypto. It is checked on the Mac
-// against the RFCs' vectors and byte for byte against CryptoKit
-// (IrisinWebTests/CipherTests.swift). It also carries its own
-// UTF-8 and base64, so the same file runs in JavaScriptCore there.
+// and ChaCha20-Poly1305 (RFC 8439), because a page served over plain HTTP is
+// not a secure context and is offered no WebCrypto. It carries its own UTF-8
+// and base64 too, so the same file runs in JavaScriptCore on the Mac, where
+// Packages/IrisinWeb/Tests/IrisinWebTests/CipherTests.swift loads it as a
+// plain script and checks it against the RFCs' vectors and byte for byte
+// against CryptoKit; the page imports it as a module (cipher.d.ts).
 // Documentation/WebManagement.md says what it protects and what it does not.
 var IrisinCipher = (function () {
     "use strict";
@@ -378,3 +379,7 @@ var IrisinCipher = (function () {
         base64Decode: base64Decode,
     };
 })();
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IrisinCipher;
+}

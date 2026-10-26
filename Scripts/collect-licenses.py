@@ -21,6 +21,10 @@ hand-kept copy that drifts (adapted from iGhostVT's and Fila's):
      such file ships the copyright header of its sources instead
      (ktiays/With has only that).
 
+  5. the web page's runtime dependencies (React and what it brings), read
+     from WebUI/node_modules, which the Build Web UI phase installs before
+     this one runs, as Fila's script reads its own.
+
 A pin whose checkout is missing, or whose checkout has neither a license
 file nor a copyright header, fails the build: the list would be incomplete
 and nobody would notice. So does GPL-family text anywhere in the set.
@@ -230,6 +234,49 @@ def package_entries(project, source_packages):
     return entries
 
 
+def resolve_node_module(name, origin):
+    """Node's lookup: `name` in a node_modules beside or above `origin`. Under
+    pnpm a package's own dependencies are its siblings in the node_modules
+    that holds it."""
+    directory = origin
+    while True:
+        for candidate in (os.path.join(directory, "node_modules", name),
+                          os.path.join(directory, name) if os.path.basename(directory) == "node_modules" else None):
+            if candidate and os.path.isfile(os.path.join(candidate, "package.json")):
+                return candidate
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return None
+        directory = parent
+
+
+def web_entries(project):
+    """The shipped WebUI runtime dependencies, including transitive packages."""
+    root = os.path.join(project, "WebUI")
+    manifest = json.load(open(os.path.join(root, "package.json"), encoding="utf-8"))
+    entries = []
+    seen = set()
+    pending = [(name, root) for name in sorted(manifest.get("dependencies", {}))]
+    while pending:
+        name, origin = pending.pop(0)
+        directory = resolve_node_module(name, origin)
+        if directory is None:
+            fail(f"WebUI's {name} is missing; build the web UI before collecting licenses")
+        directory = os.path.realpath(directory)
+        if directory in seen:
+            continue
+        seen.add(directory)
+        package = json.load(open(os.path.join(directory, "package.json"), encoding="utf-8"))
+        found = [file for file in sorted(os.listdir(directory)) if LICENSE_FILE.match(file)]
+        if not found:
+            fail(f"WebUI's {name} has no license notice")
+        url = package.get("homepage") or f"https://www.npmjs.com/package/{package['name']}"
+        for filename in found:
+            entries.append(entry(package["name"], package.get("version"), url, read(os.path.join(directory, filename))))
+        pending += [(dependency, directory) for dependency in sorted(package.get("dependencies", {}))]
+    return entries
+
+
 def find_source_packages(build_dir):
     """Xcode keeps SourcePackages beside Build/ in the derived data folder;
     BUILD_DIR is Build/Products for a build and a deeper archive path for an
@@ -261,6 +308,7 @@ def main():
     entries += copied_entries(arguments.project, app["url"])
     entries += local_entries(arguments.project, app["url"])
     entries += package_entries(arguments.project, source_packages)
+    entries += web_entries(arguments.project)
 
     os.makedirs(os.path.dirname(arguments.output), exist_ok=True)
     with open(arguments.output, "w", encoding="utf-8") as f:

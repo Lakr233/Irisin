@@ -198,6 +198,7 @@
 				CA1000000000000000000011 /* Sources */,
 				CA1000000000000000000012 /* Frameworks */,
 				CA1000000000000000000013 /* Resources */,
+				CA1000000000000000000015 /* Build Web UI */,
 				CA1000000000000000000014 /* Collect Licenses */,
 			);
 			buildRules = (
@@ -419,6 +420,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		CA1000000000000000000015 /* Build Web UI */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			name = "Build Web UI";
+			shellPath = /bin/sh;
+			shellScript = (
+				"exec \"$SRCROOT/Scripts/build-webui.sh\"",
+				"",
+			);
+			showEnvVarsInLog = 0;
+		};
 		CA1000000000000000000014 /* Collect Licenses */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

@@ -131,14 +131,11 @@ says so and points at the device.
 
 ## Words
 
-The page says nothing of its own. Its words are a table in Swift, each a
-`String(localized:)` under a stable name (`searchPlaceholder`), so Xcode
-extracts every one and translates it with the rest; the page asks for the
-table (`GET /api/v1/strings`, in the clear, since the page asks for the
-code in words too) and a Mac test checks that every name the page uses is
-in it.
-An operation's lines reach the page as the device already spells them
-(`InstallerEvent+Console`), never as events the page would have to spell.
+The page's words are its own, as Fila's are: `WebUI/src/i18n.ts`, English
+and Chinese, chosen by the browser's language, using the app's terms (卸载,
+重新载入主屏幕). What the device or a repository writes (names,
+descriptions, a failure's reason, an operation's lines as
+`InstallerEvent+Console` spells them) arrives spelled and is shown as it is.
 Custom firmware, never jailbreak.
 
 ## The interface between them
@@ -148,18 +145,17 @@ sealed `{op, args}` and whose answer is a sealed result; an operation's
 lines arrive on a streamed `fetch` of `POST /api/v1/stream`, one sealed
 frame per line with its sequence number, and a page that reconnects asks
 from the last number it has. No framework on either side: the server is
-`Network.framework` with CryptoKit, the page is HTML, CSS
-and JavaScript bundled in the app. WebCrypto is not offered to a page
-served over plain HTTP, so the page carries its own `cipher.js` (SHA-256,
-HMAC, HKDF, ChaCha20-Poly1305, a few hundred lines, no dependency),
-checked on the Mac against the RFCs' vectors and byte for byte against
-CryptoKit.
+`Network.framework` with CryptoKit; the page is `WebUI/`, React and
+TypeScript built with webpack and pnpm, the toolchain Fila's page has.
+WebCrypto is not offered to a page served over plain HTTP, so the page
+carries its own `cipher.js` (SHA-256, HMAC, HKDF, ChaCha20-Poly1305, a few
+hundred lines, no dependency), checked on the Mac against the RFCs' vectors
+and byte for byte against CryptoKit.
 
 | | |
 | --- | --- |
-| `GET /`, `/page.js`, `/page.css`, `/cipher.js` | the page, in the clear |
+| `GET /`, `/_irisin/<name>` | the page (`index.html`, `app.js`, `app.css`, its icons), in the clear |
 | `GET /api/v1/hello` | the salt for this start, in the clear |
-| `GET /api/v1/strings` | the page's words, in the device's language, in the clear |
 | `POST /api/v1/call` | sealed: `device`, `repositories`, `addRepository`, `removeRepository`, `refresh`, `search`, `package`, `installed`, `updates`, `propose` (install, remove, update all; answers the plan and its id), `clear`, `confirm` (asks the owner for that plan id; answers at once) |
 | `POST /api/v1/stream` | sealed frames: the running or last operation's lines, from a sequence number, until its end |
 
@@ -169,8 +165,14 @@ Every answer is `Cache-Control: no-store`.
 
 - `Packages/IrisinWeb`: the HTTP server, the code, the key and the sealed
   envelope, routing and the limits, with no UIKit and nothing outside the
-  system, tested on the Mac against the page's own cipher code. The page's
-  files are its resources.
+  system, tested on the Mac against the page's own cipher code. It serves
+  the page from the folder it is handed.
+- `WebUI/`: the page, as Fila's: `Scripts/build-webui.sh` installs it with
+  pnpm and builds it with webpack, the app's Build Web UI phase copies
+  `dist/` into `irisin.app/WebUI`, and `Scripts/collect-licenses.py` lists
+  its runtime dependencies (React) with the app's. `IRISIN_WEB_DEMO=1 swift
+  test --package-path Packages/IrisinWeb --filter WebUIDemo` serves it on
+  the Mac with made-up answers.
 - The pipeline service, moved out of the interface (above).
 - `Irisin/Services/WebManagement`: the API bound to the services, on the
   main actor like them.

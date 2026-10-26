@@ -1,9 +1,22 @@
 # IrisinWeb
 
-Managing a device from a browser on the local network: the server, the key,
-the sealed envelope and the page. Why it is shaped this way is
+Managing a device from a browser on the local network: the server, the key
+and the sealed envelope. The page is `WebUI/` at the repository's root, built
+the way Fila's is. Why it is shaped this way is
 `Documentation/WebManagement.md`; this is the contract the page and the
 device's responder (`WebResponder`) both keep.
+
+## The page
+
+`WebUI/` (React, TypeScript, webpack, pnpm) builds `index.html`, `app.js`,
+`app.css` and the icons into `WebUI/dist`; the app's Build Web UI phase
+copies them into `irisin.app/WebUI`, and `WebServer` serves that folder:
+`index.html` at `/`, under a policy that allows the page's own script and
+style alone, and every other file at `/_irisin/<name>`, by bare name. The
+page's words are its own (`WebUI/src/i18n.ts`, English and Chinese by the
+browser's language, as Fila's); what the device or a repository writes
+arrives spelled and is shown as it is. The page's cipher is
+`WebUI/src/cipher.js`, which `CipherTests` checks against CryptoKit.
 
 ## Keys and envelopes
 
@@ -28,9 +41,6 @@ device's responder (`WebResponder`) both keep.
    The answer is `application/x-ndjson`: one envelope a line, line *i*
    (from 1) sealed with `irisin-web/1 frame <n> <i>`; it ends when the
    operation does or the device closes it.
-5. `GET /api/v1/strings` → `{"<name>": "<text>"}`: every word the page
-   shows, in the device's language, in the clear. The page has no text of
-   its own but the fallback for a missing name, which is the name itself.
 
 ## Calls
 

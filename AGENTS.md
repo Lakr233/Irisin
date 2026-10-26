@@ -470,9 +470,24 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
 - `Packages/IrisinWeb/` — managing a device from a browser, a draft for
   5.1.0 (`Documentation/WebManagement.md`): the server on Network.framework,
   the six-digit code, the HKDF key and the ChaCha20-Poly1305 envelope every
-  call travels in, and the page, whose own `cipher.js` is checked against
-  CryptoKit. Its README is the contract the page and the device keep.
+  call travels in. Its README is the contract the page and the device keep.
   Nothing outside the system.
+- `WebUI/` — that page, built as Fila's is: React + webpack, TypeScript,
+  pnpm (the version is `package.json`'s `packageManager`, run through
+  corepack when there is no pnpm), no hand-written HTML. It is pure static
+  output (`dist/index.html`, `app.js`, `app.css`, the icons) and talks to
+  the device through the sealed calls only. The app target's *Build Web UI*
+  phase (`Scripts/build-webui.sh`, before Collect Licenses, which lists its
+  runtime dependencies) builds it and copies `dist/` into
+  `irisin.app/WebUI`; the server hands out `index.html` at `/` and the rest
+  under `/_irisin/` by bare name, with a CSP that allows nothing inline.
+  `scripts/sync-assets.js` takes the accent from `UIColor.buttonNormal` and
+  the icon from AppIcon before every build. Its words are its own
+  (`src/i18n.ts`, English and Chinese), outside the string catalogs, as
+  Fila's are. `cipher.js` is checked against CryptoKit by IrisinWeb's tests.
+  To look at it on the Mac: `IRISIN_WEB_DEMO=1 swift test --package-path
+  Packages/IrisinWeb --filter WebUIDemo` serves `WebUI/dist` with made-up
+  answers, so `pnpm watch` there plus a reload is the iteration loop.
 - `Packages/IrisinExternalClient/` — the external clients' library and its C
   shim, no dependency on the rest of Irisin; `IrisinExternalContractTests`
   in IrisinKit holds its wire to `IrisinProtocol`'s.
@@ -589,6 +604,10 @@ a version bump, like icli.
   (`OrderedCollections`, never the `Collections` umbrella): a Swift module
   linked in stays in the binary whole, used or not.
 - `make deb` / `make deb-all` — roothide and rootless packages, verified.
+- `make webui` — the browser page into `WebUI/dist` (the app's Build Web UI
+  phase runs the same script in every build). pnpm reaches the registry
+  directly; where a proxy is in the environment that it cannot pass, unset
+  it for the build.
 - `make build-appletv` / `make deb-appletv` — `irisind` and `irisin-install`
   for tvOS (scheme `irisin-privileged`), and the Apple TV package, verified
   (`package-appletv-deb.sh`, `verify-appletv-deb.sh`, the floor imports

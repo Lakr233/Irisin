@@ -125,3 +125,8 @@ yarn-error.log*
 ldid_macosx_x86_64
 *.deb
 .claude/worktrees
+
+# The web page's toolchain (WebUI/): installed and built by Scripts/build-webui.sh
+WebUI/node_modules/
+WebUI/dist/
+WebUI/src/generated/

@@ -18,19 +18,34 @@ struct WebServerTests {
                 guard await send(.object(["seq": .integer(sequence), "line": .string("line \(sequence)")])) else { return }
             }
         }
-
-        func words() async -> [String: String] {
-            ["code": "Code"]
-        }
     }
 
     private let key = WebKey(code: "123456", salt: Data(repeating: 7, count: 16))
 
+    /// A stub of what WebUI/dist holds, with a folder and a dot file the
+    /// server must not hand out.
+    private func makeWebRoot() throws -> URL {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("irisin-web-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("folder"), withIntermediateDirectories: true)
+        try Data("<!doctype html><title>Irisin</title>".utf8).write(to: root.appendingPathComponent("index.html"))
+        try Data("console.log(1)".utf8).write(to: root.appendingPathComponent("app.js"))
+        try Data("x".utf8).write(to: root.appendingPathComponent("folder/app.js"))
+        try Data("x".utf8).write(to: root.appendingPathComponent(".hidden.js"))
+        return root
+    }
+
     private func withServer(_ body: (WebServer, URL) async throws -> Void) async throws {
-        let server = WebServer(responder: Responder(), key: key)
+        let root = try makeWebRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let server = WebServer(responder: Responder(), webRoot: root, key: key)
         let port = try await server.start(port: 18790)
         defer { server.stop() }
         try await body(server, URL(string: "http://127.0.0.1:\(port)")!)
+    }
+
+    private func status(_ url: URL) async throws -> Int {
+        let (_, response) = try await URLSession.shared.data(from: url)
+        return (response as! HTTPURLResponse).statusCode
     }
 
     private func post(_ url: URL, _ body: Data) async throws -> (Data, Int) {
@@ -54,10 +69,14 @@ struct WebServerTests {
             #expect(http.value(forHTTPHeaderField: "Content-Security-Policy")?.contains("script-src 'self'") == true)
             let (hello, _) = try await URLSession.shared.data(from: base.appendingPathComponent("api/v1/hello"))
             #expect(try JSONValue.decode(hello)["salt"]?.string == key.salt.base64EncodedString())
-            let (words, _) = try await URLSession.shared.data(from: base.appendingPathComponent("api/v1/strings"))
-            #expect(try JSONValue.decode(words)["code"]?.string == "Code")
-            let (_, missing) = try await URLSession.shared.data(from: base.appendingPathComponent("nothing"))
-            #expect((missing as? HTTPURLResponse)?.statusCode == 404)
+            let (script, scriptResponse) = try await URLSession.shared.data(from: URL(string: "\(base)/_irisin/app.js")!)
+            #expect(String(decoding: script, as: UTF8.self) == "console.log(1)")
+            #expect((scriptResponse as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type")?.hasPrefix("text/javascript") == true)
+            for refused in ["/nothing", "/_irisin/folder/app.js", "/_irisin/.hidden.js", "/_irisin/", "/_irisin/missing.js",
+                            "/_irisin/index.html", "/_irisin/%2E%2E/etc/passwd", "/api/v1/strings", "/index.html"]
+            {
+                #expect(try await status(URL(string: "\(base)\(refused)")!) == 404, "\(refused)")
+            }
         }
     }
 

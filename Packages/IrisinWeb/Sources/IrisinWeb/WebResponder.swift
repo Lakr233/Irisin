@@ -9,9 +9,6 @@ public protocol WebResponder: Sendable {
     /// Returns when the operation has ended, or when `send` answers false:
     /// the page has gone.
     func stream(after: Int, send: @escaping @Sendable (JSONValue) async -> Bool) async
-
-    /// The page's words, in the device's language, by name.
-    func words() async -> [String: String]
 }
 
 public enum WebAnswer: Sendable, Equatable {
