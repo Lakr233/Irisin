@@ -467,6 +467,12 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `JobTranscript`), `IrisinVendor` (a paid repository's Keychain
   names and every vendor request, the app's and `irisin-cli`'s alike, the
   stored `secert` spelling included), each with `swift test`.
+- `Packages/IrisinWeb/` — managing a device from a browser, a draft for
+  5.1.0 (`Documentation/WebManagement.md`): the server on Network.framework,
+  the six-digit code, the HKDF key and the ChaCha20-Poly1305 envelope every
+  call travels in, and the page, whose own `cipher.js` is checked against
+  CryptoKit. Its README is the contract the page and the device keep.
+  Nothing outside the system.
 - `Packages/IrisinExternalClient/` — the external clients' library and its C
   shim, no dependency on the rest of Irisin; `IrisinExternalContractTests`
   in IrisinKit holds its wire to `IrisinProtocol`'s.

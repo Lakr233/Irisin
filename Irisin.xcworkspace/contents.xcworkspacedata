@@ -22,4 +22,7 @@
    <FileRef
       location = "group:Packages/Runestone">
    </FileRef>
+   <FileRef
+      location = "group:Packages/IrisinWeb">
+   </FileRef>
 </Workspace>
