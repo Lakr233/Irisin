@@ -348,8 +348,9 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `Resources/Assets.xcassets`.
 - **Onboarding's recommended repositories are data, not code.**
   `Resources/Environments/default-list-<architecture>.plist`, one per
-  bootstrap, and `default-list-managed.plist`, shipped empty for the
-  jailbreak to overwrite: with any entry it is the list, whatever the
+  bootstrap (Apple TV's, `appletvos-arm64e`, is apt.owngoal.dev alone, the
+  one repository that publishes for it), and `default-list-managed.plist`,
+  shipped empty for the jailbreak to overwrite: with any entry it is the list, whatever the
   architecture (`RecommendedRepositories`). No list recommends nothing, and
   the page has no such section. Each entry is a source line with optional
   inclusive iOS major bounds, which is how Procursus's per-release suite

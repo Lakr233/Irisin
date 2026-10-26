@@ -50,6 +50,14 @@ struct RecommendedRepositoriesTests {
         }
     }
 
+    @Test func appleTVRecommendsOwnGoalAlone() throws {
+        let directory = try #require(Bundle.main.resourceURL)
+        for majorVersion in 17 ... 27 {
+            #expect(RecommendedRepositories.lines(in: directory, architecture: "appletvos-arm64e", majorVersion: majorVersion)
+                == ["https://apt.owngoal.dev"])
+        }
+    }
+
     @Test func unknownArchitectureRecommendsNothing() throws {
         let directory = try #require(Bundle.main.resourceURL)
         #expect(RecommendedRepositories.lines(in: directory, architecture: "darwin-arm64", majorVersion: 18).isEmpty)
