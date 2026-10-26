@@ -4,7 +4,6 @@
 //
 
 import AptRepository
-import ScribbleLetter
 import SDWebImage
 import SnapKit
 import Then

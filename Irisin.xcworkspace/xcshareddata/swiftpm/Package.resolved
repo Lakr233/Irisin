@@ -73,15 +73,6 @@
       }
     },
     {
-      "identity" : "scribbleletterview",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/yellowplushq/ScribbleLetterView",
-      "state" : {
-        "revision" : "292e6bf72023f246c6d58b4a65ba84fc878cb919",
-        "version" : "0.1.1"
-      }
-    },
-    {
       "identity" : "sdwebimage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SDWebImage/SDWebImage",

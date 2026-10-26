@@ -24,7 +24,6 @@
 		CA10000000000000000002F0 /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = CA10000000000000000002F1 /* Runestone */; };
 		CA1000000000000000000300 /* RunestoneLanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000301 /* RunestoneLanguageSupport */; };
 		CA1000000000000000000310 /* RunestoneThemeSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000311 /* RunestoneThemeSupport */; };
-		CA1000000000000000000320 /* ScribbleLetter in Frameworks */ = {isa = PBXBuildFile; productRef = CA1000000000000000000321 /* ScribbleLetter */; };
 		CA2000000000000000000040 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA2000000000000000000041 /* IrisinProtocol */; };
 		CA8000000000000000000040 /* IrisinProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000041 /* IrisinProtocol */; };
 		CA8000000000000000000042 /* IrisinClient in Frameworks */ = {isa = PBXBuildFile; productRef = CA8000000000000000000043 /* IrisinClient */; };
@@ -111,7 +110,6 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				CA10000000000000000001A0 /* IrisinProtocol in Frameworks */,
-				CA1000000000000000000320 /* ScribbleLetter in Frameworks */,
 				CA10000000000000000001B0 /* IrisinClient in Frameworks */,
 				CA10000000000000000001F0 /* IrisinVendor in Frameworks */,
 				CA10000000000000000001C0 /* AptRepository in Frameworks */,
@@ -228,7 +226,6 @@
 				CA1000000000000000000311 /* RunestoneThemeSupport */,
 				502F2D43304EBFBC006C2087 /* Then */,
 				502F639C304F1353006C2087 /* OrderedCollections */,
-				CA1000000000000000000321 /* ScribbleLetter */,
 			);
 			productName = irisin;
 			productReference = CA1000000000000000000001 /* irisin.app */;
@@ -389,7 +386,6 @@
 				CA600000000000000000000A /* XCRemoteSwiftPackageReference "AlertController" */,
 				502F2D42304EBFBC006C2087 /* XCRemoteSwiftPackageReference "Then" */,
 				502F639B304F1353006C2087 /* XCRemoteSwiftPackageReference "swift-collections" */,
-				CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */,
 				CA600000000000000000000D /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -921,14 +917,6 @@
 				minimumVersion = 3.0.0;
 			};
 		};
-		CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/yellowplushq/ScribbleLetterView";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.1;
-			};
-		};
 		CA600000000000000000000D /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
@@ -1015,11 +1003,6 @@
 		CA1000000000000000000311 /* RunestoneThemeSupport */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RunestoneThemeSupport;
-		};
-		CA1000000000000000000321 /* ScribbleLetter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CA600000000000000000000C /* XCRemoteSwiftPackageReference "ScribbleLetterView" */;
-			productName = ScribbleLetter;
 		};
 		CA2000000000000000000041 /* IrisinProtocol */ = {
 			isa = XCSwiftPackageProductDependency;
