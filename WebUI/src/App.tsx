@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './api';
 import { CodePrompt } from './CodePrompt';
+import { DeviceView } from './DeviceView';
 import iconDark from './generated/icon-dark.png';
 import iconLight from './generated/icon-light.png';
 import { t } from './i18n';
@@ -8,8 +9,8 @@ import { InstalledView, RepositoriesView, SearchView, UpdatesView } from './List
 import { PackageView } from './PackageView';
 import { OperationView, QueueView } from './QueueView';
 
-export type Tab = 'search' | 'updates' | 'installed' | 'repositories' | 'queue';
-const TABS: Tab[] = ['search', 'updates', 'installed', 'repositories', 'queue'];
+export type Tab = 'search' | 'updates' | 'installed' | 'repositories' | 'queue' | 'device';
+const TABS: Tab[] = ['search', 'updates', 'installed', 'repositories', 'queue', 'device'];
 
 type Route = { tab: Tab; pkg?: string };
 
@@ -257,14 +258,14 @@ function Manager({ keyBytes, device: initial, onLost }: { keyBytes: Uint8Array; 
       ) : route.pkg ? (
         <PackageView page={page} id={route.pkg} />
       ) : (
-        <View tab={route.tab} page={page} />
+        <View tab={route.tab} page={page} device={device} />
       )}
       <p className="muted footnote">{t('trust')}</p>
     </Shell>
   );
 }
 
-function View({ tab, page }: { tab: Tab; page: Page }) {
+function View({ tab, page, device }: { tab: Tab; page: Page; device: api.Device }) {
   switch (tab) {
     case 'search':
       return <SearchView page={page} />;
@@ -276,6 +277,8 @@ function View({ tab, page }: { tab: Tab; page: Page }) {
       return <RepositoriesView page={page} />;
     case 'queue':
       return <QueueView page={page} />;
+    case 'device':
+      return <DeviceView page={page} device={device} />;
   }
 }
 

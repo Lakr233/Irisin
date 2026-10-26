@@ -28,13 +28,15 @@ field() { dpkg-deb -f "$deb" "$1"; }
 LC_ALL=C field Description | grep -qi 'jailbreak' && fail "the description says jailbreak; it is custom firmware"
 
 contents="$(dpkg-deb --contents "$deb" 2>/dev/null)"
-expected=(./usr/libexec/irisind ./usr/libexec/irisin-install ./Library/LaunchDaemons/wiki.qaq.irisind.plist)
+expected=(./usr/libexec/irisind ./usr/libexec/irisin-install ./Library/LaunchDaemons/wiki.qaq.irisind.plist ./Applications/irisin.app/irisin)
 for path in "${expected[@]}"; do
     grep -qE "root/(root|wheel) .* $path\$" <<<"$contents" || fail "$path is missing or not root's"
 done
-# No app, no command line, no icli, nothing at a rootless prefix.
-files="$(awk '$1 !~ /^d/ { print $NF }' <<<"$contents")"
-[[ "$(wc -l <<<"$files" | tr -d ' ')" == "${#expected[@]}" ]] || fail "unexpected files: $(tr '\n' ' ' <<<"$files")"
+# Beside the launchpad's bundle, the daemon, the helper and its plist and
+# nothing else: no command line, no icli, nothing at a rootless prefix.
+files="$(awk '$1 !~ /^d/ { print $NF }' <<<"$contents" | grep -v '^\./Applications/irisin\.app/')"
+[[ "$(wc -l <<<"$files" | tr -d ' ')" == 3 ]] || fail "unexpected files: $(tr '\n' ' ' <<<"$files")"
+grep -qE '/icli$' <<<"$contents" && fail "the package holds an icli"
 grep -q '\./var/jb' <<<"$contents" && fail "a RootHide package holds a rootless path"
 
 work="$(mktemp -d "${TMPDIR:-/tmp}/irisin-appletv-verify.XXXXXX")"
@@ -45,6 +47,25 @@ for script in postinst prerm; do
     [[ -x "$work/DEBIAN/$script" ]] || fail "$script is missing or not executable"
     grep -q '/var/jb' "$work/DEBIAN/$script" && fail "$script names a rootless path"
 done
+app="$work/root/Applications/irisin.app"
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist")" == wiki.qaq.irisin ]] || fail "the launchpad is not wiki.qaq.irisin"
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :IrisinCurrentArchitecture' "$app/Info.plist")" == "$architecture" ]] \
+    || fail "the launchpad does not say it is for $architecture"
+for page in index.html app.js app.css; do
+    [[ -f "$app/WebUI/$page" ]] || fail "the launchpad has no WebUI/$page"
+done
+for list in "$app"/default-list-*.plist; do
+    case "$(basename "$list")" in
+    "default-list-$architecture.plist" | default-list-managed.plist) ;;
+    *) fail "the launchpad carries another bootstrap's $(basename "$list")" ;;
+    esac
+done
+build="$(vtool -show-build "$app/irisin")"
+[[ "$(awk '/platform/ { print $2; exit }' <<<"$build")" == TVOS ]] || fail "the launchpad is not tvOS's"
+[[ "$(awk '/minos/ { print $2; exit }' <<<"$build")" == "$minimum_tvos" ]] || fail "the launchpad is not built for tvOS $minimum_tvos"
+ldid -e "$app/irisin" | grep -q '<key>wiki.qaq.irisin.client</key>' || fail "the launchpad is not signed as irisind's client"
+ldid -e "$app/irisin" | grep -q 'keychain-access-groups' && fail "the launchpad carries keychain groups; the page signs in to no vendor"
+
 for binary in "$work/root/usr/libexec/irisind" "$work/root/usr/libexec/irisin-install"; do
     build="$(vtool -show-build "$binary")"
     [[ "$(awk '/platform/ { print $2; exit }' <<<"$build")" == TVOS ]] || fail "$(basename "$binary") is not tvOS's"

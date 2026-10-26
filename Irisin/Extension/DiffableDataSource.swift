@@ -6,7 +6,6 @@
 //  Copyright © 2026 Lakr Aream. All rights reserved.
 //
 
-import OrderedCollections
 import UIKit
 
 extension NSDiffableDataSourceSnapshot {
@@ -49,13 +48,6 @@ final class EditableTableDiffableDataSource<Section: Hashable & Sendable, Item: 
     /// optimizer (Xcode 26.6) crashes inlining that for a generic subclass
     /// of an Objective-C generic class.
     nonisolated deinit {}
-}
-
-nonisolated extension Array where Element: Hashable {
-    /// A snapshot aborts on a duplicated identifier; keep the first one.
-    func uniqued() -> [Element] {
-        OrderedSet(self).elements
-    }
 }
 
 /// A list's changes for a table that may be out of the window. A table

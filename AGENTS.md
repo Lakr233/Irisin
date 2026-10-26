@@ -1,9 +1,13 @@
 # Irisin — Agent Notes
 
 APT package manager for jailbroken iOS 15+, roothide and rootless bootstraps
-both. **iOS only**, but for the privileged layer (`irisind`,
-`irisin-install`), which also builds for Apple TV: tvOS 17, RootHide alone,
-a draft whose decisions and open questions are `Documentation/AppleTV.md`.
+both. **iOS first.** Apple TV and Vision Pro get the launchpad
+(`IrisinLaunchpad`): the app's services and one screen of its own, managed
+from a browser on the same network (`Documentation/WebManagement.md`). The
+privileged layer (`irisind`, `irisin-install`) builds for Apple TV too: tvOS
+17, RootHide alone, whose decisions and open questions are
+`Documentation/AppleTV.md`. No bootstrap serves Vision Pro yet, so the
+launchpad there browses, and installs only in the simulator.
 The app runs as `mobile` and never becomes root; the
 bundled `irisind` LaunchDaemon starts `irisin-install`, which installs
 package files natively and, as root, tells LaunchServices about app bundles
@@ -256,8 +260,15 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   only.** `make check` rejects either in `project.pbxproj`.
 - **No project generators.** `Irisin.xcodeproj/project.pbxproj` is
   hand-written, `objectVersion = 77`, file-system-synchronized groups: a file
-  under `Irisin/`, `IrisinDaemon/` or `IrisinInstall/` joins its target by
-  existing. `make check` fails if Xcode rewrites `objectVersion`.
+  under `Irisin/`, `IrisinShared/`, `IrisinLaunchpad/`, `IrisinDaemon/` or
+  `IrisinInstall/` joins its target by existing, and one under
+  `IrisinShared/` joins both the app and the launchpad. A folder inside a
+  synchronized group cannot be left out of a target or added to one (Xcode
+  honours a file in `membershipExceptions`, never a folder, and ignores
+  `EXCLUDED_SOURCE_FILE_NAMES` there), so what both apps compile lives in
+  `IrisinShared/`, and what the launchpad takes from `Irisin/Resources`
+  (the string catalog and the recommended lists) is named there file by
+  file. `make check` fails if Xcode rewrites `objectVersion`.
 - **Everything builds through `Irisin.xcworkspace`.** It holds the project
   and every package under `Packages/`, and a package there stands in for a
   remote one of the same name anywhere in the graph. The Makefile passes
@@ -344,8 +355,24 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   at the page's bar button, then at the middle of the page. Nothing else
   makes a `UIActivityViewController` or touches a popover presentation
   controller; `make check` greps for both.
-- **One asset catalog.** Everything the app draws from a file is in
-  `Resources/Assets.xcassets`.
+- **One asset catalog per app.** Everything the app draws from a file is in
+  `Irisin/Resources/Assets.xcassets`; the launchpad's icons (tvOS brand
+  assets with their Top Shelf images, the Vision Pro image stack) are in
+  `IrisinLaunchpad/Resources/Assets.xcassets`, rendered from
+  `Documentation/Icon` by `Scripts/render-launchpad-icons.sh`. Compiling
+  the Vision Pro stack needs a visionOS simulator runtime on the Mac
+  (`xcodebuild -downloadPlatform visionOS`), device builds included.
+- **The launchpad links nothing third-party, and the page signs in to no
+  vendor.** `IrisinLaunchpad` links IrisinProtocol, IrisinClient,
+  IrisinVendor (the device's identity for repositories, never its
+  Keychain), AptRepository and AptResolver (and WCDB, libsolv and
+  libarchive with them), Dog and IrisinWeb; its interface is plain UIKit.
+  `IrisinShared/` and `IrisinLaunchpad/` import none of the app's UI
+  libraries, and `make check` greps for them. A paid package says so and
+  does not install from a browser. Every change a browser asks for is put
+  to the owner on the device first (`WebManagement.ask`, `WebRun`), Decline
+  focused, one at a time; reads answer at once, and an operation's lines
+  are polled from a feed (`OperationFeed`), not pushed.
 - **Onboarding's recommended repositories are data, not code.**
   `Resources/Environments/default-list-<architecture>.plist`, one per
   bootstrap (Apple TV's, `appletvos-arm64e`, is apt.owngoal.dev alone, the
@@ -440,10 +467,19 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
 
 ## Layout
 
-- `Irisin/` — the app: `Application/` (delegates, `AppPaths`),
-  `Services/` (`PackageQueue`, `Installer`, `Downloads`, `VendorAccount`,
-  `Privilege/PrivilegedBackend`, translation),
-  `Interface/`, `Extension/`, `Resources/`.
+- `Irisin/` — the app: `Application/` (delegates), `Services/` (what only
+  iOS has: `VendorAccount`, `OperationConfirmation`, translation),
+  `Interface/`, `Extension/` (UIKit's), `Resources/`.
+- `IrisinShared/` — what the app and the launchpad both compile:
+  `Application/` (`AppPaths`, `AppEnvironment`, `AppBootstrap`),
+  `Services/` (`PackageQueue`, `Installer`, `Downloads`,
+  `Privilege/PrivilegedBackend`, `WebManagement`: the browser's calls, the
+  owner's questions and the operation feed), `Extension/`.
+- `IrisinLaunchpad/` — the launchpad, product `irisin` (bundle
+  `wiki.qaq.irisin`, at `/Applications/irisin.app` like the app, which is
+  how irisind admits it), tvOS 17 and visionOS 2: one screen with the
+  address, the code and its QR code (`LaunchpadController`), the owner's
+  question (`QuestionController`), its own tokens and asset catalog.
 - `IrisinDaemon/` — the daemon, product `irisind`: listener, peer
   authentication, helper launch.
 - `IrisinInstall/` — the helper, product `irisin-install`: one job
@@ -468,8 +504,9 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `JobTranscript`), `IrisinVendor` (a paid repository's Keychain
   names and every vendor request, the app's and `irisin-cli`'s alike, the
   stored `secert` spelling included), each with `swift test`.
-- `Packages/IrisinWeb/` — managing a device from a browser, a draft for
-  5.1.0 (`Documentation/WebManagement.md`): the server on Network.framework,
+- `Packages/IrisinWeb/` — managing a device from a browser
+  (`Documentation/WebManagement.md`), served by the launchpad; an iOS switch
+  is still to come. The server on Network.framework,
   the six-digit code, the HKDF key and the ChaCha20-Poly1305 envelope every
   call travels in. Its README is the contract the page and the device keep.
   Nothing outside the system.
@@ -477,10 +514,10 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   pnpm (the version is `package.json`'s `packageManager`, run through
   corepack when there is no pnpm), no hand-written HTML. It is pure static
   output (`dist/index.html`, `app.js`, `app.css`, the icons) and talks to
-  the device through the sealed calls only. The app target's *Build Web UI*
-  phase (`Scripts/build-webui.sh`, before Collect Licenses, which lists its
-  runtime dependencies) builds it and copies `dist/` into
-  `irisin.app/WebUI`; the server hands out `index.html` at `/` and the rest
+  the device through the sealed calls only. The app's and the launchpad's
+  *Build Web UI* phase (`Scripts/build-webui.sh`, in the app before Collect
+  Licenses, which lists its runtime dependencies) builds it and copies
+  `dist/` into `irisin.app/WebUI`; the server hands out `index.html` at `/` and the rest
   under `/_irisin/` by bare name, with a CSP that allows nothing inline.
   `scripts/sync-assets.js` takes the accent from `UIColor.buttonNormal` and
   the icon from AppIcon before every build. Its words are its own
@@ -609,12 +646,17 @@ a version bump, like icli.
   phase runs the same script in every build). pnpm reaches the registry
   directly; where a proxy is in the environment that it cannot pass, unset
   it for the build.
-- `make build-appletv` / `make deb-appletv` — `irisind` and `irisin-install`
-  for tvOS (scheme `irisin-privileged`), and the Apple TV package, verified
+- `make build-appletv` / `make deb-appletv` — the launchpad (scheme
+  `IrisinLaunchpad`), `irisind` and `irisin-install` (scheme
+  `irisin-privileged`) for tvOS, and the Apple TV package, verified
   (`package-appletv-deb.sh`, `verify-appletv-deb.sh`, the floor imports
   against the AppleTVOS SDK with `floor-imports-appletv.txt` added). Needs
   Xcode's tvOS platform (`xcodebuild -downloadPlatform tvOS`). Its
   architecture is `appletvos-arm64e`.
+- `make sim-appletv SIMULATOR=<udid>` / `make sim-vision SIMULATOR=<udid>` —
+  the launchpad, Debug, on an Apple TV or Vision Pro simulator, installing
+  into its container as `make sim` does. It serves on the Mac's own
+  addresses, so a browser on the Mac (or the network) opens the page.
 - `make install` — update an installation over `iproxy 2333 22`.
 - `Scripts/prune-xcstrings.py Irisin/Resources/Localizable.xcstrings Irisin Packages`
   — after Xcode has marked catalog entries stale: a key still quoted in a

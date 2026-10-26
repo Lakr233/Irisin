@@ -32,9 +32,18 @@ nonisolated enum PackagedArchitecture {
     /// Independent of the app's plist and installed package mix: the layout
     /// reported by the bootstrap's runtime library determines its package
     /// architecture, which is distinct from the CPU's Mach-O architecture.
-    static let detected = JailbreakRoot.isRoothide
-        ? BootstrapArchitecture.roothide.rawValue
-        : BootstrapArchitecture.rootless.rawValue
+    /// Apple TV serves RootHide alone (Documentation/AppleTV.md), so the
+    /// launchpad there takes its one architecture, the simulator's stand-in
+    /// root included.
+    static let detected: String = {
+        #if os(tvOS)
+            BootstrapArchitecture.appleTVRoothide.rawValue
+        #else
+            JailbreakRoot.isRoothide
+                ? BootstrapArchitecture.roothide.rawValue
+                : BootstrapArchitecture.rootless.rawValue
+        #endif
+    }()
 
     static let incompatibilityMessage = incompatibilityMessage(packaged: packaged, detected: detected)
 

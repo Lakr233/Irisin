@@ -72,7 +72,7 @@ export function PackageView({ page, id }: { page: Page; id: string }) {
           )}
           <button
             className="btn primary"
-            disabled={proposing}
+            disabled={proposing || value.paid}
             onClick={() => void propose({ install: [{ id: value.id, version: version }] })}
           >
             {installAction}
@@ -83,6 +83,7 @@ export function PackageView({ page, id }: { page: Page; id: string }) {
             </button>
           )}
         </div>
+        {value.paid && <p className="muted note">{t('paidNote')}</p>}
         {failure && <p className="error">{failure}</p>}
         <dl className="fields">
           {fields

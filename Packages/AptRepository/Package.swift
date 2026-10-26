@@ -6,6 +6,9 @@ let package = Package(
     name: "AptRepository",
     platforms: [
         .iOS(.v15),
+        // the Apple TV and Vision Pro launchpad (IrisinLaunchpad)
+        .tvOS(.v17),
+        .visionOS(.v2),
         .macOS(.v13),
     ],
     products: [
@@ -20,7 +23,9 @@ let package = Package(
         .package(path: "../IrisinKit"),
         // Prebuilt WCDB (sqlite + sqlcipher + the C++ core in one dynamic
         // framework). The catalogue lives in its database; see Storage/.
-        .package(url: "https://github.com/Lakr233/wcdb.xcframework", from: "2.1.16"),
+        // 2.1.26102501 is WCDB 2.1.16 again, the first build with the
+        // visionOS slices the launchpad needs.
+        .package(url: "https://github.com/Lakr233/wcdb.xcframework", from: "2.1.26102501"),
         // the packages a list draws, held by the center; MarkdownView
         // already links it into the app
         .package(url: "https://github.com/nicklockwood/LRUCache", from: "1.3.0"),

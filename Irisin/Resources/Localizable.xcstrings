@@ -1,6 +1,244 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ is a paid package. Paid packages cannot be installed from a browser." : {
+      "comment" : "Refusal in the browser: the package name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ حزمة مدفوعة. لا يمكن تثبيت الحزم المدفوعة من متصفح."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ একটি পেইড প্যাকেজ। পেইড প্যাকেজ ব্রাউজার থেকে ইনস্টল করা যায় না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist ein kostenpflichtiges Paket. Kostenpflichtige Pakete können nicht über einen Browser installiert werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is a paid package. Paid packages cannot be installed from a browser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ es un paquete de pago. Los paquetes de pago no se pueden instalar desde un navegador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est un paquet payant. Les paquets payants ne peuvent pas être installés depuis un navigateur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ एक पेड पैकेज है। पेड पैकेज ब्राउज़र से इंस्टॉल नहीं किए जा सकते।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ adalah paket berbayar. Paket berbayar tidak dapat diinstal dari browser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ è un pacchetto a pagamento. I pacchetti a pagamento non possono essere installati da un browser."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ は有料パッケージです。有料パッケージはブラウザからインストールできません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@은(는) 유료 패키지입니다. 유료 패키지는 브라우저에서 설치할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ é um pacote pago. Pacotes pagos não podem ser instalados por um navegador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — платный пакет. Платные пакеты нельзя установить из браузера."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ni kifurushi cha kulipia. Vifurushi vya kulipia haviwezi kusakinishwa kutoka kwenye kivinjari."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ücretli bir paket. Ücretli paketler tarayıcıdan yüklenemez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ là gói trả phí. Không thể cài đặt gói trả phí từ trình duyệt."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ jẹ́ pákéèjì tí a ń sanwó fún. A kò lè fi àwọn pákéèjì tí a ń sanwó fún sórí ẹ̀rọ láti inú aṣàwákiri."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 是付费软件包，付费软件包无法从浏览器安装。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 是付費套件，付費套件無法從瀏覽器安裝。"
+          }
+        }
+      }
+    },
+    "%@ is not installed." : {
+      "comment" : "Refusal in the browser for removing a package: the package identifier.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ غير مثبّتة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ইনস্টল করা নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist nicht installiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is not installed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no está instalado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’est pas installé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ इंस्टॉल नहीं है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tidak terinstal."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ non è installato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ はインストールされていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@이(가) 설치되어 있지 않습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não está instalado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ не установлен."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ haijasakinishwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ yüklü değil."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ chưa được cài đặt."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ kò sí lórí ẹ̀rọ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 尚未安装。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 尚未安裝。"
+          }
+        }
+      }
+    },
     "%@ · Binary" : {
       "localizations" : {
         "ar" : {
@@ -2829,6 +3067,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 個套件"
+          }
+        }
+      }
+    },
+    "A browser asks to make this change on this device." : {
+      "comment" : "Under the title of the owner's question on the launchpad, before what the change does.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يطلب متصفح إجراء هذا التغيير على هذا الجهاز."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "একটি ব্রাউজার এই ডিভাইসে এই পরিবর্তনটি করার অনুরোধ করছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Browser möchte diese Änderung auf diesem Gerät vornehmen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A browser asks to make this change on this device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un navegador solicita hacer este cambio en este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un navigateur demande à effectuer cette modification sur cet appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक ब्राउज़र इस डिवाइस पर यह बदलाव करने का अनुरोध कर रहा है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sebuah browser meminta untuk melakukan perubahan ini di perangkat ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un browser chiede di apportare questa modifica su questo dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブラウザが、このデバイスでこの変更を行うよう求めています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "브라우저가 이 기기에서 이 변경을 하도록 요청합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um navegador pede para fazer esta alteração neste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер просит внести это изменение на этом устройстве."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kivinjari kinaomba kufanya badiliko hili kwenye kifaa hiki."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir tarayıcı bu aygıtta şu değişikliği yapmak istiyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một trình duyệt yêu cầu thực hiện thay đổi này trên thiết bị này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aṣàwákiri kan ń béèrè láti ṣe àyípadà yìí lórí ẹ̀rọ yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有浏览器请求在这台设备上进行以下更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有瀏覽器要求在此裝置上進行以下變更。"
           }
         }
       }
@@ -5783,6 +6140,125 @@
         }
       }
     },
+    "and %lld more" : {
+      "comment" : "Last line of the owner's question when the plan is longer than the screen lists.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "و%lld أخرى"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এবং আরও %lldটি"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "und %lld weitere"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "and %lld more"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "y %lld más"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "et %lld autres"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "और %lld अन्य"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dan %lld lainnya"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e altri %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ほか %lld 件"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "외 %lld개"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e mais %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "и ещё %lld"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "na %lld zaidi"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ve %lld tane daha"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "và %lld mục khác"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "àti %lld mìíràn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以及另外 %lld 项"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以及另外 %lld 項"
+          }
+        }
+      }
+    },
     "Another operation is already running. Wait for it to finish, then try again." : {
       "localizations" : {
         "ar" : {
@@ -8261,6 +8737,125 @@
         }
       }
     },
+    "Change Packages?" : {
+      "comment" : "Title of the owner's question on the launchpad when a browser confirms the queue.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير الحزم؟"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "প্যাকেজ পরিবর্তন করবেন?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakete ändern?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Packages?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cambiar paquetes?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les paquets ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पैकेज बदलें?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ubah Paket?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modificare i pacchetti?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パッケージを変更しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "패키지를 변경하겠습니까?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar pacotes?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить пакеты?"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ubadilishe Vifurushi?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketler Değiştirilsin mi?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thay đổi gói?"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yí Àwọn Pákéèjì Padà?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改软件包？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要變更套件嗎？"
+          }
+        }
+      }
+    },
     "Changed tweaks take effect after the home screen reloads." : {
       "localizations" : {
         "ar" : {
@@ -9797,6 +10392,125 @@
         }
       }
     },
+    "Connect this device to Wi-Fi or Ethernet to manage it from a browser." : {
+      "comment" : "The launchpad's screen when the device has no local network address.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وصِّل هذا الجهاز بشبكة Wi-Fi أو إيثرنت لإدارته من متصفح."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ব্রাউজার থেকে এই ডিভাইসটি পরিচালনা করতে এটিকে Wi-Fi বা ইথারনেটে সংযুক্ত করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde dieses Gerät mit WLAN oder Ethernet, um es über einen Browser zu verwalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect this device to Wi-Fi or Ethernet to manage it from a browser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conecta este dispositivo a una red Wi-Fi o Ethernet para gestionarlo desde un navegador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez cet appareil au Wi-Fi ou à Ethernet pour le gérer depuis un navigateur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ब्राउज़र से इस डिवाइस को प्रबंधित करने के लिए इसे Wi-Fi या ईथरनेट से कनेक्ट करें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hubungkan perangkat ini ke Wi-Fi atau Ethernet untuk mengelolanya dari browser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collega questo dispositivo a una rete Wi-Fi o Ethernet per gestirlo da un browser."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブラウザから管理するには、このデバイスをWi-FiまたはEthernetに接続してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "브라우저에서 관리하려면 이 기기를 Wi-Fi 또는 이더넷에 연결하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conecte este dispositivo a uma rede Wi-Fi ou Ethernet para gerenciá-lo por um navegador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключите это устройство к Wi-Fi или Ethernet, чтобы управлять им из браузера."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unganisha kifaa hiki kwenye Wi-Fi au Ethernet ili ukisimamie kutoka kwenye kivinjari."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu aygıtı tarayıcıdan yönetmek için Wi-Fi'ye veya Ethernet'e bağlayın."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối thiết bị này với Wi-Fi hoặc Ethernet để quản lý từ trình duyệt."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So ẹ̀rọ yìí mọ́ Wi-Fi tàbí Ethernet láti ṣàkóso rẹ̀ láti inú aṣàwákiri."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将这台设备连接到 Wi-Fi 或以太网，即可从浏览器管理它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將此裝置連接到 Wi-Fi 或乙太網路，即可透過瀏覽器管理。"
+          }
+        }
+      }
+    },
     "Copy as Markdown" : {
       "comment" : "Menu command that copies the selected table cells as a Markdown table.",
       "extractionState" : "manual",
@@ -9913,6 +10627,363 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拷貝為 Markdown"
+          }
+        }
+      }
+    },
+    "Decline" : {
+      "comment" : "Button on the owner's question on the launchpad that says no; it has the focus first.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رفض"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "প্রত্যাখ্যান করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablehnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refuser"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अस्वीकार करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tolak"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rifiuta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拒否"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "거절"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recusar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отклонить"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kataa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reddet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ chối"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kọ̀"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拒绝"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拒絕"
+          }
+        }
+      }
+    },
+    "Declined on the device." : {
+      "comment" : "Shown in the browser's transcript when the owner said no on the device.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم الرفض على الجهاز."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ডিভাইসে প্রত্যাখ্যান করা হয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf dem Gerät abgelehnt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declined on the device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazado en el dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé sur l’appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिवाइस पर अस्वीकार किया गया।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ditolak di perangkat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rifiutato sul dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスで拒否されました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기에서 거절되었습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recusado no dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отклонено на устройстве."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imekataliwa kwenye kifaa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aygıtta reddedildi."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã từ chối trên thiết bị."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kọ̀ ọ́ lórí ẹ̀rọ náà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在设备上拒绝。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在裝置上拒絕。"
+          }
+        }
+      }
+    },
+    "Delete Repository" : {
+      "comment" : "Title of the owner's question on the launchpad when a browser asks to delete a repository.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف المستودع"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিপোজিটরি মুছুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelle löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Repository"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar repositorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le dépôt"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपॉज़िटरी डिलीट करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Repositori"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina repository"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリを削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스 삭제"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar repositório"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить репозиторий"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Futa Hazina"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depoyu Sil"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa nguồn"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paarẹ́ Ibi Ìpamọ́"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除软件源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除軟體源"
           }
         }
       }
@@ -10509,6 +11580,125 @@
         }
       }
     },
+    "Every app closes, this one too. Open it again for a new code." : {
+      "comment" : "The owner's question before the home screen reloads at a browser's request.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُغلق جميع التطبيقات، ومنها هذا التطبيق. افتحه مرة أخرى للحصول على رمز جديد."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "সব অ্যাপ বন্ধ হয়ে যাবে, এটিও। নতুন কোড পেতে এটি আবার খুলুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Apps werden beendet, auch diese. Öffne sie erneut, um einen neuen Code zu erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every app closes, this one too. Open it again for a new code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las apps se cierran, también esta. Vuelve a abrirla para obtener un código nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les apps se ferment, y compris celle-ci. Rouvrez-la pour obtenir un nouveau code."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हर ऐप बंद हो जाएगा, यह भी। नया कोड पाने के लिए इसे फिर से खोलें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semua app akan ditutup, termasuk app ini. Buka lagi untuk mendapatkan kode baru."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutte le app verranno chiuse, compresa questa. Riaprila per ottenere un nuovo codice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このAppを含め、すべてのAppが終了します。新しいコードを取得するには、もう一度開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 앱을 포함한 모든 앱이 닫힙니다. 새 코드를 받으려면 다시 여십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos os apps serão fechados, inclusive este. Abra-o novamente para obter um novo código."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все приложения закроются, включая это. Откройте его снова, чтобы получить новый код."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kila programu itafungwa, hii pia. Ifungue tena ili upate msimbo mpya."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm uygulamalar kapanır, bu uygulama da. Yeni bir kod için uygulamayı yeniden açın."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mọi ứng dụng sẽ đóng, kể cả ứng dụng này. Hãy mở lại để nhận mã mới."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gbogbo àpù yóò pa, títí kan èyí. Tún un ṣí láti gba kóòdù tuntun."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有 App 都会关闭，包括这一个。再次打开即可获得新的验证码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有 App 都會關閉，包括這一個。再次開啟即可取得新的驗證碼。"
+          }
+        }
+      }
+    },
     "Face ID" : {
       "comment" : "The system's own name for this way of confirming; use Apple's spelling in this language.",
       "localizations" : {
@@ -10864,6 +12054,244 @@
         }
       }
     },
+    "Install %@ %@" : {
+      "comment" : "A line of the plan in the owner's question: package name, then version.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت %@ %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ ইনস্টল করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ installieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install %@ %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar %@ %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer %@ %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ इंस्टॉल करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instal %@ %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa %@ %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ をインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ 설치"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar %@ %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить %@ %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakinisha %@ %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ sürümünü yükle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt %@ %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fi %@ %@ sórí ẹ̀rọ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 %1$@ %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Installing. Follow it in the browser." : {
+      "comment" : "The launchpad's status line while an operation a browser started runs.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التثبيت. تابِع التقدم في المتصفح."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ইনস্টল করা হচ্ছে। ব্রাউজারে অগ্রগতি দেখুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird installiert. Verfolge den Fortschritt im Browser."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing. Follow it in the browser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando. Sigue el progreso en el navegador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation en cours. Suivez-la dans le navigateur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल हो रहा है। ब्राउज़र में प्रगति देखें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menginstal. Ikuti prosesnya di browser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installazione in corso. Seguila nel browser."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール中です。進行状況はブラウザで確認してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치 중입니다. 브라우저에서 진행 상황을 확인하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalando. Acompanhe pelo navegador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Идёт установка. Следите за ней в браузере."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inasakinisha. Fuatilia kwenye kivinjari."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleniyor. İlerlemeyi tarayıcıdan izleyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang cài đặt. Hãy theo dõi trong trình duyệt."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ń fi sórí ẹ̀rọ. Tẹ̀lé e nínú aṣàwákiri."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安装，请在浏览器中查看进度。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在安裝，請在瀏覽器中查看進度。"
+          }
+        }
+      }
+    },
     "Irisin can verify that you own this device before it installs or removes packages." : {
       "localizations" : {
         "ar" : {
@@ -10978,6 +12406,482 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Irisin 可以在安裝或解除安裝套件之前，驗證你是否為此裝置的擁有者。"
+          }
+        }
+      }
+    },
+    "Irisin restarts now. Open it again for a new code." : {
+      "comment" : "Last line of the browser's transcript after Irisin updated itself.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيُعاد تشغيل Irisin الآن. افتحه مرة أخرى للحصول على رمز جديد."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin এখন পুনরায় চালু হচ্ছে। নতুন কোড পেতে এটি আবার খুলুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin wird jetzt neu gestartet. Öffne die App erneut, um einen neuen Code zu erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin restarts now. Open it again for a new code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin se reinicia ahora. Vuelve a abrirlo para obtener un código nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin redémarre maintenant. Rouvrez-le pour obtenir un nouveau code."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin अब फिर से शुरू हो रहा है। नया कोड पाने के लिए इसे फिर से खोलें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin akan dimulai ulang sekarang. Buka lagi untuk mendapatkan kode baru."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin si riavvia ora. Riaprilo per ottenere un nuovo codice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisinはこれから再起動します。新しいコードを取得するには、もう一度開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin이 지금 다시 시작됩니다. 새 코드를 받으려면 다시 여십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Irisin será reiniciado agora. Abra-o novamente para obter um novo código."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin сейчас перезапустится. Откройте его снова, чтобы получить новый код."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin inaanza upya sasa. Ifungue tena ili upate msimbo mpya."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin şimdi yeniden başlatılıyor. Yeni bir kod için uygulamayı yeniden açın."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin sẽ khởi động lại ngay. Hãy mở lại để nhận mã mới."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin ń tún bẹ̀rẹ̀ báyìí. Tún un ṣí láti gba kóòdù tuntun."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 即将重新启动。再次打开即可获得新的验证码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 即將重新啟動。再次開啟即可取得新的驗證碼。"
+          }
+        }
+      }
+    },
+    "No repository offers %@ for this device." : {
+      "comment" : "Refusal in the browser: the package identifier.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوفّر أي مستودع %@ لهذا الجهاز."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কোনো রিপোজিটরি এই ডিভাইসের জন্য %@ দেয় না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Quelle bietet %@ für dieses Gerät an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No repository offers %@ for this device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún repositorio ofrece %@ para este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dépôt ne propose %@ pour cet appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई भी रिपॉज़िटरी इस डिवाइस के लिए %@ उपलब्ध नहीं कराती।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada repositori yang menyediakan %@ untuk perangkat ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun repository offre %@ per questo dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このデバイス向けの %@ を提供しているリポジトリはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기용 %@을(를) 제공하는 소스가 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum repositório oferece %@ para este dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни один репозиторий не предлагает %@ для этого устройства."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hakuna hazina inayotoa %@ kwa kifaa hiki."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiçbir depo bu aygıt için %@ paketini sunmuyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không nguồn nào cung cấp %@ cho thiết bị này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí ibi ìpamọ́ tí ó ń pèsè %@ fún ẹ̀rọ yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有软件源为这台设备提供 %@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有軟體源為此裝置提供 %@。"
+          }
+        }
+      }
+    },
+    "No repository offers this package." : {
+      "comment" : "Refusal in the browser for a package page.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوفّر أي مستودع هذه الحزمة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কোনো রিপোজিটরি এই প্যাকেজটি দেয় না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Quelle bietet dieses Paket an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No repository offers this package."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún repositorio ofrece este paquete."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dépôt ne propose ce paquet."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई भी रिपॉज़िटरी यह पैकेज उपलब्ध नहीं कराती।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada repositori yang menyediakan paket ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun repository offre questo pacchetto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このパッケージを提供しているリポジトリはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 패키지를 제공하는 소스가 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum repositório oferece este pacote."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни один репозиторий не предлагает этот пакет."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hakuna hazina inayotoa kifurushi hiki."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiçbir depo bu paketi sunmuyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không nguồn nào cung cấp gói này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí ibi ìpamọ́ tí ó ń pèsè pákéèjì yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有软件源提供这个软件包。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有軟體源提供此套件。"
+          }
+        }
+      }
+    },
+    "No repository offers version %@ of %@." : {
+      "comment" : "Refusal in the browser: the version, then the package identifier.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوفّر أي مستودع الإصدار %1$@ من %2$@."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কোনো রিপোজিটরি %2$@-এর সংস্করণ %1$@ দেয় না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Quelle bietet Version %1$@ von %2$@ an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No repository offers version %@ of %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún repositorio ofrece la versión %@ de %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dépôt ne propose la version %@ de %@."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई भी रिपॉज़िटरी %2$@ का वर्ज़न %1$@ उपलब्ध नहीं कराती।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada repositori yang menyediakan versi %@ dari %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun repository offre la versione %@ di %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ のバージョン %1$@ を提供しているリポジトリはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@의 %1$@ 버전을 제공하는 소스가 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum repositório oferece a versão %@ de %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ни один репозиторий не предлагает версию %@ пакета %@."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hakuna hazina inayotoa toleo %@ la %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiçbir depo %2$@ paketinin %1$@ sürümünü sunmuyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không nguồn nào cung cấp phiên bản %@ của %@."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí ibi ìpamọ́ tí ó ń pèsè ẹ̀yà %@ ti %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有软件源提供 %2$@ 的 %1$@ 版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有軟體源提供 %2$@ 的 %1$@ 版本。"
           }
         }
       }
@@ -11336,6 +13240,125 @@
         }
       }
     },
+    "On a phone or computer on the same network, scan the code or open this address:" : {
+      "comment" : "The launchpad's instruction above the page's address and beside its QR code.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "على هاتف أو كمبيوتر متصل بالشبكة نفسها، امسح رمز QR أو افتح هذا العنوان:"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "একই নেটওয়ার্কে থাকা কোনো ফোন বা কম্পিউটারে QR কোডটি স্ক্যান করুন অথবা এই ঠিকানাটি খুলুন:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanne auf einem Smartphone oder Computer im selben Netzwerk den QR-Code oder öffne diese Adresse:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On a phone or computer on the same network, scan the code or open this address:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En un teléfono u ordenador conectado a la misma red, escanea el código QR o abre esta dirección:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur un téléphone ou un ordinateur connecté au même réseau, scannez le code QR ou ouvrez cette adresse :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उसी नेटवर्क पर किसी फ़ोन या कंप्यूटर में QR कोड स्कैन करें या यह पता खोलें:"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di ponsel atau komputer dalam jaringan yang sama, pindai kode QR atau buka alamat ini:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su un telefono o un computer nella stessa rete, scansiona il codice QR o apri questo indirizzo:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同じネットワーク上のスマートフォンまたはコンピュータで、QRコードをスキャンするか、次のアドレスを開いてください："
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 네트워크에 있는 휴대폰이나 컴퓨터에서 QR 코드를 스캔하거나 다음 주소를 여십시오:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em um celular ou computador na mesma rede, escaneie o código QR ou abra este endereço:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На телефоне или компьютере в той же сети отсканируйте QR-код или откройте этот адрес:"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kwenye simu au kompyuta iliyo kwenye mtandao uleule, changanua msimbo wa QR au fungua anwani hii:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aynı ağdaki bir telefon veya bilgisayarda QR kodunu tarayın ya da şu adresi açın:"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trên điện thoại hoặc máy tính trong cùng mạng, hãy quét mã QR hoặc mở địa chỉ này:"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lórí fóònù tàbí kọ̀ǹpútà tí ó wà lórí nẹ́tíwọ́ọ̀kì kan náà, ṣàyẹ̀wò kóòdù QR tàbí ṣí àdírẹ́sì yìí:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在同一网络中的手机或电脑上，扫描二维码或打开这个地址："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用同一網路中的手機或電腦，掃描 QR 碼或開啟這個位址："
+          }
+        }
+      }
+    },
     "Optic ID" : {
       "comment" : "The system's own name for this way of confirming; use Apple's spelling in this language.",
       "localizations" : {
@@ -11573,6 +13596,482 @@
         }
       }
     },
+    "Preparing the installation…" : {
+      "comment" : "A line of the browser's transcript while the packages are staged.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تجهيز التثبيت…"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ইনস্টলেশন প্রস্তুত করা হচ্ছে…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation wird vorbereitet …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing the installation…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando la instalación…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation de l’installation…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉलेशन की तैयारी हो रही है…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan instalasi…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparazione dell’installazione…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストールを準備中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치 준비 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando a instalação…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подготовка установки…"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaandaa usakinishaji…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme hazırlanıyor…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chuẩn bị cài đặt…"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ń múra ìfisórí ẹ̀rọ sílẹ̀…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备安装…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在準備安裝…"
+          }
+        }
+      }
+    },
+    "Refreshing repositories…" : {
+      "comment" : "The launchpad's status line while repositories refresh.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تحديث المستودعات…"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিপোজিটরি রিফ্রেশ করা হচ্ছে…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellen werden aktualisiert …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshing repositories…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando repositorios…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualisation des dépôts…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपॉज़िटरी रीफ़्रेश हो रही हैं…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyegarkan repositori…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento dei repository…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリを更新中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스를 새로 고치는 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizando repositórios…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление репозиториев…"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaonyesha upya hazina…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depolar yenileniyor…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang làm mới các nguồn…"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ń sọ àwọn ibi ìpamọ́ dọ̀tun…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在刷新软件源…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在重新整理軟體源…"
+          }
+        }
+      }
+    },
+    "Reinstall %@ %@" : {
+      "comment" : "A line of the plan in the owner's question: package name, then version.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تثبيت %@ %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ আবার ইনস্টল করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ neu installieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall %@ %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalar %@ %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstaller %@ %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ दोबारा इंस्टॉल करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instal Ulang %@ %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalla %@ %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ を再インストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ 재설치"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalar %@ %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переустановить %@ %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sakinisha upya %@ %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@ sürümünü yeniden yükle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt lại %@ %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tún fi %@ %@ sórí ẹ̀rọ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新安装 %1$@ %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新安裝 %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Remove %@" : {
+      "comment" : "A line of the plan in the owner's question: the package name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ সরান"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ entfernen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desinstalar %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désinstaller %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ हटाएँ"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buang %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ を削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 제거"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondoa %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ paketini kaldır"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gỡ bỏ %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yọ %@ kúrò"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卸载 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除安裝 %@"
+          }
+        }
+      }
+    },
     "Require %@" : {
       "localizations" : {
         "ar" : {
@@ -11687,6 +14186,1553 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要 %@"
+          }
+        }
+      }
+    },
+    "Starting…" : {
+      "comment" : "The launchpad's screen before the page is served.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ البدء…"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "চালু হচ্ছে…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird gestartet …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrage…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शुरू हो रहा है…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memulai…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvio…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "起動中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작하는 중…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запуск…"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaanza…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başlatılıyor…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang khởi động…"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ń bẹ̀rẹ̀…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在启动…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在啟動…"
+          }
+        }
+      }
+    },
+    "The device does not answer %@." : {
+      "comment" : "Refusal in the browser for a call this version does not know; the call's name.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يستجيب الجهاز لـ %@."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ডিভাইসটি %@-এ সাড়া দেয় না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Gerät antwortet nicht auf %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The device does not answer %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El dispositivo no responde a %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil ne répond pas à %@."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिवाइस %@ का जवाब नहीं देता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perangkat tidak menanggapi %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il dispositivo non risponde a %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスは %@ に応答しません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기가 %@에 응답하지 않습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O dispositivo não responde a %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство не отвечает на %@."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kifaa hakijibu %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aygıt %@ isteğini yanıtlamıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị không phản hồi %@."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ẹ̀rọ náà kò dáhùn sí %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备不响应 %@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置不回應 %@。"
+          }
+        }
+      }
+    },
+    "The device is already asking about another change. Answer it there first." : {
+      "comment" : "Refusal in the browser while the owner's question for another change is open.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يطرح الجهاز بالفعل سؤالًا عن تغيير آخر. أجِب عنه هناك أولًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ডিভাইসটি ইতিমধ্যে অন্য একটি পরিবর্তন সম্পর্কে জিজ্ঞাসা করছে। প্রথমে সেখানে এর উত্তর দিন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Gerät fragt bereits nach einer anderen Änderung. Beantworte die Frage zuerst dort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The device is already asking about another change. Answer it there first."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El dispositivo ya está preguntando por otro cambio. Responde primero allí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil pose déjà une question sur une autre modification. Répondez-y d’abord sur l’appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिवाइस पहले से ही किसी दूसरे बदलाव के बारे में पूछ रहा है। पहले वहाँ उसका जवाब दें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perangkat sedang menanyakan perubahan lain. Jawab pertanyaan itu di perangkat terlebih dahulu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il dispositivo sta già ponendo una domanda su un’altra modifica. Rispondi prima lì."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスはすでに別の変更について確認を求めています。先にデバイスで応答してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기에서 이미 다른 변경에 대해 묻고 있습니다. 먼저 기기에서 응답하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O dispositivo já está perguntando sobre outra alteração. Responda lá primeiro."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство уже спрашивает о другом изменении. Сначала ответьте на устройстве."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kifaa tayari kinauliza kuhusu badiliko jingine. Jibu swali hilo kwenye kifaa kwanza."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aygıt zaten başka bir değişikliği soruyor. Önce aygıtta yanıtlayın."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị đang hỏi về một thay đổi khác. Hãy trả lời trên thiết bị trước."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ẹ̀rọ náà ti ń béèrè nípa àyípadà mìíràn tẹ́lẹ̀. Kọ́kọ́ dáhùn rẹ̀ níbẹ̀."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备正在询问另一项更改，请先在设备上作答。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置正在詢問另一項變更，請先在裝置上回覆。"
+          }
+        }
+      }
+    },
+    "The device no longer knows this request." : {
+      "comment" : "Refusal in the browser for a request from before the device started serving again.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يعد الجهاز يعرف هذا الطلب."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ডিভাইসটি এই অনুরোধটি আর চেনে না।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Gerät kennt diese Anfrage nicht mehr."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The device no longer knows this request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El dispositivo ya no reconoce esta solicitud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil ne connaît plus cette demande."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिवाइस अब इस अनुरोध को नहीं पहचानता।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perangkat tidak lagi mengenali permintaan ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il dispositivo non riconosce più questa richiesta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリクエストはデバイスでもう認識されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기에 이 요청이 더 이상 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O dispositivo não reconhece mais esta solicitação."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот запрос больше не известен устройству."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kifaa hakitambui tena ombi hili."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aygıt bu isteği artık tanımıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị không còn nhận ra yêu cầu này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ẹ̀rọ náà kò mọ ìbéèrè yìí mọ́."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备上已没有这项请求。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置上已沒有這項請求。"
+          }
+        }
+      }
+    },
+    "The page could not be served: %@" : {
+      "comment" : "The launchpad's screen when the server could not listen; the system's reason.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تقديم الصفحة: %@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পৃষ্ঠাটি সরবরাহ করা যায়নি: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite konnte nicht bereitgestellt werden: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The page could not be served: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido servir la página: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de servir la page : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेज उपलब्ध नहीं कराया जा सका: %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halaman tidak dapat disajikan: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile fornire la pagina: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ページを提供できませんでした：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지를 제공할 수 없습니다: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível disponibilizar a página: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось предоставить страницу: %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukurasa haukuweza kutolewa: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa sunulamadı: %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể cung cấp trang: %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kò lè pèsè ojú ìwé náà: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法提供网页：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法提供網頁：%@"
+          }
+        }
+      }
+    },
+    "The queue changed since the page read it. Review it again." : {
+      "comment" : "Refusal in the browser when the plan it confirms is not the queue's any more.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيّرت قائمة الانتظار منذ أن قرأتها الصفحة. راجِعها مرة أخرى."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পৃষ্ঠাটি সারিটি পড়ার পর থেকে সারিতে পরিবর্তন হয়েছে। এটি আবার পর্যালোচনা করুন।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Warteschlange hat sich geändert, seit die Seite sie gelesen hat. Prüfe sie erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The queue changed since the page read it. Review it again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cola ha cambiado desde que la página la leyó. Revísala de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La file d’attente a changé depuis que la page l’a lue. Vérifiez-la à nouveau."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेज द्वारा पढ़े जाने के बाद से कतार बदल गई है। इसकी फिर से समीक्षा करें।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antrean berubah sejak halaman membacanya. Periksa lagi."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La coda è cambiata da quando la pagina l’ha letta. Controllala di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ページが読み込んだ後にキューが変更されました。もう一度確認してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지가 읽은 후 대기열이 변경되었습니다. 다시 검토하십시오."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fila mudou desde que a página a leu. Revise-a novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очередь изменилась с тех пор, как страница её прочитала. Просмотрите её снова."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foleni imebadilika tangu ukurasa ulipoisoma. Ikague tena."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa kuyruğu okuduktan sonra kuyruk değişti. Yeniden gözden geçirin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hàng đợi đã thay đổi kể từ khi trang đọc nó. Hãy xem lại."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ìtòsẹ́ náà ti yí padà láti ìgbà tí ojú ìwé náà ti kà á. Ṣàyẹ̀wò rẹ̀ lẹ́ẹ̀kansí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面读取之后队列已发生变化，请重新查看。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "頁面讀取之後，佇列已有變動，請重新檢視。"
+          }
+        }
+      }
+    },
+    "The repository list could not be written." : {
+      "comment" : "Refusal in the browser when exporting the repository list failed.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّرت كتابة قائمة المستودعات."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "রিপোজিটরি তালিকা লেখা যায়নি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Quellenliste konnte nicht geschrieben werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The repository list could not be written."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido escribir la lista de repositorios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’écrire la liste des dépôts."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपॉज़िटरी सूची लिखी नहीं जा सकी।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daftar repositori tidak dapat ditulis."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile scrivere l’elenco dei repository."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリリストを書き込めませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스 목록을 저장할 수 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível gravar a lista de repositórios."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось записать список репозиториев."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orodha ya hazina haikuweza kuandikwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depo listesi yazılamadı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể ghi danh sách nguồn."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kò lè kọ àtòjọ ibi ìpamọ́ náà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法写出软件源列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法寫出軟體源列表。"
+          }
+        }
+      }
+    },
+    "There are no new repositories in it." : {
+      "comment" : "Refusal in the browser when an imported list holds only repositories already added.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تحتوي على مستودعات جديدة."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এতে কোনো নতুন রিপোজিটরি নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darin sind keine neuen Quellen enthalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are no new repositories in it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No contiene repositorios nuevos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle ne contient aucun nouveau dépôt."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसमें कोई नई रिपॉज़िटरी नहीं है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada repositori baru di dalamnya."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non contiene nuovi repository."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいリポジトリは含まれていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로운 소스가 포함되어 있지 않습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não há repositórios novos nela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В нём нет новых репозиториев."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hakuna hazina mpya ndani yake."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İçinde yeni depo yok."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có nguồn mới nào trong đó."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí ibi ìpamọ́ tuntun nínú rẹ̀."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其中没有新的软件源。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其中沒有新的軟體源。"
+          }
+        }
+      }
+    },
+    "There is nothing to change." : {
+      "comment" : "Refusal in the browser for an empty change.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد ما يمكن تغييره."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "পরিবর্তন করার কিছু নেই।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es gibt nichts zu ändern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is nothing to change."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay nada que cambiar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il n’y a rien à modifier."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलने के लिए कुछ नहीं है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada yang perlu diubah."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non c’è niente da modificare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更する内容がありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경할 내용이 없습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não há nada para alterar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нечего изменять."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hakuna cha kubadilisha."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değiştirilecek bir şey yok."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có gì để thay đổi."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kò sí ohun tí a lè yí padà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有需要更改的内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有需要變更的內容。"
+          }
+        }
+      }
+    },
+    "This file was made by a newer Irisin." : {
+      "comment" : "Refusal in the browser for a repository file of a newer format.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أُنشئ هذا الملف بإصدار أحدث من Irisin."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই ফাইলটি Irisin-এর একটি নতুন সংস্করণ দিয়ে তৈরি করা হয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Datei wurde mit einer neueren Version von Irisin erstellt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file was made by a newer Irisin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este archivo se creó con una versión más reciente de Irisin."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier a été créé par une version plus récente d’Irisin."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह फ़ाइल Irisin के नए वर्ज़न से बनाई गई थी।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File ini dibuat oleh Irisin versi yang lebih baru."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo file è stato creato da una versione più recente di Irisin."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このファイルは新しいバージョンのIrisinで作成されています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 파일은 더 새로운 버전의 Irisin에서 만들어졌습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este arquivo foi criado por uma versão mais recente do Irisin."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот файл создан более новой версией Irisin."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faili hii iliundwa na toleo jipya zaidi la Irisin."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu dosya, Irisin'in daha yeni bir sürümüyle oluşturulmuş."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp này được tạo bởi phiên bản Irisin mới hơn."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ẹ̀yà Irisin tí ó tuntun jù ló ṣe fáìlì yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个文件由更新版本的 Irisin 生成。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此檔案由較新版本的 Irisin 產生。"
+          }
+        }
+      }
+    },
+    "This is not a repository address." : {
+      "comment" : "Refusal in the browser when adding a repository.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هذا ليس عنوان مستودع."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এটি কোনো রিপোজিটরির ঠিকানা নয়।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dies ist keine Quellenadresse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is not a repository address."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta no es una dirección de repositorio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est pas une adresse de dépôt."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह रिपॉज़िटरी का पता नहीं है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ini bukan alamat repositori."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo non è l’indirizzo di un repository."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これはリポジトリのアドレスではありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스 주소가 아닙니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este não é um endereço de repositório."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это не адрес репозитория."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hii si anwani ya hazina."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bir depo adresi değil."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đây không phải là địa chỉ nguồn."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Èyí kì í ṣe àdírẹ́sì ibi ìpamọ́."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这不是软件源地址。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這不是軟體源位址。"
+          }
+        }
+      }
+    },
+    "This repository is already added." : {
+      "comment" : "Refusal in the browser when adding a repository.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمت إضافة هذا المستودع مسبقًا."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই রিপোজিটরিটি ইতিমধ্যে যোগ করা হয়েছে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Quelle wurde bereits hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository is already added."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este repositorio ya está añadido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dépôt a déjà été ajouté."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह रिपॉज़िटरी पहले से जोड़ी गई है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositori ini sudah ditambahkan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo repository è già stato aggiunto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリポジトリはすでに追加されています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 소스는 이미 추가되어 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este repositório já foi adicionado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот репозиторий уже добавлен."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazina hii tayari imeongezwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu depo zaten eklenmiş."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nguồn này đã được thêm."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A ti ṣàfikún ibi ìpamọ́ yìí tẹ́lẹ̀."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个软件源已经添加过了。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此軟體源已經加入。"
+          }
+        }
+      }
+    },
+    "This repository is not added." : {
+      "comment" : "Refusal in the browser when deleting a repository.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم تتم إضافة هذا المستودع."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "এই রিপোজিটরিটি যোগ করা হয়নি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Quelle wurde nicht hinzugefügt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository is not added."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este repositorio no está añadido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dépôt n’a pas été ajouté."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह रिपॉज़िटरी जोड़ी नहीं गई है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repositori ini belum ditambahkan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo repository non è stato aggiunto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このリポジトリは追加されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 소스는 추가되어 있지 않습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este repositório não foi adicionado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот репозиторий не добавлен."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazina hii haijaongezwa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu depo eklenmemiş."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nguồn này chưa được thêm."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kò tíì ṣàfikún ibi ìpamọ́ yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个软件源尚未添加。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此軟體源尚未加入。"
           }
         }
       }
@@ -12042,6 +16088,244 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法取得測試版更新"
+          }
+        }
+      }
+    },
+    "Update %@ to %@" : {
+      "comment" : "A line of the plan in the owner's question: package name, then the new version.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث %1$@ إلى %2$@"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@-কে %2$@-এ আপডেট করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ auf %2$@ aktualisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update %@ to %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar %@ a %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour %@ vers %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ को %2$@ पर अपडेट करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui %@ ke %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna %@ a %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ を %@ にアップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@을(를) %@(으)로 업데이트"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar %@ para %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить %@ до %@"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sasisha %@ hadi %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ paketini %@ sürümüne güncelle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cập nhật %@ lên %@"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ṣe ìmúdójúìwọ̀n %@ sí %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 %1$@ 更新到 %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 %1$@ 更新為 %2$@"
+          }
+        }
+      }
+    },
+    "Verification Code" : {
+      "comment" : "Caption above the six digits on the launchpad that a browser enters.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز التحقق"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "যাচাইকরণ কোড"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigungscode"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verification Code"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código de verificación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code de vérification"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सत्यापन कोड"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kode Verifikasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice di verifica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認コード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인 코드"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código de verificação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код подтверждения"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Msimbo wa Uthibitishaji"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğrulama Kodu"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mã xác minh"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kóòdù Ìṣàrídájú"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "验证码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "驗證碼"
           }
         }
       }

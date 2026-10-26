@@ -332,30 +332,7 @@ class RepositoryDetailController: UIViewController {
     private func refreshExplanation(_ formatter: DateFormatter) -> String? {
         guard let report = repo.refreshReport, !report.issues.isEmpty else { return nil }
         let refreshed = formatter.string(from: report.date)
-        var sentences = report.issues.map { issue in
-            switch issue {
-            case .unreachable:
-                String(localized: "The last refresh, on \(refreshed), could not reach the server.")
-            case .stalled:
-                String(localized: "The server stopped responding during the last refresh.")
-            case let .serverError(code):
-                String(localized: "The server returned an error (HTTP \(code)) during the last refresh.")
-            case .releaseMissing, .releaseMalformed:
-                String(
-                    localized: "This repository's Release file is missing or cannot be read, so its package lists cannot be verified."
-                )
-            case .releaseOutdated:
-                String(
-                    localized: "The server returned an older Release file than the one on this device, so it was ignored."
-                )
-            case .indexUnverified:
-                String(
-                    localized: "This repository's Release file does not list its package list, so the list cannot be verified."
-                )
-            case .noIndex:
-                String(localized: "The server has no package list for this device.")
-            }
-        }
+        var sentences = report.issues.map { $0.sentence(refreshed: refreshed) }
         if report.didNotConnect, repo.packageCount > 0, repo.lastUpdatePackage.timeIntervalSince1970 > 0 {
             sentences.append(String(localized: "These packages are from \(formatter.string(from: repo.lastUpdatePackage))."))
         }

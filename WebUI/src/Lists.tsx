@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Page } from './App';
 import { message } from './App';
 import * as api from './api';
+import Cipher from './cipher';
 import { date, t } from './i18n';
 
 /** A call's answer, read again whenever `deps` or the page's revision change. */
@@ -174,7 +175,31 @@ export function RepositoriesView({ page }: { page: Page }) {
   const [tick, setTick] = useState(0);
   const { value, error } = useAnswer<api.Repository[]>(page, 'repositories', {}, [tick]);
   const [address, setAddress] = useState('');
+  const [failure, setFailure] = useState<string | null>(null);
+  const file = useRef<HTMLInputElement>(null);
   const refreshing = value?.some((repository) => repository.refreshing) ?? false;
+
+  // the list as a `.irisinrepos`, saved by the browser
+  const exportList = async () => {
+    setFailure(null);
+    try {
+      const list = await page.call<api.RepositoryExport>('exportRepositories');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([list.text], { type: 'application/xml' }));
+      link.download = list.name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    } catch (problem) {
+      setFailure(message(problem));
+    }
+  };
+
+  // a `.irisinrepos`, a `.irisinrepo` (binary) or a text list, read whole
+  const importList = async (chosen: File) => {
+    setFailure(null);
+    const bytes = new Uint8Array(await chosen.arrayBuffer());
+    await page.ask('importRepositories', { base64: Cipher.base64Encode(bytes) });
+  };
 
   // while anything refreshes, its state is read again every two seconds
   useEffect(() => {
@@ -218,7 +243,25 @@ export function RepositoriesView({ page }: { page: Page }) {
         >
           {refreshing ? t('refreshing') : t('refresh')}
         </button>
+        <button className="btn" type="button" disabled={value.length === 0} onClick={() => void exportList()}>
+          {t('exportList')}
+        </button>
+        <button className="btn" type="button" onClick={() => file.current?.click()}>
+          {t('importList')}
+        </button>
+        <input
+          ref={file}
+          type="file"
+          accept=".irisinrepos,.irisinrepo,.txt,.list"
+          hidden
+          onChange={(event) => {
+            const chosen = event.target.files?.[0];
+            event.target.value = '';
+            if (chosen) void importList(chosen);
+          }}
+        />
       </form>
+      {failure && <Failure text={failure} />}
       {value.length === 0 ? (
         <Empty text={t('reposEmpty')} />
       ) : (
@@ -231,7 +274,7 @@ export function RepositoriesView({ page }: { page: Page }) {
                   className="btn plain danger small"
                   onClick={() => void page.ask('removeRepository', { url: repository.url })}
                 >
-                  {t('remove')}
+                  {t('delete')}
                 </button>
               </span>
               <span className="row-detail muted mono">{repository.url}</span>

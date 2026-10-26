@@ -13,7 +13,7 @@ import PackageDescription
 /// third-party may reach the daemon: launchd caps it at 6 MB.
 let package = Package(
     name: "IrisinKit",
-    platforms: [.iOS(.v15), .tvOS(.v17), .macOS(.v13)],
+    platforms: [.iOS(.v15), .tvOS(.v17), .visionOS("2.0"), .macOS(.v13)],
     products: [
         .library(name: "IrisinProtocol", targets: ["IrisinProtocol"]),
         .library(name: "IrisinInstaller", type: .static, targets: ["IrisinInstaller"]),

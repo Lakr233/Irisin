@@ -1,9 +1,10 @@
 # Apple TV: the privileged layer
 
-Draft. `irisind` and `irisin-install` on tvOS 17 and later, inside a
-RootHide bootstrap, doing the same closed jobs they do on iOS. There is no
-app on tvOS yet: the device is managed over the network (a later
-document), and everything here is what that management will stand on.
+`irisind` and `irisin-install` on tvOS 17 and later, inside a RootHide
+bootstrap, doing the same closed jobs they do on iOS. The app on tvOS is the
+launchpad (`IrisinLaunchpad`), which serves a page a browser manages the
+device from (`Documentation/WebManagement.md`); everything here is what it
+stands on.
 
 ## What was decided
 
@@ -71,8 +72,8 @@ An external client's package must name it or `all`: on tvOS the helper's
 probes is decided with the name.
 
 `IrisinWire.clientPaths`, the exact path that admits Irisin's own app as
-mobile, is empty on tvOS until there is an app there: every client of the
-tvOS daemon is root's.
+mobile, is the launchpad's on tvOS, `/Applications/irisin.app/irisin` as on
+iOS: it is the one mobile client, and every other is root's.
 
 ## The system's processes
 
@@ -112,10 +113,16 @@ icli checkout before the build.
   `Base.xcconfig`, through the shared scheme `irisin-privileged`. xcodebuild
   refuses a tvOS destination until Xcode's tvOS platform is installed
   (`xcodebuild -downloadPlatform tvOS`).
-- The tvOS package carries the daemon, the helper and the daemon's launchd
-  plist, with an empty prefix (RootHide's dpkg relocates it), the
-  architecture `appletvos-arm64e` and `Depends: firmware (>= 17.0)`. It carries no
-  app, so its postinst loads the daemon and registers nothing.
+- The tvOS package carries the launchpad, the daemon, the helper and the
+  daemon's launchd plist, with an empty prefix (RootHide's dpkg relocates
+  it), the architecture `appletvos-arm64e` and `Depends: firmware (>= 17.0)`.
+  Its postinst makes the launchpad's data folder by the iOS postinst's rule,
+  loads the daemon and registers the app (`rebuildIconCache`), except when
+  Irisin's own helper runs it. The launchpad is signed with
+  `irisin-launchpad.entitlements`: the client entitlement, no sandbox, the
+  network server, and no keychain. vphoned's `bootstrap.install`, which
+  until now allowed the package's missing app on `appletvos-*`, has an app
+  to register and a data folder to make from this release on.
 - `check-floor-imports.py` reads the AppleTVOS SDK and tvOS 17 for the
   tvOS binaries (`--sdk`, `--floor`), with IOKit's names read from the
   stub's headers, since the AppleTVOS SDK has none, and what a tvOS 17

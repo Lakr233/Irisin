@@ -49,13 +49,13 @@ Sizes are bytes; dates are ISO 8601 or null.
 
 | op | args | result |
 | --- | --- | --- |
-| `device` | | `{name, model, system, bootstrap, architecture, irisinVersion, freeSpace, busy}`: `system` reads like "iOS 27.0.1", `busy` is whether an operation is running |
+| `device` | | `{name, model, system, bootstrap, architecture, irisinVersion, freeSpace, busy, canInstall, backend}`: `system` reads like "iOS 27.0.1", `busy` is whether an operation is running, `canInstall` whether the privileged service answered, and `backend` the service as the device names it, or why there is none |
 | `repositories` | | `[{url, name, packageCount, refreshed, refreshing, problem}]` |
 | `refresh` | | `{}`: every repository starts refreshing; `repositories` shows how far |
 | `addRepository` | `{url}` | a request (below) |
 | `removeRepository` | `{url}` | a request |
 | `search` | `{query, limit}` | `[{id, name, version, section, summary, repository, installed}]`, ranked as the app ranks it; `installed` is the installed version or null |
-| `package` | `{id}` | `{id, name, version, versions, section, author, maintainer, summary, description, depends, repository, installed, size, installedSize, homepage}`; `versions` lists what the repositories offer, newest first; `depends` is the raw field |
+| `package` | `{id}` | `{id, name, version, versions, section, author, maintainer, summary, description, depends, repository, installed, size, installedSize, homepage, paid}`; `versions` lists what the repositories offer, newest first; `depends` is the raw field; `paid` marks a package its repository sells, which `propose` refuses: the page signs in to no vendor |
 | `installed` | | `[{id, name, version, section}]` |
 | `updates` | | `[{id, name, installed, available, repository}]` |
 | `propose` | `{install: [{id, version}], remove: [id], updateAll}` (each optional; `version` null for the newest) | the plan below, or `ok: false` with why it cannot be done |
@@ -64,10 +64,16 @@ Sizes are bytes; dates are ISO 8601 or null.
 | `confirm` | `{plan}` (the plan's id) | a request: the device asks its owner to run that plan |
 | `respring` | | a request |
 | `request` | `{id}` | `{id, state, detail}`: `state` is `asking`, `declined`, `running`, `done` or `failed`; `detail` says why, in words, or null |
+| `storage` | | `{total, catalogue, downloads, other, freeSpace, repositories}`: what Irisin keeps on the device in bytes (`total` is its whole folder; `other` the logs and settings), the volume's free space, and how many repositories there are |
+| `clearDownloads` | | `storage` again, after Settings' Clear Downloads: every download, partial download and staged copy; refused while an operation runs |
+| `exportRepositories` | | `{name, text, count}`: the repository list as a `.irisinrepos` (XML, addresses only), for the page to save |
+| `importRepositories` | `{base64}` or `{text}` | a request: the addresses in a `.irisinrepos`, a `.irisinrepo` (binary; its catalogue is never read) or a list of source lines, those not yet added, put to the owner |
 
 A plan is `{id, install: [{id, name, version, repository, size}], remove:
-[{id, name, version}], downloadSize, notes}`; `notes` are what the resolver
-said beside it, in words.
+[{id, name, version}], downloadSize, notes, blocked}`; `notes` are what the
+resolver said beside it, in words, and `blocked` why the plan could not
+follow packages that changed under it, or null: a blocked plan is not
+confirmed.
 
 A request answers at once with `{id, state: "asking"}`: every change waits
 for the owner's yes on the device (Face ID or the passcode on iOS, the
@@ -83,4 +89,6 @@ A confirmed plan becomes the operation whose lines `stream` carries.
 `{seq, progress: {completed, total}}`; and last `{seq, end: true,
 succeeded, status}`. `after` is the last `seq` the page has, so a page that
 reconnects misses nothing; with no operation running, the last one's frames
-are sent and the stream ends.
+are sent and the stream ends. The device reads the running operation a few
+times a second (`OperationFeed`) and the stream sends what it found: the
+page is on the same network, and polling there costs nothing worth a push.

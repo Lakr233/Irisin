@@ -30,6 +30,9 @@ RESOURCES = os.path.join(ROOT, "Irisin", "Resources")
 CATALOGS = {
     "Localizable": os.path.join(RESOURCES, "Localizable.xcstrings"),
     "InfoPlist": os.path.join(RESOURCES, "InfoPlist.xcstrings"),
+    # the launchpad's own Info.plist words (IrisinLaunchpad); its other
+    # strings are the app's catalog
+    "LaunchpadInfoPlist": os.path.join(ROOT, "IrisinLaunchpad", "Resources", "InfoPlist.xcstrings"),
 }
 SETTINGS = os.path.join(RESOURCES, "Settings.bundle")
 SETTINGS_TABLE = "Root"

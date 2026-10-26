@@ -1,14 +1,46 @@
 #!/bin/sh
 # Irisin's Apple TV package: RootHide alone, so every path below is the
 # bootstrap's own and RootHide's dpkg relocates it (Documentation/AppleTV.md).
-# There is no app yet, so nothing is registered and no data folder is made:
-# the daemon is loaded and that is all.
+# It carries the launchpad (IrisinLaunchpad, at /Applications/irisin.app),
+# so the steps are the iOS package's: the data folder, the daemon, then the
+# app's registration.
+
+# The launchpad has no container, so its home is mobile's inside the
+# bootstrap, and its data goes in a folder named for its bundle id in a
+# Documents mobile owns. Each missing level is made and handed to mobile on
+# its own, a level that exists is left alone, and a symlink is never
+# followed: the rule of the iOS postinst and of irisind's prepareUserHome.
+app_data=/var/mobile/Documents/wiki.qaq.irisin
+mobile_dir() {
+    if [ -L "$1" ]; then
+        return 1
+    fi
+    if [ -d "$1" ]; then
+        return 0
+    fi
+    mkdir -m 0755 "$1" && chown -h 501:501 "$1"
+}
+for directory in /var/mobile /var/mobile/Documents "$app_data"; do
+    mobile_dir "$directory" || {
+        echo "warning: $directory could not be prepared for mobile." >&2
+        break
+    }
+done
 
 helper=/usr/libexec/irisin-install
 if [ -x "$helper" ]; then
     echo '{"bootstrapIrisinDaemon":{}}' | "$helper" >/dev/null || {
         echo "warning: Irisin's background service could not be loaded and started." >&2
         echo "warning: reinstall Irisin before trying to install packages." >&2
+    }
+fi
+
+# The launchpad's registration with LaunchServices, as the iOS postinst
+# does it, and not when Irisin's own helper runs this script: that is Irisin
+# updating itself, and the launchpad registers itself as it leaves.
+if [ -x "$helper" ] && [ -z "${IRISIN_INSTALLER_VERSION:-}" ]; then
+    echo '{"rebuildIconCache":{}}' | "$helper" >/dev/null || {
+        echo "warning: irisin.app was not registered with LaunchServices." >&2
     }
 fi
 

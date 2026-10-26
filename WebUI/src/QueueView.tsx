@@ -38,6 +38,7 @@ export function QueueView({ page }: { page: Page }) {
           </li>
         ))}
       </ul>
+      {plan.blocked && <p className="error">{plan.blocked}</p>}
       {plan.notes.map((note) => (
         <p key={note} className="muted note">
           {note}
@@ -57,7 +58,11 @@ export function QueueView({ page }: { page: Page }) {
         >
           {t('clear')}
         </button>
-        <button className="btn primary" onClick={() => void page.ask('confirm', { plan: plan.id })}>
+        <button
+          className="btn primary"
+          disabled={plan.blocked !== null}
+          onClick={() => void page.ask('confirm', { plan: plan.id })}
+        >
           {t('confirmOnDevice')}
         </button>
       </div>

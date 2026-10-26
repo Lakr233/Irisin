@@ -1,0 +1,152 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Irisin"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "irisin"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يقدّم Irisin صفحة على شبكتك المحلية، ليتمكن متصفح على جهاز آخر من إدارة هذا الجهاز."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin আপনার লোকাল নেটওয়ার্কে একটি পৃষ্ঠা সরবরাহ করে, যাতে অন্য ডিভাইসের ব্রাউজার এই ডিভাইসটি পরিচালনা করতে পারে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin stellt in deinem lokalen Netzwerk eine Seite bereit, damit ein Browser auf einem anderen Gerät dieses Gerät verwalten kann."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin serves a page on your local network, so a browser on another device can manage this one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin ofrece una página en tu red local para que un navegador de otro dispositivo pueda gestionar este."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin propose une page sur votre réseau local pour qu’un navigateur sur un autre appareil puisse gérer celui-ci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin आपके लोकल नेटवर्क पर एक पेज उपलब्ध कराता है, ताकि किसी दूसरे डिवाइस पर मौजूद ब्राउज़र इस डिवाइस को प्रबंधित कर सके।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin menyajikan halaman di jaringan lokal Anda, sehingga browser di perangkat lain dapat mengelola perangkat ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin fornisce una pagina sulla tua rete locale, così un browser su un altro dispositivo può gestire questo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisinはローカルネットワーク上でページを提供し、ほかのデバイスのブラウザからこのデバイスを管理できるようにします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin은 로컬 네트워크에서 페이지를 제공하여 다른 기기의 브라우저에서 이 기기를 관리할 수 있도록 합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Irisin disponibiliza uma página na sua rede local para que um navegador em outro dispositivo possa gerenciar este."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin размещает страницу в локальной сети, чтобы браузер на другом устройстве мог управлять этим устройством."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin hutoa ukurasa kwenye mtandao wako wa karibu, ili kivinjari kwenye kifaa kingine kiweze kusimamia kifaa hiki."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin, yerel ağınızda bir sayfa sunar; böylece başka bir aygıttaki tarayıcı bu aygıtı yönetebilir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin cung cấp một trang trên mạng cục bộ của bạn để trình duyệt trên thiết bị khác có thể quản lý thiết bị này."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin ń pèsè ojú ìwé kan lórí nẹ́tíwọ́ọ̀kì agbègbè rẹ, kí aṣàwákiri lórí ẹ̀rọ mìíràn lè ṣàkóso ẹ̀rọ yìí."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 会在你的局域网中提供一个网页，让其他设备上的浏览器管理这台设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irisin 會在你的區域網路中提供一個網頁，讓其他裝置上的瀏覽器可以管理此裝置。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}

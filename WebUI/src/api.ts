@@ -152,6 +152,10 @@ export interface Device {
   irisinVersion: string;
   freeSpace: number;
   busy: boolean;
+  /** Whether the device's privileged service answered: without it, the page browses and installs nothing. */
+  canInstall: boolean;
+  /** The service as the device names it, or why there is none, in its words. */
+  backend: string;
 }
 
 export interface Repository {
@@ -189,6 +193,8 @@ export interface PackageDetail {
   size: number;
   installedSize: number;
   homepage: string | null;
+  /** Bought from its repository: a sign-in the page has no way to, so it does not install from here. */
+  paid: boolean;
 }
 
 export interface InstalledRow {
@@ -212,10 +218,29 @@ export interface Plan {
   remove: { id: string; name: string; version: string }[];
   downloadSize: number;
   notes: string[];
+  /** Why the plan cannot follow the packages that changed under it; it cannot be confirmed meanwhile. */
+  blocked: string | null;
 }
 
 export interface Request {
   id: string;
   state: 'asking' | 'declined' | 'running' | 'done' | 'failed';
   detail: string | null;
+}
+
+/** What Irisin keeps on the device, in bytes. */
+export interface Storage {
+  total: number;
+  catalogue: number;
+  downloads: number;
+  other: number;
+  freeSpace: number;
+  repositories: number;
+}
+
+/** The repository list as a `.irisinrepos` another Irisin imports. */
+export interface RepositoryExport {
+  name: string;
+  text: string;
+  count: number;
 }

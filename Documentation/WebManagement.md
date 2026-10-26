@@ -1,11 +1,13 @@
 # Managing from a browser
 
-Draft, for 5.1.0, after three rounds of review and the owner's decisions
-of 2026-10-26. A device running Irisin serves a page on
-the local network, and a browser on another device (Safari on an iPhone
-first) manages it: repositories, search, install, remove, update, the
-operation as it runs. On Apple TV it is the only interface Irisin has; on
-iPhone and iPad it is a second one, beside the app.
+Designed for 5.1.0 after three rounds of review and the owner's decisions
+of 2026-10-26, and built for the launchpad (Apple TV, Vision Pro) the same
+day; the iOS app's switch is still to come. A device running Irisin serves
+a page on the local network, and a browser on another device (Safari on an
+iPhone first) manages it: repositories, search, install, remove, update,
+the operation as it runs, and the data Irisin keeps. On Apple TV and Vision
+Pro it is the only interface Irisin has; on iPhone and iPad it will be a
+second one, beside the app.
 
 ## The shape
 
@@ -79,28 +81,35 @@ rarely, and an Apple TV holds little of anyone's data.
   while a browser is connected; in the background it stops serving. iOS
   asks before an app listens on the local network:
   `NSLocalNetworkUsageDescription`, in `InfoPlist.xcstrings`.
-- **tvOS:** the launcher is a target of its own in the project, product
-  `irisin` at `/Applications/irisin.app`, built from `Services/` with an
-  application delegate and one screen of its own: the device's name and
-  address, the code and its QR code, the operation running, and the owner's
-  answers. It serves while it is open and keeps the screen from
+- **tvOS and visionOS:** the launchpad, the `IrisinLaunchpad` target,
+  product `irisin` at `/Applications/irisin.app`, built from `IrisinShared/`
+  (the services both apps compile) with an application delegate and one
+  screen of its own: the device's name and address, the code and its QR
+  code, what is running, and the owner's answers. It serves while it is in
+  front, with a new code each time it comes back, and keeps the screen from
   sleeping. irisind admits it as mobile by the exact-path rule iOS's app has
-  (`IrisinWire.clientPaths`, empty on tvOS until the launcher ships), and
-  `PackagedArchitecture` learns tvOS: RootHide's root found from the bundle
-  path, and the package's architecture, the placeholder for now. The tvOS
-  package becomes the daemon, the helper and the launcher.
+  (`IrisinWire.clientPaths`, the same path on tvOS now), and
+  `PackagedArchitecture` takes `appletvos-arm64e` on tvOS, the simulator's
+  stand-in root included. The tvOS package is the daemon, the helper and
+  the launchpad; on its first launch with no repositories it adds the
+  recommended list (apt.owngoal.dev), which nobody is at a screen to pick.
+  No bootstrap serves Vision Pro yet: the launchpad there browses, and
+  installs only in the simulator.
 
-## What has to move first
+## The run without a view controller
 
-The run from a proposal to its end lives in the interface today
-(`QueueController`: waiting for downloads, `QueueInstallChecks`, the
-scripts warning, the confirmation, staging, the console; and the
-operation's Ending, Try Again and Irisin's own registration in
-`OperationController+Completion`). The web, and the launcher, need it
-without a view controller, so it moves into a service both interfaces
-call, and the app shows an operation the web started the way it shows its
-own. That move is the first change of 5.1.0, made and tested on iOS before
-the server exists.
+The run from a proposal to its end lives in the app's interface
+(`QueueController`, `OperationController+Completion`), but every step of it
+is a service: `PackageQueue` proposes and commits, `Downloads` fetches,
+`Installer` stages and begins, `OperationMonitor` follows. `WebRun`
+composes the same services for a browser's plan, without moving the app's
+pages: the owner's yes, the downloads (`Downloads.awaitFiles`, which the
+queue page waits on too), on a system with no dpkg Bootstrap Install where
+the plan allows it or else the owner hears which packages run scripts
+(`QueueInstallChecks`), staging, the run, and the end: an update of Irisin
+registers it and leaves (`OwnRegistration.request`), and changed tweaks
+say the home screen should reload. The app showing an operation the web
+started, as it shows its own, comes with the iOS switch.
 
 The server also needs the helper's transcript not to stall: a suspended
 reader would let the pipe fill and the helper block holding dpkg's lock.
@@ -173,17 +182,48 @@ Every answer is `Cache-Control: no-store`.
   its runtime dependencies (React) with the app's. `IRISIN_WEB_DEMO=1 swift
   test --package-path Packages/IrisinWeb --filter WebUIDemo` serves it on
   the Mac with made-up answers.
-- The pipeline service, moved out of the interface (above).
-- `Irisin/Services/WebManagement`: the API bound to the services, on the
-  main actor like them.
-- The tvOS launcher target, sharing `Services/` with the app through the
-  synchronized group, minus what it cannot compile there. AptRepository and
-  the rest declare tvOS 17; the WCDB and libsolv releases already pinned
-  carry tvOS slices.
+- `IrisinShared/Services/WebManagement`: the server's start and stop and
+  the owner's questions (`WebManagement`), the calls bound to the services
+  on the main actor like them (`WebCalls`), the changes and their run
+  (`WebRun`, above), and the lines of the operation a browser started
+  (`OperationFeed`).
+- The launchpad (`IrisinLaunchpad`), which shares `IrisinShared/` with the
+  app and links nothing third-party. AptRepository and the rest declare
+  tvOS 17 and visionOS 2; libsolv and libarchive carry both slices, and
+  WCDB from 2.1.26102501, which is 2.1.16 built again with visionOS's.
 
 ## Tested on
 
-jp-01 and jp-02. The iOS package on the RootHide guests, managed from
+So far, 2026-10-26: the tvOS simulator (Apple TV 4K, tvOS 26.5), the
+launchpad installing into its container through `SimulatorDaemon`, called
+from the Mac with the page's own cipher: `device`, `repositories` (the
+recommended list added on first launch and refreshed), `search`,
+`package`, `installed`, `updates`, `storage`, `propose` and the plan, a
+wrong code refused (403), and `confirm` putting the owner's question on the
+screen with Decline focused. The Vision Pro simulator build compiles; the
+tvOS package builds and verifies.
+
+On `tv4k` (jp-01: AppleTV14,1, tvOS 26.6, RootHide), the same day, with the
+package's files pushed into the existing root over `vphone.sock` and the
+postinst's three jobs run through `irisin-install` as root (`prepareUserHome`,
+`bootstrapIrisinDaemon`, `rebuildIconCache`: "Registered 1"); the page called
+from jp-01 with `cipher.js` in `jsc` and `curl`, the remote pressed with
+`input.hid`. The launchpad showed its address, code and QR code, and
+irisind admitted it as mobile by its path. `device`, `repositories` (the
+recommended list added and refreshed on first launch), `search`,
+`installed`, `storage`, `clearDownloads` (733184 bytes to 0), `exportRepositories`,
+a wrong code (403) and the page's files (200) answered. Declined with Select
+on the focused Decline and with Menu; confirmed with Right and Select: a
+repository added (Procursus, an empty catalogue for `appletvos-arm64e`) and
+deleted, and the queue's install of Irisin 5.0.1, the repository's one
+package for this bootstrap, ran to the end: downloaded, Bootstrap Install (no
+dpkg), staged, verified, unpacked and configured (its shell postinst failing
+as a warning, there being no shell), the daemon loaded again, `succeeded`,
+status 0, and the launchpad left as after an update of Irisin, dpkg listing
+5.0.1. 5.0.2's files went back the same way, and the launchpad was admitted
+again.
+
+Still to do, on jp-01 and jp-02. The iOS package on the RootHide guests, managed from
 Safari on the host Mac; the tvOS package (daemon, helper, launcher) on the
 tvOS guests, the same way, once a repository serves the placeholder
 architecture (a fixture repository until there is a real one). A wrong

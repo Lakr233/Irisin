@@ -9,7 +9,6 @@
 import AptRepository
 import Dog
 import Foundation
-import Then
 
 /// Package downloads: hands URLs to `Downloader`, checks what comes back
 /// against the hash the repository published and keeps the files that pass.
@@ -65,10 +64,12 @@ final class Downloads {
     private var queued: Set<URL> = []
     private var archived: Set<URL> = []
 
-    private let byteFormatter = ByteCountFormatter().then {
-        $0.allowedUnits = [.useAll]
-        $0.countStyle = .file
-    }
+    private let byteFormatter: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useAll]
+        formatter.countStyle = .file
+        return formatter
+    }()
 
     private let completedStore = Stored(key: "download.completed", defaultValue: Data())
 

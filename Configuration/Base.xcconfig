@@ -8,8 +8,12 @@
 // linker believes the SDK's availability metadata, and where that is wrong
 // the app dies in dyld before `main` on the old device. See AGENTS.md.
 IPHONEOS_DEPLOYMENT_TARGET = 15.0
-// Apple TV: the daemon and the helper alone, on RootHide (Documentation/AppleTV.md).
+// Apple TV: the daemon, the helper and the launchpad, on RootHide
+// (Documentation/AppleTV.md).
 TVOS_DEPLOYMENT_TARGET = 17.0
+// Vision Pro: the launchpad alone (IrisinLaunchpad). No bootstrap serves it
+// yet, so it browses, and installs only in the simulator.
+XROS_DEPLOYMENT_TARGET = 2.0
 MACOSX_DEPLOYMENT_TARGET = 13.0
 
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon

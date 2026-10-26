@@ -29,15 +29,9 @@ public enum IrisinWire {
     /// nobody else) as well as by `ExecutableAdmission`, so a bootstrap
     /// whose directories the wider rule distrusts never locks Irisin out of
     /// its own daemon.
-    /// None on tvOS, which has no app yet: the rule that admits mobile there
-    /// waits for one.
-    public static let clientPaths: [String] = {
-        #if os(tvOS)
-            []
-        #else
-            ["/Applications/irisin.app/irisin"]
-        #endif
-    }()
+    /// On tvOS it is the launchpad (the `IrisinLaunchpad` target), whose
+    /// product is installed at the same path.
+    public static let clientPaths = ["/Applications/irisin.app/irisin"]
 
     /// The version of the external-client operations (`serviceInfo` through
     /// `respring`), answered by `serviceInfo`. It grows when one of them
