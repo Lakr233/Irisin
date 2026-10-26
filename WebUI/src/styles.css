@@ -182,6 +182,7 @@ p.error {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   flex: none;
 }
@@ -201,6 +202,14 @@ p.error {
 .btn.primary:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+}
+/* Faded accent under white text cannot be read: a disabled primary goes
+   neutral instead. */
+.btn.primary:disabled {
+  background: var(--subtle);
+  border-color: var(--border);
+  color: var(--muted);
+  opacity: 1;
 }
 .btn.danger {
   color: var(--danger);
