@@ -63,12 +63,11 @@ MINIMUM_IOS_VERSION := $(call base_xcconfig_setting,IPHONEOS_DEPLOYMENT_TARGET)
 MINIMUM_TVOS_VERSION := $(call base_xcconfig_setting,TVOS_DEPLOYMENT_TARGET)
 DEB_OUTPUT          ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$(PACKAGE_ARCHITECTURE).deb
 # Apple TV: irisind and irisin-install alone, for RootHide
-# (Documentation/AppleTV.md). The architecture is a placeholder until it is
-# named, and not one dpkg accepts.
+# (Documentation/AppleTV.md), architecture appletvos-arm64e.
 PRIVILEGED_SCHEME   := irisin-privileged
 APPLETV_PRODUCTS    := $(DERIVED_DATA)/Build/Products/$(CONFIGURATION)-appletvos
 APPLETV_STUBS       := $(DERIVED_DATA)/tvos-stubs
-APPLETV_ARCHITECTURE ?= __replace_me_atv_os_package_arch__
+APPLETV_ARCHITECTURE ?= appletvos-arm64e
 APPLETV_DEB_OUTPUT  ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$(APPLETV_ARCHITECTURE).deb
 
 XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh

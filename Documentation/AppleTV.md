@@ -11,7 +11,7 @@ document), and everything here is what that management will stand on.
 | --- | --- |
 | Floor | tvOS 17: `UIContextMenu` is there, and nothing below it is served |
 | Bootstrap | RootHide alone. A rootful or rootless Apple TV is refused by both the daemon and the helper before either does anything |
-| Package architecture | `__replace_me_atv_os_package_arch__`, a placeholder until it is decided; no repository carries it yet |
+| Package architecture | `appletvos-arm64e` |
 | `posix_spawn` | through a C shim, on iOS as well as tvOS |
 | Home screen | PineBoard, through icli 0.10.0 and later |
 
@@ -63,7 +63,7 @@ not at its installed path. `irisin-install` answers such a job with
 `helperMisplaced` and `EX_CONFIG`: a helper outside a bootstrap this system
 serves is misplaced, and the failure needs no new case or string.
 
-`BootstrapArchitecture` gains `appleTVRoothide`, raw value the placeholder.
+`BootstrapArchitecture` gains `appleTVRoothide`, raw value `appletvos-arm64e`.
 An external client's package must name it or `all`: on tvOS the helper's
 `nativeArchitecture` is `appleTVRoothide`, so an iOS RootHide package
 (`iphoneos-arm64e`) is refused there as it is on a rootless iPhone.
@@ -114,7 +114,7 @@ icli checkout before the build.
   (`xcodebuild -downloadPlatform tvOS`).
 - The tvOS package carries the daemon, the helper and the daemon's launchd
   plist, with an empty prefix (RootHide's dpkg relocates it), the
-  placeholder architecture and `Depends: firmware (>= 17.0)`. It carries no
+  architecture `appletvos-arm64e` and `Depends: firmware (>= 17.0)`. It carries no
   app, so its postinst loads the daemon and registers nothing.
 - `check-floor-imports.py` reads the AppleTVOS SDK and tvOS 17 for the
   tvOS binaries (`--sdk`, `--floor`), with IOKit's names read from the
@@ -168,10 +168,6 @@ from `make deb-appletv`. tvOS 17 itself is untested: no guest runs it.
 
 ## Open questions
 
-- The package architecture's name. The placeholder is not one dpkg
-  accepts (a name must start with a letter or digit): `dpkg-deb` warns,
-  and a bootstrap's dpkg would refuse the package. Irisin's helper does
-  not check the spelling, so its own tests pass with it.
 - What loads `<root>/Library/LaunchDaemons` on a RootHide Apple TV after a
   re-jailbreak, and whether its launchctl rewrites plists marked
   `__Patched` (`LaunchDaemon.preparePlist`) as RootHide's does on iOS.

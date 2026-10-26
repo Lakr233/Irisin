@@ -613,7 +613,7 @@ a version bump, like icli.
   (`package-appletv-deb.sh`, `verify-appletv-deb.sh`, the floor imports
   against the AppleTVOS SDK with `floor-imports-appletv.txt` added). Needs
   Xcode's tvOS platform (`xcodebuild -downloadPlatform tvOS`). Its
-  architecture is a placeholder dpkg does not accept until it is named.
+  architecture is `appletvos-arm64e`.
 - `make install` — update an installation over `iproxy 2333 22`.
 - `Scripts/prune-xcstrings.py Irisin/Resources/Localizable.xcstrings Irisin Packages`
   — after Xcode has marked catalog entries stale: a key still quoted in a

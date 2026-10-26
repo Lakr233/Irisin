@@ -18,9 +18,7 @@ fail() {
     echo "error: $*" >&2
     exit 65
 }
-# dpkg-deb warns about the placeholder architecture on every read; the
-# packager has said so once.
-field() { dpkg-deb -f "$deb" "$1" 2>/dev/null; }
+field() { dpkg-deb -f "$deb" "$1"; }
 
 [[ -f "$deb" ]] || fail "no package at $deb"
 [[ "$(field Package)" == "$package_id" ]] || fail "Package is not $package_id"

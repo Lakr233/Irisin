@@ -35,12 +35,6 @@ done
 [[ "$version" =~ ^[0-9A-Za-z.+:~_-]+$ ]] || { echo "error: invalid version" >&2; exit 64; }
 [[ "$architecture" =~ ^[A-Za-z0-9_][A-Za-z0-9_-]+$ ]] || { echo "error: invalid architecture" >&2; exit 64; }
 [[ "$minimum_tvos" =~ ^[0-9]+\.[0-9]+$ ]] || { echo "error: invalid minimum tvOS version" >&2; exit 64; }
-# The placeholder is not a name dpkg accepts (it must start with a letter or
-# a digit): dpkg-deb warns, and a bootstrap's dpkg would refuse the package.
-if [[ "$architecture" == __* ]]; then
-    echo "warning: '$architecture' is a placeholder; dpkg refuses a package that names it" >&2
-fi
-
 # Each binary is tvOS's, at the floor the package claims.
 for binary in "$daemon_binary" "$helper_binary"; do
     build="$(vtool -show-build "$binary")"

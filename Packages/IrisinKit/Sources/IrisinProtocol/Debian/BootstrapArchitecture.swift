@@ -10,10 +10,9 @@ public enum BootstrapArchitecture: String, Hashable, Sendable {
     case rootless = "iphoneos-arm64"
     /// Files at rootful paths, relocated by dpkg into a randomized root.
     case roothide = "iphoneos-arm64e"
-    /// Draft: RootHide on Apple TV, the one bootstrap tvOS is served on
-    /// (`BootstrapSupport`). The name is a placeholder until it is decided,
-    /// and no repository carries it yet.
-    case appleTVRoothide = "__replace_me_atv_os_package_arch__"
+    /// RootHide on Apple TV, the one bootstrap tvOS is served on
+    /// (`BootstrapSupport`).
+    case appleTVRoothide = "appletvos-arm64e"
 
     /// The order a suite repository's index directories are probed in,
     /// after the device's own: a directory's name need not be the

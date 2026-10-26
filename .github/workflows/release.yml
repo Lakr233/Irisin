@@ -73,9 +73,7 @@ jobs:
           github-token: ${{ github.token }}
       # CI's list proves the transfer. The release's own list is written for
       # exactly the files it carries, named for the tag, and a missing one
-      # fails here. Apple TV's package joins both lists once CI builds it
-      # (ci.yml, Package and verify Apple TV), as
-      # "wiki.qaq.irisin_${version}_<its architecture>.deb".
+      # fails here.
       - name: Verify the packages and write the release checksums
         working-directory: build/Packages
         run: |
@@ -85,6 +83,7 @@ jobs:
           sha256sum \
             "wiki.qaq.irisin_${version}_iphoneos-arm64e.deb" \
             "wiki.qaq.irisin_${version}_iphoneos-arm64.deb" \
+            "wiki.qaq.irisin_${version}_appletvos-arm64e.deb" \
             "Irisin_${version}_dSYMs.zip" > SHA256SUMS
           cat SHA256SUMS
       - name: Publish release
@@ -105,8 +104,7 @@ jobs:
           fi
           files=("build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64e.deb"
                  "build/Packages/wiki.qaq.irisin_${version}_iphoneos-arm64.deb"
-                 # Apple TV, once its architecture is named (ci.yml):
-                 # "build/Packages/wiki.qaq.irisin_${version}___replace_me_atv_os_package_arch__.deb"
+                 "build/Packages/wiki.qaq.irisin_${version}_appletvos-arm64e.deb"
                  "build/Packages/Irisin_${version}_dSYMs.zip"
                  "build/Packages/SHA256SUMS")
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
