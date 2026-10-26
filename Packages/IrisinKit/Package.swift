@@ -7,13 +7,13 @@ import PackageDescription
 ///
 /// irisind links IrisinProtocol only. irisin-install links
 /// IrisinProtocol + IrisinInstaller, and through the installer our own
-/// icli (`IcliKit`), on iOS alone, and `IrisinPreparation`, which reads a
+/// icli (`IcliKit`), on iOS and tvOS, and `IrisinPreparation`, which reads a
 /// `.deb` with the libarchive icli already brings. The app links IrisinProtocol +
 /// IrisinClient, and calls IrisinInstaller only in the simulator. Nothing here imports UIKit and nothing
 /// third-party may reach the daemon: launchd caps it at 6 MB.
 let package = Package(
     name: "IrisinKit",
-    platforms: [.iOS(.v15), .macOS(.v13)],
+    platforms: [.iOS(.v15), .tvOS(.v17), .macOS(.v13)],
     products: [
         .library(name: "IrisinProtocol", targets: ["IrisinProtocol"]),
         .library(name: "IrisinInstaller", type: .static, targets: ["IrisinInstaller"]),
@@ -23,8 +23,9 @@ let package = Package(
     ],
     dependencies: [
         // Our own LaunchServices and SpringBoard code, linked into the helper
-        // as a library: app registration and the graceful respring. iOS only.
-        .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.9.2"),
+        // as a library: app registration and the graceful respring (PineBoard's
+        // on tvOS, from 0.10.0). Not on the Mac.
+        .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.10.0"),
         // icli's own libarchive, named here for `IrisinPreparation`: the same
         // package, so the helper gains no second copy, and the app already
         // links it through AptRepository.
@@ -38,9 +39,16 @@ let package = Package(
         // XPC overlay, a dylib iOS 15 does not have. See `IrisinXPC`.
         .systemLibrary(name: "CIrisinXPC", path: "Sources/CIrisinXPC"),
 
+        // libSystem's spawn calls, which the AppleTVOS SDK marks unavailable,
+        // declared again under labels naming the same symbols. See
+        // `ProcessSpawn`.
+        .systemLibrary(name: "CIrisinSpawn", path: "Sources/CIrisinSpawn"),
+
         // The wire vocabulary and the job description, compiled into every
-        // side. Free of anything platform-specific beyond XPC.
-        .target(name: "IrisinProtocol", dependencies: ["CIrisinXPC"]),
+        // side, and how the daemon and the helper find their install root
+        // and start a process. Free of anything platform-specific beyond XPC
+        // and posix_spawn.
+        .target(name: "IrisinProtocol", dependencies: ["CIrisinXPC", "CIrisinSpawn"]),
 
         // A `.deb` into the prepared tree the helper installs from. The app
         // runs it as mobile on what it downloaded; the helper on a package an
@@ -60,7 +68,7 @@ let package = Package(
             dependencies: [
                 "IrisinProtocol",
                 "IrisinPreparation",
-                .product(name: "IcliKit", package: "icli", condition: .when(platforms: [.iOS])),
+                .product(name: "IcliKit", package: "icli", condition: .when(platforms: [.iOS, .tvOS])),
             ]
         ),
 

@@ -100,11 +100,11 @@ public final class InstallerRunner {
         case .bootoutIrisinDaemon:
             manageDaemon(.bootout(plist: daemonPlist))
         case .reloadAirDrop:
-            signal("sharingd", SIGKILL)
+            reloadAirDrop()
         case .enterSafeMode:
-            // The jailbreak's tweak-free safe mode: SpringBoard crashing on
-            // SIGSEGV is what its injection library watches for.
-            signal("SpringBoard", SIGSEGV)
+            // The jailbreak's tweak-free safe mode: the home screen crashing
+            // on SIGSEGV is what its injection library watches for.
+            signal(SystemProcess.homeScreen, SIGSEGV)
         case .prepareUserHome:
             prepareUserHome()
         case let .external(external):
@@ -463,9 +463,9 @@ public final class InstallerRunner {
         removedOwnApplications = []
     }
 
-    /// The graceful respring through icli; failing that, backboardd is asked
-    /// to exit and takes SpringBoard with it, the way `killall backboardd`
-    /// did.
+    /// The graceful respring through icli (PineBoard's on tvOS); failing
+    /// that, backboardd is asked to exit and takes the home screen with it,
+    /// the way `killall backboardd` did.
     private func respring() -> Int32 {
         emit(.phase(.applying))
         let outcome = registrar.respring()
@@ -473,9 +473,19 @@ public final class InstallerRunner {
         case .done:
             return 0
         case .failed:
-            emit(.notice("Graceful respring unavailable (\(outcome.reason)); restarting backboardd"))
-            return signal("backboardd", SIGTERM, announced: false)
+            emit(.notice("Graceful respring unavailable (\(outcome.reason)); restarting \(SystemProcess.backboard)"))
+            return signal(SystemProcess.backboard, SIGTERM, announced: false)
         }
+    }
+
+    /// A system with no AirDrop has nothing to reload: the job is not one of
+    /// its jobs, and no one there sends it.
+    private func reloadAirDrop() -> Int32 {
+        guard let airDrop = SystemProcess.airDrop else {
+            emit(.failure(.invalidJob))
+            return 64
+        }
+        return signal(airDrop, SIGKILL)
     }
 
     /// mobile's home as this bootstrap's apps are registered with it: inside

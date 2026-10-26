@@ -1,0 +1,11 @@
+#!/bin/sh
+# Irisin's Apple TV package, RootHide alone (Documentation/AppleTV.md).
+
+if [ "${1:-}" = remove ] || [ "${1:-}" = deconfigure ]; then
+    helper=/usr/libexec/irisin-install
+    if [ -x "$helper" ]; then
+        echo '{"bootoutIrisinDaemon":{}}' | "$helper" >/dev/null || true
+    fi
+fi
+
+exit 0

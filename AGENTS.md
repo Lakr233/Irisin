@@ -1,7 +1,10 @@
 # Irisin — Agent Notes
 
 APT package manager for jailbroken iOS 15+, roothide and rootless bootstraps
-both. **iOS only.** The app runs as `mobile` and never becomes root; the
+both. **iOS only**, but for the privileged layer (`irisind`,
+`irisin-install`), which also builds for Apple TV: tvOS 17, RootHide alone,
+a draft whose decisions and open questions are `Documentation/AppleTV.md`.
+The app runs as `mobile` and never becomes root; the
 bundled `irisind` LaunchDaemon starts `irisin-install`, which installs
 package files natively and, as root, tells LaunchServices about app bundles
 through [icli](https://github.com/owngoal-dev/icli), our own code, linked into
@@ -264,6 +267,17 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `CIrisinXPC` through `IrisinXPC`; naming them in Swift links
   `libswiftXPC.dylib`, which iOS 15 does not have. `make check` greps for
   them and `verify-deb.sh` checks the load commands.
+- **A process is started with `ProcessSpawn`, nowhere else.** The AppleTVOS
+  SDK marks `posix_spawn` and its setup calls unavailable, though tvOS's
+  libSystem exports them; `CIrisinSpawn` declares them again under labels
+  naming the same symbols, for iOS and tvOS alike, and `ProcessSpawn` is the
+  one Swift file that calls them. `make check` greps every other Swift file
+  for `posix_spawn`, and the symbols are in `floor-imports.txt`, since a
+  labelled declaration carries no availability.
+- **On tvOS, RootHide or nothing.** `BootstrapSupport.serves(installRoot:)`
+  takes, on tvOS, only an install root whose name libroothide would make
+  (`RoothideRoot`): irisind will not start and irisin-install answers
+  `helperMisplaced` anywhere else. iOS serves every root it always has.
 - **No absolute build paths in a shipped binary.** `#file` is concise
   (`SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE`), and a dependency that still
   spells `#file` in a default argument in Swift 5 mode leaks the *caller's*
@@ -445,8 +459,9 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `OperationPackages`), queue resolution, notification bindings, the path
   list and the depiction's contact parsing.
 - `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`,
-  `ExecutableAdmission`, `ExternalTransaction`, `BootstrapArchitecture`),
-  `IrisinInstaller` (`BootstrapLayout`, `InstallerRunner`, `ToolSpawn`),
+  `ExecutableAdmission`, `ExternalTransaction`, `BootstrapArchitecture`,
+  `BootstrapSupport`, `ProcessSpawn`), `IrisinInstaller` (`BootstrapLayout`,
+  `InstallerRunner`, `ToolSpawn`, `SystemProcess`),
   `IrisinPreparation` (`DebianPreparation`, a `.deb` into a prepared tree,
   the app's and the helper's), `IrisinClient` (`DaemonLink`,
   `JobTranscript`), `IrisinVendor` (a paid repository's Keychain
@@ -568,6 +583,12 @@ a version bump, like icli.
   (`OrderedCollections`, never the `Collections` umbrella): a Swift module
   linked in stays in the binary whole, used or not.
 - `make deb` / `make deb-all` — roothide and rootless packages, verified.
+- `make build-appletv` / `make deb-appletv` — `irisind` and `irisin-install`
+  for tvOS (scheme `irisin-privileged`), and the Apple TV package, verified
+  (`package-appletv-deb.sh`, `verify-appletv-deb.sh`, the floor imports
+  against the AppleTVOS SDK with `floor-imports-appletv.txt` added). Needs
+  Xcode's tvOS platform (`xcodebuild -downloadPlatform tvOS`). Its
+  architecture is a placeholder dpkg does not accept until it is named.
 - `make install` — update an installation over `iproxy 2333 22`.
 - `Scripts/prune-xcstrings.py Irisin/Resources/Localizable.xcstrings Irisin Packages`
   — after Xcode has marked catalog entries stale: a key still quoted in a

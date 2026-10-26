@@ -46,22 +46,7 @@ nonisolated enum JailbreakRoot {
     /// no link and the path is the only evidence there is. The path is read
     /// as spelled: resolving it could only lose the name being looked for.
     static func roothideRoot(ofBundleAt bundlePath: String) -> String? {
-        let components = bundlePath.split(separator: "/")
-        guard let index = components.firstIndex(where: isRoothideRootName) else { return nil }
-        return "/" + components[...index].joined(separator: "/")
-    }
-
-    /// libroothide's `is_jbroot_name`: `.jbroot-` and sixteen hex digits,
-    /// the last byte the xor of the seven before it. Digits only: a sign is
-    /// a number to `UInt64` and to `strtoull`, and no name roothide makes.
-    private static func isRoothideRootName(_ name: Substring) -> Bool {
-        let prefix = ".jbroot-"
-        let digits = name.dropFirst(prefix.count)
-        guard name.hasPrefix(prefix), digits.count == 16, digits.allSatisfy(\.isHexDigit),
-              let value = UInt64(digits, radix: 16)
-        else { return false }
-        let check = (1 ... 7).reduce(UInt8(0)) { $0 ^ UInt8(truncatingIfNeeded: value >> ($1 * 8)) }
-        return check == UInt8(truncatingIfNeeded: value)
+        RoothideRoot.root(ofPath: bundlePath)
     }
 
     private static let libraryRoot: (prefix: String, isRoothide: Bool) = {

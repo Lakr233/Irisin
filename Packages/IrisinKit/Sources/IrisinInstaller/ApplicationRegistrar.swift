@@ -24,7 +24,7 @@ struct ApplicationRegistrar {
         /// ones, drop registrations whose bundle is gone.
         case refresh(directory: String)
         /// FrontBoard's relaunch action, the graceful fade `sbreload` sends,
-        /// verified by SpringBoard's pid changing.
+        /// verified by the home screen's pid changing (PineBoard's on tvOS).
         case respring
     }
 
@@ -137,7 +137,7 @@ struct ApplicationRegistrar {
         }
 
     #else
-        /// icli is built for iOS alone; a Mac has no home screen to tell.
+        /// icli is built for iOS and tvOS; a Mac has no home screen to tell.
         static func live(emit _: @escaping (InstallerEvent) -> Void) -> (Request) throws -> [String: Any] {
             { _ in throw Refusal(message: "icli is not available on this platform") }
         }

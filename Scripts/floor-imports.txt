@@ -66,6 +66,9 @@ csops
 memorystatus_control
 proc_name
 proc_pidpath
+# Private libdispatch, exported since iOS 8 and tvOS 9. Swift's
+# Compatibility56 library calls it; the tvOS link imports it strong.
+voucher_adopt
 # Private libxpc: launchctl's bootstrap pipe. _xpc_pipe_interface_routine is the
 # iOS 15.0 / macOS 12 entry point Procursus launchctl gates at exactly 15.0.
 _os_alloc_once_table
@@ -197,6 +200,21 @@ __NSArray0__
 # entitlement lookup (xpc_copy_entitlement_for_token) is resolved with dlsym.
 proc_listpids
 xpc_connection_get_audit_token
+# libSystem's spawn calls, through CIrisinSpawn's labelled declarations, which
+# carry no availability for the compiler to weak-link by: posix_spawn and its
+# attributes and file actions since iOS 2, addchdir_np since iOS 13. tvOS's
+# libSystem exports every one; only its SDK marks them unavailable.
+posix_spawn
+posix_spawn_file_actions_addchdir_np
+posix_spawn_file_actions_adddup2
+posix_spawn_file_actions_addopen
+posix_spawn_file_actions_destroy
+posix_spawn_file_actions_init
+posix_spawnattr_destroy
+posix_spawnattr_init
+posix_spawnattr_setflags
+posix_spawnattr_setsigdefault
+posix_spawnattr_setsigmask
 # More of the Swift runtime's C entry points. Each is defined in the
 # swift-5.5-RELEASE sources (stdlib/public, include/swift/Runtime), the
 # runtime iOS 15.0 shipped.

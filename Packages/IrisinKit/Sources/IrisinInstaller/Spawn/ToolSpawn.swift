@@ -2,13 +2,6 @@ import Darwin
 import Foundation
 import IrisinProtocol
 
-/// libSystem exports this on iOS; only the header marks it unavailable.
-@_silgen_name("posix_spawn_file_actions_addchdir_np")
-private func spawnActionsAddChdir(
-    _ actions: UnsafeMutablePointer<posix_spawn_file_actions_t?>,
-    _ path: UnsafePointer<CChar>
-) -> Int32
-
 /// One bootstrap tool, run to completion with its output read line by line.
 ///
 /// The argv is whatever the caller composed and nothing else: there is no
@@ -54,44 +47,24 @@ public enum ToolSpawn {
             }
         }
 
-        var actions: posix_spawn_file_actions_t?
-        posix_spawn_file_actions_init(&actions)
-        defer { posix_spawn_file_actions_destroy(&actions) }
-        posix_spawn_file_actions_adddup2(&actions, writeEnd, STDOUT_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, errorWriteEnd >= 0 ? errorWriteEnd : writeEnd, STDERR_FILENO)
-        posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0)
-
-        if let workingDirectory {
-            let result = spawnActionsAddChdir(&actions, workingDirectory)
-            guard result == 0 else {
-                closeAll()
-                throw Failure(errno: result)
-            }
-        }
-
-        var attributes: posix_spawnattr_t?
-        posix_spawnattr_init(&attributes)
-        defer { posix_spawnattr_destroy(&attributes) }
-        var defaulted = sigset_t()
-        sigfillset(&defaulted)
-        posix_spawnattr_setsigdefault(&attributes, &defaulted)
-        var masked = sigset_t()
-        sigemptyset(&masked)
-        posix_spawnattr_setsigmask(&attributes, &masked)
         // Every descriptor this process holds stays here: the child gets its
         // three standard streams and nothing it could use to reach back.
-        posix_spawnattr_setflags(
-            &attributes,
-            Int16(POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK)
-        )
-
-        let argv = CStringArray(arguments)
-        let envp = CStringArray(environment.map { "\($0.key)=\($0.value)" })
-        var pid: pid_t = 0
-        let spawned = posix_spawn(&pid, executable, &actions, &attributes, argv.pointers, envp.pointers)
-        guard spawned == 0 else {
+        let pid: pid_t
+        do {
+            pid = try ProcessSpawn.spawn(
+                executable,
+                arguments: arguments,
+                environment: environment.map { "\($0.key)=\($0.value)" },
+                descriptors: [
+                    .duplicate(writeEnd, as: STDOUT_FILENO),
+                    .duplicate(errorWriteEnd >= 0 ? errorWriteEnd : writeEnd, as: STDERR_FILENO),
+                    .open("/dev/null", flags: O_RDONLY, as: STDIN_FILENO),
+                ],
+                workingDirectory: workingDirectory
+            )
+        } catch {
             closeAll()
-            throw Failure(errno: spawned)
+            throw Failure(errno: error.errno)
         }
         close(writeEnd)
         if errorWriteEnd >= 0 {

@@ -6,6 +6,8 @@ nothing else. Three things below it say no word on the floor:
 
 - A local package whose `platforms` is above the floor. Xcode builds it at
   its own minimum, so its own guards are checked against the wrong version.
+  The same for tvOS (TVOS_DEPLOYMENT_TARGET), in a package that declares it:
+  only what the Apple TV build links does.
 - An SF Symbol newer than the floor. `UIImage(systemName:)` answers nil and
   the control draws with no icon. Any string literal that names a symbol is
   checked, not only `systemName:`, since this app hands symbols around as
@@ -16,7 +18,7 @@ nothing else. Three things below it say no word on the floor:
   release from the floor up: onboarding on that release recommends no
   bootstrap repository at all, or one built for another release.
 
-Usage: check-floor-sources.py <floor> <repository root>
+Usage: check-floor-sources.py <floor> <repository root> [<tvOS floor>]
 """
 
 import plistlib
@@ -31,6 +33,7 @@ GLYPHS = Path(
 NOT_SYMBOLS = {"fish"}
 LITERAL = re.compile(r'"([a-z0-9]+(?:\.[a-z0-9]+)*)"')
 PLATFORM = re.compile(r"\.iOS\(\s*(?:\.v(\d+)(?:_(\d+))?|\"([0-9.]+)\")\s*\)")
+TV_PLATFORM = re.compile(r"\.tvOS\(\s*(?:\.v(\d+)(?:_(\d+))?|\"([0-9.]+)\")\s*\)")
 AVAILABLE = re.compile(r"#available\(iOS (\d+(?:\.\d+)?)")
 
 
@@ -39,17 +42,20 @@ def version_key(version: str) -> tuple:
     return (tuple(int(part) for part in version.split(".")) + (0, 0))[:3]
 
 
-def check_packages(floor: tuple, root: Path) -> list:
+def check_packages(floor: tuple, root: Path, tv_floor: tuple | None = None) -> list:
     errors = []
+    systems = [("iOS", PLATFORM, floor)] + ([("tvOS", TV_PLATFORM, tv_floor)] if tv_floor else [])
     for manifest in sorted((root / "Packages").glob("*/Package.swift")):
-        for match in PLATFORM.finditer(manifest.read_text(encoding="utf-8")):
-            major, minor, literal = match.groups()
-            version = version_key(literal) if literal else (int(major), int(minor or 0))
-            if version[:2] != floor[:2]:
-                errors.append(
-                    f"{manifest.relative_to(root)}: platforms says iOS {'.'.join(map(str, version))}, "
-                    f"the deployment target is {'.'.join(map(str, floor))}"
-                )
+        text = manifest.read_text(encoding="utf-8")
+        for system, pattern, target in systems:
+            for match in pattern.finditer(text):
+                major, minor, literal = match.groups()
+                version = version_key(literal) if literal else (int(major), int(minor or 0))
+                if version[:2] != target[:2]:
+                    errors.append(
+                        f"{manifest.relative_to(root)}: platforms says {system} {'.'.join(map(str, version))}, "
+                        f"the deployment target is {'.'.join(map(str, target))}"
+                    )
     return errors
 
 
@@ -126,15 +132,17 @@ def check_recommended(floor: tuple, root: Path) -> list:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         raise SystemExit(__doc__)
     floor = version_key(sys.argv[1])
     root = Path(sys.argv[2])
-    errors = check_packages(floor, root) + check_symbols(floor, root) + check_recommended(floor, root)
+    tv_floor = version_key(sys.argv[3]) if len(sys.argv) == 4 else None
+    errors = check_packages(floor, root, tv_floor) + check_symbols(floor, root) + check_recommended(floor, root)
     for error in errors:
         print(f"error: {error}", file=sys.stderr)
     if errors:
-        print(f"error: {len(errors)} source(s) break the iOS {sys.argv[1]} floor", file=sys.stderr)
+        floors = f"iOS {sys.argv[1]}" + (f", tvOS {sys.argv[3]}" if tv_floor else "")
+        print(f"error: {len(errors)} source(s) break the floor ({floors})", file=sys.stderr)
         return 65
     return 0
 

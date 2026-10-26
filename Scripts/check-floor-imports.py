@@ -25,8 +25,15 @@ the symbol check leaves alone).
 
 icli's scripts/verify-binary.py is where this came from.
 
-Usage: check-floor-imports.py <allowlist> <path> [<path> ...]
-       <path> is a Mach-O or a bundle, which is walked
+Usage: check-floor-imports.py [--sdk <sdk>] [--floor <version>] [--headers <dir>]...
+                              [--allow <allowlist>]... <allowlist> <path> [<path> ...]
+       <path> is a Mach-O or a bundle, which is walked. --sdk is iphoneos
+       unless given (appletvos for the Apple TV build), --floor 15.0; a
+       --headers directory is read as the SDK's own is: the IOKit stub the
+       tvOS helper links against, whose headers the AppleTVOS SDK lacks.
+       Apple TV's floor is newer than iOS's, so the allowlist's iOS 15.0
+       symbols are exported there too; --allow names a further list, such
+       as what a tvOS 17 target adds (floor-imports-appletv.txt).
 """
 
 import os
@@ -36,7 +43,8 @@ import sys
 from pathlib import Path
 
 
-# Loaded strongly, each of these is a launch failure below the iOS it names.
+# Loaded strongly, each of these is a launch failure below the version it
+# names, which iOS and tvOS share.
 LATE_LIBRARIES = {
     "/usr/lib/swift/libswift_StringProcessing.dylib": "16.0",
     "/usr/lib/swift/libswift_RegexParser.dylib": "16.0",
@@ -56,12 +64,16 @@ LATE_LIBRARIES = {
 COMMENTS = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
 
 
-def sdk_declared_names() -> set:
-    sdk = Path(subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-path"], text=True).strip())
+def version_key(version: str) -> tuple:
+    return tuple(int(part) for part in (version.split(".") + ["0", "0"])[:3])
+
+
+def sdk_declared_names(sdk_name: str, extra: list) -> set:
+    sdk = Path(subprocess.check_output(["xcrun", "--sdk", sdk_name, "--show-sdk-path"], text=True).strip())
     names = set()
     # os.walk, not rglob: several frameworks in the SDK are symlinks, and
     # rglob does not follow a symlinked directory (SafariServices is one)
-    for folder in [sdk / "usr/include", sdk / "System/Library/Frameworks"]:
+    for folder in [sdk / "usr/include", sdk / "System/Library/Frameworks"] + extra:
         for directory, _, files in os.walk(folder, followlinks=True):
             for file in files:
                 if file.endswith(".h"):
@@ -103,23 +115,42 @@ def strong_imports(binary: Path) -> set:
     return names
 
 
-def late_libraries(binary: Path) -> list:
+def late_libraries(binary: Path, floor: str) -> list:
     output = subprocess.check_output(["otool", "-L", str(binary)], text=True, stderr=subprocess.DEVNULL)
     late = []
     for line in output.splitlines()[1:]:
         library = line.strip().split(" (", 1)[0]
-        if library in LATE_LIBRARIES and ", weak)" not in line:
-            late.append(f"{library} (iOS {LATE_LIBRARIES[library]})")
+        introduced = LATE_LIBRARIES.get(library)
+        if introduced and version_key(introduced) > version_key(floor) and ", weak)" not in line:
+            late.append(f"{library} ({introduced})")
     return late
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
+    arguments = sys.argv[1:]
+    sdk_name, floor, extra, further = "iphoneos", "15.0", [], []
+    while arguments and arguments[0].startswith("--"):
+        if len(arguments) < 2 or arguments[0] not in ("--sdk", "--floor", "--headers", "--allow"):
+            raise SystemExit(__doc__)
+        option, value = arguments[0], arguments[1]
+        arguments = arguments[2:]
+        if option == "--sdk":
+            sdk_name = value
+        elif option == "--floor":
+            floor = value
+        elif option == "--allow":
+            further.append(Path(value))
+        else:
+            extra.append(Path(value))
+    if len(arguments) < 2:
         raise SystemExit(__doc__)
-    allowed = allowlist(Path(sys.argv[1]))
-    declared = sdk_declared_names()
+    allowlist_path = arguments[0]
+    allowed = allowlist(Path(allowlist_path))
+    for path in further:
+        allowed |= allowlist(path)
+    declared = sdk_declared_names(sdk_name, extra)
     failures = 0
-    for argument in sys.argv[2:]:
+    for argument in arguments[1:]:
         path = Path(argument)
         if not path.exists():
             print(f"error: no such path: {path}", file=sys.stderr)
@@ -131,7 +162,7 @@ def main() -> int:
             for name in unknown:
                 print(f"error: {binary} imports {name} strongly; no SDK header declares it and the allowlist does not list it", file=sys.stderr)
             failures += len(unknown)
-            for library in late_libraries(binary):
+            for library in late_libraries(binary, floor):
                 print(f"error: {binary} loads {library} strongly", file=sys.stderr)
                 failures += 1
         if not found:
@@ -140,7 +171,7 @@ def main() -> int:
     if failures:
         print(
             f"error: {failures} strong import(s) the floor may not have. Confirm the floor exports each symbol "
-            f"and list it in {sys.argv[1]}, or resolve it with dlsym; weak-link a late library",
+            f"and list it in {allowlist_path}, or resolve it with dlsym; weak-link a late library",
             file=sys.stderr,
         )
         return 65

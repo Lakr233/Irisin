@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/owngoal-dev/icli.git",
       "state" : {
-        "revision" : "217dc37e55ef44bf6a0739358f2486e660b05d40",
-        "version" : "0.9.2"
+        "revision" : "2fbdb5ee61d8c320732deb9768b22506f5e3d411",
+        "version" : "0.10.0"
       }
     },
     {

@@ -60,11 +60,22 @@ APP_VERSION         := $(call xcconfig_setting,MARKETING_VERSION)
 # line: nothing in the tree changes from building. CI passes its run number.
 BUILD_NUMBER        ?= $(shell git -C "$(ROOT_DIR)" rev-list --count HEAD 2>/dev/null)
 MINIMUM_IOS_VERSION := $(call base_xcconfig_setting,IPHONEOS_DEPLOYMENT_TARGET)
+MINIMUM_TVOS_VERSION := $(call base_xcconfig_setting,TVOS_DEPLOYMENT_TARGET)
 DEB_OUTPUT          ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$(PACKAGE_ARCHITECTURE).deb
+# Apple TV: irisind and irisin-install alone, for RootHide
+# (Documentation/AppleTV.md). The architecture is a placeholder until it is
+# named, and not one dpkg accepts.
+PRIVILEGED_SCHEME   := irisin-privileged
+APPLETV_PRODUCTS    := $(DERIVED_DATA)/Build/Products/$(CONFIGURATION)-appletvos
+APPLETV_STUBS       := $(DERIVED_DATA)/tvos-stubs
+APPLETV_ARCHITECTURE ?= __replace_me_atv_os_package_arch__
+APPLETV_DEB_OUTPUT  ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$(APPLETV_ARCHITECTURE).deb
 
 XCODEBUILD_WRAPPER  := $(ROOT_DIR)/Scripts/run-xcodebuild.sh
 DEB_PACKAGER        := $(ROOT_DIR)/Scripts/package-deb.sh
 DEB_VERIFIER        := $(ROOT_DIR)/Scripts/verify-deb.sh
+APPLETV_PACKAGER    := $(ROOT_DIR)/Scripts/package-appletv-deb.sh
+APPLETV_VERIFIER    := $(ROOT_DIR)/Scripts/verify-appletv-deb.sh
 FLOOR_AUDIT         := $(ROOT_DIR)/Scripts/audit-ios-floor.sh
 FLOOR_IMPORTS       := $(ROOT_DIR)/Scripts/check-floor-imports.py
 VERSION_APPLIER    := $(ROOT_DIR)/Scripts/apply-version.sh
@@ -107,7 +118,8 @@ endif
 
 .PHONY: all help print-version print-build-number print-deb-path print-flavor \
 	set-version check harness test build compile sim _build-ios _package-deb \
-	_packages deb deb-roothide deb-rootless deb-all install clean
+	_packages deb deb-roothide deb-rootless deb-all build-appletv deb-appletv \
+	_package-appletv install clean
 
 all: deb-all
 
@@ -121,6 +133,8 @@ help:
 	@echo "  sim         Build Debug and launch the app on the booted simulator"
 	@echo "  deb         Build, ad-hoc sign, package, and verify the .deb for FLAVOR (default roothide)"
 	@echo "  deb-all     Package both the roothide and the rootless .deb"
+	@echo "  build-appletv  Build irisind and irisin-install for tvOS (needs Xcode's tvOS platform)"
+	@echo "  deb-appletv    Package and verify the Apple TV .deb (RootHide; draft architecture)"
 	@echo "  install     Build for FLAVOR and update an installation on the device via iproxy"
 	@echo "  set-version Write VERSION=x.y.z into Configuration/Version.xcconfig (build number: git commit count, or BUILD_NUMBER=n)"
 	@echo "  clean       Remove derived data and generated packages"
@@ -157,7 +171,7 @@ check:
 	done
 	@test -f "$(CONTROL_TEMPLATE)" || { echo "error: Debian control template is missing" >&2; exit 66; }
 	@test -f "$(PACKAGE_DIR)/Package.swift" || { echo "error: Packages/IrisinKit/Package.swift is missing" >&2; exit 66; }
-	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(FLOOR_AUDIT)" "$(FLOOR_IMPORTS)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
+	@for script in "$(DEB_PACKAGER)" "$(DEB_VERIFIER)" "$(APPLETV_PACKAGER)" "$(APPLETV_VERIFIER)" "$(FLOOR_AUDIT)" "$(FLOOR_IMPORTS)" "$(VERSION_APPLIER)" "$(XCODEBUILD_WRAPPER)" "$(DEVICE_INSTALLER)"; do \
 		test -x "$$script" || { echo "error: $$script is not executable" >&2; exit 66; }; \
 	done
 	@for xcconfig in Version Base Size Development Release; do \
@@ -168,10 +182,13 @@ check:
 	@[[ "$(MINIMUM_IOS_VERSION)" =~ ^[0-9]+\.[0-9]+$$ ]] || { echo "error: IPHONEOS_DEPLOYMENT_TARGET must look like 15.0, got '$(MINIMUM_IOS_VERSION)'" >&2; exit 65; }
 	@grep -qE '(MARKETING_VERSION|CURRENT_PROJECT_VERSION) =' "$(PROJECT)/project.pbxproj" \
 		&& { echo "error: versions must live in Configuration/Version.xcconfig, not project.pbxproj" >&2; exit 65; } || true
-	@grep -q 'IPHONEOS_DEPLOYMENT_TARGET' "$(PROJECT)/project.pbxproj" \
+	@grep -qE '(IPHONEOS|TVOS)_DEPLOYMENT_TARGET' "$(PROJECT)/project.pbxproj" \
 		&& { echo "error: deployment target must live in Configuration/Base.xcconfig, not project.pbxproj" >&2; exit 65; } || true
 	@grep -Fq "Depends: firmware (>= @MINIMUM_IOS_VERSION@)" "$(CONTROL_TEMPLATE)" \
 		|| { echo "error: Debian control must depend on firmware (>= @MINIMUM_IOS_VERSION@)" >&2; exit 65; }
+	@grep -Fq "Depends: firmware (>= @MINIMUM_TVOS_VERSION@)" "$(ROOT_DIR)/Packaging/AppleTV/control" \
+		|| { echo "error: the Apple TV control must depend on firmware (>= @MINIMUM_TVOS_VERSION@)" >&2; exit 65; }
+	@[[ "$(MINIMUM_TVOS_VERSION)" =~ ^[0-9]+\.[0-9]+$$ ]] || { echo "error: TVOS_DEPLOYMENT_TARGET must look like 17.0, got '$(MINIMUM_TVOS_VERSION)'" >&2; exit 65; }
 	@objver="$$(sed -n 's/^[[:space:]]*objectVersion = \([0-9]*\);.*/\1/p' "$(PROJECT)/project.pbxproj")"; \
 		[[ "$$objver" == "$(PROJECT_OBJECT_VERSION)" ]] || { echo "error: project.pbxproj objectVersion must stay $(PROJECT_OBJECT_VERSION) so Xcode 16+ can read it, got '$$objver' (newer Xcode rewrites it on save)" >&2; exit 65; }
 	@if (( $$(cut -d. -f1 <<<"$(MINIMUM_IOS_VERSION)") < 16 )); then \
@@ -182,8 +199,12 @@ check:
 			exit 65; \
 		fi; \
 	fi
-	@grep -rnE 'setuid\(|posix_spawnattr_set_persona|exec-root|giveMeRoot' --include='*.swift' --include='*.m' "$(ROOT_DIR)/Irisin" "$(ROOT_DIR)/IrisinCLI" \
-		&& { echo "error: the app must never raise privilege; privileged work goes through irisind" >&2; exit 65; } || true
+	@grep -rnE 'posix_spawn' --include='*.swift' --exclude-dir=.build "$(ROOT_DIR)/Irisin" "$(ROOT_DIR)/IrisinDaemon" "$(ROOT_DIR)/IrisinInstall" "$(ROOT_DIR)/IrisinCLI" "$(ROOT_DIR)/Packages" \
+		| grep -vE '^[^:]+:[0-9]+:[[:space:]]*//' \
+		| grep -vF "$(PACKAGE_DIR)/Sources/IrisinProtocol/Process/ProcessSpawn.swift:" \
+		&& { echo "error: a process is started with ProcessSpawn, whose CIrisinSpawn declarations reach libSystem's posix_spawn where the AppleTVOS SDK marks it unavailable; no posix_spawn call anywhere else" >&2; exit 65; } || true
+	@grep -rnE 'setuid\(|posix_spawnattr_set_persona|exec-root|giveMeRoot' --include='*.swift' --include='*.m' --include='*.h' --include='*.c' "$(ROOT_DIR)/Irisin" "$(ROOT_DIR)/IrisinCLI" "$(PACKAGE_DIR)/Sources" \
+		&& { echo "error: the app must never raise privilege, and nothing it links may offer a way to; privileged work goes through irisind" >&2; exit 65; } || true
 	@grep -rnE 'NSLocalizedString\(|"[A-Z][A-Z0-9]*(_[A-Z0-9]+)+"' --include='*.swift' "$(ROOT_DIR)/Irisin" \
 		&& { echo "error: user-facing text is a String.LocalizationValue spelled out in English (\"Delete All Downloads\"), never NSLocalizedString or a SHOUTING_KEY" >&2; exit 65; } || true
 	@grep -rnE 'numberOfRowsInSection|numberOfItemsInSection|\.reloadData\(\)|(UITableView|UICollectionView)DataSource($$|[^A-Za-z])' --include='*.swift' "$(ROOT_DIR)/Irisin" \
@@ -222,7 +243,7 @@ check:
 	@# package's platforms, SF Symbols, and a Procursus suite recommended
 	@# for each iOS release from the floor up.
 	@test -x "$(ROOT_DIR)/Scripts/check-floor-sources.py" || { echo "error: check-floor-sources.py is not executable" >&2; exit 66; }
-	@"$(ROOT_DIR)/Scripts/check-floor-sources.py" "$(MINIMUM_IOS_VERSION)" "$(ROOT_DIR)"
+	@"$(ROOT_DIR)/Scripts/check-floor-sources.py" "$(MINIMUM_IOS_VERSION)" "$(ROOT_DIR)" "$(MINIMUM_TVOS_VERSION)"
 	@# What the user reads says custom firmware, in every language.
 	@"$(ROOT_DIR)/Scripts/check-wording.py" "$(ROOT_DIR)"
 	@# The manual quotes the app's controls by name, and a control renamed in
@@ -323,7 +344,7 @@ _package-deb:
 	@# A strong import no SDK header declares has no availability for the
 	@# compiler to weak-link by: each one is listed once the floor is known
 	@# to export it, or looked up with dlsym. The list is for iOS 15.0.
-	"$(FLOOR_IMPORTS)" "$(ROOT_DIR)/Scripts/floor-imports.txt" "$(APP_BUNDLE)" "$(DAEMON_BINARY)" "$(HELPER_BINARY)" "$(CLI_BINARY)"
+	"$(FLOOR_IMPORTS)" --floor "$(MINIMUM_IOS_VERSION)" "$(ROOT_DIR)/Scripts/floor-imports.txt" "$(APP_BUNDLE)" "$(DAEMON_BINARY)" "$(HELPER_BINARY)" "$(CLI_BINARY)"
 	"$(DEB_PACKAGER)" \
 		"$(APP_BUNDLE)" \
 		"$(DAEMON_BINARY)" \
@@ -348,6 +369,45 @@ _package-deb:
 		"$(APP_VERSION)" \
 		"$(PACKAGE_ARCHITECTURE)" \
 		"$(INSTALL_PREFIX)"
+
+# IcliKit links IOKit, which tvOS ships and the AppleTVOS SDK leaves out; icli
+# makes the stub it links against from the iPhoneOS SDK. icli's own sources
+# include IOKit's headers, and a package target never reads a native target's
+# settings, so the stub's folder reaches every target from the command line.
+# xcodebuild needs Xcode's tvOS platform (`xcodebuild -downloadPlatform tvOS`).
+build-appletv: check
+	XCBUILD_LABEL=resolve-appletv $(XCODEBUILD) -scheme "$(PRIVILEGED_SCHEME)" -resolvePackageDependencies
+	sh "$(DERIVED_DATA)/SourcePackages/checkouts/icli/scripts/tvos-iokit-stub.sh" "$(APPLETV_STUBS)"
+	XCBUILD_LABEL=build-appletv $(XCODEBUILD) \
+		$(if $(filter Release,$(CONFIGURATION)),-xcconfig "$(SIZE_CONFIG)") \
+		-configuration "$(CONFIGURATION)" \
+		-scheme "$(PRIVILEGED_SCHEME)" \
+		-destination "generic/platform=tvOS" \
+		'FRAMEWORK_SEARCH_PATHS=$$(inherited) $(APPLETV_STUBS)' \
+		build
+
+deb-appletv: build-appletv
+	@$(MAKE) --no-print-directory _package-appletv
+
+_package-appletv:
+	@# tvOS 17 lets the compiler name runtime entry points an iOS 15 target
+	@# never does; they are listed on their own.
+	"$(FLOOR_IMPORTS)" --sdk appletvos --floor "$(MINIMUM_TVOS_VERSION)" --headers "$(APPLETV_STUBS)" \
+		--allow "$(ROOT_DIR)/Scripts/floor-imports-appletv.txt" "$(ROOT_DIR)/Scripts/floor-imports.txt" \
+		"$(APPLETV_PRODUCTS)/irisind" "$(APPLETV_PRODUCTS)/irisin-install"
+	"$(APPLETV_PACKAGER)" \
+		"$(APPLETV_PRODUCTS)/irisind" \
+		"$(APPLETV_PRODUCTS)/irisin-install" \
+		"$(LAUNCH_DAEMON)" \
+		"$(ROOT_DIR)/Packaging/AppleTV" \
+		"$(DAEMON_ENTITLEMENTS)" \
+		"$(HELPER_ENTITLEMENTS)" \
+		"$(APPLETV_DEB_OUTPUT)" \
+		"$(PACKAGE_ID)" \
+		"$(APP_VERSION)" \
+		"$(APPLETV_ARCHITECTURE)" \
+		"$(MINIMUM_TVOS_VERSION)"
+	"$(APPLETV_VERIFIER)" "$(APPLETV_DEB_OUTPUT)" "$(PACKAGE_ID)" "$(APP_VERSION)" "$(APPLETV_ARCHITECTURE)" "$(MINIMUM_TVOS_VERSION)"
 
 deb-roothide:
 	@$(MAKE) --no-print-directory deb FLAVOR=roothide

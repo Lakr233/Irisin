@@ -35,43 +35,31 @@ extension DaemonServer {
         var input: [Int32] = [-1, -1]
         guard pipe(&input) == 0 else { throw IrisinFailure(errno: errno) }
 
-        var actions: posix_spawn_file_actions_t?
-        posix_spawn_file_actions_init(&actions)
-        defer { posix_spawn_file_actions_destroy(&actions) }
-        posix_spawn_file_actions_adddup2(&actions, input[0], STDIN_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, standardOutput, STDOUT_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, standardOutput, STDERR_FILENO)
+        var descriptors: [ProcessSpawn.Descriptor] = [
+            .duplicate(input[0], as: STDIN_FILENO),
+            .duplicate(standardOutput, as: STDOUT_FILENO),
+            .duplicate(standardOutput, as: STDERR_FILENO),
+        ]
         if let package {
-            posix_spawn_file_actions_adddup2(&actions, package, InstallerJob.External.packageDescriptor)
+            descriptors.append(.duplicate(package, as: InstallerJob.External.packageDescriptor))
         }
-
-        var attributes: posix_spawnattr_t?
-        posix_spawnattr_init(&attributes)
-        defer { posix_spawnattr_destroy(&attributes) }
-        var defaulted = sigset_t()
-        sigfillset(&defaulted)
-        posix_spawnattr_setsigdefault(&attributes, &defaulted)
-        var masked = sigset_t()
-        sigemptyset(&masked)
-        posix_spawnattr_setsigmask(&attributes, &masked)
-        // `POSIX_SPAWN_SETSID`: the helper gets a session of its own, so launchd
-        // tearing this daemon down (which the package being installed may ask
-        // for in its postinst) does not take the install down with it.
-        posix_spawnattr_setflags(
-            &attributes,
-            Int16(POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSID)
-        )
-
-        var argv: [UnsafeMutablePointer<CChar>?] = [strdup(helper), nil]
-        defer { free(argv[0]) }
-        var envp: [UnsafeMutablePointer<CChar>?] = [nil]
-        var pid: pid_t = 0
-        let spawned = posix_spawn(&pid, helper, &actions, &attributes, &argv, &envp)
-        close(input[0])
-        guard spawned == 0 else {
+        // A session of its own: launchd tearing this daemon down (which the
+        // package being installed may ask for in its postinst) does not take
+        // the install down with it.
+        do {
+            _ = try ProcessSpawn.spawn(
+                helper,
+                arguments: [helper],
+                environment: [],
+                descriptors: descriptors,
+                newSession: true
+            )
+        } catch {
+            close(input[0])
             close(input[1])
-            throw IrisinFailure(errno: spawned, path: helper)
+            throw IrisinFailure(errno: error.errno, path: helper)
         }
+        close(input[0])
 
         // The whole job, then EOF: the helper reads its standard input to the
         // end before doing anything. A job is a few kilobytes at most.

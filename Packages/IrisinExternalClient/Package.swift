@@ -11,7 +11,7 @@ import PackageDescription
 /// `Documentation/ExternalClients.md` is the contract it speaks.
 let package = Package(
     name: "IrisinExternalClient",
-    platforms: [.iOS(.v15), .macOS(.v13)],
+    platforms: [.iOS(.v15), .tvOS(.v17), .macOS(.v13)],
     products: [
         .library(name: "IrisinExternalClient", targets: ["IrisinExternalClient"]),
     ],

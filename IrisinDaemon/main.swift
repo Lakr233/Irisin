@@ -11,6 +11,12 @@ autoreleasepool {
         log.error("irisind is not at its installed path; refusing to start")
         exit(EX_CONFIG)
     }
+    // tvOS serves RootHide alone: a rootful or rootless Apple TV gets no
+    // daemon at all.
+    guard BootstrapSupport.serves(installRoot: installRoot) else {
+        log.error("irisind does not serve the bootstrap at \(installRoot, privacy: .public) on this system; refusing to start")
+        exit(EX_CONFIG)
+    }
     log.info("irisind started, pid \(getpid()), uid \(getuid()), root \(installRoot, privacy: .public)")
     let server = DaemonServer(installRoot: installRoot)
     guard server.start() else {

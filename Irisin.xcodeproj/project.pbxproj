@@ -670,6 +670,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.irisind;
 				PRODUCT_NAME = irisind;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator appletvos";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_VERSION = 6.0;
 			};
@@ -683,6 +684,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = wiki.qaq.irisind;
 				PRODUCT_NAME = irisind;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator appletvos";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 6.0;
 			};
@@ -697,6 +699,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "wiki.qaq.irisin-install";
 				PRODUCT_NAME = "irisin-install";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator appletvos";
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_VERSION = 6.0;
 			};
@@ -711,6 +714,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "wiki.qaq.irisin-install";
 				PRODUCT_NAME = "irisin-install";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator appletvos";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 6.0;
 			};

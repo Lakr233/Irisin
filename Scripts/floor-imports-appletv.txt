@@ -1,0 +1,65 @@
+# Strong imports the Apple TV build's tvOS 17.0 floor allows beyond
+# floor-imports.txt, which check-floor-imports.py reads first. A tvOS 17
+# target lets the compiler emit runtime entry points an iOS 15 target never
+# asks for; each is emitted only for a target whose runtime the compiler's
+# own availability table says has it. Checked so far on tvOS 26.6 guests
+# alone, not on a tvOS 17 device. See Documentation/AppleTV.md.
+
+# objc4's ARC entry points by register, which clang calls for a target of
+# iOS 16 or tvOS 16 and later instead of objc_retain and objc_release.
+objc_release_x0
+objc_release_x1
+objc_release_x10
+objc_release_x11
+objc_release_x12
+objc_release_x13
+objc_release_x14
+objc_release_x15
+objc_release_x19
+objc_release_x2
+objc_release_x20
+objc_release_x21
+objc_release_x22
+objc_release_x23
+objc_release_x24
+objc_release_x25
+objc_release_x26
+objc_release_x27
+objc_release_x28
+objc_release_x3
+objc_release_x4
+objc_release_x5
+objc_release_x6
+objc_release_x7
+objc_release_x8
+objc_release_x9
+objc_retain_x0
+objc_retain_x1
+objc_retain_x10
+objc_retain_x11
+objc_retain_x12
+objc_retain_x13
+objc_retain_x14
+objc_retain_x15
+objc_retain_x19
+objc_retain_x2
+objc_retain_x20
+objc_retain_x21
+objc_retain_x22
+objc_retain_x23
+objc_retain_x24
+objc_retain_x25
+objc_retain_x26
+objc_retain_x27
+objc_retain_x28
+objc_retain_x3
+objc_retain_x4
+objc_retain_x5
+objc_retain_x6
+objc_retain_x7
+objc_retain_x8
+objc_retain_x9
+# The Swift runtime's metadata lookup with a second generic-context form,
+# which the compiler names only for a runtime that has it.
+swift_getTypeByMangledNameInContext2
+swift_getTypeByMangledNameInContextInMetadataState2

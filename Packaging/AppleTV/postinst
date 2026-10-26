@@ -1,0 +1,15 @@
+#!/bin/sh
+# Irisin's Apple TV package: RootHide alone, so every path below is the
+# bootstrap's own and RootHide's dpkg relocates it (Documentation/AppleTV.md).
+# There is no app yet, so nothing is registered and no data folder is made:
+# the daemon is loaded and that is all.
+
+helper=/usr/libexec/irisin-install
+if [ -x "$helper" ]; then
+    echo '{"bootstrapIrisinDaemon":{}}' | "$helper" >/dev/null || {
+        echo "warning: Irisin's background service could not be loaded and started." >&2
+        echo "warning: reinstall Irisin before trying to install packages." >&2
+    }
+fi
+
+exit 0

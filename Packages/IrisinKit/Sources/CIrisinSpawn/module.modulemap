@@ -1,0 +1,14 @@
+// `posix_spawn` and the calls that set it up are in libSystem on every iOS
+// and tvOS Irisin runs on, but the SDK headers say otherwise: the AppleTVOS
+// SDK marks every one of them `__API_UNAVAILABLE(tvos)`, and the iPhoneOS SDK
+// marks `posix_spawn_file_actions_addchdir_np` unavailable on iOS. Swift
+// refuses to name an unavailable function, so the ones irisind and
+// irisin-install use are declared again here, under names of our own, each
+// bound by an assembler label to the libSystem symbol it is. Nothing is
+// defined and nothing is looked up at run time: the binaries import
+// `_posix_spawn` itself. See `ProcessSpawn`, the one Swift file that calls
+// them.
+module CIrisinSpawn [system] {
+    header "shim.h"
+    export *
+}
