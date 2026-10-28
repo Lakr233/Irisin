@@ -169,26 +169,39 @@ directory that is not there) and `var`.
    `all`, an upgrade, an iOS RootHide package refused, `removePackage` of
    both, `respring`, and `bootoutIrisinDaemon`.
 
+The `tvhd` guest has no Metal device, so CoreImage, which draws the
+launchpad's QR code, has no renderer there, GPU or software, and the code
+is a blank square; a real Apple TV HD has a GPU.
+
 Passed on both guests on 2026-10-26: `tvhd` (Apple TV HD template) on jp-02
 and `tv4k` (Apple TV 4K template) on jp-01, tvOS 26.6, with the binaries
 from `make deb-appletv`. tvOS 17 itself is untested: no guest runs it.
 
 ## Irisin updating itself
 
-A launchpad updated from the page asks for `registerOwnApplication` as it
-leaves, as the iOS app does. Through 5.0.2 it was then refused at every
-launch: PineBoard answered `Denying open-application request for reason:
-Disabled`. Registering it again changed nothing (`rebuildIconCache` found
-it unchanged), a respring neither, and changing the mode of its
-`Info.plist` neither; registering it once its `Info.plist` had been written
-again, by `files.push` or `files.plist_set` over vphoned, opened it. The
-helper on tvOS now lets the launchpad's process go first, ten seconds at
-most, and writes each of Irisin's own `Info.plist`s again, the same bytes
-under a new inode and time, before it registers them. The helper that does
+PineBoard terminates an app that LaunchServices registers while it runs
+and marks it disabled (`Terminated -- disabled for reasons (Programming
+Guide)`); every launch after that is refused (`Denying open-application
+request for reason: Disabled`). It makes the app's record again, enabled,
+only when a registration finds a different modification date
+(`Regenerating application … due to modification date mismatch`):
+registering it again with the same `Info.plist` changed nothing, nor did a
+respring. The launchpad updated from the page asks for
+`registerOwnApplication` as it leaves, as the iOS app does, and through
+5.0.2 the helper registered it while it was still running. The helper on
+tvOS now lets its process go first, ten seconds at most, and writes each of
+Irisin's own `Info.plist`s again, the same bytes under a new inode and time,
+before it registers them (`prepareForRegistration`). The helper that does
 this is the one the update installs, so an update from 5.0.2 gets it too.
-Found on `tv4k` (tvOS 26.6) on 2026-10-28. Whether an update of another
-package's app needs the same is open: no other app is published for this
-bootstrap yet.
+
+On `tv4k` (tvOS 26.6), 2026-10-28: `registerOwnApplication` asked for while
+the launchpad ran, the launchpad leaving two seconds later, left it opening
+normally, and a launchpad already disabled opened after it. A vphone guest
+cannot show the whole path: vphoned refreshes `/Applications` as soon as
+the bootstrap's `Library/dpkg` changes, which registers the running
+launchpad during the transaction, before it can ask, so there it is still
+disabled after an update from the page; `registerOwnApplication` through
+the helper opens it again.
 
 ## Open questions
 
