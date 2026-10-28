@@ -175,16 +175,20 @@ from `make deb-appletv`. tvOS 17 itself is untested: no guest runs it.
 
 ## Irisin updating itself
 
-PineBoard disables an app that LaunchServices registers while it runs
-(`Denying open-application request for reason: Disabled`), and enables it
-again only at its next registration. The launchpad updated from the page
-asks for `registerOwnApplication` as it leaves, as the iOS app does, and
-through 5.0.2 the helper registered it at once, while it was still running:
-it stayed refused at every launch, and `rebuildIconCache` found it
-unchanged. The helper on tvOS now waits for the launchpad's process to be
-gone, ten seconds at most, before it registers. The helper that does this
-is the one the update installs, so an update from 5.0.2 is covered too.
-Found on `tv4k` (tvOS 26.6) on 2026-10-28.
+A launchpad updated from the page asks for `registerOwnApplication` as it
+leaves, as the iOS app does. Through 5.0.2 it was then refused at every
+launch: PineBoard answered `Denying open-application request for reason:
+Disabled`. Registering it again changed nothing (`rebuildIconCache` found
+it unchanged), a respring neither, and changing the mode of its
+`Info.plist` neither; registering it once its `Info.plist` had been written
+again, by `files.push` or `files.plist_set` over vphoned, opened it. The
+helper on tvOS now lets the launchpad's process go first, ten seconds at
+most, and writes each of Irisin's own `Info.plist`s again, the same bytes
+under a new inode and time, before it registers them. The helper that does
+this is the one the update installs, so an update from 5.0.2 gets it too.
+Found on `tv4k` (tvOS 26.6) on 2026-10-28. Whether an update of another
+package's app needs the same is open: no other app is published for this
+bootstrap yet.
 
 ## Open questions
 

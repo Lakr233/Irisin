@@ -429,7 +429,7 @@ public final class InstallerRunner {
         }
         emit(.phase(.registeringApplications))
         #if os(tvOS)
-            awaitExit(of: bundles)
+            prepareForRegistration(bundles)
         #endif
         var status: Int32 = 0
         for path in bundles.sorted() {
@@ -446,12 +446,14 @@ public final class InstallerRunner {
     }
 
     #if os(tvOS)
-        /// PineBoard disables an app that LaunchServices registers while it
-        /// runs, and enables it again only at its next registration: the
-        /// launchpad that asked for this, leaving after its own update,
-        /// stayed refused at every launch. Its process is let go first, ten
-        /// seconds at most, then the registration goes ahead regardless.
-        private func awaitExit(of bundles: Set<String>) {
+        /// A launchpad its own update replaced was refused at every launch
+        /// after it registered itself ("Disabled", PineBoard said):
+        /// registering it again changed nothing, a respring neither, and
+        /// registering it once its `Info.plist` had been written again
+        /// opened it. So its process is let go first, ten seconds at most,
+        /// and each `Info.plist` is written again, the same bytes under a
+        /// new inode and time, before the registration.
+        private func prepareForRegistration(_ bundles: Set<String>) {
             let executables = bundles.compactMap { bundle in
                 NSDictionary(contentsOfFile: bundle + "/Info.plist")?["CFBundleExecutable"] as? String
             }
@@ -460,6 +462,16 @@ public final class InstallerRunner {
                   executables.contains(where: { !ProcessTable.processIdentifiers(named: $0).isEmpty })
             {
                 usleep(100_000)
+            }
+            for bundle in bundles {
+                let path = bundle + "/Info.plist"
+                var info = stat()
+                guard lstat(path, &info) == 0, info.st_mode & S_IFMT == S_IFREG,
+                      let contents = FileManager.default.contents(atPath: path),
+                      (try? contents.write(to: URL(fileURLWithPath: path), options: .atomic)) != nil
+                else { continue }
+                chown(path, info.st_uid, info.st_gid)
+                chmod(path, info.st_mode & 0o7777)
             }
         }
     #endif

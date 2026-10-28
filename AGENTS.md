@@ -141,10 +141,10 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `/Applications`). The app sends `registerOwnApplication` from its
   Updating App alert as it exits, and at the next launch, once per build,
   when LaunchServices still has an older build. On tvOS the helper lets
-  the launchpad's process go first (`awaitExit`, ten seconds at most):
-  PineBoard disables an app registered while it runs until its next
-  registration, so a launchpad updated from the page stayed refused. A
-  removed bundle is
+  the launchpad's process go first, ten seconds at most, and writes its
+  `Info.plist` again before registering it (`prepareForRegistration`): a
+  launchpad updated from the page was otherwise refused at every launch,
+  and only a registration after that rewrite opened it. A removed bundle is
   unregistered after the transcript's `exit` (`finishAfterExit`). A fix
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.
