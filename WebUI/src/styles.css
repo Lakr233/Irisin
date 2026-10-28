@@ -431,4 +431,11 @@ select:focus,
   .brand .device {
     display: none;
   }
+  /* a repository's address takes a row of its own, its buttons the next */
+  form.toolbar {
+    flex-wrap: wrap;
+  }
+  form.toolbar input {
+    flex-basis: 100%;
+  }
 }
