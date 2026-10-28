@@ -5,61 +5,42 @@
 
 import UIKit
 
-/// The launchpad's type ramp: one screen read from across a room on a
-/// television, or in a window in space. A call site picks one of these, as
-/// the app's do from `Irisin/Interface/DesignTokens`; nothing else names a
-/// size or a weight.
+/// The launchpad's type: one screen read from across a room on a
+/// television, or in a window in space. Every line is set in one size;
+/// weight and the text colour's opacity tell them apart. A call site picks
+/// one of these, as the app's do from `Irisin/Interface/DesignTokens`;
+/// nothing else names a size or a weight.
 extension UIFont {
-    /// The app's name, at the top of the screen.
-    static var launchpadTitle: UIFont {
-        semibold(.title1)
+    /// The one size: the headline's on a television, the second title's in
+    /// a window, which sits further off than a page of text.
+    private static var launchpadSize: CGFloat {
+        #if os(tvOS)
+            preferredFont(forTextStyle: .headline).pointSize
+        #else
+            preferredFont(forTextStyle: .title2).pointSize
+        #endif
     }
 
-    /// What a block of the screen is about, and the owner's question.
-    static var launchpadHeadline: UIFont {
-        semibold(.title3)
+    /// Lines that explain: what to do, the code's caption, what is going on.
+    static var launchpadText: UIFont {
+        .systemFont(ofSize: launchpadSize, weight: .regular)
     }
 
-    /// Sentences: what to do, what is running.
-    static var launchpadBody: UIFont {
-        preferredFont(forTextStyle: .body)
-    }
-
-    /// The device's name and system, and the status line.
-    static var launchpadCaption: UIFont {
-        preferredFont(forTextStyle: .callout)
-    }
-
-    /// The page's address, typed by hand when there is no camera to hand.
-    static var launchpadAddress: UIFont {
-        .monospacedSystemFont(ofSize: preferredFont(forTextStyle: .title3).pointSize, weight: .regular)
-    }
-
-    /// The six digits, read from the sofa.
-    static var launchpadCode: UIFont {
-        .monospacedDigitSystemFont(ofSize: preferredFont(forTextStyle: .title1).pointSize * 1.8, weight: .semibold)
-    }
-
-    private static func semibold(_ style: TextStyle) -> UIFont {
-        let base = preferredFont(forTextStyle: style)
-        guard let descriptor = base.fontDescriptor.withSymbolicTraits(.traitBold) else { return base }
-        return UIFont(descriptor: descriptor, size: base.pointSize)
+    /// Lines that carry the screen: the address and the code, with digits
+    /// of one width.
+    static var launchpadEmphasis: UIFont {
+        .monospacedDigitSystemFont(ofSize: launchpadSize, weight: .semibold)
     }
 }
 
-/// The launchpad's colours, by purpose.
+/// The launchpad's colours, by purpose: the system's own text colours, and
+/// the one ground the QR code needs.
 extension UIColor {
-    /// Irisin's blue, the icon's own (#0088FF).
-    static let launchpadAccent = UIColor(red: 0, green: 0x88 / 255.0, blue: 1, alpha: 1)
-
-    /// Text that carries the screen.
+    /// Text that carries the screen: the address and the code.
     static let launchpadPrimaryText = UIColor.label
 
-    /// Text that explains it.
+    /// Text that explains it: the same text at the system's lower opacity.
     static let launchpadSecondaryText = UIColor.secondaryLabel
-
-    /// A yes that takes something away, or is likely to fail.
-    static let launchpadDestructive = UIColor.systemRed
 
     /// The ground a QR code needs around it to be read: always white, in
     /// either appearance, as the code is drawn black.

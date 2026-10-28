@@ -479,7 +479,8 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `wiki.qaq.irisin`, at `/Applications/irisin.app` like the app, which is
   how irisind admits it), tvOS 17 and visionOS 2: one screen with the
   address, the code and its QR code (`LaunchpadController`), the owner's
-  question (`QuestionController`), its own tokens and asset catalog.
+  question as the system's alert (`QuestionAlert`), its own tokens and
+  asset catalog.
 - `IrisinDaemon/` — the daemon, product `irisind`: listener, peer
   authentication, helper launch.
 - `IrisinInstall/` — the helper, product `irisin-install`: one job

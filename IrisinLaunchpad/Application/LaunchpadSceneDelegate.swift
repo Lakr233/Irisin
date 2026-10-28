@@ -13,8 +13,20 @@ final class LaunchpadSceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     private var registration: AnyCancellable?
 
+    #if os(visionOS)
+        /// The launchpad's window in space: the QR code and the lines under
+        /// it, with room around them.
+        private static let windowSize = CGSize(width: 800, height: 800)
+    #endif
+
     func scene(_ scene: UIScene, willConnectTo _: UISceneSession, options _: UIScene.ConnectionOptions) {
         guard let scene = scene as? UIWindowScene else { return }
+        #if os(visionOS)
+            // a window the size of what it shows, not the system's wide
+            // default with the code lost in the middle of it
+            scene.sizeRestrictions?.minimumSize = Self.windowSize
+            scene.requestGeometryUpdate(.Vision(size: Self.windowSize))
+        #endif
         let window = UIWindow(windowScene: scene)
         window.rootViewController = LaunchpadController()
         window.makeKeyAndVisible()
