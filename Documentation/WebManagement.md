@@ -87,8 +87,8 @@ rarely, and an Apple TV holds little of anyone's data.
   screen of its own: the QR code, the address and the code under it, a line
   when something is running, and the owner's answers as the system's alert,
   Decline its preferred and cancel action. Every line is one size, told
-  apart by weight and opacity alone, double-spaced, with twice that gap
-  under the QR code; on Vision Pro the window is the size of what it shows.
+  apart by weight and opacity alone, half a line's height apart, with
+  twice that gap under the QR code; on Vision Pro the window is the size of what it shows.
   It serves while it is in front, with a new code each time it comes back,
   and keeps the screen from sleeping. irisind admits it as mobile by the
   exact-path rule iOS's app has (`IrisinWire.clientPaths`, the same path on

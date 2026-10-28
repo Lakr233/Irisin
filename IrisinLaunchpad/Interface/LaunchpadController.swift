@@ -39,10 +39,11 @@ final class LaunchpadController: UIViewController {
     /// The white around the code that a camera needs to find its edge.
     private static let quietZone: CGFloat = 24
 
-    /// The gap between the lines of the screen: a line's height, so they
-    /// read double-spaced. The QR code keeps twice it above them.
+    /// The gap between the lines of the screen: half a line's height, so
+    /// each line sits one line's spacing from the next. The QR code keeps
+    /// twice it above them.
     private static var spacing: CGFloat {
-        UIFont.launchpadText.lineHeight.rounded()
+        (UIFont.launchpadText.lineHeight / 2).rounded()
     }
 
     override func viewDidLoad() {
