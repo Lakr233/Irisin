@@ -84,20 +84,20 @@ rarely, and an Apple TV holds little of anyone's data.
 - **tvOS and visionOS:** the launchpad, the `IrisinLaunchpad` target,
   product `irisin` at `/Applications/irisin.app`, built from `IrisinShared/`
   (the services both apps compile) with an application delegate and one
-  screen of its own: the QR code, the address and the code under it, a
-  line when something is running, and the owner's answers as the system's
-  alert, Decline its preferred and cancel action. Every line is one size,
-  told apart by weight and opacity alone, with one gap between all of
-  them; on Vision Pro the window is the size of what it shows. It serves
-  while it is in front, with a new code each time it comes back, and keeps
-  the screen from sleeping. irisind admits it as mobile by the exact-path rule iOS's app has
-  (`IrisinWire.clientPaths`, the same path on tvOS now), and
-  `PackagedArchitecture` takes `appletvos-arm64e` on tvOS, the simulator's
-  stand-in root included. The tvOS package is the daemon, the helper and
-  the launchpad; on its first launch with no repositories it adds the
-  recommended list (apt.owngoal.dev), which nobody is at a screen to pick.
-  No bootstrap serves Vision Pro yet: the launchpad there browses, and
-  installs only in the simulator.
+  screen of its own: the QR code, the address and the code under it, a line
+  when something is running, and the owner's answers as the system's alert,
+  Decline its preferred and cancel action. Every line is one size, told
+  apart by weight and opacity alone, double-spaced, with twice that gap
+  under the QR code; on Vision Pro the window is the size of what it shows.
+  It serves while it is in front, with a new code each time it comes back,
+  and keeps the screen from sleeping. irisind admits it as mobile by the
+  exact-path rule iOS's app has (`IrisinWire.clientPaths`, the same path on
+  tvOS now), and `PackagedArchitecture` takes `appletvos-arm64e` on tvOS,
+  the simulator's stand-in root included. The tvOS package is the daemon,
+  the helper and the launchpad; on its first launch with no repositories it
+  adds the recommended list (apt.owngoal.dev), which nobody is at a screen
+  to pick. No bootstrap serves Vision Pro yet: the launchpad there browses,
+  and installs only in the simulator.
 
 ## The run without a view controller
 
