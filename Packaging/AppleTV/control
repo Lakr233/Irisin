@@ -2,11 +2,12 @@ Package: @PACKAGE_ID@
 Name: Irisin
 Version: @VERSION@
 Architecture: @ARCHITECTURE@
-Description: Package management services for Apple TV on RootHide custom firmware
- The on-demand root daemon and the installer Irisin uses on Apple TV:
- packages are installed natively and apps are registered with the system,
- without dpkg. Draft: the Apple TV is managed over the network in a later
- release.
+Description: Package manager for Apple TV on RootHide custom firmware
+ Irisin on the Apple TV's Home Screen shows an address and a code: open the
+ page on a phone or computer on the same network to browse repositories and
+ install, update and remove packages, each change confirmed on the TV with
+ the remote. An on-demand root daemon installs packages natively and
+ registers apps with the system, without dpkg.
 Icon: https://lakr233.github.io/Irisin/icon.png
 Depiction: https://lakr233.github.io/Irisin/
 SileoDepiction: https://lakr233.github.io/Irisin/depiction.json
