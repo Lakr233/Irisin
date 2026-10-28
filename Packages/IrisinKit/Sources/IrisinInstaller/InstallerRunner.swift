@@ -428,6 +428,9 @@ public final class InstallerRunner {
             return 1
         }
         emit(.phase(.registeringApplications))
+        #if os(tvOS)
+            awaitExit(of: bundles)
+        #endif
         var status: Int32 = 0
         for path in bundles.sorted() {
             let outcome = registrar.register(bundleAt: path)
@@ -441,6 +444,25 @@ public final class InstallerRunner {
         }
         return status
     }
+
+    #if os(tvOS)
+        /// PineBoard disables an app that LaunchServices registers while it
+        /// runs, and enables it again only at its next registration: the
+        /// launchpad that asked for this, leaving after its own update,
+        /// stayed refused at every launch. Its process is let go first, ten
+        /// seconds at most, then the registration goes ahead regardless.
+        private func awaitExit(of bundles: Set<String>) {
+            let executables = bundles.compactMap { bundle in
+                NSDictionary(contentsOfFile: bundle + "/Info.plist")?["CFBundleExecutable"] as? String
+            }
+            let deadline = Date().addingTimeInterval(10)
+            while Date() < deadline,
+                  executables.contains(where: { !ProcessTable.processIdentifiers(named: $0).isEmpty })
+            {
+                usleep(100_000)
+            }
+        }
+    #endif
 
     /// What waits until the transcript has ended: Irisin's own bundles a
     /// removal took away, unregistered and cleared once the app has read the

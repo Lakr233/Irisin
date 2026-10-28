@@ -140,7 +140,11 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   the file triggers of Irisin's own package (uikittools' `uicache -a` on
   `/Applications`). The app sends `registerOwnApplication` from its
   Updating App alert as it exits, and at the next launch, once per build,
-  when LaunchServices still has an older build. A removed bundle is
+  when LaunchServices still has an older build. On tvOS the helper lets
+  the launchpad's process go first (`awaitExit`, ten seconds at most):
+  PineBoard disables an app registered while it runs until its next
+  registration, so a launchpad updated from the page stayed refused. A
+  removed bundle is
   unregistered after the transcript's `exit` (`finishAfterExit`). A fix
   to the LaunchServices code goes to the icli repository and arrives here as
   a version bump.

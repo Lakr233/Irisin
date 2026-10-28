@@ -173,6 +173,19 @@ Passed on both guests on 2026-10-26: `tvhd` (Apple TV HD template) on jp-02
 and `tv4k` (Apple TV 4K template) on jp-01, tvOS 26.6, with the binaries
 from `make deb-appletv`. tvOS 17 itself is untested: no guest runs it.
 
+## Irisin updating itself
+
+PineBoard disables an app that LaunchServices registers while it runs
+(`Denying open-application request for reason: Disabled`), and enables it
+again only at its next registration. The launchpad updated from the page
+asks for `registerOwnApplication` as it leaves, as the iOS app does, and
+through 5.0.2 the helper registered it at once, while it was still running:
+it stayed refused at every launch, and `rebuildIconCache` found it
+unchanged. The helper on tvOS now waits for the launchpad's process to be
+gone, ten seconds at most, before it registers. The helper that does this
+is the one the update installs, so an update from 5.0.2 is covered too.
+Found on `tv4k` (tvOS 26.6) on 2026-10-28.
+
 ## Open questions
 
 - What loads `<root>/Library/LaunchDaemons` on a RootHide Apple TV after a
