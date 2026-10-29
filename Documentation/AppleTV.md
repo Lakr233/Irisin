@@ -1,6 +1,6 @@
 # Apple TV: the privileged layer
 
-`irisind` and `irisin-install` on tvOS 17 and later, inside a RootHide
+`irisind` and `irisin-install` on tvOS 16 and later, inside a RootHide
 bootstrap, doing the same closed jobs they do on iOS. The app on tvOS is the
 launchpad (`IrisinLaunchpad`), which serves a page a browser manages the
 device from (`Documentation/WebManagement.md`); everything here is what it
@@ -10,7 +10,7 @@ stands on.
 
 | | |
 | --- | --- |
-| Floor | tvOS 17: `UIContextMenu` is there, and nothing below it is served |
+| Floor | tvOS 16: what OwnGoal Stripe builds its `appletvos-arm64e` packages for. Nothing the launchpad, the daemon or the helper call is newer |
 | Bootstrap | RootHide alone. A rootful or rootless Apple TV is refused by both the daemon and the helper before either does anything |
 | Package architecture | `appletvos-arm64e` |
 | `posix_spawn` | through a C shim, on iOS as well as tvOS |
@@ -109,13 +109,13 @@ icli checkout before the build.
 ## Building and packaging
 
 - `irisind` and `irisin-install` build for `appletvos` beside `iphoneos` and
-  the simulator the app's tests run in (`SUPPORTED_PLATFORMS`), with `TVOS_DEPLOYMENT_TARGET = 17.0` in
+  the simulator the app's tests run in (`SUPPORTED_PLATFORMS`), with `TVOS_DEPLOYMENT_TARGET = 16.0` in
   `Base.xcconfig`, through the shared scheme `irisin-privileged`. xcodebuild
   refuses a tvOS destination until Xcode's tvOS platform is installed
   (`xcodebuild -downloadPlatform tvOS`).
 - The tvOS package carries the launchpad, the daemon, the helper and the
   daemon's launchd plist, with an empty prefix (RootHide's dpkg relocates
-  it), the architecture `appletvos-arm64e` and `Depends: firmware (>= 17.0)`.
+  it), the architecture `appletvos-arm64e` and `Depends: firmware (>= 16.0)`.
   Its postinst makes the launchpad's data folder by the iOS postinst's rule,
   loads the daemon and registers the app (`rebuildIconCache`), except when
   Irisin's own helper runs it. The launchpad is signed with
@@ -123,9 +123,9 @@ icli checkout before the build.
   network server, and no keychain. vphoned's `bootstrap.install`, which
   until now allowed the package's missing app on `appletvos-*`, has an app
   to register and a data folder to make from this release on.
-- `check-floor-imports.py` reads the AppleTVOS SDK and tvOS 17 for the
+- `check-floor-imports.py` reads the AppleTVOS SDK and tvOS 16 for the
   tvOS binaries (`--sdk`, `--floor`), with IOKit's names read from the
-  stub's headers, since the AppleTVOS SDK has none, and what a tvOS 17
+  stub's headers, since the AppleTVOS SDK has none, and what a tvOS 16
   target adds in `floor-imports-appletv.txt`. The spawn calls are listed in
   `floor-imports.txt`: their labelled declarations carry no availability
   for the compiler to weak-link by, and every one is older than both
@@ -136,7 +136,7 @@ icli checkout before the build.
   scripts of its own beside iOS's; `make check` checks its control file's
   `firmware` dependency, and `check-floor-sources.py` the tvOS floor of a
   package that declares one.
-- `IrisinExternalClient` declares tvOS 17, so a program on tvOS can be a
+- `IrisinExternalClient` declares tvOS 16, so a program on tvOS can be a
   client; the test client below is one.
 
 ## How it is tested
@@ -175,7 +175,8 @@ is a blank square; a real Apple TV HD has a GPU.
 
 Passed on both guests on 2026-10-26: `tvhd` (Apple TV HD template) on jp-02
 and `tv4k` (Apple TV 4K template) on jp-01, tvOS 26.6, with the binaries
-from `make deb-appletv`. tvOS 17 itself is untested: no guest runs it.
+from `make deb-appletv`. tvOS 16 and 17 themselves are untested: no guest
+runs them.
 
 ## Irisin updating itself
 

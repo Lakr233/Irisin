@@ -10,7 +10,7 @@
 IPHONEOS_DEPLOYMENT_TARGET = 15.0
 // Apple TV: the daemon, the helper and the launchpad, on RootHide
 // (Documentation/AppleTV.md).
-TVOS_DEPLOYMENT_TARGET = 17.0
+TVOS_DEPLOYMENT_TARGET = 16.0
 // Vision Pro: the launchpad alone (IrisinLaunchpad). No bootstrap serves it
 // yet, so it browses, and installs only in the simulator.
 XROS_DEPLOYMENT_TARGET = 2.0

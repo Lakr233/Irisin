@@ -192,7 +192,7 @@ Every answer is `Cache-Control: no-store`.
   (`OperationFeed`).
 - The launchpad (`IrisinLaunchpad`), which shares `IrisinShared/` with the
   app and links nothing third-party. AptRepository and the rest declare
-  tvOS 17 and visionOS 2; libsolv and libarchive carry both slices, and
+  tvOS 16 and visionOS 2; libsolv and libarchive carry both slices, and
   WCDB from 2.1.26102501, which is 2.1.16 built again with visionOS's.
 
 ## Tested on

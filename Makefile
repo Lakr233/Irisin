@@ -459,7 +459,7 @@ deb-appletv: build-appletv
 	@$(MAKE) --no-print-directory _package-appletv
 
 _package-appletv:
-	@# tvOS 17 lets the compiler name runtime entry points an iOS 15 target
+	@# tvOS 16 lets the compiler name runtime entry points an iOS 15 target
 	@# never does; they are listed on their own.
 	"$(FLOOR_IMPORTS)" --sdk appletvos --floor "$(MINIMUM_TVOS_VERSION)" --headers "$(APPLETV_STUBS)" \
 		--allow "$(ROOT_DIR)/Scripts/floor-imports-appletv.txt" "$(ROOT_DIR)/Scripts/floor-imports.txt" \

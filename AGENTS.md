@@ -5,7 +5,7 @@ both. **iOS first.** Apple TV and Vision Pro get the launchpad
 (`IrisinLaunchpad`): the app's services and one screen of its own, managed
 from a browser on the same network (`Documentation/WebManagement.md`). The
 privileged layer (`irisind`, `irisin-install`) builds for Apple TV too: tvOS
-17, RootHide alone, whose decisions and open questions are
+16, RootHide alone, whose decisions and open questions are
 `Documentation/AppleTV.md`. No bootstrap serves Vision Pro yet, so the
 launchpad there browses, and installs only in the simulator.
 The app runs as `mobile` and never becomes root; the
@@ -483,7 +483,7 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   owner's questions and the operation feed), `Extension/`.
 - `IrisinLaunchpad/` — the launchpad, product `irisin` (bundle
   `wiki.qaq.irisin`, at `/Applications/irisin.app` like the app, which is
-  how irisind admits it), tvOS 17 and visionOS 2: one screen with the
+  how irisind admits it), tvOS 16 and visionOS 2: one screen with the
   address, the code and its QR code (`LaunchpadController`), the owner's
   question as the system's alert (`QuestionAlert`), its own tokens and
   asset catalog.

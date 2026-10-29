@@ -33,7 +33,7 @@ Usage: check-floor-imports.py [--sdk <sdk>] [--floor <version>] [--headers <dir>
        tvOS helper links against, whose headers the AppleTVOS SDK lacks.
        Apple TV's floor is newer than iOS's, so the allowlist's iOS 15.0
        symbols are exported there too; --allow names a further list, such
-       as what a tvOS 17 target adds (floor-imports-appletv.txt).
+       as what a tvOS 16 target adds (floor-imports-appletv.txt).
 """
 
 import os

@@ -1,9 +1,9 @@
-# Strong imports the Apple TV build's tvOS 17.0 floor allows beyond
-# floor-imports.txt, which check-floor-imports.py reads first. A tvOS 17
+# Strong imports the Apple TV build's tvOS 16.0 floor allows beyond
+# floor-imports.txt, which check-floor-imports.py reads first. A tvOS 16
 # target lets the compiler emit runtime entry points an iOS 15 target never
 # asks for; each is emitted only for a target whose runtime the compiler's
 # own availability table says has it. Checked so far on tvOS 26.6 guests
-# alone, not on a tvOS 17 device. See Documentation/AppleTV.md.
+# alone, not on a tvOS 16 or 17 device. See Documentation/AppleTV.md.
 
 # objc4's ARC entry points by register, which clang calls for a target of
 # iOS 16 or tvOS 16 and later instead of objc_retain and objc_release.

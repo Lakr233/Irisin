@@ -128,7 +128,7 @@ jobs:
           retention-days: 1
 
   # Apple TV (Documentation/AppleTV.md): the launchpad, irisind and
-  # irisin-install for RootHide on tvOS 17, appletvos-arm64e. Still built
+  # irisin-install for RootHide on tvOS 16, appletvos-arm64e. Still built
   # with Xcode 26: icli's tvos-iokit-stub.sh retargets the iPhoneOS SDK's
   # IOKit.tbd by its `arm64e-ios` target, and from Xcode 27 that stub also
   # names `arm64e.x1-ios`, which the script refuses. It moves to the xcode-27

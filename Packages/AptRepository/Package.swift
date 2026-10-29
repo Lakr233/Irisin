@@ -7,7 +7,7 @@ let package = Package(
     platforms: [
         .iOS(.v15),
         // the Apple TV and Vision Pro launchpad (IrisinLaunchpad)
-        .tvOS(.v17),
+        .tvOS(.v16),
         .visionOS(.v2),
         .macOS(.v13),
     ],

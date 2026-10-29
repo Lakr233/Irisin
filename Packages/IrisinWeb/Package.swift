@@ -10,7 +10,7 @@ import PackageDescription
 /// page's own cipher against CryptoKit included.
 let package = Package(
     name: "IrisinWeb",
-    platforms: [.iOS(.v15), .tvOS(.v17), .visionOS(.v2), .macOS(.v13)],
+    platforms: [.iOS(.v15), .tvOS(.v16), .visionOS(.v2), .macOS(.v13)],
     products: [
         .library(name: "IrisinWeb", targets: ["IrisinWeb"]),
     ],
