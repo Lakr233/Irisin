@@ -754,7 +754,13 @@ is `/var/jb/var/log/irisin-install.log`.
   before 27 it sits in a box. `_build-ios` refuses an older iPhoneOS SDK
   (`MINIMUM_IPHONEOS_SDK`), and the build job runs on the `xcode-27` runner
   with Xcode 27.1 chosen by name, not the image's newest (a 27.2 release
-  candidate); the host tests stay on `macos-26`. A page keeps to the safe
+  candidate); the host tests stay on `macos-26`, and so does the Apple TV
+  package, in a job of its own: icli 0.10's `tvos-iokit-stub.sh` retargets
+  the iPhoneOS SDK's `IOKit.tbd` by `arm64e-ios`, Xcode 27's also names
+  `arm64e.x1-ios`, and the script stops at it ("still names an iOS
+  target"), so `make deb-appletv` needs Xcode 26 until icli retargets that
+  too. A third job puts the three packages, the dSYMs and their checksums
+  in the one artifact `release.yml` takes. A page keeps to the safe
   area on every edge: a scroll view adjusts only the axis it scrolls on, and
   the dashboard's flow layout, laid out from its own content inset, put its
   last column and the Featured See All under the bar's Settings button
