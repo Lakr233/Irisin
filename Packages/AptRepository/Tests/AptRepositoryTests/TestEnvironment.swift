@@ -49,7 +49,17 @@ struct MemoryStorage: AptStorage {
 }
 
 struct PrintLogger: AptLogger {
+    private static let lock = NSLock()
+    private nonisolated(unsafe) static var lines = [String]()
+
+    /// Every message logged so far, at any level, that contains `text`: a
+    /// test reads the lines naming its own host.
+    static func logged(containing text: String) -> [String] {
+        lock.withLock { lines.filter { $0.contains(text) } }
+    }
+
     func log(_ kind: String, _ message: String, level: AptLogLevel) {
+        Self.lock.withLock { Self.lines.append(message) }
         if level == .error || level == .critical {
             print("[\(level.rawValue)] \(kind): \(message)")
         }

@@ -311,7 +311,11 @@ extension RepositoryCenter {
             if let index, let part = decodeUpdatePackage(index, suffix: suffix) {
                 parts.append(part)
             } else if digests?.lists(url) == true {
-                aptLog(Self.self, "\(url.absoluteString) is in the Release and could not be had", level: .error)
+                // a spelling called off once another was read never came,
+                // and that says nothing about the repository
+                if index != nil || !Task.isCancelled {
+                    aptLog(Self.self, "\(url.absoluteString) is in the Release and could not be had", level: .error)
+                }
                 return nil
             }
         }

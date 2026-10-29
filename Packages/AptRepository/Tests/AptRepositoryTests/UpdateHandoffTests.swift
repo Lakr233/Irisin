@@ -310,6 +310,42 @@ import Testing
         #expect(outcome.report?.issues == [])
     }
 
+    /// OwnGoal Stripe on 2026-10-29: every spelling its Release lists was
+    /// asked for at once, `Packages` read first, and the `.xz` and `.zst`
+    /// called off were logged as "in the Release and could not be had". A
+    /// listed spelling the server does not have still says so.
+    @Test func spellingsCalledOffAreNotLoggedAsMissing() async {
+        let digest = SHA256.hash(data: Self.current).map { String(format: "%02x", $0) }.joined()
+        let release = Data("""
+        Origin: Example
+        SHA256:
+         \(digest) \(Self.current.count) Packages
+         \(digest) \(Self.current.count) Packages.bz2
+         \(digest) \(Self.current.count) Packages.gz
+
+        """.utf8)
+        let outcome = await update(
+            host: "called-off.test",
+            serving: ["/Release": release, "/Packages": Self.current],
+            behaving: ["/Packages.bz2": .hang, "/Packages.gz": .hang]
+        ) { request in
+            request.optionalBudget = 0.5
+        }
+        #expect(outcome.searchPath == "")
+        #expect(outcome.report?.issues == [])
+        #expect(PrintLogger.logged(containing: "called-off.test").allSatisfy { !$0.contains("could not be had") })
+
+        let missing = await update(
+            host: "listed-missing.test",
+            serving: [
+                "/Release": Data("Origin: Example\nSHA256:\n \(digest) \(Self.current.count) Packages.bz2\n".utf8),
+                "/Packages": Self.current,
+            ]
+        )
+        #expect(missing.succeeded)
+        #expect(!PrintLogger.logged(containing: "listed-missing.test/Packages.bz2 is in the Release and could not be had").isEmpty)
+    }
+
     /// The Release answered and the index timed out: the connection, not a
     /// server with nothing for this device.
     @Test func indexThatTimedOutIsNotMissing() async {
