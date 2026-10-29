@@ -17,19 +17,26 @@ extension DashboardController {
     /// arrives a turn late leaves a frame of `PackageListRow.minimumSize` cells.
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        if collectionView.frame.size == collectionViewFrameCache,
+        let width = rowWidth
+        if width == collectionViewWidthCache,
            traitCollection.preferredContentSizeCategory == collectionViewTextSizeCache
         {
             return
         }
-        collectionViewFrameCache = collectionView.frame.size
+        collectionViewWidthCache = width
         collectionViewTextSizeCache = traitCollection.preferredContentSizeCategory
         updateCellSize()
     }
 
+    /// What the flow layout lays rows out in: the bounds less the adjusted
+    /// content inset, which holds the safe area's leading and trailing edges.
+    private var rowWidth: CGFloat {
+        let inset = collectionView.adjustedContentInset
+        return collectionView.bounds.width - inset.left - inset.right
+    }
+
     func updateCellSize() {
-        let inset = collectionView.contentInset.left + collectionView.contentInset.right
-        let layout = PackageListRow.layout(inWidth: view.frame.width - inset)
+        let layout = PackageListRow.layout(inWidth: rowWidth)
         collectionViewCellSizeCache = layout.size
         collectionView.collectionViewLayout.invalidateLayout()
 

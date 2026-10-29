@@ -91,9 +91,14 @@ class TabInterfaceController: UITabBarController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Above the tab bar where it is at the bottom; an iPad window wide
-        // enough has it at the top, and the bar keeps to the safe area.
-        let atBottom = !tabBar.isHidden && tabBar.frame.midY > view.bounds.midY
+        // Above the tab bar where it runs along the bottom; an iPad window
+        // wide enough has it at the top, and an iPhone Duo (from the iOS 27.1
+        // SDK) stands it on the trailing edge, a full-height frame whose
+        // middle is the view's own. Anywhere but the bottom, the bar keeps to
+        // the safe area, which has the vertical bar's inset.
+        let runsAlongBottom = tabBar.frame.width > tabBar.frame.height
+            && tabBar.frame.midY > view.bounds.midY
+        let atBottom = !tabBar.isHidden && runsAlongBottom
         queueBar?.bottomInset = atBottom ? view.bounds.maxY - tabBar.frame.minY : view.safeAreaInsets.bottom
     }
 

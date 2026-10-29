@@ -24,7 +24,9 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
     let generalHeaderID = UUID().uuidString
     let footerID = UUID().uuidString
 
-    var collectionViewFrameCache: CGSize?
+    /// The width the rows were last laid out in: inside the content inset
+    /// and the safe area, which can change with no change of frame.
+    var collectionViewWidthCache: CGFloat?
     /// The text size the cached cell size was measured at: a row is as tall
     /// as its lines, so a change of text size has to measure it again.
     var collectionViewTextSizeCache: UIContentSizeCategory?
@@ -115,6 +117,11 @@ class DashboardController: UICollectionViewController, UICollectionViewDelegateF
 
         collectionView.clipsToBounds = false
         collectionView.contentInset = UIEdgeInsets(top: 10, left: 20, bottom: 50, right: 20)
+        // The safe area on every edge, not only the scrolling one: a vertical
+        // bar (an iPhone Duo, from the iOS 27.1 SDK) is a trailing inset, and
+        // a flow layout lays out from the content inset alone, so the rows,
+        // the headers and their See All ran under the bar.
+        collectionView.contentInsetAdjustmentBehavior = .always
         collectionView.dataSource = diffableDataSource
         collectionView.delegate = self
         collectionView.alwaysBounceVertical = true
