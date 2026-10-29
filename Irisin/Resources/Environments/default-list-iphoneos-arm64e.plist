@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  The repositories onboarding recommends on roothide: those that publish
-  iphoneos-arm64e packages. Havoc, Chariz and BigBoss publish rootless
-  packages only, which nothing here installs; there is no ElleKit, since
-  roothide brings its own injector.
+  The repositories onboarding recommends on roothide: the bootstrap's
+  packages and OwnGoal's own. roothide's own repository
+  (roothide.github.io) is not among them, since OwnGoal Stripe has what
+  the bootstrap needs. Havoc, Chariz and BigBoss publish rootless packages
+  only, which nothing here installs; there is no ElleKit, since roothide
+  brings its own injector.
 -->
 <plist version="1.0">
 <array>
-	<dict>
-		<key>source</key>
-		<string>https://roothide.github.io</string>
-	</dict>
 	<!--
 	  The bootstrap's own packages. OwnGoal Stripe has the one suite, 1900,
 	  built for iOS 16 and later; iOS 15 keeps roothide's own Procursus

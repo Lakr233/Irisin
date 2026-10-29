@@ -27,7 +27,7 @@ struct RecommendedRepositoriesTests {
             #expect(rootlessLines.filter { $0.contains("apt.procurs.us") }.count == 1)
             #expect(rootlessLines.allSatisfy { RepositorySource(line: $0) != nil })
             let roothideLines = RecommendedRepositories.lines(in: directory, architecture: roothide, majorVersion: majorVersion)
-            #expect(roothideLines.contains("https://roothide.github.io"))
+            #expect(!roothideLines.contains("https://roothide.github.io"))
             #expect(roothideLines.filter { $0.contains("roothide.github.io/procursus") || $0.contains("stripe.owngoal.dev") }.count == 1)
             #expect(roothideLines.allSatisfy { RepositorySource(line: $0) != nil })
         }
