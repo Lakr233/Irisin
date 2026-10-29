@@ -1,11 +1,12 @@
 # Tag vX.Y.Z → the packages CI built for the tagged commit, published.
 #
 # Nothing is tested or compiled here. The push of the commit to main-4.0 ran
-# `ci.yml`: the host tests in one job and, beside them, both packages
-# compiled, packaged and verified in another, kept as the artifact
-# `irisin-<sha>`. The tag publishes that artifact, and only once that run
-# has succeeded: a failed test fails the run, and the release with it. What
-# ships is the file CI verified, not a second build of the same commit.
+# `ci.yml`: the host tests in one job and, beside them, the iPhone packages
+# and the Apple TV one compiled, packaged and verified in two more, then
+# collected as the artifact `irisin-<sha>`. The tag publishes that
+# artifact, and only once that run has succeeded: a failed test fails the
+# run, and the release with it. What ships is the file CI verified, not a
+# second build of the same commit.
 #
 # The commit says its version (`make set-version`, the release notes, then
 # the tag), and the packages CI built are named for it: when they are not

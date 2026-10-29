@@ -746,12 +746,30 @@ is `/var/jb/var/log/irisin-install.log`.
   otherwise it is looked up with `dlsym`, as `irisind` does
   `xpc_copy_entitlement_for_token`, with SecTask behind it. The list's top
   half is icli's own; keep the two in step.
-- **The project is built with Xcode 27 and CI has 26.6.** The runner image
-  has no Xcode 27, so one thing is a workaround and comes out the day it
-  does: `UITabBarController.prominentTabIdentifier` is in the iOS 27 SDK and
-  not in Xcode 26's, and `#available` guards the call, not the reference, so
-  `TabInterfaceController` sets it through KVC under its `iOS 27.0` check.
-  Same behaviour, any SDK.
+- **A device build links the iOS 27.1 SDK, and CI's is Xcode 27.1's.** On
+  an iPhone Duo the SDK decides the layout: built with 27.1 the app fills
+  either display edge to edge and its bars stand on the side, a leading or
+  trailing safe-area inset (the outer display, and the inner one in
+  landscape); built with 27.0 it is kept clear of the status bar's side, and
+  before 27 it sits in a box. `_build-ios` refuses an older iPhoneOS SDK
+  (`MINIMUM_IPHONEOS_SDK`), and the build job runs on the `xcode-27` runner
+  with Xcode 27.1 chosen by name, not the image's newest (a 27.2 release
+  candidate); the host tests stay on `macos-26`, and so does the Apple TV
+  package, in a job of its own: icli 0.10's `tvos-iokit-stub.sh` retargets
+  the iPhoneOS SDK's `IOKit.tbd` by `arm64e-ios`, Xcode 27's also names
+  `arm64e.x1-ios`, and the script stops at it ("still names an iOS
+  target"), so `make deb-appletv` needs Xcode 26 until icli retargets that
+  too. A third job puts the three packages, the dSYMs and their checksums
+  in the one artifact `release.yml` takes. A page keeps to the safe
+  area on every edge: a scroll view adjusts only the axis it scrolls on, and
+  the dashboard's flow layout, laid out from its own content inset, put its
+  last column and the Featured See All under the bar's Settings button
+  (`contentInsetAdjustmentBehavior = .always` now). Xcode 27.0 has no 27.1
+  simulator SDK, but a 27.0 simulator build takes the 27.1 layout on the
+  27.1 runtime once both places that name the SDK say 27.1, the main
+  executable's `LC_BUILD_VERSION` (`vtool -set-build-version`) and the
+  `DT*` keys of its `Info.plist`, and it is signed again: the load command
+  alone changed nothing. A layout check only, never a package.
 - **LNPopupController crashed the iPad on launch and is gone.** Its
   `UISplitViewController` category asked a legacy-style split controller
   `isShowingColumn:`, which iOS 26 answers with an exception, and nothing

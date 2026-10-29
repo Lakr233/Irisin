@@ -32,16 +32,8 @@ class TabInterfaceController: UITabBarController {
             // iOS 26 set the search tab apart on its own; from iOS 27 that
             // place is the prominent tab's, and a search tab only takes it
             // unasked when it activates search by itself, which ours does not.
-            //
-            // Set through KVC, not `prominentTabIdentifier =`: the property
-            // arrived in the iOS 27 SDK and the runners have Xcode 26, whose
-            // SDK has no such symbol to compile against — `#available` guards
-            // the call at run time, not the reference at build time. The name
-            // is the property's own, so the effect is the same wherever this
-            // was built. Put `prominentTabIdentifier = searchTab.identifier`
-            // back the day the runner image ships Xcode 27.
             if #available(iOS 27.0, *) {
-                setValue(searchTab.identifier, forKey: "prominentTabIdentifier")
+                prominentTabIdentifier = searchTab.identifier
             }
             everyTab = [
                 UITab(
@@ -91,9 +83,14 @@ class TabInterfaceController: UITabBarController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Above the tab bar where it is at the bottom; an iPad window wide
-        // enough has it at the top, and the bar keeps to the safe area.
-        let atBottom = !tabBar.isHidden && tabBar.frame.midY > view.bounds.midY
+        // Above the tab bar where it runs along the bottom; an iPad window
+        // wide enough has it at the top, and an iPhone Duo (from the iOS 27.1
+        // SDK) stands it on the trailing edge, a full-height frame whose
+        // middle is the view's own. Anywhere but the bottom, the bar keeps to
+        // the safe area, which has the vertical bar's inset.
+        let runsAlongBottom = tabBar.frame.width > tabBar.frame.height
+            && tabBar.frame.midY > view.bounds.midY
+        let atBottom = !tabBar.isHidden && runsAlongBottom
         queueBar?.bottomInset = atBottom ? view.bounds.maxY - tabBar.frame.minY : view.safeAreaInsets.bottom
     }
 

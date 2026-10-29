@@ -62,10 +62,81 @@ jobs:
           name: resolver-benchmarks
           path: build/resolver-benchmarks/report.json
 
+  # The device packages link the iOS 27.1 SDK (the Makefile refuses an
+  # older one): built with it, the app fills an iPhone Duo's displays and
+  # its bars stand on the side. The macos-26 images stop at Xcode 26; the
+  # xcode-27 runner has Xcode 27.1, chosen by name below rather than as the
+  # newest, which on that image is a 27.2 release candidate.
   build:
     name: Build and verify Debian packages
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
+
+    steps:
+      - name: Configure build paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "DERIVED_DATA=$RUNNER_TEMP/irisin-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 27.1
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.1.app/Contents/Developer
+          xcodebuild -version
+          echo "iPhoneOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
+
+      - name: Install packaging dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          formulae=()
+          command -v dpkg-deb >/dev/null 2>&1 || formulae+=(dpkg)
+          command -v ldid >/dev/null 2>&1 || formulae+=(ldid)
+          if (( ${#formulae[@]} > 0 )); then
+            brew install "${formulae[@]}"
+          fi
+
+      - name: Compile
+        run: make compile CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+
+      - name: Package and verify both flavours
+        run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+
+      # Both flavours package the one build, and neither strip nor ldid touches
+      # LC_UUID, so one set of dSYMs matches every shipped binary.
+      - name: Archive dSYMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(make --no-print-directory print-version)"
+          cd "$DERIVED_DATA/Build/Products/Release-iphoneos"
+          zip -qry "$GITHUB_WORKSPACE/build/Packages/Irisin_${version}_dSYMs.zip" *.dSYM
+
+      - name: Upload iPhone packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: irisin-iphoneos-${{ github.sha }}
+          path: |
+            build/Packages/*.deb
+            build/Packages/*_dSYMs.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  # Apple TV (Documentation/AppleTV.md): the launchpad, irisind and
+  # irisin-install for RootHide on tvOS 17, appletvos-arm64e. Still built
+  # with Xcode 26: icli's tvos-iokit-stub.sh retargets the iPhoneOS SDK's
+  # IOKit.tbd by its `arm64e-ios` target, and from Xcode 27 that stub also
+  # names `arm64e.x1-ios`, which the script refuses. It moves to the xcode-27
+  # runner with the icli release that retargets it.
+  appletv:
+    name: Build and verify the Apple TV package
+    runs-on: macos-26
+    timeout-minutes: 60
 
     steps:
       - name: Configure build paths
@@ -96,33 +167,39 @@ jobs:
             brew install "${formulae[@]}"
           fi
 
-      - name: Compile
-        run: make compile CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
-
-      - name: Package and verify both flavours
-        run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
-
-      # Apple TV (Documentation/AppleTV.md): irisind and irisin-install for
-      # RootHide on tvOS 17, appletvos-arm64e.
       - name: Package and verify Apple TV
         run: make deb-appletv CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
 
-      # Both flavours package the one build, and neither strip nor ldid touches
-      # LC_UUID, so one set of dSYMs matches every shipped binary.
-      - name: Archive dSYMs
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(make --no-print-directory print-version)"
-          cd "$DERIVED_DATA/Build/Products/Release-iphoneos"
-          zip -qry "$GITHUB_WORKSPACE/build/Packages/Irisin_${version}_dSYMs.zip" *.dSYM
+      - name: Upload Apple TV package
+        uses: actions/upload-artifact@v4
+        with:
+          name: irisin-appletvos-${{ github.sha }}
+          path: build/Packages/*.deb
+          if-no-files-found: error
+          retention-days: 1
+
+  # One artifact per commit, as `release.yml` downloads it: the three
+  # packages, the dSYMs and their checksums.
+  packages:
+    name: Collect the packages
+    needs: [build, appletv]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download the packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: irisin-*-${{ github.sha }}
+          path: build/Packages
+          merge-multiple: true
 
       - name: Write checksums
         shell: bash
         run: |
           set -euo pipefail
           cd build/Packages
-          shasum -a 256 ./*.deb ./*_dSYMs.zip > SHA256SUMS
+          sha256sum ./*.deb ./*_dSYMs.zip > SHA256SUMS
           cat SHA256SUMS
 
       - name: Upload Debian packages
