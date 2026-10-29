@@ -61,27 +61,26 @@ extension PackageTransaction {
                 ) else { continue }
                 destination = selected
             }
-            let attributes = overrides.attributes(path)
             try filesystem.install(
                 entry,
                 from: archive,
                 at: destination,
-                mode: attributes?.mode,
-                owner: attributes.map { ($0.uid, $0.gid) }
+                mode: overrides.attributes(path)?.mode,
+                owner: overrides.owner(path, of: entry)
             )
         }
         for entry in pendingLinks {
             let targetPath = try archive.regularFileTarget(of: entry)
             let target = try filesystem.location(overrides.path("/" + targetPath, owner: identity))
-            let destination = try filesystem.location(overrides.path("/" + entry.path, owner: identity))
-            let attributes = overrides.attributes("/" + entry.path)
+            let path = "/" + entry.path
+            let destination = try filesystem.location(overrides.path(path, owner: identity))
             try filesystem.install(
                 entry,
                 from: archive,
                 at: destination,
                 hardLinkTarget: target,
-                mode: attributes?.mode,
-                owner: attributes.map { ($0.uid, $0.gid) }
+                mode: overrides.attributes(path)?.mode,
+                owner: overrides.owner(path, of: entry)
             )
         }
     }

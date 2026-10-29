@@ -10,6 +10,9 @@ final class PackageTransaction {
     let selfPackage: SelfPackage
     let triggers: Triggers
     let recoveryMode: Bool
+    /// Whether any package is unpacked, the one case dpkg reads its
+    /// statoverrides in.
+    let unpacks: Bool
     var overrides: PackageOverrides
     let emit: (InstallerEvent) -> Void
     private let preparedDirectory: URL
@@ -21,6 +24,7 @@ final class PackageTransaction {
         scriptRoot: String,
         ignoreScriptFailures: Bool,
         recoveryMode: Bool,
+        unpacks: Bool,
         installerEnvironment: [String: String],
         emit: @escaping (InstallerEvent) -> Void
     ) throws {
@@ -40,7 +44,8 @@ final class PackageTransaction {
         )
         triggers = Triggers(database: database, scripts: scripts)
         self.recoveryMode = recoveryMode
-        overrides = try PackageOverrides(directory: databaseDirectory)
+        self.unpacks = unpacks
+        overrides = try PackageOverrides(directory: databaseDirectory, layout: layout, statoverrides: unpacks)
         self.emit = emit
         preparedDirectory = databaseDirectory.appendingPathComponent("irisin-prepared-" + UUID().uuidString)
     }

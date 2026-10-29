@@ -54,7 +54,7 @@ extension PackageTransaction {
         let prermRan = try prepareUpgrade(archive, old: old)
         // preinst may use the device's dpkg-divert or dpkg-statoverride.
         // Observe those committed changes before choosing any destination.
-        overrides = try PackageOverrides(directory: database.directory)
+        overrides = try PackageOverrides(directory: database.directory, layout: filesystem.layout, statoverrides: true)
 
         var removed: [String] = []
         do {

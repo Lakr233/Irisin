@@ -140,6 +140,8 @@ public enum DebianPreparation {
                         mode: UInt32(archive_entry_perm(entry)),
                         uid: owner.uid,
                         gid: owner.gid,
+                        userName: owner.userName,
+                        groupName: owner.groupName,
                         modificationTime: Int64(archive_entry_mtime(entry))
                     ))
                 }
@@ -157,32 +159,27 @@ public enum DebianPreparation {
         return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// An entry's owner as dpkg reads it: a user or group name this system
-    /// knows wins over the number stored beside it. A package packed on a
-    /// Mac without `--root-owner-group` says `root` next to its builder's
-    /// uid, and dpkg installs it as root.
-    private static func owner(of entry: OpaquePointer) throws -> (uid: UInt32, gid: UInt32) {
+    /// An entry's owner as the archive stores it, numbers and names both.
+    /// Which wins is the helper's to say, against the bootstrap's accounts
+    /// (`PackageOverrides.owner`): the app runs this as mobile, where only
+    /// the system's accounts answer, and a name only the bootstrap has
+    /// would have fallen back to its number.
+    private static func owner(
+        of entry: OpaquePointer
+    ) throws -> (uid: UInt32, gid: UInt32, userName: String?, groupName: String?) {
         guard archive_entry_uid(entry) >= 0, archive_entry_uid(entry) <= Int64(UInt32.max),
               archive_entry_gid(entry) >= 0, archive_entry_gid(entry) <= Int64(UInt32.max)
         else { throw CocoaError(.fileReadCorruptFile) }
-        var uid = UInt32(archive_entry_uid(entry))
-        var gid = UInt32(archive_entry_gid(entry))
-        var buffer = [CChar](repeating: 0, count: 4096)
-        if let name = archive_entry_uname(entry), name.pointee != 0 {
-            var record = passwd()
-            var found: UnsafeMutablePointer<passwd>?
-            if getpwnam_r(name, &record, &buffer, buffer.count, &found) == 0, found != nil {
-                uid = record.pw_uid
-            }
+        func name(_ text: UnsafePointer<CChar>?) -> String? {
+            guard let text, text.pointee != 0 else { return nil }
+            return String(validatingCString: text)
         }
-        if let name = archive_entry_gname(entry), name.pointee != 0 {
-            var record = group()
-            var found: UnsafeMutablePointer<group>?
-            if getgrnam_r(name, &record, &buffer, buffer.count, &found) == 0, found != nil {
-                gid = record.gr_gid
-            }
-        }
-        return (uid, gid)
+        return (
+            UInt32(archive_entry_uid(entry)),
+            UInt32(archive_entry_gid(entry)),
+            name(archive_entry_uname(entry)),
+            name(archive_entry_gname(entry))
+        )
     }
 
     private static func reader(_ source: URL, tar: Bool) throws -> OpaquePointer {

@@ -503,7 +503,7 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
 - `Packages/IrisinKit/` — `IrisinProtocol` (`IrisinWire`, `InstallerJob`,
   `ExecutableAdmission`, `ExternalTransaction`, `BootstrapArchitecture`,
   `BootstrapSupport`, `ProcessSpawn`), `IrisinInstaller` (`BootstrapLayout`,
-  `InstallerRunner`, `ToolSpawn`, `SystemProcess`),
+  `BootstrapAccounts`, `InstallerRunner`, `ToolSpawn`, `SystemProcess`),
   `IrisinPreparation` (`DebianPreparation`, a `.deb` into a prepared tree,
   the app's and the helper's), `IrisinClient` (`DaemonLink`,
   `JobTranscript`), `IrisinVendor` (a paid repository's Keychain
@@ -760,6 +760,21 @@ is `/var/jb/var/log/irisin-install.log`.
 - **A stale dpkg files list breaks every install on the device.** A `.list`
   under `Library/dpkg/info` with a bare `/` or an empty line makes dpkg abort
   with "contains empty filename" for *any* package. Strip those lines.
+- **A bootstrap's users and groups are not iOS's.** Procursus builds dpkg
+  against libiosexec, whose `getpwnam` and `getgrnam` read the bootstrap's
+  `etc/spwd.db` (`etc/pwd.db` for anyone but root) and `etc/group`, and
+  never the system's. redis-tools adds `redis` there and redis-server names
+  it in a statoverride; through 5.0.3 the helper asked iOS, which has no
+  `redis`, and every install on that device stopped at "Unknown
+  statoverride account", whatever it installed. `BootstrapAccounts` is
+  libiosexec's two readers again, and both the statoverride's names and an
+  archive's owner names go through it, in the helper: the prepared
+  manifest carries the names, and the app, as mobile, never decides. A
+  name is the bootstrap's or unknown, never the system's, even when the
+  bootstrap has no account files; only a run without a bootstrap asks iOS.
+  An unknown name in the statoverride still stops every install, as it
+  stops `dpkg -i`, and no longer stops a removal, which dpkg never reads
+  the statoverrides for (`Documentation/InstallerCaseStudies.md`).
 - **launchd may print the daemon under `user/501` even though it is a system
   daemon.** IcliKit reads both the system proxy and foreground-user record;
   trust the helper transcript and the app's journal.

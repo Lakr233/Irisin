@@ -96,10 +96,10 @@ final class LocalPackageTests: XCTestCase {
         XCTAssertThrowsError(try ArchiveStream.debianControlMembers(atPath: dir.appendingPathComponent("control").path))
     }
 
-    /// dpkg installs an entry as the user its archive names, when the
-    /// system knows the name, whatever number is stored beside it: a
-    /// package packed on a Mac says `root` next to the builder's uid.
-    func testPreparedOwnersAreReadByName() throws {
+    /// The manifest keeps an entry's owner as the archive stores it, names
+    /// and numbers both: which wins is the helper's to decide against the
+    /// bootstrap's accounts, which the app, as mobile, cannot all read.
+    func testPreparedOwnersKeepTheirNames() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir.appendingPathComponent("a"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -116,7 +116,9 @@ final class LocalPackageTests: XCTestCase {
         _ = try ArchiveStream.prepareDebianPackage(at: dir.appendingPathComponent("a.deb"), in: prepared)
         let manifest = try JSONDecoder().decode(PreparedPackage.self, from: Data(contentsOf: prepared.appendingPathComponent("manifest.json")))
         let owners = Dictionary(uniqueKeysWithValues: manifest.entries.map { ($0.path, [$0.uid, $0.gid]) })
-        XCTAssertEqual(owners, ["a/named": [0, 0], "a/unknown": [777, 778]])
+        XCTAssertEqual(owners, ["a/named": [501, 20], "a/unknown": [777, 778]])
+        let names = Dictionary(uniqueKeysWithValues: manifest.entries.map { ($0.path, [$0.userName, $0.groupName]) })
+        XCTAssertEqual(names, ["a/named": ["root", "wheel"], "a/unknown": ["irisin-nobody", "irisin-nobody"]])
     }
 
     /// A PAX header spells a name in UTF-8, and libarchive converts it into

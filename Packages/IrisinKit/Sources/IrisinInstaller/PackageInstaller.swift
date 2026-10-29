@@ -76,6 +76,7 @@ public final class PackageInstaller {
             scriptRoot: scriptRoot,
             ignoreScriptFailures: transaction.ignoreScriptFailures || transaction.recoveryMode,
             recoveryMode: transaction.recoveryMode,
+            unpacks: !transaction.install.isEmpty,
             installerEnvironment: installerEnvironment,
             emit: emit
         )

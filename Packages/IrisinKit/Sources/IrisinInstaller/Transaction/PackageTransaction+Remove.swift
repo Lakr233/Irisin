@@ -38,7 +38,7 @@ extension PackageTransaction {
                 throw error
             }
         }
-        overrides = try PackageOverrides(directory: database.directory)
+        overrides = try PackageOverrides(directory: database.directory, layout: filesystem.layout, statoverrides: unpacks)
         fields["status"] = "deinstall ok half-installed"
         try database.commit(identity, fields)
 

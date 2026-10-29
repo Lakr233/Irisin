@@ -4,6 +4,89 @@ Failures of the native installer that reached a device, what caused them,
 and what now keeps them from coming back. Each one names the dpkg or apt
 behavior the fix follows. See `NativeInstaller.md` for the installer itself.
 
+## A statoverride naming the bootstrap's own user (2026-10-28)
+
+### What happened
+
+Apelin asked Irisin 4.7.5 to install a toolchain package on a RootHide
+vphone, and the helper stopped before verifying anything: "Installation
+stopped: Unknown statoverride account". The device's statoverride file had
+two lines that redis-server's postinst writes,
+`redis redis 640 /etc/redis/redis.conf` and the same for
+`sentinel.conf`, and every install on that device stopped the same way,
+whatever it installed.
+
+### Why
+
+The helper named statoverride accounts with the system's `getpwnam` and
+`getgrnam`. The device's dpkg never does: Procursus builds it against
+libiosexec, whose header turns both into `ie_getpwnam` and `ie_getgrnam`,
+and on a rootless or roothide bootstrap those read the bootstrap's
+`etc/spwd.db` (`etc/pwd.db` for anyone but root) and `etc/group`
+(libiosexec 1.3.1's `getpwent.c` and `getgrent.c`, unchanged in
+roothide's fork). redis-tools adds `redis` there; iOS has never heard of
+it. A probe on the device gave `getpwnam("redis")` NULL from
+`libsystem_info` and `ie_getpwnam("redis")` uid 1001 from libiosexec.
+
+dpkg is no more forgiving of a name it cannot find: `ensure_statoverrides`
+stops at one anywhere in the file. Only the lookup was wrong.
+
+The same lookup named an archive entry's owner, in the app, as mobile:
+`tar_entry_update_from_system` asks libiosexec there too, so a file the
+archive gives to a bootstrap-only user kept the number beside the name.
+
+### What changed
+
+- `BootstrapAccounts` is libiosexec's two readers again, decision for
+  decision: the db(3) hash keyed by `_PW_KEYBYNAME` and the name, the
+  1024-byte record and `MAXLOGNAME` limits, `grscan`'s rules for a line of
+  `etc/group`. A bootstrap's files answer alone, and a bootstrap without
+  them knows no names, as libiosexec there does not; only a run without a
+  bootstrap (rootful, the Mac harness) asks iOS.
+- `PackageOverrides` names statoverride accounts through it, one instance
+  per reading of the database (after each preinst, before each removal),
+  and an unknown one says which user or group, and for which path.
+- The prepared manifest carries an entry's user and group names beside
+  its numbers (`PreparedEntry.userName`, `groupName`), and the helper
+  decides: the statoverride's owner, else the names as the bootstrap knows
+  them, else the numbers (`PackageOverrides.owner`). A manifest without
+  names installs by its numbers, as before.
+- A transaction that unpacks nothing reads no statoverrides, as dpkg reads
+  them only in `archivefiles`. On the vphone, `dpkg -r` removed a package
+  past an override naming a user nobody has, where Irisin stopped; with the
+  override the device had, Irisin could not even remove redis-server.
+
+Tests: `BootstrapAccountsTests` reads files written as `pwd_mkdb` and base
+write them, as root and as anyone else; `DpkgParityTests` installs past a
+`redis` statoverride, stops at an unknown user or group with its name and
+path, removes past one, and gives archive owners as above. With the
+system's lookup put back, the statoverride tests fail as the device did,
+and with the statoverrides read for every transaction the removal does.
+A copy of libiosexec 1.3.1's two readers, compiled on the Mac against the
+same fixtures as root and as mobile, gave the same answer for every name.
+
+### On the vphones
+
+jp-01's ios264 (iOS 26.4) and ios27 (iOS 27.0.1), both RootHide with
+dpkg 1.21.21 and libiosexec 1.3.1. A user and group `irisintest` (1077)
+went into the bootstrap's `master.passwd` (then `pwd_mkdb`) and `group`,
+and `dpkg-statoverride --add irisintest irisintest 640` named a file of a
+test package whose archive gives one file to `irisintest` (777:778 beside
+the name) and one to `root` (501:20 beside the name).
+
+- 5.0.3 stopped installing the package at "Unknown statoverride account",
+  on both.
+- The fix installed it on both: the overridden file 1077:1077 0640, the
+  named file 1077:1077, the other 0:0. The device's own `dpkg -i` gave the
+  same three owners.
+- With a line naming a user nobody has added, Irisin stopped the install
+  with that user and path, and `dpkg -i` stopped too ("unknown system user
+  … in statoverride file"). Irisin removed the package past it, as
+  `dpkg -r` did.
+- The app launched and came to the front on both afterwards. Each guest
+  was put back with its account files, no statoverride file, and the
+  released 5.0.3.
+
 ## Irisin closing during its own update (2026-10-18)
 
 ### What happened

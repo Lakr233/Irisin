@@ -10,8 +10,14 @@ public struct PreparedEntry: Codable, Equatable, Sendable {
     public let file: PreparedFile?
     public let linkTarget: String?
     public let mode: UInt32
+    /// The owner as numbers, as the archive stores them.
     public let uid: UInt32
     public let gid: UInt32
+    /// The owner by name, as the archive names it, if it does. The helper
+    /// asks the bootstrap for these, and they win over the numbers when it
+    /// knows them; the app, running as mobile, never decides.
+    public let userName: String?
+    public let groupName: String?
     public let modificationTime: Int64
 
     public init(
@@ -22,6 +28,8 @@ public struct PreparedEntry: Codable, Equatable, Sendable {
         mode: UInt32,
         uid: UInt32,
         gid: UInt32,
+        userName: String? = nil,
+        groupName: String? = nil,
         modificationTime: Int64
     ) {
         self.path = path
@@ -31,6 +39,8 @@ public struct PreparedEntry: Codable, Equatable, Sendable {
         self.mode = mode
         self.uid = uid
         self.gid = gid
+        self.userName = userName
+        self.groupName = groupName
         self.modificationTime = modificationTime
     }
 }

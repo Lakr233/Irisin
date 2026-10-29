@@ -569,6 +569,95 @@ struct DpkgParityTests {
         #expect(attributes[.posixPermissions] as? Int == 0o600)
     }
 
+    /// `ensure_statoverrides` names its accounts with `getpwnam` and
+    /// `getgrnam`, which libiosexec answers from the bootstrap: `redis`,
+    /// which redis-server's postinst names for its configuration, is not
+    /// the system's, and a package that has nothing to do with it installs.
+    @Test func statoverrideNamesAreTheBootstrapsAccounts() throws {
+        let fixture = try NativeInstallFixture()
+        let accounts = try BootstrapAccountsFixture(root: fixture.root)
+        try accounts.users(["redis": getuid()])
+        try accounts.groups("redis:*:\(getgid()):\n")
+        try Data("redis redis 640 /etc/redis/redis.conf\nredis redis 600 /usr/share/example\n".utf8)
+            .write(to: fixture.database.appendingPathComponent("statoverride"))
+        try fixture.run(install: [fixture.package(files: ["usr/share/example": "x"])], layout: accounts.layout)
+        let attributes = try FileManager.default.attributesOfItem(atPath: fixture.root.appendingPathComponent("usr/share/example").path)
+        #expect(attributes[.posixPermissions] as? Int == 0o600)
+        let overrides = try PackageOverrides(directory: fixture.database, layout: accounts.layout, statoverrides: true)
+        #expect(overrides.attributes("/etc/redis/redis.conf").map { [$0.mode, $0.uid, $0.gid] } == [0o640, getuid(), getgid()])
+    }
+
+    /// dpkg stops at an account it cannot name anywhere in the file,
+    /// whichever package is installing, and says which and where.
+    @Test(arguments: [
+        ("ghost redis 640 /etc/redis/redis.conf", "Unknown user 'ghost' in the statoverride for /etc/redis/redis.conf"),
+        ("redis ghost 640 /etc/redis/redis.conf", "Unknown group 'ghost' in the statoverride for /etc/redis/redis.conf"),
+        ("daemon redis 640 /etc/redis/redis.conf", "Unknown user 'daemon' in the statoverride for /etc/redis/redis.conf"),
+    ])
+    func anUnknownStatoverrideAccountStopsEveryInstall(line: String, message: String) throws {
+        let fixture = try NativeInstallFixture()
+        let accounts = try BootstrapAccountsFixture(root: fixture.root)
+        try accounts.users(["redis": 1001])
+        try accounts.groups("redis:*:1001:\n")
+        try Data((line + "\n").utf8).write(to: fixture.database.appendingPathComponent("statoverride"))
+        let error = #expect(throws: (any Error).self) {
+            try fixture.run(install: [fixture.package(files: ["usr/share/example": "x"])], layout: accounts.layout)
+        }
+        #expect(error.map(String.init(describing:)) == message)
+        #expect(try fixture.status() == nil)
+    }
+
+    /// `archivefiles` is the one place dpkg reads its statoverrides: a
+    /// removal passes an override that names an account nobody has, and the
+    /// next install stops at it, as `dpkg -r` and `dpkg -i` did on a vphone.
+    @Test func onlyAnUnpackReadsTheStatoverrides() throws {
+        let fixture = try NativeInstallFixture()
+        let accounts = try BootstrapAccountsFixture(root: fixture.root)
+        try accounts.users(["redis": 1001])
+        try accounts.groups("redis:*:1001:\n")
+        try fixture.run(install: [fixture.package(files: ["usr/share/example": "x"])], layout: accounts.layout)
+        try Data("ghost redis 640 /etc/redis/redis.conf\n".utf8).write(to: fixture.database.appendingPathComponent("statoverride"))
+        #expect(throws: (any Error).self) {
+            try fixture.run(install: [fixture.package("other.package", files: ["usr/share/other": "y"])], layout: accounts.layout)
+        }
+        try fixture.run(remove: ["example.package"], layout: accounts.layout)
+        #expect(try fixture.status() == nil)
+        #expect(!FileManager.default.fileExists(atPath: fixture.root.appendingPathComponent("usr/share/example").path))
+    }
+
+    /// `tar_entry_update_from_system`: an archive's user and group names win
+    /// over the numbers beside them when the bootstrap knows them, and a
+    /// statoverride wins over both.
+    @Test func archiveOwnersAreNamedByTheBootstrap() throws {
+        let accounts = try BootstrapAccountsFixture()
+        try accounts.users(["root": 0, "redis": 1001])
+        try accounts.groups("wheel:*:0:root\nredis:*:1002:\n")
+        let database = accounts.root.appendingPathComponent("Library/dpkg")
+        try FileManager.default.createDirectory(at: database, withIntermediateDirectories: true)
+        try Data("#5 #6 600 /usr/share/overridden\n".utf8).write(to: database.appendingPathComponent("statoverride"))
+        let overrides = try PackageOverrides(directory: database, layout: accounts.layout, statoverrides: true)
+        func owner(_ user: String?, _ group: String?, at path: String = "/usr/share/x") -> [UInt32] {
+            let entry = PreparedEntry(path: String(path.dropFirst()), kind: .file, mode: 0o644, uid: 501, gid: 20, userName: user, groupName: group, modificationTime: 0)
+            let owner = overrides.owner(path, of: entry)
+            return [owner.uid, owner.gid]
+        }
+        #expect(owner("root", "wheel") == [0, 0])
+        #expect(owner("redis", "redis") == [1001, 1002])
+        #expect(owner("ghost", "ghost") == [501, 20])
+        #expect(owner("daemon", "daemon") == [501, 20])
+        #expect(owner(nil, nil) == [501, 20])
+        #expect(owner("redis", "redis", at: "/usr/share/overridden") == [5, 6])
+    }
+
+    /// Without a bootstrap the system names them: a package packed on a
+    /// Mac without `--root-owner-group` says `root` beside its builder's uid.
+    @Test func archiveOwnersWithoutABootstrapAreTheSystems() throws {
+        let fixture = try NativeInstallFixture()
+        let overrides = try PackageOverrides(directory: fixture.database, layout: .init(kind: .none), statoverrides: true)
+        let entry = PreparedEntry(path: "a", kind: .file, mode: 0o644, uid: 501, gid: 20, userName: "root", groupName: "wheel", modificationTime: 0)
+        #expect(overrides.owner("/a", of: entry) == (0, 0))
+    }
+
     // MARK: depisok
 
     @Test func aBrokenDependencyElsewhereDoesNotBlockAnUnrelatedInstall() throws {

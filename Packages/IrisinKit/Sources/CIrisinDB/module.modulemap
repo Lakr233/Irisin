@@ -1,0 +1,9 @@
+// db(3), the hash files a bootstrap keeps its users in (`etc/pwd.db`,
+// `etc/spwd.db`). `dbopen` has been in libSystem since the first iOS, and the
+// iPhoneOS and AppleTVOS SDKs declare it in `<db.h>`, but the Darwin module
+// leaves that header out, so Swift cannot name it without this. See
+// `BootstrapAccounts`.
+module CIrisinDB [system] {
+    header "shim.h"
+    export *
+}

@@ -396,7 +396,7 @@ final class PackageFilesystem {
         at destination: URL,
         hardLinkTarget: URL? = nil,
         mode: UInt32? = nil,
-        owner: (UInt32, UInt32)? = nil
+        owner: (uid: UInt32, gid: UInt32)
     ) throws {
         if entry.kind == .directory {
             // dpkg asks stat, not lstat: a symbolic link to a directory is
@@ -445,9 +445,7 @@ final class PackageFilesystem {
             }
             try note(destination, installed: installed, removed: false)
         }
-        let uid = owner?.0 ?? entry.uid
-        let gid = owner?.1 ?? entry.gid
-        if geteuid() == 0, lchown(destination.path, uid, gid) != 0 {
+        if geteuid() == 0, lchown(destination.path, owner.uid, owner.gid) != 0 {
             throw PackageFailure("Cannot set file ownership: \(entry.path)")
         }
         if entry.kind != .symbolicLink {
