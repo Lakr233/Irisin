@@ -90,6 +90,83 @@ struct DpkgParityTests {
         #expect(try fixture.status("dpkg") == "install ok installed")
     }
 
+    /// The bootstraps `upgradingDpkg` runs on: rootless `/var/jb`, and
+    /// roothide with its `var` in the jbroot or, as on a device, linked
+    /// through `private/var` to an app group container outside it.
+    enum DpkgBootstrap: CaseIterable, Sendable {
+        case rootless, roothide, roothideWithOutsideVar
+    }
+
+    /// dpkg's `pkg_remove_old_files` on an upgrade of dpkg itself, shaped as
+    /// Stripe's 1.22.6-1 is: the database's directories, `/var/lib/dpkg`
+    /// linking to them, and a man page 1.21.21 had and it drops. Asking
+    /// where the new paths lead, to keep an old one that reaches a new
+    /// file, must skip the database: the upgrade stopped there, with
+    /// "Package data cannot overwrite the package database".
+    @Test(arguments: DpkgBootstrap.allCases)
+    func upgradingDpkgRemovesOldFilesAndKeepsTheDatabase(_ bootstrap: DpkgBootstrap) throws {
+        let fixture = try NativeInstallFixture()
+        let manager = FileManager.default
+        let prefix = bootstrap == .rootless ? "var/jb/" : ""
+        let layout = bootstrap == .rootless
+            ? BootstrapLayout(kind: .rootless(prefix: BootstrapLayout.rootlessPrefix), mount: fixture.root.path)
+            : BootstrapLayout(kind: .roothide(jbroot: fixture.root.path))
+        var outside: URL?
+        if bootstrap == .roothideWithOutsideVar {
+            let group = fixture.root.deletingLastPathComponent().appendingPathComponent("app group " + UUID().uuidString)
+            try manager.createDirectory(at: group.appendingPathComponent("lib"), withIntermediateDirectories: true)
+            try manager.createDirectory(at: fixture.root.appendingPathComponent("private"), withIntermediateDirectories: true)
+            try manager.createSymbolicLink(atPath: fixture.root.appendingPathComponent("private/var").path, withDestinationPath: group.path)
+            try manager.createSymbolicLink(atPath: fixture.root.appendingPathComponent("var").path, withDestinationPath: "private/var")
+            outside = group
+        } else {
+            try manager.createDirectory(at: fixture.root.appendingPathComponent("var/lib"), withIntermediateDirectories: true)
+        }
+        defer { outside.map { try? manager.removeItem(at: $0) } }
+        // as the bootstrap made it
+        let link = fixture.root.appendingPathComponent("var/lib/dpkg").path
+        try manager.createSymbolicLink(atPath: link, withDestinationPath: fixture.database.path)
+
+        func directory(_ path: String) -> PreparedEntry {
+            PreparedEntry(path: prefix + path, kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)
+        }
+        var entries = ["Library", "Library/dpkg", "Library/dpkg/info", "Library/dpkg/parts", "usr", "usr/bin", "var", "var/lib"]
+            .map(directory)
+        entries.append(PreparedEntry(
+            path: prefix + "var/lib/dpkg",
+            kind: .symbolicLink,
+            linkTarget: "/" + prefix + "Library/dpkg",
+            mode: 0o777,
+            uid: 0,
+            gid: 0,
+            modificationTime: 0
+        ))
+        if bootstrap == .rootless {
+            entries += [PreparedEntry(path: "var", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)]
+            entries += [PreparedEntry(path: "var/jb", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)]
+        }
+        let dropped = "usr/share/man/hu/man1/dpkg-split.1.zst"
+        let old = entries + ["usr/share", "usr/share/man", "usr/share/man/hu", "usr/share/man/hu/man1"].map(directory)
+        try fixture.run(
+            install: [fixture.package("dpkg", version: "1.21.21", files: [prefix + "usr/bin/dpkg": "one", prefix + dropped: "old"], links: old)],
+            layout: layout
+        )
+
+        try fixture.run(
+            install: [fixture.package("dpkg", version: "1.22.6-1", files: [prefix + "usr/bin/dpkg": "two"], links: entries)],
+            layout: layout
+        )
+
+        #expect(try fixture.status("dpkg") == "install ok installed")
+        #expect(try fixture.text("usr/bin/dpkg") == "two")
+        #expect(!manager.fileExists(atPath: fixture.root.appendingPathComponent("usr/share/man/hu").path))
+        let list = try fixture.text("Library/dpkg/info/dpkg.list")
+        #expect(list.contains("/\(prefix)Library/dpkg/parts\n"))
+        #expect(!list.contains(dropped))
+        #expect(manager.fileExists(atPath: fixture.database.appendingPathComponent("info").path))
+        #expect(try manager.destinationOfSymbolicLink(atPath: link) == fixture.database.path)
+    }
+
     /// dpkg's package list includes its administrative directories. Removing
     /// the package removes its tools, but the database holding that removal
     /// must remain available for the next transaction.

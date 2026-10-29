@@ -252,7 +252,9 @@ final class PackageFilesystem {
     }
 
     /// Package lists have no entry kinds. A database path they record is
-    /// protected scaffolding during removal, never payload to delete.
+    /// protected scaffolding during removal, never payload to delete, and
+    /// the database directories dpkg's own package ships are no file an
+    /// upgrade's old path can reach.
     func isPackageDatabasePath(_ path: String) throws -> Bool {
         try isInDatabase(resolvedLocation(path))
     }

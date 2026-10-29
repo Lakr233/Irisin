@@ -133,10 +133,17 @@ extension PackageTransaction {
         // ElleKit links the directory to `usr/lib/TweakInject`. Nothing is
         // there to compare against on a first install, where asking what a
         // theme's four thousand new paths lead to is four thousand stats for
-        // a set nothing reads.
+        // a set nothing reads. dpkg's own package ships the database's
+        // directories, which `installPayload` let through as directories and
+        // `location` refuses by path alone: a directory has no identity, and
+        // asking stopped dpkg's upgrade from 1.21.21 to 1.22.6-1.
         var installed = Set<FileIdentity>()
         for path in oldFiles.isEmpty ? [] : newPaths where !filesystem.isScaffolding(path) {
-            if let file = try FileIdentity(filesystem.location(overrides.path(path, owner: identity))) {
+            let actual = overrides.path(path, owner: identity)
+            if try filesystem.isPackageDatabasePath(actual) {
+                continue
+            }
+            if let file = try FileIdentity(filesystem.location(actual)) {
                 installed.insert(file)
             }
         }

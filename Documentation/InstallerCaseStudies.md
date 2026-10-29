@@ -4,6 +4,69 @@ Failures of the native installer that reached a device, what caused them,
 and what now keeps them from coming back. Each one names the dpkg or apt
 behavior the fix follows. See `NativeInstaller.md` for the installer itself.
 
+## dpkg's own upgrade (2026-10-29)
+
+### What happened
+
+On a RootHide iPhone (iOS 16, OwnGoal Stripe's `1900` suite), the update of
+dpkg from 1.21.21 to Stripe's 1.22.6-1 stopped at unpacking: "Package data
+cannot overwrite the package database". Every retry stopped the same way.
+Apple TV's dpkg from the same suite has the same shape.
+
+### Why
+
+dpkg's package ships the database's own directories (`/Library/dpkg`,
+`info`, `parts`, `updates`, `alternatives`) and `/var/lib/dpkg` as a link
+to `/Library/dpkg`. `location` refuses a database path for anything but a
+directory, and it is told an entry's kind by the overload that takes the
+entry. `removeOldFiles` asked where every *new* path leads, to keep an old
+path that reaches a new file through a directory link, and asked it by path
+alone, so `/Library/dpkg` was taken for package data written over the
+database. That question is asked only when the old version had paths the
+new one drops, which 1.21.21 has (seven: man pages and their directories),
+so a first install and a reinstall of the same version went through and the
+upgrade did not. The step in the message, unpacking and not verifying, says
+the device's `Library/dpkg` is the directory and `var/lib/dpkg` the link,
+as on the vphones: the other way round, the link entry itself would be
+refused at verifying.
+
+### What changed
+
+That question skips a database path, as the loop over the old paths below
+it already did. A file or link inside the database is still refused at
+verifying and again when it is placed, so only a directory is skipped, and
+a directory has no `FileIdentity`: for every path that did not stop the run
+the answer is the one it was.
+
+Tests: `DpkgParityTests` upgrades a package shaped as Stripe's dpkg (the
+database's directories, the `var/lib/dpkg` link the bootstrap already has,
+a man page the old version had and the new one drops) on rootless `/var/jb`,
+on RootHide, and on RootHide with `var` linked through `private/var` to a
+directory outside the root. All three stopped with the device's message
+before the change. A review ran Stripe's real package, prepared as the app
+prepares it, through install, upgrade, reinstall, downgrade, removal and
+purge on the same three layouts.
+
+### On the vphones
+
+jp-01's ios264 (iOS 26.4) and ios27 (iOS 27.0.1), RootHide with dpkg
+1.21.21 and `var/lib/dpkg` a link to `Library/dpkg`, as Stripe's package
+ships it. A test package shipping the same directories and link, version 1
+with one file more than version 2, through `irisin-cli`:
+
+- The released 5.0.4 installed version 1 and stopped version 2 at unpacking
+  with the device's message, on both, and put version 1 back.
+- The fix upgraded to version 2 on both: the dropped file gone,
+  `Library/dpkg` and the link as they were. Removing the package left both
+  too, and the installed list as it was before the test. `tree` installed
+  and removed, and the app launched and came to the front.
+- The device's own `dpkg -i` of the two versions and `dpkg -r` gave the
+  same result. `dpkg --audit` and `apt-get check` found nothing new after
+  any step.
+- Stripe's dpkg itself was not installed there: it needs Stripe's
+  `roothide` and `libiosexec1`, newer than the vphones'.
+- Each guest was put back on the Irisin it had, with no test package.
+
 ## A statoverride naming the bootstrap's own user (2026-10-28)
 
 ### What happened
