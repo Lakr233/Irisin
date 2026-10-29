@@ -13,8 +13,9 @@
 		<string>https://roothide.github.io</string>
 	</dict>
 	<!--
-	  roothide's own Procursus build: 1800 is iOS 15, and iOS 16 and later
-	  use 1900.
+	  The bootstrap's own packages. OwnGoal Stripe has the one suite, 1900,
+	  built for iOS 16 and later; iOS 15 keeps roothide's own Procursus
+	  build, 1800.
 	-->
 	<dict>
 		<key>source</key>
@@ -24,7 +25,7 @@
 	</dict>
 	<dict>
 		<key>source</key>
-		<string>deb https://roothide.github.io/procursus iphoneos-arm64e/1900 main</string>
+		<string>deb https://stripe.owngoal.dev 1900 main</string>
 		<key>minimumSystemVersion</key>
 		<integer>16</integer>
 	</dict>

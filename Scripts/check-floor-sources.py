@@ -14,9 +14,10 @@ nothing else. Three things below it say no word on the floor:
   `symbol:` and `icon:` too. A literal on the guarded side of an
   `#available(iOS N` check (on its line, or up to three lines after it, and
   before its `else`) may need iOS N, no more.
-- A recommended repository list without a Procursus suite for some iOS
-  release from the floor up: onboarding on that release recommends no
-  bootstrap repository at all, or one built for another release.
+- A recommended repository list without a bootstrap suite (Procursus, or
+  OwnGoal Stripe on roothide) for some iOS release from the floor up:
+  onboarding on that release recommends no bootstrap repository at all, or
+  one built for another release.
 
 Usage: check-floor-sources.py <floor> <repository root> [<tvOS floor>]
 """
@@ -35,6 +36,9 @@ LITERAL = re.compile(r'"([a-z0-9]+(?:\.[a-z0-9]+)*)"')
 PLATFORM = re.compile(r"\.iOS\(\s*(?:\.v(\d+)(?:_(\d+))?|\"([0-9.]+)\")\s*\)")
 TV_PLATFORM = re.compile(r"\.tvOS\(\s*(?:\.v(\d+)(?:_(\d+))?|\"([0-9.]+)\")\s*\)")
 AVAILABLE = re.compile(r"#available\(iOS (\d+(?:\.\d+)?)")
+# The repositories that publish a bootstrap's own packages, one suite per
+# iOS release: Procursus, and OwnGoal Stripe, which roothide uses from iOS 16.
+BOOTSTRAP_REPOSITORIES = ("procurs", "stripe.owngoal.dev")
 
 
 def version_key(version: str) -> tuple:
@@ -110,23 +114,22 @@ def check_recommended(floor: tuple, root: Path) -> list:
     errors = []
     for path in sorted((root / "Irisin/Resources/Environments").glob("default-list-iphoneos-*.plist")):
         entries = plistlib.loads(path.read_bytes())
-        suites = [entry for entry in entries if "procurs" in entry["source"]]
+        suites = [entry for entry in entries if any(name in entry["source"] for name in BOOTSTRAP_REPOSITORIES)]
         # every bound named, and one past the highest, must be covered; one
         # suite left open at the top covers every release after it
         bounds = [entry.get(key, 0) for entry in suites for key in ("minimumSystemVersion", "maximumSystemVersion")]
         if not any("maximumSystemVersion" not in entry for entry in suites):
-            errors.append(f"{path.relative_to(root)}: no Procursus suite is left open for the newest iOS")
+            errors.append(f"{path.relative_to(root)}: no bootstrap suite is left open for the newest iOS")
         for major in range(floor[0], max(bounds + [floor[0]]) + 2):
             covered = [
                 entry["source"]
-                for entry in entries
-                if "procurs" in entry["source"]
-                and entry.get("minimumSystemVersion", 0) <= major <= entry.get("maximumSystemVersion", 99)
+                for entry in suites
+                if entry.get("minimumSystemVersion", 0) <= major <= entry.get("maximumSystemVersion", 99)
             ]
             if len(covered) != 1:
                 errors.append(
                     f"{path.relative_to(root)}: iOS {major} is recommended "
-                    f"{len(covered)} Procursus suites, not one: {covered}"
+                    f"{len(covered)} bootstrap suites, not one: {covered}"
                 )
     return errors
 

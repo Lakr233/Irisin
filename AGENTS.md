@@ -379,14 +379,16 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   are polled from a feed (`OperationFeed`), not pushed.
 - **Onboarding's recommended repositories are data, not code.**
   `Resources/Environments/default-list-<architecture>.plist`, one per
-  bootstrap (Apple TV's, `appletvos-arm64e`, is apt.owngoal.dev alone, the
-  one repository that publishes for it), and `default-list-managed.plist`,
-  shipped empty for the jailbreak to overwrite: with any entry it is the list, whatever the
+  bootstrap, and `default-list-managed.plist`, shipped empty for the
+  jailbreak to overwrite: with any entry it is the list, whatever the
   architecture (`RecommendedRepositories`). No list recommends nothing, and
   the page has no such section. Each entry is a source line with optional
   inclusive iOS major bounds, which is how Procursus's per-release suite
-  is picked. `package-deb.sh` keeps the flavor's own list and the managed
-  one and `verify-deb.sh` checks it; `PLIST_FILE_OUTPUT_FORMAT` keeps them
+  is picked. RootHide's bootstrap packages come from OwnGoal Stripe
+  (`deb https://stripe.owngoal.dev 1900 main`, built for iOS and tvOS 16
+  and later) on iOS 16 and later and on Apple TV, beside apt.owngoal.dev;
+  iOS 15 keeps roothide's own Procursus build. `package-deb.sh` keeps the
+  flavor's own list and the managed one and `verify-deb.sh` checks it; `PLIST_FILE_OUTPUT_FORMAT` keeps them
   XML, so the managed file's instructions reach the device.
 - **Swift 6 language mode, everywhere.** `SWIFT_VERSION = 6.0` on every
   target; concurrency diagnostics are errors, not warnings to be silenced.
@@ -544,7 +546,8 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `IcliKit` asks of IrisinKit and everything above it;
   `Scripts/check-floor-sources.py` fails `make check` on one that does
   not, on an SF Symbol newer than the floor, and on a recommended list
-  without one Procursus suite for each iOS release from the floor up. PackageDepiction's views are
+  without one bootstrap suite (Procursus, or OwnGoal Stripe) for each iOS
+  release from the floor up. PackageDepiction's views are
   laid out with SnapKit and configured with Then, like the app: a depiction
   is Auto Layout throughout, so its height is its own and nothing measures it.
   Everything with a usable upstream release is a remote package reference.

@@ -95,8 +95,8 @@ rarely, and an Apple TV holds little of anyone's data.
   tvOS now), and `PackagedArchitecture` takes `appletvos-arm64e` on tvOS,
   the simulator's stand-in root included. The tvOS package is the daemon,
   the helper and the launchpad; on its first launch with no repositories it
-  adds the recommended list (apt.owngoal.dev), which nobody is at a screen
-  to pick. No bootstrap serves Vision Pro yet: the launchpad there browses,
+  adds the recommended list (OwnGoal Stripe and apt.owngoal.dev), which
+  nobody is at a screen to pick. No bootstrap serves Vision Pro yet: the launchpad there browses,
   and installs only in the simulator.
 
 ## The run without a view controller
