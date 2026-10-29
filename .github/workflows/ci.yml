@@ -62,9 +62,14 @@ jobs:
           name: resolver-benchmarks
           path: build/resolver-benchmarks/report.json
 
+  # The device packages link the iOS 27.1 SDK (the Makefile refuses an
+  # older one): built with it, the app fills an iPhone Duo's displays and
+  # its bars stand on the side. The macos-26 images stop at Xcode 26; the
+  # xcode-27 runner has Xcode 27.1, chosen by name below rather than as the
+  # newest, which on that image is a 27.2 release candidate.
   build:
     name: Build and verify Debian packages
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
 
     steps:
@@ -79,11 +84,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Select newest Xcode
+      - name: Select Xcode 27.1
         run: |
-          latest="$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -print | sort -V | tail -n1)"
-          sudo xcode-select -s "$latest/Contents/Developer"
+          sudo xcode-select -s /Applications/Xcode_27.1.app/Contents/Developer
           xcodebuild -version
+          echo "iPhoneOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
 
       - name: Install packaging dependencies
         shell: bash
@@ -101,6 +106,17 @@ jobs:
 
       - name: Package and verify both flavours
         run: make _packages CONFIGURATION=Release DERIVED_DATA="$DERIVED_DATA" BUILD_NUMBER="$GITHUB_RUN_NUMBER"
+
+      # The Apple TV build needs Xcode's tvOS platform, the SDK and a
+      # simulator runtime for the asset catalog; an image that left it out
+      # gets it here, and one that has it downloads nothing.
+      - name: Install the tvOS platform if missing
+        run: |
+          if ! xcodebuild -showsdks | grep -q -- '-sdk appletvos' \
+            || ! xcrun simctl runtime list | grep -qE '^tvOS [0-9]'; then
+            xcodebuild -downloadPlatform tvOS
+          fi
+          xcodebuild -showsdks | grep -- '-sdk appletvos'
 
       # Apple TV (Documentation/AppleTV.md): irisind and irisin-install for
       # RootHide on tvOS 17, appletvos-arm64e.

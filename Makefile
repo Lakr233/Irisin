@@ -60,6 +60,11 @@ APP_VERSION         := $(call xcconfig_setting,MARKETING_VERSION)
 # line: nothing in the tree changes from building. CI passes its run number.
 BUILD_NUMBER        ?= $(shell git -C "$(ROOT_DIR)" rev-list --count HEAD 2>/dev/null)
 MINIMUM_IOS_VERSION := $(call base_xcconfig_setting,IPHONEOS_DEPLOYMENT_TARGET)
+# The iPhoneOS SDK a device build links, Xcode 27.1's or newer. On an iPhone
+# Duo the SDK decides the layout: built with 27.1, the app fills either
+# display edge to edge and its bars stand on the side; built with 27.0 it is
+# kept clear of the status bar's side, and before 27 it sits in a box.
+MINIMUM_IPHONEOS_SDK := 27.1
 MINIMUM_TVOS_VERSION := $(call base_xcconfig_setting,TVOS_DEPLOYMENT_TARGET)
 DEB_OUTPUT          ?= $(ROOT_DIR)/build/Packages/$(PACKAGE_ID)_$(APP_VERSION)_$(PACKAGE_ARCHITECTURE).deb
 # Apple TV: the launchpad (IrisinLaunchpad), irisind and irisin-install, for
@@ -331,6 +336,11 @@ compile: check
 # each tool it links into: in one build graph the two copies land on the
 # same path, which it refuses as two commands making one file.
 _build-ios:
+	@sdk="$$(xcrun --sdk iphoneos --show-sdk-version)" || exit $$?; \
+	if [[ "$$(printf '%s\n' "$(MINIMUM_IPHONEOS_SDK)" "$$sdk" | sort -V | head -n 1)" != "$(MINIMUM_IPHONEOS_SDK)" ]]; then \
+		echo "error: the iPhoneOS SDK is $$sdk; a device build links $(MINIMUM_IPHONEOS_SDK) or newer (Xcode 27.1, or DEVELOPER_DIR at it)" >&2; \
+		exit 69; \
+	fi
 	@echo "==> build $(BUILD_NUMBER)"
 	XCBUILD_LABEL=build-ios $(XCODEBUILD) \
 		$(if $(filter Release,$(CONFIGURATION)),-xcconfig "$(SIZE_CONFIG)") \

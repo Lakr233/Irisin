@@ -32,16 +32,8 @@ class TabInterfaceController: UITabBarController {
             // iOS 26 set the search tab apart on its own; from iOS 27 that
             // place is the prominent tab's, and a search tab only takes it
             // unasked when it activates search by itself, which ours does not.
-            //
-            // Set through KVC, not `prominentTabIdentifier =`: the property
-            // arrived in the iOS 27 SDK and the runners have Xcode 26, whose
-            // SDK has no such symbol to compile against — `#available` guards
-            // the call at run time, not the reference at build time. The name
-            // is the property's own, so the effect is the same wherever this
-            // was built. Put `prominentTabIdentifier = searchTab.identifier`
-            // back the day the runner image ships Xcode 27.
             if #available(iOS 27.0, *) {
-                setValue(searchTab.identifier, forKey: "prominentTabIdentifier")
+                prominentTabIdentifier = searchTab.identifier
             }
             everyTab = [
                 UITab(
