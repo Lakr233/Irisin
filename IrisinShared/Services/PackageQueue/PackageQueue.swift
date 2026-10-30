@@ -161,6 +161,14 @@ final class PackageQueue {
         plan?.install.first { $0.identity == identity }
     }
 
+    /// Whether Update All leaves the package as the queue has it: the
+    /// queue asks for it already, a request Update All keeps, or installs
+    /// `version` of it or a newer one.
+    func coversUpdate(of identity: String, to version: String) -> Bool {
+        actions.contains { $0.identity == identity }
+            || queuedPackage(of: identity)?.latestVersion.map { DebianVersion.compare($0, version) >= 0 } == true
+    }
+
     /// Solves the queue without the package: its own request or tick, or
     /// the requests that bring it in. `cleanup` replaces the ticked set.
     func proposeWithdrawal(

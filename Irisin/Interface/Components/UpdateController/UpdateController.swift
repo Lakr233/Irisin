@@ -42,6 +42,22 @@ class UpdateController: UIViewController, UITableViewDelegate {
         return cell
     }
 
+    private lazy var updateAllButton = UIBarButtonItem(
+        title: String(localized: "Update All"),
+        style: .done,
+        target: self,
+        action: #selector(updateAll)
+    )
+    /// Stands in for Update All once the queue has every update the page
+    /// lists: the sheet would change nothing, and the queue is where the
+    /// user was going.
+    private lazy var openQueueButton = UIBarButtonItem(
+        title: String(localized: "Open Queue"),
+        style: .done,
+        target: self,
+        action: #selector(openQueue)
+    )
+
     init(notificationCenter: NotificationCenter = .default) {
         self.notificationCenter = notificationCenter
         super.init(nibName: nil, bundle: nil)
@@ -70,13 +86,7 @@ class UpdateController: UIViewController, UITableViewDelegate {
         // has a navigation controller, and `present(next:)` always gives it one
         title = String(localized: "Updates")
 
-        let rightItem = UIBarButtonItem(
-            title: String(localized: "Update All"),
-            style: .done,
-            target: self,
-            action: #selector(updateAll)
-        )
-        navigationItem.rightBarButtonItem = rightItem
+        navigationItem.rightBarButtonItem = updateAllButton
 
         reload()
 
@@ -92,6 +102,12 @@ class UpdateController: UIViewController, UITableViewDelegate {
         .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
         .sink { [weak self] _ in self?.reload() }
         .store(in: &subscriptions)
+
+        // the queue taking the updates, or letting one go, turns the button
+        NotificationCenter.default.publisher(for: .PackageQueueChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.showBarButton(animated: true) }
+            .store(in: &subscriptions)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -122,6 +138,24 @@ class UpdateController: UIViewController, UITableViewDelegate {
         Task { await QueueChangeController.show(.updateAll, from: self) }
     }
 
+    @objc
+    func openQueue() {
+        InterfaceHostController.enclosing(self)?.openQueue()
+    }
+
+    /// Update All, or Open Queue while the queue has every update listed
+    /// (`PackageQueue.coversUpdate(of:to:)`).
+    private func showBarButton(animated: Bool) {
+        let rows = diffableDataSource.snapshot().itemIdentifiers
+        let queued = !rows.isEmpty && rows.allSatisfy { row in
+            row.candidate.latestVersion.map { PackageQueue.shared.coversUpdate(of: row.installed.identity, to: $0) } == true
+        }
+        let button = queued ? openQueueButton : updateAllButton
+        if navigationItem.rightBarButtonItem !== button {
+            navigationItem.setRightBarButton(button, animated: animated)
+        }
+    }
+
     func reload() {
         reloadTask?.cancel()
         let index = PackageCenter.default.index
@@ -136,6 +170,7 @@ class UpdateController: UIViewController, UITableViewDelegate {
                 snapshot,
                 animatingDifferences: tableView.shouldAnimateDiff
             )
+            showBarButton(animated: tableView.shouldAnimateDiff)
             guard !Task.isCancelled else { return }
             if rows.isEmpty {
                 if let navigator = navigationController {

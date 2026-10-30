@@ -57,6 +57,43 @@ final class TaskResolutionTests: XCTestCase {
     }
 
     @MainActor
+    func testQueueCoversTheUpdatesItAsksForOrBringsIn() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let db = AptDatabase(at: directory.appendingPathComponent("apt.db"))
+        let center = PackageCenter.default
+        let previous = center.index
+        center.index = PackageIndex(db: db)
+        let manager = PackageQueue.shared
+        defer {
+            manager.clear()
+            center.index = previous
+        }
+
+        let repository = try XCTUnwrap(URL(string: "https://example.test/"))
+        let library = Package(identity: "test.library", payload: ["2": [
+            "architecture": "all", "filename": "pool/library.deb",
+        ]], repoRef: repository)
+        let tweak = Package(identity: "test.tweak", payload: ["2": [
+            "architecture": "all", "filename": "pool/tweak.deb", "depends": "test.library (>= 2)",
+        ]], repoRef: repository)
+        db.replacePackages(of: repository, with: [library.identity: library, tweak.identity: tweak])
+        guard case let .success(proposal) = await manager.propose([.install(tweak)]) else {
+            return XCTFail("A package and its dependency must solve")
+        }
+        XCTAssertTrue(manager.commit(proposal))
+
+        // Update All keeps the queue's own request, whatever version it is for
+        XCTAssertTrue(manager.coversUpdate(of: tweak.identity, to: "3"))
+        // and a dependency the queue brings in is as new as what it installs
+        XCTAssertTrue(manager.coversUpdate(of: library.identity, to: "2"))
+        XCTAssertTrue(manager.coversUpdate(of: library.identity, to: "1.5"))
+        XCTAssertFalse(manager.coversUpdate(of: library.identity, to: "2.1"))
+        XCTAssertFalse(manager.coversUpdate(of: "test.other", to: "1"))
+    }
+
+    @MainActor
     func testRefusedRequestReportsAndLeavesNothingBehind() async throws {
         let broken = Package(
             identity: "test.broken",
