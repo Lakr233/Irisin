@@ -144,6 +144,10 @@ final class PackageFilesystem {
         root.path == "/" || storage.contains { path == $0 || path.hasPrefix($0 + "/") }
     }
 
+    /// What `PackageFileBackup.installed` records for a directory put where
+    /// a file was.
+    private static let directoryMark = "directory"
+
     /// What is at the path now, in the terms `PackageFileBackup.installed`
     /// records: the content's digest, a link's target, nil when nothing.
     private func fingerprint(_ url: URL) -> String? {
@@ -152,6 +156,7 @@ final class PackageFilesystem {
         switch info.st_mode & S_IFMT {
         case S_IFREG: return try? PackageArchive.digest(url, md5: false)
         case S_IFLNK: return (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)).map { "link:" + $0 }
+        case S_IFDIR: return Self.directoryMark
         default: return "other"
         }
     }
@@ -406,10 +411,22 @@ final class PackageFilesystem {
             if isDirectory(destination) {
                 return
             }
-            guard !exists(destination) else {
-                throw PackageFailure("Directory collides with a file: \(entry.path)")
+            if exists(destination) {
+                // a file where the package now has a directory, as libc++'s
+                // `__string` header became one: dpkg moves the file aside
+                // and makes the directory, and so does this, with the file
+                // kept for a rollback. Whose file it was is
+                // `validateOwnership`'s to settle first; dpkg's own records
+                // are never a package's to replace.
+                guard !isInDatabase(destination) else {
+                    throw PackageFailure("Directory collides with a file: \(entry.path)")
+                }
+                try backup(destination)
+                try FileManager.default.removeItem(at: destination)
+                lastDirectory = nil
             }
             try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+            try note(destination, installed: Self.directoryMark, removed: false)
             ensured.insert(destination)
         } else {
             if keepsDirectory(entry, at: destination) {
@@ -471,6 +488,16 @@ final class PackageFilesystem {
         var info = stat()
         guard let path = physical(url.path, followingLast: true) else { return false }
         return stat(path, &info) == 0 && info.st_mode & S_IFMT == S_IFDIR
+    }
+
+    /// Whether everything under the directory is another directory.
+    private static func holdsDirectoriesAlone(_ url: URL) -> Bool {
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: url.path) else { return false }
+        return names.allSatisfy { name in
+            let child = url.appendingPathComponent(name)
+            var info = stat()
+            return lstat(child.path, &info) == 0 && info.st_mode & S_IFMT == S_IFDIR && holdsDirectoriesAlone(child)
+        }
     }
 
     /// dpkg keeps what is at the path where the archive has a symbolic link
@@ -601,6 +628,20 @@ final class PackageFilesystem {
                chmod(temporary.path, kept.st_mode & 0o7777) != 0
             {
                 throw PackageFailure("Cannot restore the file's permissions: \(destination.path)")
+            }
+            // a file the run made a directory of: what the run placed in it
+            // went back first, as it came later, and directories are all
+            // that may be left. Anything else is not this run's, and a
+            // replay leaves it where it is.
+            var current = stat()
+            if lstat(destination.path, &current) == 0, current.st_mode & S_IFMT == S_IFDIR {
+                guard Self.holdsDirectoriesAlone(destination) else {
+                    if interrupted {
+                        continue
+                    }
+                    throw PackageFailure("Recovery cannot replace a directory: \(destination.path)")
+                }
+                try FileManager.default.removeItem(at: destination)
             }
             guard rename(temporary.path, destination.path) == 0 else {
                 throw PackageFailure("Cannot restore file: \(destination.path)")

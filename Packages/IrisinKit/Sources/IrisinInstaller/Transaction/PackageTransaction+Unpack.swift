@@ -100,12 +100,17 @@ extension PackageTransaction {
     /// A path another package's diversion moved its file to is never
     /// overwritten. A link the filesystem keeps a directory for is shared,
     /// like a directory; those paths are returned, as the preinst left them.
+    /// A directory is shared too, unless it takes the place of a file.
     private func validateOwnership(_ archive: PackageArchive, owners: [String: [String]]) throws -> Set<String> {
         var kept = Set<String>()
-        for entry in archive.package.entries where entry.kind != .directory {
+        for entry in archive.package.entries {
             let path = "/" + entry.path
             let actual = overrides.path(path, owner: archive.identity)
-            if try filesystem.keepsDirectory(entry, at: filesystem.location(actual)) {
+            if entry.kind == .directory {
+                guard !filesystem.isScaffolding(path) else { continue }
+                let location = try filesystem.location(actual, for: entry)
+                guard filesystem.exists(location), !filesystem.isDirectory(location) else { continue }
+            } else if try filesystem.keepsDirectory(entry, at: filesystem.location(actual)) {
                 kept.insert(path)
                 continue
             }

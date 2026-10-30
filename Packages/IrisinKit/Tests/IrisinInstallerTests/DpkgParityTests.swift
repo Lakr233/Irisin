@@ -536,6 +536,39 @@ struct DpkgParityTests {
         #expect(try fixture.text("Library/dpkg/info/tool.list").contains("/usr/bin/tool\n"))
     }
 
+    /// libc++'s `__string` header became a directory of headers between
+    /// two versions of build-essential's SDK (issue 145): the old version's
+    /// file goes aside for the directory, and comes back when the upgrade
+    /// fails after the files are placed.
+    @Test func aDirectoryTakesThePlaceOfTheOldVersionsFile() throws {
+        let fixture = try NativeInstallFixture()
+        try fixture.run(install: [fixture.package(files: ["usr/include/__string": "header"])])
+        let directory = PreparedEntry(path: "usr/include/__string", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)
+        let headers = ["usr/include/__string/char_traits.h": "traits"]
+        let failing = try fixture.package(version: "2", files: headers, controls: ["extrainst_": "#!/bin/sh\nexit 3\n"], links: [directory])
+        #expect(throws: (any Error).self) { try fixture.run(install: [failing]) }
+        #expect(try fixture.text("usr/include/__string") == "header")
+        #expect(try fixture.status() == "install ok installed")
+
+        try fixture.run(install: [fixture.package(version: "2", files: headers, links: [directory])])
+        #expect(try fixture.text("usr/include/__string/char_traits.h") == "traits")
+        let list = try fixture.text("Library/dpkg/info/example.package.list")
+        #expect(list.contains("/usr/include/__string\n"))
+        #expect(list.contains("/usr/include/__string/char_traits.h\n"))
+    }
+
+    /// The same directory over another package's file takes that file
+    /// away, which only Replaces allows.
+    @Test func aDirectoryOverAnotherPackagesFileNeedsReplaces() throws {
+        let fixture = try NativeInstallFixture()
+        try fixture.run(install: [fixture.package("owner.package", files: ["usr/share/thing": "theirs"])])
+        let directory = PreparedEntry(path: "usr/share/thing", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)
+        let taking = try fixture.package("new.package", files: ["usr/share/thing/inside": "mine"], links: [directory])
+        #expect(throws: (any Error).self) { try fixture.run(install: [taking]) }
+        #expect(try fixture.text("usr/share/thing") == "theirs")
+        #expect(try fixture.status("new.package") == nil)
+    }
+
     @Test func directoryEntryAcceptsASymbolicLinkToADirectory() throws {
         let fixture = try NativeInstallFixture()
         try FileManager.default.createDirectory(at: fixture.root.appendingPathComponent("real"), withIntermediateDirectories: true)

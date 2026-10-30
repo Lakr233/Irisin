@@ -56,6 +56,32 @@ struct NativeRecoveryTests {
         #expect(try String(contentsOf: path, encoding: .utf8) == "before")
     }
 
+    /// A run that died after a directory took a file's place, and after a
+    /// file went into the directory: the next one takes both out and puts
+    /// the file back.
+    @Test func anInterruptedDirectoryOverAFileGivesTheFileBack() throws {
+        let fixture = try NativeInstallFixture()
+        let path = fixture.root.appendingPathComponent("usr/include/__string")
+        try FileManager.default.createDirectory(at: path.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("header".utf8).write(to: path)
+        let directory = PreparedEntry(path: "usr/include/__string", kind: .directory, mode: 0o755, uid: 0, gid: 0, modificationTime: 0)
+        let item = try fixture.package(files: ["usr/include/__string/char_traits.h": "traits"], links: [directory])
+        let archive = try PackageArchive(
+            directory: URL(fileURLWithPath: item.preparedPath!),
+            digest: item.preparedSHA256!,
+            identity: item.identity
+        )
+        let filesystem = try PackageFilesystem(root: fixture.root, layout: .init(kind: .none), database: fixture.database)
+        for entry in archive.package.entries.sorted(by: { $0.path < $1.path }) {
+            try filesystem.install(entry, from: archive, at: filesystem.location("/" + entry.path, for: entry), owner: (0, 0))
+        }
+        #expect(try String(contentsOf: path.appendingPathComponent("char_traits.h"), encoding: .utf8) == "traits")
+
+        let reopened = try PackageFilesystem(root: fixture.root, layout: .init(kind: .none), database: fixture.database)
+        try reopened.recover()
+        #expect(try String(contentsOf: path, encoding: .utf8) == "header")
+    }
+
     @Test func failedRollbackRetainsRecoveryJournal() throws {
         let fixture = try NativeInstallFixture()
         let path = fixture.root.appendingPathComponent("original")

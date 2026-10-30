@@ -4,6 +4,60 @@ Failures of the native installer that reached a device, what caused them,
 and what now keeps them from coming back. Each one names the dpkg or apt
 behavior the fix follows. See `NativeInstaller.md` for the installer itself.
 
+## A file that became a directory (2026-10-30, issue 145)
+
+### What happened
+
+On a RootHide iPad (iOS 26.0.1, Irisin 5.1.2), the update of
+build-essential from 16.1 to OwnGoal Stripe's 16.4 stopped at unpacking:
+"Directory collides with a file:
+usr/share/SDKs/iPhoneOS.sdk/usr/include/c++/v1/__string". The run was put
+back and 16.1 stayed installed. 16.1's SDK has libc++'s `__string` header
+as a file; 16.4's libc++ splits it into a directory of headers of the same
+name.
+
+### Why
+
+A directory entry over anything but a directory was refused. dpkg's
+`tarobject` moves what is there aside when one of the two is a directory
+("can't do atomic install") and puts the new entry in its place, after the
+same ownership check a file gets: a path another package lists needs
+Replaces. The helper had neither half, so every upgrade that turns a file
+into a directory stopped, whoever owned the file.
+
+### What changed
+
+`PackageFilesystem.install` backs up a non-directory at a directory entry's
+path in the journal, removes it, and makes the directory. A rollback takes
+out what the run put in the directory first, since those records come later,
+then the directory, once it holds nothing but directories, and puts the
+file back. A replay after a crash does the same while the directory still
+holds only directories, and leaves it otherwise. `validateOwnership` now
+looks at a directory entry that would take a file's place, so another
+package's file there needs Replaces, as it does for a file. dpkg's own
+records are still never replaced.
+
+Tests: `aDirectoryTakesThePlaceOfTheOldVersionsFile` (an upgrade that fails
+after the files are placed puts the file back, then the upgrade goes
+through), `aDirectoryOverAnotherPackagesFileNeedsReplaces`, and
+`anInterruptedDirectoryOverAFileGivesTheFileBack`. The first and the last
+failed before the change.
+
+### On the vphones
+
+jp-01's ios264 (iOS 26.4) and ios27 (iOS 27.0.1), RootHide. A test package
+whose 1.0 has `usr/share/irisin-test/__string` as a file and whose 2.0 has
+it as a directory of two headers, through `irisin-cli`:
+
+- The guests' 5.0.4 stopped 2.0 with the device's message and kept 1.0
+  (ios27).
+- The fix: a 1.5 with the directory and an `extrainst_` that fails stopped
+  at unpacking, and 1.0's file was back with its contents. 2.0 then
+  installed, the directory in place of the file and the list naming both
+  headers. Removing the package took the directory with it. On both.
+- The app launched on both. Each guest was put back on the Irisin it had,
+  with no test package.
+
 ## dpkg's own upgrade (2026-10-29)
 
 ### What happened
