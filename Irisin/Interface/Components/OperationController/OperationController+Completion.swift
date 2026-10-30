@@ -27,7 +27,8 @@ extension OperationController {
         if monitor.outcome?.succeeded == false, !isRecoveryMode {
             let ignore = UIAction(
                 title: String(localized: "Ignore Script Errors and Retry"),
-                image: UIImage(systemName: "exclamationmark.shield")
+                image: UIImage(systemName: "exclamationmark.shield"),
+                attributes: retrying ? .disabled : []
             ) { [weak self] _ in
                 self?.retryIgnoringScriptFailures()
             }
@@ -69,6 +70,8 @@ extension OperationController {
             ).then { $0.accessibilityLabel = String(localized: "Done") }
         }
         button.style = .done
+        // Try Again tapped before the button came holds it too (`retrying`)
+        button.isEnabled = !retrying
         button.accessibilityValue = succeeded
             ? String(localized: "Operation completed.")
             : String(localized: "Operation failed. Try again.")

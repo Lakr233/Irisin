@@ -100,7 +100,8 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   `InstallerEvent+Console` spells them in the user's language. The
   operation page is the queue's list with a ring per row and nothing else
   that moves; a failure offers Try Again as a small link below the list,
-  which runs the re-solved queue in a new controller in the same sheet. The
+  which runs the re-solved queue in a new controller in the same sheet, and
+  holds the button that closes the page while it stages. The
   button that closes it is the monitor's `Ending`: Done, Done that leaves
   after an update of Irisin, or Reload Home Screen when the run, failed or
   not, left the tweak loader's directories different (`TweakInjection`,

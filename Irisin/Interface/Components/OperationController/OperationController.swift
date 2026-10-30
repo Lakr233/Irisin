@@ -99,8 +99,16 @@ final class OperationController: UIViewController, UITableViewDelegate {
     }
 
     private var isFinishing = false
-    /// Try Again was tapped and the queue is being staged.
-    private var retrying = false
+    /// Try Again was tapped and the queue is being staged. The button that
+    /// closes the page waits with it, as Try Again does: the sheet closed
+    /// while the run was staged threw the run away. It stays held once the
+    /// run is pushed, which has no way back to this page.
+    private(set) var retrying = false {
+        didSet {
+            view.setNeedsLayout()
+            navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = !retrying }
+        }
+    }
 
     private lazy var dataSource: EditableTableDiffableDataSource<Section, Row> = .init(
         tableView: tableView
@@ -445,11 +453,9 @@ final class OperationController: UIViewController, UITableViewDelegate {
     private func retry(ignoreScriptFailures: Bool? = nil) {
         guard !retrying else { return }
         retrying = true
-        view.setNeedsLayout()
         Task { [weak self] in
             guard await OperationConfirmation.confirm() else {
                 self?.retrying = false
-                self?.view.setNeedsLayout()
                 return
             }
             let manager = PackageQueue.shared
@@ -476,9 +482,8 @@ final class OperationController: UIViewController, UITableViewDelegate {
             }
             // Staging took time; a sheet closed meanwhile has nothing to run.
             guard view.window != nil else { return }
-            retrying = false
-            view.setNeedsLayout()
             guard let payload, !payload.transaction.stages.isEmpty else {
+                retrying = false
                 reconfigure()
                 // staging said why in the report when it could
                 let report = PackageActionReport.shared.allAvailable()

@@ -129,13 +129,14 @@
 
 <section class="chapter" id="try-again"><h2 tabindex="-1"><svg class="chapter-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false"><path d="M50 30Q49 12 31 12Q13 13 13 32Q14 51 32 51Q44 50 50 40"/><path d="M41 26L51 31L57 21"/><path class="icon-detail" d="M26 31L38 32"/></svg><span class="section-title-mark">Try Again</span></h2>
 <p>After a failure, a small <span class="ui">Try Again</span> link appears under the list. It does not repeat the old plan. It plans again <span class="editorial-mark">from what the failed run left</span> on the device, then runs that plan on a new page in the same sheet.</p>
+<p>While it plans, a spinner turns under the link, and the button that closes the page cannot be tapped.</p>
 <p>If it cannot, an alert titled <span class="ui">Unable to Try Again</span> gives the reason, which is one of those listed in <a href="#when-a-plan-cannot-be-made">When a Plan Cannot Be Made</a> or one of the two below. Tap <span class="ui">Dismiss</span> to close it.</p>
 <ul>
 	<li><span class="ui">Packages changed. Review the changes and try again.</span> Something else changed your packages since the plan was made. Close the page, look at the queue, and tap <span class="ui">Execute</span> again.</li>
 	<li><span class="ui">Packages changed while preparing the installation. Try again.</span> The same happened while Irisin was preparing. Tap <span class="ui">Try Again</span> once more.</li>
 </ul>
 <h3><span class="ui">Ignore Script Errors and Retry</span></h3>
-<p>After a failure, the … menu, labeled <span class="ui">More</span>, adds <span class="ui">Ignore Script Errors and Retry</span>. It is not offered while an operation runs, after a success, or in Recovery Mode.</p>
+<p>After a failure, the … menu, labeled <span class="ui">More</span>, adds <span class="ui">Ignore Script Errors and Retry</span>. It is not offered while an operation runs, after a success, or in Recovery Mode, and cannot be chosen while <span class="ui">Try Again</span> plans.</p>
 <ol>
 	<li>Open the package's Problem page and read <span class="ui">Script Output</span>.</li>
 	<li>Go back, open the … menu, and choose <span class="ui">Ignore Script Errors and Retry</span>.</li>
