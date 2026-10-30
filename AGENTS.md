@@ -471,6 +471,19 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   withdrawn package on Confirm is an alert with Check Again, which reads
   the catalogue now, and a plan staging refuses is solved again at once
   (`solveAgainNow`).
+- **Every plan mends what a run that stopped partway left broken.** The
+  packages before the one that failed keep their new versions, so an
+  installed package can be left needing what is no longer there: apt
+  2.6.0-2 beside libapt-pkg6.0 2.9.4-3 (issue 146), a dependency never
+  installed, a Breaks not caught up with. libsolv keeps a package that was
+  broken before as it is, and the final check refused every plan until
+  the user found the one request that mended it. When the installed set
+  fails that check (`PackageUniverse.broken`), the solve adds libsolv's
+  verify (`Job(.verify, .all)`, from libsolv.xcframework 0.1.3) and keeps
+  every package involved installed, so the mend installs and updates and
+  never removes one the request does not; when nothing mends it beside the
+  request, the request is solved as before and fails naming what is
+  broken. A healthy installed set gets no extra job: `golden` answers alike.
 
 ## Layout
 

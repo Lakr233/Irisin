@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/libsolv.xcframework",
       "state" : {
-        "revision" : "7104b85bfb0d63eeeaff1af1b917e5938b8a7eb4",
-        "version" : "0.1.1"
+        "revision" : "27b62b740489ad52468c029cfe358254f04f0609",
+        "version" : "0.1.3"
       }
     },
     {

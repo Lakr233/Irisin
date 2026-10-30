@@ -18,7 +18,7 @@ let package = Package(
         .executable(name: "NativeInstallerProbe", targets: ["NativeInstallerProbe"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Lakr233/libsolv.xcframework", from: "0.1.1"),
+        .package(url: "https://github.com/Lakr233/libsolv.xcframework", from: "0.1.3"),
         .package(url: "https://github.com/Lakr233/libarchive.xcframework.git", from: "1.0.1"),
         .package(path: "../IrisinKit"),
         // Prebuilt WCDB (sqlite + sqlcipher + the C++ core in one dynamic

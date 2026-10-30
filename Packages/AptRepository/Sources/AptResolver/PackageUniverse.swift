@@ -32,6 +32,31 @@ struct PackageUniverse: Sendable {
         witnesses(requirement).contains { selected.contains($0) }
     }
 
+    /// What `validate` would refuse in `selected`: each package with a
+    /// Depends or Pre-Depends nothing there satisfies, and both sides of a
+    /// Conflicts or Breaks that meets a package there.
+    func broken(in selected: Set<Int>) -> Set<Int> {
+        var found = Set<Int>()
+        for index in selected {
+            let package = packages[index]
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
+                if (package.relations[kind] ?? []).contains(where: { !satisfied($0, in: selected) }) {
+                    found.insert(index)
+                }
+            }
+            for kind in [PoolPackage.Group.Kind.conflicts, .breaks] {
+                for relationship in package.relations[kind] ?? [] {
+                    let met = witnesses(relationship).filter { $0 != index && selected.contains($0) }
+                    if !met.isEmpty {
+                        found.insert(index)
+                        found.formUnion(met)
+                    }
+                }
+            }
+        }
+        return found
+    }
+
     func validate(_ selected: Set<Int>) throws {
         var names = Set<String>()
         for index in selected.sorted() {

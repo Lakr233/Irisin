@@ -171,13 +171,36 @@ public enum PackageResolver {
         if request.updateAll {
             jobs.append(Job(.update, .all))
         }
+        // What a run that stopped partway leaves broken, whatever its shape:
+        // a library's new version unpacked beside a dependant that needs the
+        // old one (issue 146: apt 2.6.0-2 beside libapt-pkg6.0 2.9.4-3), a
+        // new dependency never installed, a Breaks the broken package has
+        // not caught up with. libsolv keeps an installed package that was
+        // broken before as it is, so every plan failed validation until the
+        // user found the one request that mends it. Every plan mends it now,
+        // as libsolv's verify does, by installing or updating what it takes,
+        // and keeps each package involved: one goes only when the request
+        // removes it. When nothing mends it beside this request, the request
+        // is solved as before and fails naming what is broken.
+        var repair: [Job] = []
+        let broken = universe.broken(in: installed)
+        if !broken.isEmpty {
+            repair.append(Job(.verify, .all))
+            for index in broken.sorted() where actions[records[index].name] == nil {
+                repair.append(Job(.install, .name(records[index].name)))
+            }
+        }
         var options = SolverOptions()
         options.allowUninstall = !request.updateAll
         options.allowDowngrade = !explicitInstall.isEmpty
         options.installRecommendations = false
         let result: Resolution
-        do { result = try environment.solve(jobs, options: options) }
-        catch let failure as LibSolv.ResolutionFailure {
+        do {
+            do { result = try environment.solve(jobs + repair, options: options) }
+            catch is LibSolv.ResolutionFailure where !repair.isEmpty {
+                result = try environment.solve(jobs, options: options)
+            }
+        } catch let failure as LibSolv.ResolutionFailure {
             // a removal the system keeps is the plainest cause to name
             for name in explicitRemove.sorted() {
                 if let blocked = removalBlock(installedByName[name]!, base: installed, universe: universe, kept: kept) {

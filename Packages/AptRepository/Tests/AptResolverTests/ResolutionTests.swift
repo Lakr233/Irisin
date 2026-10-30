@@ -248,6 +248,124 @@ struct ResolutionTests {
         #expect(result.stages == [.configure(["aa"])])
     }
 
+    /// What a run left that stopped at build-essential (issue 146): the new
+    /// libapt-pkg6.0 unpacked, apt still the version that needs the old
+    /// one, a trigger pending.
+    private func interruptedRun(tool: String = "apt", toolUpdate: Bool = true) -> (available: [Package], installed: [Package]) {
+        let installed = [
+            pkg("libapt-pkg6.0", "2.9", ["status": "install ok unpacked"], installed: true),
+            pkg(tool, "2.6", ["depends": "libapt-pkg6.0 (= 2.6)"], installed: true),
+            pkg("build-essential", "16.1", installed: true),
+            pkg("trigger", "1", ["status": "install ok triggers-pending"], installed: true),
+        ]
+        var available = [
+            pkg("libapt-pkg6.0", "2.9"),
+            pkg("build-essential", "16.4"),
+            pkg("trigger", "1"),
+            pkg("irisin", "5.1.3"),
+        ]
+        if toolUpdate {
+            available.append(pkg(tool, "2.9", ["depends": "libapt-pkg6.0 (= 2.9)"]))
+        }
+        return (available, installed)
+    }
+
+    /// Every request but Update All failed there, Irisin's own update
+    /// among them: libsolv keeps an installed package that was broken
+    /// before. Any request now updates it, as `apt --fix-broken` would,
+    /// and configures what the run left.
+    @Test func anyRequestMendsWhatAnInterruptedRunLeftBroken() throws {
+        for tool in ["apt", "tool"] {
+            let (available, installed) = interruptedRun(tool: tool)
+            for name in ["build-essential", "irisin"] {
+                let wanted = try #require(available.first { $0.identity == name })
+                let plan = try solve(available, installed: installed, actions: [.install(wanted)])
+                #expect(Set(plan.install.map { "\($0.identity) \($0.latestVersion ?? "")" }) == ["\(tool) 2.9", "\(name) \(wanted.latestVersion!)"])
+                #expect(plan.remove.isEmpty)
+                let configured = plan.stages.flatMap { stage -> [String] in
+                    if case let .configure(names) = stage { names } else { [] }
+                }
+                #expect(Set(configured) == ["libapt-pkg6.0", "trigger", tool, name])
+            }
+            // removing an unrelated package mends it too
+            let removal = try solve(available, installed: installed, actions: [.remove("build-essential")])
+            #expect(removal.install.map(\.identity) == [tool])
+            #expect(removal.remove.map(\.identity) == ["build-essential"])
+        }
+    }
+
+    /// Whatever the run left, the solver finds the mend: a dependency the
+    /// new version brought that was never installed, or a Breaks the
+    /// package it names has not caught up with. Update All mends it too.
+    @Test func aPlanMendsWhateverShapeTheBreakageHas() throws {
+        let unrelated = pkg("irisin", "5.1.3")
+        let missing = (
+            available: [pkg("tweak", "2", ["depends": "newlib (>= 1)"]), pkg("newlib", "1"), unrelated],
+            installed: [pkg("tweak", "2", ["depends": "newlib (>= 1)"], installed: true)]
+        )
+        let breaks = (
+            available: [pkg("libfoo", "2", ["breaks": "bar (<< 2)"]), pkg("bar", "1"), pkg("bar", "2"), unrelated],
+            installed: [
+                pkg("libfoo", "2", ["breaks": "bar (<< 2)"], installed: true),
+                pkg("bar", "1", installed: true),
+            ]
+        )
+        for (fixture, mend) in [(missing, "newlib 1"), (breaks, "bar 2")] {
+            for update in [false, true] {
+                let plan = try solve(
+                    fixture.available,
+                    installed: fixture.installed,
+                    actions: update ? [] : [.install(unrelated)],
+                    update: update
+                )
+                let installs = Set(plan.install.map { "\($0.identity) \($0.latestVersion ?? "")" })
+                #expect(installs == (update ? [mend] : [mend, "irisin 5.1.3"]))
+                #expect(plan.remove.isEmpty)
+            }
+        }
+    }
+
+    /// With no version that mends it, the request still fails and names
+    /// the requirement, as it did: the mend never removes the broken
+    /// package, protected or not, and a held package is not updated for it.
+    @Test func aBrokenPackageNothingMendsStillFails() throws {
+        for tool in ["apt", "tool"] {
+            let (available, installed) = interruptedRun(tool: tool, toolUpdate: false)
+            let wanted = try #require(available.first { $0.identity == "irisin" })
+            do {
+                _ = try solve(available, installed: installed, actions: [.install(wanted)])
+                Issue.record("a broken package nothing mends must fail the request")
+            } catch let failure as ResolutionFailure {
+                #expect(failure.reason == .missingRequirement(package: tool, requirement: "libapt-pkg6.0 (= 2.6)"))
+            }
+        }
+        let wanted = pkg("irisin", "5.1.3")
+        do {
+            _ = try solve(
+                [pkg("libfoo", "2", ["breaks": "bar (<< 2)"]), pkg("bar", "1"), wanted],
+                installed: [pkg("libfoo", "2", ["breaks": "bar (<< 2)"], installed: true), pkg("bar", "1", installed: true)],
+                actions: [.install(wanted)]
+            )
+            Issue.record("a Breaks nothing mends must fail the request")
+        } catch let failure as ResolutionFailure {
+            #expect(failure.reason == .conflict(package: "libfoo", requirement: "bar (<< 2)"))
+        }
+        var (offered, held) = interruptedRun(tool: "tool")
+        held[1] = pkg("tool", "2.6", ["depends": "libapt-pkg6.0 (= 2.6)", "status": "hold ok installed"], installed: true)
+        offered.removeAll { $0.identity == "build-essential" }
+        #expect(throws: (any Error).self) {
+            try solve(offered, installed: held, actions: [.install(wanted)])
+        }
+    }
+
+    /// The user may still remove the broken package, and that alone.
+    @Test func theBrokenPackageGoesWhenTheRequestRemovesIt() throws {
+        let (available, installed) = interruptedRun(tool: "tool", toolUpdate: false)
+        let plan = try solve(available, installed: installed, actions: [.remove("tool")])
+        #expect(plan.install.isEmpty)
+        #expect(plan.remove.map(\.identity) == ["tool"])
+    }
+
     @Test func graphTraversalHandlesLongChainsWithoutRecursion() {
         let graph = Dictionary(uniqueKeysWithValues: (0 ..< 20000).map { ($0, $0 == 19999 ? [] : [$0 + 1]) })
         let groups = StronglyConnectedComponents.components(graph)
