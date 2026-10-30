@@ -53,7 +53,7 @@ import Testing
                     fromUrl: URL(string: "https://watched.test/\(path)")!,
                     networking: networking
                 )
-                await MainActor.run { watch.finished.insert(path) }
+                await MainActor.run { _ = watch.finished.insert(path) }
                 return download
             }
         }
