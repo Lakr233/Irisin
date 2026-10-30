@@ -48,10 +48,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
     private var subscriptions = Set<AnyCancellable>()
     /// The row the list last scrolled to, so it follows a package once.
     private var followed: String?
-    /// Fires when the helper has said nothing for a while: the sheet then
-    /// offers Hide. The operation keeps running and its log stays on disk.
-    private var stallWatchdog: Timer?
-    private static let stallInterval: TimeInterval = 120
     /// When the page appeared. A text button set in the bar while it still
     /// settles from Try Again's push came up white on white on iOS 26, so
     /// the closing button waits until the page has been up this long.
@@ -359,22 +355,15 @@ final class OperationController: UIViewController, UITableViewDelegate {
     /// Events arrive in bursts while files land; the rows are refreshed at
     /// most ten times a second and always end on the latest state.
     private func bind(_ monitor: OperationMonitor) {
-        armStallWatchdog()
         monitor.$packages
             .removeDuplicates()
             .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
             .sink { [weak self] packages in
                 guard let self else { return }
-                armStallWatchdog()
                 refreshVisibleRows()
                 follow(packages.current)
                 updateFinishingFooter()
             }
-            .store(in: &subscriptions)
-        // the helper speaking at all is a sign of life, row or no row
-        monitor.$lineCount
-            .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
-            .sink { [weak self] _ in self?.armStallWatchdog() }
             .store(in: &subscriptions)
         monitor.$outcome
             .compactMap(\.self)
@@ -382,9 +371,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] outcome in
                 guard let self else { return }
-                stallWatchdog?.invalidate()
-                // Hide goes; the menu stays
-                navigationItem.leftBarButtonItems = Array((navigationItem.leftBarButtonItems ?? []).prefix(1))
                 title = outcome.succeeded ? String(localized: "Completed") : String(localized: "Failed")
                 refreshVisibleRows()
                 applySnapshot()
@@ -499,25 +485,6 @@ final class OperationController: UIViewController, UITableViewDelegate {
             )
             navigationController?.pushViewController(next, animated: true)
         }
-    }
-
-    private func armStallWatchdog() {
-        stallWatchdog?.invalidate()
-        stallWatchdog = Timer.scheduledTimer(withTimeInterval: Self.stallInterval, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.offerHide() }
-        }
-    }
-
-    /// A maintainer script that waits forever must not take the app with
-    /// it. Hiding the sheet leaves the helper running; the transcript is
-    /// still mirrored to the log on disk.
-    private func offerHide() {
-        guard monitor?.outcome == nil, navigationItem.leftBarButtonItems?.count == 1 else { return }
-        let hide = UIBarButtonItem(title: String(localized: "Hide"), primaryAction: UIAction { [weak self] _ in
-            self?.dismiss(animated: true)
-        })
-        hide.accessibilityHint = String(localized: "The operation keeps running in the background.")
-        navigationItem.leftBarButtonItems?.append(hide)
     }
 
     /// Confirm once, then stage a new transaction with script failures tolerated.
