@@ -63,17 +63,38 @@ public enum PackageResolver {
         snapshot: ResolutionSnapshot,
         pool prepared: ResolutionPool?
     ) throws -> ResolutionPlan {
-        var actions: [String: ResolutionAction] = [:]
-        for action in request.actions {
-            actions[action.identity] = action
-        }
         // a pool read for other inputs is never used; one the request would
         // add a candidate to is read again with it, for this request alone
         let pool = if let prepared, prepared.serves(snapshot), prepared.offers(request) {
             prepared
         } else {
-            try ResolutionPool(snapshot: snapshot, requested: ResolutionRequest(actions: Array(actions.values)).installs)
+            try ResolutionPool(
+                snapshot: snapshot,
+                requested: ResolutionRequest(actions: Array(latestActions(of: request).values)).installs
+            )
         }
+        var plan = try solve(request: request, snapshot: snapshot, in: pool)
+        if request.updateAll, !plan.heldBack.isEmpty {
+            plan.migration = try migration(request: request, snapshot: snapshot, pool: pool, plan: plan)
+        }
+        return plan
+    }
+
+    /// Each identity's last action in `request`: the one that counts.
+    private static func latestActions(of request: ResolutionRequest) -> [String: ResolutionAction] {
+        var actions: [String: ResolutionAction] = [:]
+        for action in request.actions {
+            actions[action.identity] = action
+        }
+        return actions
+    }
+
+    private static func solve(
+        request: ResolutionRequest,
+        snapshot: ResolutionSnapshot,
+        in pool: ResolutionPool
+    ) throws -> ResolutionPlan {
+        let actions = latestActions(of: request)
         for entry in pool.installed {
             let index = try entry.get()
             try pool.records[index].admit(actions[pool.records[index].name])
@@ -319,6 +340,98 @@ public enum PackageResolver {
             autoInstalled: additions.filter(isAuto).map { records[$0].name }.sorted(),
             unneeded: unneeded,
             recoveryMode: false
+        )
+    }
+
+    /// What an update of everything that left updates behind needs to let
+    /// them through by moving installed packages to another repository:
+    /// those that follow their install origin (`ResolutionSnapshot.origins`)
+    /// and that a held-back update, or a package it would bring in, needs
+    /// at a version only another repository offers. Only those are let out
+    /// of their origin, so a newer copy elsewhere of anything else is still
+    /// not an update. Nil when no such package is found, or moving them
+    /// lets nothing through.
+    private static func migration(
+        request: ResolutionRequest,
+        snapshot: ResolutionSnapshot,
+        pool: ResolutionPool,
+        plan: ResolutionPlan
+    ) throws -> ResolutionPlan.Migration? {
+        // the other repositories' versions of what follows an origin, one
+        // record each, as the pool reads its candidates
+        var elsewhere: [String: [Package]] = [:]
+        for package in snapshot.packages {
+            guard let origin = snapshot.origins[package.identity], origin != package.repoRef else { continue }
+            for (version, metadata) in package.payload {
+                let record = Package(identity: package.identity, payload: [version: metadata], repoRef: package.repoRef)
+                if record.supports(architecture: snapshot.architecture) {
+                    elsewhere[package.identity, default: []].append(record)
+                }
+            }
+        }
+        guard !elsewhere.isEmpty else { return nil }
+        let records = pool.records
+        let universe = pool.universe
+        // from the newest version of every held-back package, through each
+        // package a relation of one would bring in: a relation nothing
+        // here satisfies names what has to move
+        let heldBack = Set(plan.heldBack)
+        var newest: [String: Int] = [:]
+        for index in records.indices where !records[index].installed && heldBack.contains(records[index].name) {
+            let name = records[index].name
+            if newest[name].map({ DebianVersion.compare(records[index].version, records[$0].version) > 0 }) ?? true {
+                newest[name] = index
+            }
+        }
+        var visited = Set(newest.values)
+        var pending = newest.values.sorted().map { records[$0] }
+        var moving: [String: [Package]] = [:]
+        while let record = pending.popLast() {
+            try Task.checkCancellation()
+            for kind in [PoolPackage.Group.Kind.depends, .preDepends] {
+                for clause in record.relations[kind] ?? [] {
+                    let witnesses = universe.witnesses(clause)
+                    guard witnesses.isEmpty else {
+                        for witness in witnesses where !records[witness].installed && visited.insert(witness).inserted {
+                            pending.append(records[witness])
+                        }
+                        continue
+                    }
+                    for element in clause.elements where moving[element.representPackage] == nil {
+                        guard let copies = elsewhere[element.representPackage] else { continue }
+                        let fitting = copies
+                            .compactMap { try? PoolPackage(reading: $0, installed: false, in: snapshot) }
+                            .filter { $0.satisfies(element, architecture: snapshot.architecture) }
+                        guard !fitting.isEmpty else { continue }
+                        moving[element.representPackage] = copies
+                        pending += fitting
+                    }
+                }
+            }
+        }
+        guard !moving.isEmpty else { return nil }
+        // the same update, with their other copies among the candidates
+        let probe: ResolutionPlan
+        do {
+            let wider = try ResolutionPool(snapshot: snapshot, requested: moving.keys.sorted().flatMap { moving[$0]! })
+            probe = try solve(request: request, snapshot: snapshot, in: wider)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            // the held-back updates say why on their own
+            return nil
+        }
+        let moves = probe.install.filter { package in
+            snapshot.origins[package.identity].map { $0 != package.repoRef } == true
+        }
+        let released = heldBack.subtracting(probe.heldBack)
+        guard !moves.isEmpty, !released.isEmpty else { return nil }
+        let moved = Set(moves.map(\.identity))
+        return .init(
+            moves: moves,
+            install: probe.install,
+            released: released.sorted(),
+            requiredBy: probe.requiredBy.filter { moved.contains($0.key) }
         )
     }
 

@@ -34,6 +34,26 @@ public struct ResolutionPlan: Sendable {
     /// failures as warnings; archive, architecture and filesystem safety
     /// checks still apply.
     public let recoveryMode: Bool
+    /// Updating everything left updates behind that moving installed
+    /// packages to another repository would let through: what moves, and
+    /// the update of everything once it has. Nil otherwise.
+    public internal(set) var migration: Migration?
+
+    /// Installed packages that follow the repository they were installed
+    /// from, and that updates need from another one.
+    public struct Migration: Sendable, Equatable {
+        /// The versions to install from another repository than the
+        /// installed package's origin, which their repository becomes.
+        public let moves: [Package]
+        /// Everything the update of everything installs once they move,
+        /// the moves among it.
+        public let install: [Package]
+        /// The held-back updates the move lets through.
+        public let released: [String]
+        /// For each move, the packages of the update that depend on it,
+        /// as `ResolutionPlan.requiredBy` has them.
+        public let requiredBy: [String: [String]]
+    }
 
     /// A last-resort plan for one local package. It never chooses another
     /// package, removes anything, or claims that a dependency brought it in.

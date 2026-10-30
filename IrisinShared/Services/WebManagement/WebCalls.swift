@@ -111,6 +111,11 @@ enum WebCalls {
 
     static let busy = String(localized: "Another operation is already running. Wait for it to finish, then try again.")
 
+    /// Update All held back updates that a move to another repository lets
+    /// through. The page does not move anything: on iOS the app's Update
+    /// All offers the move.
+    static let needsMigration = String(localized: "Some updates were held back: they need packages from a repository other than the one each was installed from.")
+
     private static func device() -> JSONValue {
         let device = UIDevice.current
         let info = Bundle.main.infoDictionary
@@ -349,6 +354,9 @@ enum WebCalls {
             case let .success(found):
                 actions += found.actions
                 notices += found.notices
+                if found.migration != nil {
+                    notices.append(Self.needsMigration)
+                }
             case let .failure(failure):
                 return .failure(failure.message)
             }
@@ -370,7 +378,8 @@ enum WebCalls {
             actions.append(.remove(identity))
         }
         guard !actions.isEmpty else {
-            return .failure(String(localized: "There is nothing to change."))
+            // an update of everything that held every update back says why
+            return .failure(notices.isEmpty ? String(localized: "There is nothing to change.") : notices.joined(separator: "\n"))
         }
         // a proposal the queue moved under is solved once more
         for _ in 0 ..< 2 {

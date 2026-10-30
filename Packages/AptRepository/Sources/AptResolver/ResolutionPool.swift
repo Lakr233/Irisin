@@ -80,7 +80,8 @@ public struct ResolutionPool: Sendable {
         // a refused installed package fails every request before the
         // candidates are looked at: there is no point reading them
         if !refused {
-            // an installed identity follows the repository it came from: the
+            // an installed identity follows the repository it came from while
+            // that repository lists it (`ResolutionSnapshot.origins`): the
             // other repositories' copies are not candidates for it, unless the
             // user asked for one of them by name, which a request's own
             // pool takes in `requested`

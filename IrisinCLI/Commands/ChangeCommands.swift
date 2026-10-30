@@ -22,10 +22,13 @@ struct ChangeOptions: ParsableArguments {
 
 extension ParsableCommand {
     /// Solve, show, ask, run: what install, remove and upgrade share.
+    /// `revise` may ask for another request once the first is solved: the
+    /// plan of that one is the one shown and run.
     func change(
         _ options: GlobalOptions,
         _ change: ChangeOptions,
-        request: @escaping (Context, PackageIndex) throws -> ResolutionRequest
+        request: @escaping (Context, PackageIndex) throws -> ResolutionRequest,
+        revise: @escaping (ResolutionPlan) -> ResolutionRequest? = { _ in nil }
     ) throws {
         let output = Output(json: options.json)
         try guarded(output) {
@@ -33,7 +36,11 @@ extension ParsableCommand {
             let pipeline = Pipeline(context: context, index: index, output: output)
             var resolution = try request(context, index)
             resolution.allowSystemRemoval = change.allowSystemRemoval
-            let plan = try pipeline.plan(resolution)
+            var plan = try pipeline.plan(resolution)
+            if var revised = revise(plan) {
+                revised.allowSystemRemoval = change.allowSystemRemoval
+                plan = try pipeline.plan(revised)
+            }
             guard pipeline.show(plan) else { return }
             try pipeline.confirm(change.pipeline)
             try await pipeline.run(plan, options: change.pipeline)
@@ -102,10 +109,19 @@ struct Upgrade: ParsableCommand {
     @OptionGroup var options: GlobalOptions
     @OptionGroup var changeOptions: ChangeOptions
 
+    @Flag(help: "Install the packages held-back updates need from the repository that offers them, as Irisin's Migrate and Update does.")
+    var migrate = false
+
     func run() throws {
         try change(options, changeOptions) { _, index in
             Session.warnIfStale(index, Output(json: options.json))
             return ResolutionRequest(updateAll: true)
+        } revise: { plan in
+            // what the app's Migrate and Update asks the queue for: the
+            // update of every installed package, the moves among them
+            guard migrate, let migration = plan.migration else { return nil }
+            let installed = Set(plan.snapshot.installed.map(\.identity))
+            return ResolutionRequest(actions: migration.install.filter { installed.contains($0.identity) }.map { .install($0) })
         }
     }
 }

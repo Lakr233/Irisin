@@ -12054,6 +12054,125 @@
         }
       }
     },
+    "Held-back updates need these packages from a repository other than the one each was installed from. Migrate and Update installs them from there, and their updates come from there afterwards." : {
+      "comment" : "Footer under the packages that need another repository in the Update All sheet.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحتاج التحديثات المؤجلة إلى هذه الحزم من مستودع غير الذي ثُبّتت منه كل منها. يثبّتها «الترحيل والتحديث» من هناك، وتأتي تحديثاتها من هناك بعد ذلك."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "আটকে রাখা আপডেটগুলোর জন্য এই প্যাকেজগুলো দরকার এমন একটি রিপোজিটরি থেকে, যেখান থেকে এগুলো ইনস্টল করা হয়নি। “মাইগ্রেট করে আপডেট করুন” সেখান থেকে এগুলো ইনস্টল করে, এবং এরপর এগুলোর আপডেটও সেখান থেকে আসে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurückgehaltene Updates brauchen diese Pakete aus einer anderen Quelle als der, aus der sie jeweils installiert wurden. „Umziehen und aktualisieren“ installiert sie von dort, und ihre Updates kommen danach von dort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Held-back updates need these packages from a repository other than the one each was installed from. Migrate and Update installs them from there, and their updates come from there afterwards."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actualizaciones retenidas necesitan estos paquetes de un repositorio distinto del que se instaló cada uno. «Migrar y actualizar» los instala desde allí, y sus actualizaciones llegarán de allí en adelante."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mises à jour retenues ont besoin de ces paquets depuis un autre dépôt que celui d’où chacun a été installé. « Migrer et mettre à jour » les installe depuis ce dépôt, et leurs mises à jour en viendront ensuite."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रोके गए अपडेट को ये पैकेज उस रिपॉज़िटरी के बजाय किसी दूसरी रिपॉज़िटरी से चाहिए, जिससे हर एक इंस्टॉल हुआ था। “माइग्रेट करके अपडेट करें” इन्हें वहीं से इंस्टॉल करता है, और इसके बाद इनके अपडेट भी वहीं से आते हैं।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembaruan yang ditahan memerlukan paket ini dari repositori selain tempat masing-masing dipasang. “Migrasikan dan Perbarui” memasangnya dari sana, dan pembaruannya selanjutnya juga datang dari sana."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli aggiornamenti trattenuti richiedono questi pacchetti da un repository diverso da quello da cui è stato installato ciascuno. «Migra e aggiorna» li installa da lì, e i loro aggiornamenti arriveranno da lì in seguito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留されたアップデートには、これらのパッケージをそれぞれのインストール元とは別のリポジトリから入手する必要があります。「移行してアップデート」はそのリポジトリからインストールし、以降のアップデートもそこから取得します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보류된 업데이트에는 이 패키지들을 각각 설치한 소스가 아닌 다른 소스에서 받아야 합니다. ‘이전하고 업데이트’는 그 소스에서 설치하며, 이후 업데이트도 그곳에서 받습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As atualizações retidas precisam destes pacotes de um repositório diferente daquele de onde cada um foi instalado. “Migrar e atualizar” os instala de lá, e as atualizações deles passam a vir de lá."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отложенным обновлениям нужны эти пакеты из другого репозитория, а не из того, откуда каждый был установлен. «Перенести и обновить» установит их оттуда, и дальше их обновления будут приходить оттуда."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masasisho yaliyozuiliwa yanahitaji vifurushi hivi kutoka hazina tofauti na ile ambayo kila kimoja kilisakinishwa kutoka. “Hamisha na Usasishe” huvisakinisha kutoka huko, na masasisho yake yatatoka huko baadaye."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekletilen güncellemeler bu paketlere, her birinin yüklendiği depodan farklı bir depodan ihtiyaç duyuyor. “Taşı ve Güncelle” onları oradan yükler ve sonraki güncellemeleri de oradan gelir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các bản cập nhật bị giữ lại cần những gói này từ một nguồn khác với nguồn mà mỗi gói đã được cài. “Chuyển nguồn và cập nhật” sẽ cài chúng từ đó, và các bản cập nhật sau này cũng đến từ đó."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Àwọn ìmúdójúìwọ̀n tí a dá dúró nílò àwọn pákéèjì wọ̀nyí láti ibi ìpamọ́ míràn, kì í ṣe èyí tí a ti fi ọ̀kọ̀ọ̀kan sórí ẹ̀rọ. “Ṣí Lọ Kí O sì Ṣe Ìmúdójúìwọ̀n” yóò fi wọ́n sórí ẹ̀rọ láti ibẹ̀, àti pé àwọn ìmúdójúìwọ̀n wọn yóò máa wá láti ibẹ̀ lẹ́yìn náà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被保留的更新需要从另一个软件源获取这些软件包，而不是它们各自安装时所用的软件源。“迁移并更新”会从那个软件源安装它们，之后它们的更新也来自那里。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被保留的更新需要從另一個軟體源取得這些套件，而不是它們各自安裝時所用的軟體源。「遷移並更新」會從那個軟體源安裝它們，之後它們的更新也來自那裡。"
+          }
+        }
+      }
+    },
     "Install %@ %@" : {
       "comment" : "A line of the plan in the owner's question: package name, then version.",
       "localizations" : {
@@ -12525,6 +12644,244 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Irisin 即將重新啟動。再次開啟即可取得新的驗證碼。"
+          }
+        }
+      }
+    },
+    "Migrate and Update" : {
+      "comment" : "Row in the Update All sheet that moves those packages to the other repository and updates everything.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترحيل والتحديث"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "মাইগ্রেট করে আপডেট করুন"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umziehen und aktualisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrate and Update"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrar y actualizar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrer et mettre à jour"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "माइग्रेट करके अपडेट करें"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrasikan dan Perbarui"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migra e aggiorna"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移行してアップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전하고 업데이트"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrar e atualizar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перенести и обновить"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hamisha na Usasishe"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taşı ve Güncelle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển nguồn và cập nhật"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ṣí Lọ Kí O sì Ṣe Ìmúdójúìwọ̀n"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "迁移并更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "遷移並更新"
+          }
+        }
+      }
+    },
+    "Needs Another Repository" : {
+      "comment" : "Section header in the Update All sheet: installed packages whose updates must come from another repository than the one they were installed from.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتطلب مستودعًا آخر"
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "অন্য রিপোজিটরি দরকার"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Quelle erforderlich"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Another Repository"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necesitan otro repositorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre dépôt nécessaire"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दूसरी रिपॉज़िटरी चाहिए"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perlu Repositori Lain"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serve un altro repository"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のリポジトリが必要"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다른 소스 필요"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precisam de outro repositório"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен другой репозиторий"
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inahitaji Hazina Nyingine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başka Bir Depo Gerekiyor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần nguồn khác"
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ó Nílò Ibi Ìpamọ́ Míràn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要换用其他软件源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要改用其他軟體源"
           }
         }
       }
@@ -14190,6 +14547,125 @@
         }
       }
     },
+    "Some updates were held back: they need packages from a repository other than the one each was installed from." : {
+      "comment" : "Reason the browser shows when Update All held updates back that need another repository.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أُجِّلت بعض التحديثات: فهي تحتاج إلى حزم من مستودع غير الذي ثُبّتت منه كل منها."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "কিছু আপডেট আটকে রাখা হয়েছে: এগুলোর জন্য এমন একটি রিপোজিটরির প্যাকেজ দরকার, যেখান থেকে এগুলো ইনস্টল করা হয়নি।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Updates wurden zurückgehalten: Sie brauchen Pakete aus einer anderen Quelle als der, aus der sie jeweils installiert wurden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some updates were held back: they need packages from a repository other than the one each was installed from."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas actualizaciones se retuvieron: necesitan paquetes de un repositorio distinto del que se instaló cada uno."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines mises à jour ont été retenues : elles ont besoin de paquets d’un autre dépôt que celui d’où chacun a été installé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कुछ अपडेट रोके गए: इन्हें उस रिपॉज़िटरी के बजाय किसी दूसरी रिपॉज़िटरी के पैकेज चाहिए, जिससे हर एक इंस्टॉल हुआ था।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa pembaruan ditahan: pembaruan itu memerlukan paket dari repositori selain tempat masing-masing dipasang."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcuni aggiornamenti sono stati trattenuti: richiedono pacchetti da un repository diverso da quello da cui è stato installato ciascuno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部のアップデートは保留されました。それぞれのインストール元とは別のリポジトリのパッケージが必要です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 업데이트가 보류되었습니다. 각각 설치한 소스가 아닌 다른 소스의 패키지가 필요합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algumas atualizações foram retidas: elas precisam de pacotes de um repositório diferente daquele de onde cada um foi instalado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Некоторые обновления отложены: им нужны пакеты из другого репозитория, а не из того, откуда каждый был установлен."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baadhi ya masasisho yamezuiliwa: yanahitaji vifurushi kutoka hazina tofauti na ile ambayo kila kimoja kilisakinishwa kutoka."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bazı güncellemeler bekletildi: Her birinin yüklendiği depodan farklı bir depodaki paketlere ihtiyaç duyuyorlar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một số bản cập nhật đã bị giữ lại: chúng cần các gói từ một nguồn khác với nguồn mà mỗi gói đã được cài."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dá àwọn ìmúdójúìwọ̀n kan dúró: wọ́n nílò àwọn pákéèjì láti ibi ìpamọ́ míràn, kì í ṣe èyí tí a ti fi ọ̀kọ̀ọ̀kan sórí ẹ̀rọ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分更新被保留：它们需要从另一个软件源获取软件包，而不是各自安装时所用的软件源。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分更新被保留：它們需要從另一個軟體源取得套件，而不是各自安裝時所用的軟體源。"
+          }
+        }
+      }
+    },
     "Starting…" : {
       "comment" : "The launchpad's screen before the page is served.",
       "localizations" : {
@@ -14662,6 +15138,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "裝置上已沒有這項請求。"
+          }
+        }
+      }
+    },
+    "The packages that change repository are installed from the new one, and their updates come from there afterwards." : {
+      "comment" : "Notice in the sheet that Migrate and Update opens.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُثبَّت الحزم التي تغيّر مستودعها من المستودع الجديد، وتأتي تحديثاتها منه بعد ذلك."
+          }
+        },
+        "bn" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "যে প্যাকেজগুলোর রিপোজিটরি বদলাচ্ছে সেগুলো নতুন রিপোজিটরি থেকে ইনস্টল হয়, এবং এরপর সেগুলোর আপডেটও সেখান থেকে আসে।"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakete, die die Quelle wechseln, werden aus der neuen installiert, und ihre Updates kommen danach von dort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The packages that change repository are installed from the new one, and their updates come from there afterwards."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los paquetes que cambian de repositorio se instalan desde el nuevo, y sus actualizaciones llegarán de allí en adelante."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les paquets qui changent de dépôt sont installés depuis le nouveau, et leurs mises à jour en viendront ensuite."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जिन पैकेज की रिपॉज़िटरी बदलती है, वे नई रिपॉज़िटरी से इंस्टॉल होते हैं, और इसके बाद उनके अपडेट भी वहीं से आते हैं।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket yang berpindah repositori dipasang dari repositori baru, dan pembaruannya selanjutnya juga datang dari sana."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pacchetti che cambiano repository vengono installati dal nuovo, e i loro aggiornamenti arriveranno da lì in seguito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リポジトリが変わるパッケージは新しいリポジトリからインストールされ、以降のアップデートもそこから取得します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소스가 바뀌는 패키지는 새 소스에서 설치되며, 이후 업데이트도 그곳에서 받습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os pacotes que mudam de repositório são instalados a partir do novo, e as atualizações deles passam a vir de lá."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакеты, меняющие репозиторий, устанавливаются из нового, и дальше их обновления будут приходить оттуда."
+          }
+        },
+        "sw" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vifurushi vinavyobadilisha hazina vinasakinishwa kutoka ile mpya, na masasisho yake yatatoka huko baadaye."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depo değiştiren paketler yeni depodan yüklenir ve sonraki güncellemeleri de oradan gelir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các gói đổi nguồn sẽ được cài từ nguồn mới, và các bản cập nhật sau này cũng đến từ đó."
+          }
+        },
+        "yo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Àwọn pákéèjì tí ó ń yí ibi ìpamọ́ padà ni a ó fi sórí ẹ̀rọ láti inú èyí tuntun, àti pé àwọn ìmúdójúìwọ̀n wọn yóò máa wá láti ibẹ̀ lẹ́yìn náà."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更换软件源的软件包会从新的软件源安装，之后它们的更新也来自那里。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更換軟體源的套件會從新的軟體源安裝，之後它們的更新也來自那裡。"
           }
         }
       }

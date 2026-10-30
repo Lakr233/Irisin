@@ -221,25 +221,66 @@ final class PackageQueue {
         Downloads.shared.cancelAll()
     }
 
+    /// What Update All asks the queue for.
+    struct UpdateAll {
+        /// Every installed package with a newer version, as install requests.
+        let actions: [ResolutionAction]
+        /// A line for each update left behind that `migration` does not
+        /// let through.
+        let notices: [String]
+        /// The update once the packages that need another repository move
+        /// there; nil when moving none lets an update through.
+        let migration: Migration?
+    }
+
+    /// Update All with installed packages moved to another repository than
+    /// the one they were installed from (`ResolutionPlan.Migration`).
+    struct Migration {
+        /// A version that moves, by identity, and the repository its
+        /// installed package came from.
+        let moves: [String: (package: Package, origin: URL)]
+        /// The update of everything once they have moved, as install
+        /// requests, the moves among them.
+        let actions: [ResolutionAction]
+        /// For each move, the names of the packages of the update that
+        /// depend on it.
+        let requiredBy: [String: [String]]
+    }
+
     /// Every installed package with a newer version, as install requests,
-    /// and a line for each one an update of everything leaves behind.
-    /// Which packages are updates is the catalogue's own answer, and nothing
-    /// holds it against the catalogue later: Confirm finds an update missing
-    /// from a kept catalogue no more than an empty answer offers Confirm at
-    /// all. So it is read as it is now, the one the Updates page lists, even
-    /// while the repositories refresh.
-    func updateAllActions() async -> Result<(actions: [ResolutionAction], notices: [String]), ResolutionFailure> {
+    /// a line for each one an update of everything leaves behind, and the
+    /// migration that lets some of those through. Which packages are updates
+    /// is the catalogue's own answer, and nothing holds it against the
+    /// catalogue later: Confirm finds an update missing from a kept
+    /// catalogue no more than an empty answer offers Confirm at all. So it
+    /// is read as it is now, the one the Updates page lists, even while the
+    /// repositories refresh.
+    func updateAllActions() async -> Result<UpdateAll, ResolutionFailure> {
         if Self.isRefreshing {
             readPool(awaited: true)
         }
         switch await solve(ResolutionRequest(updateAll: true)) {
         case let .success(plan):
             let installed = Set(plan.snapshot.installed.map(\.identity))
-            return .success((
-                plan.install.filter { installed.contains($0.identity) }.map { .install($0) },
-                plan.heldBack.map {
+            let migration = plan.migration.map { found in
+                let updated = Dictionary(found.install.map { ($0.identity, $0) }, uniquingKeysWith: { a, _ in a })
+                return Migration(
+                    moves: Dictionary(uniqueKeysWithValues: found.moves.compactMap { package in
+                        plan.snapshot.origins[package.identity].map { (package.identity, (package, $0)) }
+                    }),
+                    actions: found.install.filter { installed.contains($0.identity) }.map { .install($0) },
+                    requiredBy: found.requiredBy.mapValues { names in
+                        names.map { name in updated[name].map(PackageCenter.default.name(of:)) ?? name }
+                    }
+                )
+            }
+            let released = Set(plan.migration?.released ?? [])
+            return .success(UpdateAll(
+                actions: plan.install.filter { installed.contains($0.identity) }.map { .install($0) },
+                notices: plan.heldBack.filter { !released.contains($0) }.map {
                     String(localized: "\($0): kept at the current version by another package or a blocked update.")
-                }
+                },
+                migration: migration
             ))
         case let .failure(failure):
             return .failure(failure)
@@ -358,7 +399,9 @@ final class PackageQueue {
         }
     }
 
-    /// Solves exactly these requests; a queue with no requests is empty.
+    /// Solves exactly these requests; a queue with no requests is empty,
+    /// and keeps the notices that say why: an update of everything that
+    /// held every update back has nothing else to show.
     private func proposal(
         actions: [ResolutionAction],
         cleanup: Set<String>,
@@ -366,7 +409,7 @@ final class PackageQueue {
     ) async -> Result<Proposal, ResolutionFailure> {
         let revision = revision
         guard !actions.isEmpty else {
-            return .success(Proposal(actions: [], cleanup: [], plan: nil, notices: [], revision: revision))
+            return .success(Proposal(actions: [], cleanup: [], plan: nil, notices: notices, revision: revision))
         }
         switch await solve(ResolutionRequest(actions: actions, autoremove: cleanup)) {
         case let .success(plan):

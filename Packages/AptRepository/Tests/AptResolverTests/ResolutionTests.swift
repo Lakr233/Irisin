@@ -109,6 +109,80 @@ struct ResolutionTests {
         #expect(result.heldBack.isEmpty)
     }
 
+    /// An origin whose repository was removed, or no longer lists the
+    /// package, has nothing to keep to: the package takes the newest from
+    /// any repository, and the updates that need it are no longer held
+    /// back. Issue 144: roothide installed from roothide's Procursus, that
+    /// repository removed for OwnGoal Stripe, and Update All held back
+    /// every Stripe update that needs Stripe's roothide.
+    @Test func updateLeavesAnOriginThatNoLongerListsThePackage() throws {
+        let gone = "https://gone.test/", stripe = "https://stripe.test/"
+        let available = [
+            pkg("other", "1", source: gone),
+            pkg("roothide", "0.1.0-5", source: stripe),
+            pkg("apt", "2.9.4-3", ["depends": "roothide (>= 0.1.0-5)"], source: stripe),
+        ]
+        let installed = [pkg("roothide", "0.1.0", installed: true), pkg("apt", "2.6.0-2", installed: true)]
+        let result = try solve(available, installed: installed, actions: [], update: true, origins: ["roothide": gone])
+        #expect(result.install.map { "\($0.identity) \($0.latestVersion ?? "")" }.sorted() == ["apt 2.9.4-3", "roothide 0.1.0-5"])
+        #expect(result.heldBack.isEmpty)
+    }
+
+    /// An update that needs a newer version of a package than the
+    /// repository it follows offers, when another repository has one, is
+    /// held back with a migration: that package moves, and the update goes
+    /// through. Nothing else moves with it, however new its copy elsewhere.
+    @Test func heldBackUpdateOffersAMigration() throws {
+        let classic = "https://classic.test/", new = "https://new.test/"
+        let available = [
+            pkg("core", "1.0", source: classic), pkg("tweak", "1", source: classic),
+            pkg("core", "1.0-5", source: new), pkg("tweak", "9", source: new),
+            pkg("utils", "2.0", ["depends": "core (>= 1.0-5)"], source: new),
+        ]
+        let installed = [
+            pkg("core", "1.0", installed: true), pkg("tweak", "1", installed: true),
+            pkg("utils", "1.0", ["depends": "core"], installed: true),
+        ]
+        let origins = ["core": classic, "tweak": classic, "utils": new]
+        let result = try solve(available, installed: installed, actions: [], update: true, origins: origins)
+        #expect(result.install.isEmpty)
+        #expect(result.heldBack == ["utils"])
+        let migration = try #require(result.migration)
+        #expect(migration.moves.map { "\($0.identity) \($0.latestVersion ?? "") \($0.repoRef?.absoluteString ?? "")" } == ["core 1.0-5 https://new.test/"])
+        #expect(migration.install.map { "\($0.identity) \($0.latestVersion ?? "")" }.sorted() == ["core 1.0-5", "utils 2.0"])
+        #expect(migration.released == ["utils"])
+        #expect(migration.requiredBy == ["core": ["utils"]])
+    }
+
+    /// A package the held-back update would bring in may be the one that
+    /// needs the move.
+    @Test func migrationFollowsWhatTheUpdateBringsIn() throws {
+        let classic = "https://classic.test/", new = "https://new.test/"
+        let available = [
+            pkg("core", "1.0-5", source: new),
+            pkg("library", "1", ["depends": "core (>= 1.0-5)"], source: new),
+            pkg("utils", "2.0", ["depends": "library"], source: new),
+        ]
+        let installed = [pkg("core", "1.0", installed: true), pkg("utils", "1.0", installed: true)]
+        let result = try solve(available + [pkg("core", "1.0", source: classic)], installed: installed, actions: [], update: true, origins: ["core": classic, "utils": new])
+        #expect(result.heldBack == ["utils"])
+        #expect(result.migration?.moves.map(\.identity) == ["core"])
+        #expect(result.migration?.install.map(\.identity).sorted() == ["core", "library", "utils"])
+    }
+
+    /// An update held back for another reason offers no migration.
+    @Test func conflictOffersNoMigration() throws {
+        let classic = "https://classic.test/", new = "https://new.test/"
+        let available = [
+            pkg("core", "1.0", source: classic), pkg("core", "1.0-5", source: new),
+            pkg("utils", "2.0", ["conflicts": "keep"], source: new),
+        ]
+        let installed = [pkg("core", "1.0", installed: true), pkg("utils", "1.0", installed: true), pkg("keep", installed: true)]
+        let result = try solve(available, installed: installed, actions: [], update: true, origins: ["core": classic, "utils": new])
+        #expect(result.heldBack == ["utils"])
+        #expect(result.migration == nil)
+    }
+
     /// Asking for another repository's copy by name is how a package moves
     /// there; nothing else moves with it.
     @Test func explicitInstallMayLeaveTheOriginRepository() throws {

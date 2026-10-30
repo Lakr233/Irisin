@@ -175,6 +175,21 @@ final class AptDatabaseTests: XCTestCase {
         XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.shared", version: "0").count, 0)
     }
 
+    /// An origin whose repository no longer lists the package keeps
+    /// describing it, and no longer decides its updates: every repository's
+    /// newer version is on offer, as for a package with no origin.
+    func testUpdatesLeaveAnOriginThatNoLongerListsThePackage() throws {
+        seed()
+        let installed = Dictionary(uniqueKeysWithValues: index.obtainInstalledPackageList().map { ($0.identity, $0) })
+        db.replaceInstalled(installed, installedFrom: [package("com.example.shared", "1.0", repo: Self.repoA)])
+        XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.shared", version: "1.0").count, 0)
+        db.deletePackages(of: Self.repoA)
+        db.delete(repository: Self.repoA)
+        XCTAssertEqual(index.obtainInstallOrigin(of: "com.example.shared")?.repoRef, Self.repoA)
+        XCTAssertEqual(index.obtainUpdateForPackage(with: "com.example.shared", version: "1.0").map(\.repoRef), [Self.repoB])
+        XCTAssertNil(try index.resolutionSnapshot().origins["com.example.shared"])
+    }
+
     func testLocalReinstallClearsThePreviousRepositoryAtTheSameVersion() {
         let installed = package("test.local", "1", repo: nil)
         let remote = package(installed.identity, "1", repo: Self.repoA)

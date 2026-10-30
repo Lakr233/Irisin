@@ -60,7 +60,7 @@ adds it in the app.
 | `list [--upgradable]` | installed packages, or those with an update |
 | `install <package \| ./file.deb>...` | resolve, download, prepare, run |
 | `remove <package>...` | resolve, run |
-| `upgrade` | every update the Updates page would list |
+| `upgrade [--migrate]` | every update the Updates page would list; `--migrate` also installs, from the repository that offers them, the packages held-back updates need, as Migrate and Update does |
 | `repo list` / `repo add <url>` | the second prints the app's link |
 | `vendor status <repo>` | signed in or not, and the account's purchases |
 | `vendor login <repo>` | prints the sign-in URL; the sign-in finishes in the app |

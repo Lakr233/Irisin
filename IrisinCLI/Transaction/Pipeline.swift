@@ -51,6 +51,20 @@ struct Pipeline {
         if !plan.heldBack.isEmpty {
             output.line("Held back: \(plan.heldBack.sorted().joined(separator: ", "))")
         }
+        let moves = (plan.migration?.moves ?? []).map { package -> [String: Any] in
+            [
+                "package": package.identity, "version": package.latestVersion ?? "",
+                "from": plan.snapshot.origins[package.identity]?.absoluteString ?? NSNull(),
+                "to": package.repoRef?.absoluteString ?? NSNull(),
+            ]
+        }
+        if let migration = plan.migration {
+            output.line("Needs another repository, for \(migration.released.joined(separator: ", ")):")
+            for move in moves {
+                output.line("  \(move["package"]!) \(move["version"]!): \(move["from"]!) -> \(move["to"]!)")
+            }
+            output.line("Run `irisin-cli upgrade --migrate` to install them from there and update everything.")
+        }
         output.object([
             "plan": [
                 "install": installing.map { package -> [String: Any] in
@@ -59,6 +73,7 @@ struct Pipeline {
                 },
                 "remove": removing.map { ["package": $0.identity, "version": $0.latestVersion ?? ""] },
                 "heldBack": plan.heldBack.sorted(),
+                "migration": plan.migration.map { ["moves": moves, "released": $0.released] as [String: Any] } ?? NSNull(),
             ] as [String: Any],
         ])
         if installing.isEmpty, removing.isEmpty {

@@ -100,6 +100,7 @@ struct PlanSummary: Equatable {
     let autoInstalled: [String]
     let unneeded: [String: [String]]
     let recoveryMode: Bool
+    let migration: ResolutionPlan.Migration?
 
     init(_ plan: ResolutionPlan) {
         install = plan.install
@@ -112,6 +113,7 @@ struct PlanSummary: Equatable {
         autoInstalled = plan.autoInstalled
         unneeded = plan.unneeded
         recoveryMode = plan.recoveryMode
+        migration = plan.migration
     }
 }
 

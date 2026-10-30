@@ -27,10 +27,16 @@ import UIKit
 /// this: `PackageDiagnosticController` is the sheet, with Close in place of
 /// a way back. A refusal that comes later, from a tick or a queue that
 /// moved, is pushed over the last answer, which is still there to go back to.
+/// Update All that held updates back for packages only another repository
+/// than their own offers names them under Needs Another Repository, each
+/// with the move, and Migrate and Update pushes the update with them moved.
 final class QueueChangeController: UIViewController, UITableViewDelegate {
     enum Request {
         case actions([ResolutionAction])
         case updateAll
+        /// Update All with the packages that need another repository moved
+        /// there (`PackageQueue.Migration`).
+        case migrate
         /// The package leaves the queue, with whatever it came with.
         case withdraw(String)
     }
@@ -38,6 +44,9 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     nonisolated enum Section: Hashable {
         case changes(QueueChange.Kind, dependencies: Bool)
         case cleanup, dropped
+        /// Update All's packages that need another repository, and the
+        /// row that moves them.
+        case migration
         /// The footer that closes the sheet. The text is the identity, so a
         /// new text is a new section and the table asks for it again.
         case note(String)
@@ -49,6 +58,10 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         /// An unneeded package; its box follows `ticked`.
         case cleanup(String)
         case unchanged
+        /// A package Update All needs from another repository.
+        case move(QueueChange)
+        /// Migrate and Update.
+        case migrate
     }
 
     private let request: Request
@@ -60,6 +73,11 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// The last plan's unneeded list, kept while the next one is solved so
     /// the rows stay where they are.
     private var unneeded: [String: [String]] = [:]
+    /// What Update All offers to move, while the sheet shows Update All.
+    private var migration: PackageQueue.Migration?
+    /// The packages this sheet's plan moves to another repository: a
+    /// change row says so.
+    private var moves: [String: (package: Package, origin: URL)] = [:]
     private var work: Task<Void, Never>?
     /// Confirm was tapped and the answer is being held against the
     /// packages as they are now.
@@ -88,6 +106,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         cell.contentConfiguration = content(for: row)
         cell.selectionStyle = switch row {
         case let .cleanup(name): blockers(of: name).isEmpty ? .default : .none
+        case .migrate: .default
         default: .none
         }
         // a cleanup row's tick is an icon in its own content and nothing
@@ -96,6 +115,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         cell.accessibilityTraits = switch row {
         case let .cleanup(name) where !blockers(of: name).isEmpty: .notEnabled
         case let .cleanup(name): (ticked ?? []).contains(name) ? [.button, .selected] : .button
+        case .migrate: .button
         default: .staticText
         }
         cell.accessoryView = versionLabel(for: row, reusing: cell.accessoryView as? UILabel)
@@ -200,6 +220,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             case let .changes(kind, dependencies): kind.title(dependencies: dependencies)
             case .cleanup: String(localized: "No Longer Needed")
             case .dropped: String(localized: "No Longer Queued")
+            case .migration: String(localized: "Needs Another Repository")
             case .note: nil
             }
         }
@@ -207,6 +228,8 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
             switch section {
             case .cleanup:
                 String(localized: "These were installed as dependencies and nothing needs them now. Tick one to remove it with the queue.")
+            case .migration:
+                String(localized: "Held-back updates need these packages from a repository other than the one each was installed from. Migrate and Update installs them from there, and their updates come from there afterwards.")
             case let .note(text):
                 text.isEmpty ? nil : text
             case .changes, .dropped:
@@ -246,26 +269,21 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         let request = request
         let ticked = ticked
         work = Task { [weak self] in
-            let result: Result<PackageQueue.Proposal, ResolutionFailure> = switch request {
+            let (result, offer): (Result<PackageQueue.Proposal, ResolutionFailure>, PackageQueue.Migration?) = switch request {
             case let .actions(actions):
-                await PackageQueue.shared.propose(actions, cleanup: ticked)
-            case .updateAll:
-                switch await PackageQueue.shared.updateAllActions() {
-                case let .success(update):
-                    await PackageQueue.shared.propose(
-                        update.actions,
-                        cleanup: ticked,
-                        keepingQueued: true,
-                        notices: update.notices
-                    )
-                case let .failure(failure):
-                    .failure(failure)
-                }
+                await (PackageQueue.shared.propose(actions, cleanup: ticked), nil)
+            case .updateAll, .migrate:
+                await Self.proposeUpdate(for: request, cleanup: ticked)
             case let .withdraw(identity):
-                await PackageQueue.shared.proposeWithdrawal(of: identity, cleanup: ticked)
+                await (PackageQueue.shared.proposeWithdrawal(of: identity, cleanup: ticked), nil)
             }
             guard !Task.isCancelled, let self else { return }
             work = nil
+            if case .migrate = request {
+                moves = offer?.moves ?? [:]
+            } else {
+                migration = offer
+            }
             switch result {
             case let .success(proposal):
                 // the refusal did not last, a refresh caught mid-solve: its
@@ -305,6 +323,28 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         if isViewLoaded {
             render(animated: view.shouldAnimateDiff)
         }
+    }
+
+    /// Update All's answer as a proposal, and the migration it offers:
+    /// the update as it is, or for `.migrate` the update with the moves,
+    /// which a migration no longer needed leaves as it is.
+    private static func proposeUpdate(
+        for request: Request,
+        cleanup: Set<String>?
+    ) async -> (Result<PackageQueue.Proposal, ResolutionFailure>, PackageQueue.Migration?) {
+        let update: PackageQueue.UpdateAll
+        switch await PackageQueue.shared.updateAllActions() {
+        case let .success(found): update = found
+        case let .failure(failure): return (.failure(failure), nil)
+        }
+        var actions = update.actions
+        var notices = update.notices
+        if case .migrate = request, let migration = update.migration {
+            actions = migration.actions
+            notices.append(String(localized: "The packages that change repository are installed from the new one, and their updates come from there afterwards."))
+        }
+        let proposal = await PackageQueue.shared.propose(actions, cleanup: cleanup, keepingQueued: true, notices: notices)
+        return (proposal, update.migration)
     }
 
     private func toggle(_ name: String) {
@@ -380,7 +420,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                 && Set(actions.map(\.identity)) == [changes[0].package.identity]
         case let .withdraw(identity):
             changes.isEmpty && dropped.map(\.package.identity) == [identity]
-        case .updateAll:
+        case .updateAll, .migrate:
             false
         }
         guard plain else { return false }
@@ -472,6 +512,17 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
                 snapshot.appendSections([.dropped])
                 snapshot.appendItems(dropped.map(Row.dropped), toSection: .dropped)
             }
+            if case .updateAll = request, let migration, !migration.moves.isEmpty {
+                let installed = Dictionary(
+                    PackageCenter.default.index.obtainInstalledPackageList().map { ($0.identity, $0.latestVersion) },
+                    uniquingKeysWith: { a, _ in a }
+                )
+                let rows = migration.moves.values
+                    .map { QueueChange(kind: .update, package: $0.package, current: installed[$0.package.identity] ?? nil, requested: false) }
+                    .sorted { $0.name < $1.name }
+                snapshot.appendSections([.migration])
+                snapshot.appendItems(rows.map(Row.move) + [.migrate], toSection: .migration)
+            }
             let unchanged = changes.isEmpty && dropped.isEmpty
             var lines = proposal.notices
             // an emptied queue has nothing left to install
@@ -512,10 +563,24 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         content.secondaryTextProperties.color = .textSubtitle
         switch row {
         case let .change(change):
-            content = change.content(
-                icon: icons.icon(of: change.package),
-                details: change.details(in: proposal?.plan, cleanup: proposal?.cleanup ?? [])
-            )
+            var details = change.details(in: proposal?.plan, cleanup: proposal?.cleanup ?? [])
+            if let move = moves[change.package.identity] {
+                details.insert(repositoryMove(from: move.origin, to: move.package.repoRef), at: 0)
+            }
+            content = change.content(icon: icons.icon(of: change.package), details: details)
+        case let .move(change):
+            let identity = change.package.identity
+            var details: [String] = []
+            if let origin = migration?.moves[identity]?.origin {
+                details.append(repositoryMove(from: origin, to: change.package.repoRef))
+            }
+            if let dependents = migration?.requiredBy[identity], !dependents.isEmpty {
+                details.append(String(localized: "Required by \(ListFormatter.localizedString(byJoining: dependents))"))
+            }
+            content = change.content(icon: icons.icon(of: change.package), details: details)
+        case .migrate:
+            content = .cell()
+            content.attributedText = plainTitle(String(localized: "Migrate and Update"), color: .buttonNormal)
         case let .dropped(change):
             content = change.content(icon: icons.icon(of: change.package), details: [], muted: true)
         case let .cleanup(name):
@@ -557,6 +622,15 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         return content
     }
 
+    /// "Old Repository → New Repository", each by the name the
+    /// Repositories list shows.
+    private func repositoryMove(from origin: URL, to destination: URL?) -> String {
+        func name(_ url: URL) -> String {
+            RepositoryCenter.default.obtainImmutableRepository(withUrl: url)?.nickName ?? url.host ?? url.absoluteString
+        }
+        return "\(name(origin)) → \(destination.map(name) ?? "")"
+    }
+
     /// A row's text that is not a change's. It says that it is not struck
     /// through, as a change's does: a label keeps a removal's strikethrough
     /// through any later text that does not mention one.
@@ -573,7 +647,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     /// would grow in from nothing on every tick.
     private func versionLabel(for row: Row, reusing reused: UILabel?) -> UIView? {
         switch row {
-        case let .change(change), let .dropped(change):
+        case let .change(change), let .dropped(change), let .move(change):
             let label = reused ?? UILabel()
             label.font = .footnote.monospacedDigitFont
             label.textColor = .textSubtitle
@@ -599,6 +673,7 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
     func tableView(_: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
         switch dataSource.itemIdentifier(for: indexPath) {
         case let .cleanup(name): blockers(of: name).isEmpty
+        case .migrate: true
         default: false
         }
     }
@@ -608,6 +683,8 @@ final class QueueChangeController: UIViewController, UITableViewDelegate {
         switch dataSource.itemIdentifier(for: indexPath) {
         case let .cleanup(name) where blockers(of: name).isEmpty:
             toggle(name)
+        case .migrate:
+            navigationController?.pushViewController(QueueChangeController(request: .migrate), animated: true)
         default:
             break
         }

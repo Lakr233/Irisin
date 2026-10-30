@@ -74,6 +74,7 @@
 
 <p><span class="ui">Update All</span> never downgrades a package and <span class="editorial-mark">never removes one to make room</span>. If updating everything would require removing something you have installed, it refuses, and the sheet is a report that reads <span class="ui">Updating everything would remove installed packages. Update packages one at a time.</span> Queue the updates one by one from the <span class="ui">Updates</span> page, and read what each plan removes before you confirm it.</p>
 <p>A package that cannot move to its newest version is named under the list, for example <span class="ui" data-key="%@: kept at the current version by another package or a blocked update.">Example: kept at the current version by another package or a blocked update.</span> Either another installed package requires the version you have, or you blocked that package's updates. The rest of the plan is unaffected.</p>
+<p>Sometimes an update needs a newer version of a package that only another repository offers, while that package follows the repository it was installed from (see <a href="#when-an-update-is-missing">When an Update Is Missing</a>). The sheet then lists that package under <span class="ui">Needs Another Repository</span>, with both repositories and the updates that need it. Tap <span class="ui">Migrate and Update</span> to see the plan with it installed from the other repository. Confirm it as usual. From then on, that package's updates come from the new repository.</p>
 <p>To update some packages and not others, pick them on the <span class="ui">Installed</span> page:</p>
 <ol>
 	<li>Open the menu on the <span class="ui">Installed</span> page and tap <span class="ui">Select</span>.</li>
@@ -111,12 +112,12 @@
 <p>A newer version reaches the <span class="ui">Updates</span> page, the badge, and the <span class="ui">Dashboard</span> only if it passes two checks.</p>
 <figure class="sk" id="figure-ch4"><div class="sk-paper"><ol class="sk-steps">
 	<li><strong>Not blocked</strong><span>a block hides every version</span><span>Undo with <span class="ui">Unblock&nbsp;Update</span></span></li>
-	<li><strong>From its own repository</strong><span>another repository does not count</span><span>Installed another way: any repository</span></li>
+	<li><strong>From its own repository</strong><span>another repository does not count</span><span>Installed another way, or its repository gone: any repository</span></li>
 	<li class="sk-goal"><strong><span class="ui">Updates</span></strong><span>page, badge and <span class="ui">Dashboard</span></span><em class="sk-ok">listed</em></li>
 </ol><p class="sk-foot">Only versions built for this system, or for every architecture, are listed at all.</p></div><figcaption>The two checks a newer version passes before it is listed in <span class="ui">Updates</span>. <span class="ui">Unblock Update</span> is the one you control.</figcaption></figure>
 <ol>
 	<li><strong>It is not blocked.</strong> A blocked package is offered nothing. Look for it in <span class="ui">Settings → Packages → Blocked Updates</span>; see <a href="#block-an-update">Block an Update</a>.</li>
-	<li><strong>It comes from the right repository.</strong> A package that Irisin installed is offered updates <span class="editorial-mark">only from the repository it came from</span>. A newer version in some other repository does not count. A package that was installed another way, by a different package manager or by hand, has no repository on record. It is offered updates from any repository, and the first update you install sets its repository.</li>
+	<li><strong>It comes from the right repository.</strong> A package that Irisin installed is offered updates <span class="editorial-mark">only from the repository it came from</span>. A newer version in some other repository does not count. A package that was installed another way, by a different package manager or by hand, has no repository on record. It is offered updates from any repository, and the first update you install sets its repository. So is a package whose repository you removed, or that its repository no longer lists.</li>
 </ol>
 <p>An update is always a version built for this system, or for every architecture (<code>all</code>). Irisin does not list a package built for the other bootstrap, so such a version is never offered.</p>
 <p>Separately, a package that <code>dpkg</code> has on hold stays at its version under <span class="ui">Update All</span>.</p>
