@@ -1,11 +1,11 @@
-import AptResolver
+import AptRepository
 
-extension ResolutionPlan {
+public extension ResolutionPlan {
     /// Whether the helper can place every file of the plan before any of
     /// its scripts runs: nothing removed, nothing already installed, and
     /// nothing configured but what the plan installs or an earlier run
     /// left unpacked, as a Bootstrap Install that failed does.
-    nonisolated var allowsBootstrapInstall: Bool {
+    var allowsBootstrapInstall: Bool {
         let installing = Set(install.map(\.identity))
         let installed = Set(snapshot.installed.map(\.identity))
         let unconfigured = Set(snapshot.installed.filter {
