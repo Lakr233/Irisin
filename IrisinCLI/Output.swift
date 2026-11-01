@@ -87,6 +87,8 @@ extension ParsableCommand {
     /// waits. Commands are synchronous on purpose: an async `main` imports
     /// `swift_task_asyncMainDrainQueue` and `swift_job_run`, which the iOS
     /// 15 floor is not known to export (Scripts/check-floor-imports.py).
+    /// The main run loop keeps turning meanwhile: `--repository` refreshes
+    /// through the repository center, which is the main actor's.
     static func blocking(_ body: @escaping () async throws -> Void) throws {
         let work = Unchecked(body)
         let outcome = Unchecked(Outcome())
@@ -100,7 +102,9 @@ extension ParsableCommand {
             }
             finished.signal()
         }
-        finished.wait()
+        while finished.wait(timeout: .now()) == .timedOut {
+            RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+        }
         try outcome.value.result.get()
     }
 }

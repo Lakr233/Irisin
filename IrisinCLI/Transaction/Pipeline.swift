@@ -17,6 +17,10 @@ struct Pipeline {
         var assumeYes = false
         var dryRun = false
         var allowSystemRemoval = false
+        /// Every package's files placed before any script runs, as the
+        /// app's Bootstrap Install: a first installation's scripts then find
+        /// the shell and tools the same transaction brings.
+        var bootstrapInstall = false
     }
 
     // MARK: - Plan
@@ -130,7 +134,8 @@ struct Pipeline {
             autoInstalled: plan.autoInstalled,
             statusDigest: plan.snapshot.statusDigest,
             allowSystemRemoval: options.allowSystemRemoval,
-            recoveryMode: plan.recoveryMode
+            recoveryMode: plan.recoveryMode,
+            bootstrapInstall: options.bootstrapInstall
         )
         try InstallerJob.transaction(transaction).validate()
         try await Runner(context: context, output: output).run(.transaction(transaction))
@@ -142,11 +147,11 @@ struct Pipeline {
 struct Workspace {
     let directory: URL
 
-    private static let prefix = "irisin-cli."
-
-    static func make() throws -> Workspace {
+    /// `prefix` keeps one run's workspaces apart: the downloads' and the
+    /// catalogue's of `--repository`.
+    static func make(prefix: String = "irisin-cli.") throws -> Workspace {
         let base = FileManager.default.temporaryDirectory
-        removeAbandoned(in: base)
+        removeAbandoned(in: base, prefix: prefix)
         let directory = base.appendingPathComponent("\(prefix)\(getpid())", isDirectory: true)
         try? FileManager.default.removeItem(at: directory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -158,7 +163,7 @@ struct Workspace {
     }
 
     /// A directory whose run has no process any more.
-    private static func removeAbandoned(in base: URL) {
+    private static func removeAbandoned(in base: URL, prefix: String) {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: base.path)) ?? []
         for name in names where name.hasPrefix(prefix) {
             guard let pid = Int32(name.dropFirst(prefix.count)), pid != getpid() else { continue }

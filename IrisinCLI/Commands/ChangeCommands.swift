@@ -24,15 +24,27 @@ extension ParsableCommand {
     /// Solve, show, ask, run: what install, remove and upgrade share.
     /// `revise` may ask for another request once the first is solved: the
     /// plan of that one is the one shown and run.
+    /// `repositories`, when given, are the catalogue instead of the app's
+    /// (`Session.open(_:repositories:in:output:)`).
     func change(
         _ options: GlobalOptions,
         _ change: ChangeOptions,
+        repositories: [String] = [],
+        bootstrapInstall: Bool = false,
         request: @escaping (Context, PackageIndex) throws -> ResolutionRequest,
         revise: @escaping (ResolutionPlan) -> ResolutionRequest? = { _ in nil }
     ) throws {
         let output = Output(json: options.json)
         try guarded(output) {
-            let (context, index) = try Session.open(options)
+            let catalogue = repositories.isEmpty ? nil : try Workspace.make(prefix: "irisin-cli-catalogue.")
+            defer { catalogue?.remove() }
+            let context: Context
+            let index: PackageIndex
+            if let catalogue {
+                (context, index) = try await Session.open(options, repositories: repositories, in: catalogue, output: output)
+            } else {
+                (context, index) = try Session.open(options)
+            }
             let pipeline = Pipeline(context: context, index: index, output: output)
             var resolution = try request(context, index)
             resolution.allowSystemRemoval = change.allowSystemRemoval
@@ -42,8 +54,16 @@ extension ParsableCommand {
                 plan = try pipeline.plan(revised)
             }
             guard pipeline.show(plan) else { return }
-            try pipeline.confirm(change.pipeline)
-            try await pipeline.run(plan, options: change.pipeline)
+            var run = change.pipeline
+            if bootstrapInstall {
+                guard plan.allowsBootstrapInstall else {
+                    throw CommandFailure.refused("Bootstrap Install is for a first installation: none of the packages may be installed already, and nothing may be removed.")
+                }
+                output.line("Bootstrap Install: every package's files are placed before any script runs.")
+                run.bootstrapInstall = true
+            }
+            try pipeline.confirm(run)
+            try await pipeline.run(plan, options: run)
         }
     }
 }
@@ -56,11 +76,23 @@ struct Install: ParsableCommand {
     @OptionGroup var options: GlobalOptions
     @OptionGroup var changeOptions: ChangeOptions
 
+    @Option(
+        name: .customLong("repository"),
+        help: ArgumentHelp(
+            "Resolve against this repository, refreshed now, instead of Irisin's catalogue, which is neither read nor changed. Its address, or `deb <url> <suite> <components>`; repeat for several.",
+            valueName: "source"
+        )
+    )
+    var repositories: [String] = []
+
+    @Flag(help: "Bootstrap Install: place every package's files before any script runs, for a first installation that brings its own shell and tools.")
+    var bootstrapInstall = false
+
     @Argument(help: "Package identifiers, identifier=version, or paths to .deb files.")
     var packages: [String]
 
     func run() throws {
-        try change(options, changeOptions) { context, index in
+        try change(options, changeOptions, repositories: repositories, bootstrapInstall: bootstrapInstall) { context, index in
             let actions = try packages.map { name -> ResolutionAction in
                 if name.hasSuffix(".deb") || name.contains("/") {
                     let url = context.userPath(name)

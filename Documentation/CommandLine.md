@@ -51,6 +51,12 @@ catalogue was last refreshed and warns when that is more than a day ago;
 `irisin-cli repo add <url>` prints the `irisin://repository/add` link that
 adds it in the app.
 
+`install --repository <source>` (repeatable) resolves against those
+repositories alone instead: `irisin-cli` refreshes them through the app's
+own repository center into a catalogue in a workspace of root's, removed when
+the command ends. The app's catalogue is neither read nor written, so this
+works before Irisin has ever been opened, as on a bootstrap set up by a script.
+
 ## Commands
 
 | command | |
@@ -58,7 +64,7 @@ adds it in the app.
 | `search <words>` | full-text search of the catalogue |
 | `show <package>` | every repository's record of it, and the installed one |
 | `list [--upgradable]` | installed packages, or those with an update |
-| `install <package \| ./file.deb>...` | resolve, download, prepare, run |
+| `install <package \| ./file.deb>...` | resolve, download, prepare, run; `--repository <source>` resolves against those repositories, `--bootstrap-install` places every package's files before any script runs, as the app's Bootstrap Install, for a first installation that brings its own shell |
 | `remove <package>...` | resolve, run |
 | `upgrade [--migrate]` | every update the Updates page would list; `--migrate` also installs, from the repository that offers them, the packages held-back updates need, as Migrate and Update does |
 | `repo list` / `repo add <url>` | the second prints the app's link |

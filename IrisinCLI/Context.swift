@@ -112,11 +112,12 @@ struct Context {
 
     /// Hands AptRepository an environment that never points at mobile's
     /// folder: the catalogue is opened read-only on its own, and a working
-    /// location there would let a writable handle meet it.
-    func bootstrapEnvironment(verbose: Bool) {
+    /// location there would let a writable handle meet it. `workingLocation`
+    /// is root's own workspace when `--repository` builds a catalogue there.
+    func bootstrapEnvironment(verbose: Bool, workingLocation: URL? = nil) {
         let architecture = architecture
         AptEnvironment.bootstrap(AptEnvironment(
-            workingLocation: FileManager.default.temporaryDirectory.appendingPathComponent("irisin-cli-unused"),
+            workingLocation: workingLocation ?? FileManager.default.temporaryDirectory.appendingPathComponent("irisin-cli-unused"),
             dpkgStatusLocation: statusFile,
             aptExtendedStatesLocation: path("/var/lib/apt/extended_states"),
             deviceArchitecture: { architecture },
