@@ -346,7 +346,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ · 二进制"
+            "value" : "%@ · 二进制文件"
           }
         },
         "zh-Hant" : {
@@ -1762,13 +1762,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 需要 %2$@，但找不到它。请添加提供它的软件源后重试。"
+            "value" : "%1$@ 需要 %2$@，但目前无法获取。请添加提供该软件包的软件源后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ 需要 %2$@，但目前無法取得。請加入提供它的軟體源後再試一次。"
+            "value" : "%1$@ 需要 %2$@，但目前無法取得。請加入提供該套件的軟體源後再試一次。"
           }
         }
       }
@@ -2122,7 +2122,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@：其軟體源沒有可用的版本。請重新整理軟體源後再試一次。"
+            "value" : "%@：軟體源中沒有可用的版本。請重新整理軟體源後再試一次。"
           }
         }
       }
@@ -2352,13 +2352,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@：软件源中已没有这个版本。请刷新软件源后重试。"
+            "value" : "%@：软件源中已没有此版本。请刷新软件源后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@：其軟體源未提供此版本。請重新整理軟體源後再試一次。"
+            "value" : "%@：軟體源中已沒有此版本。請重新整理軟體源後再試一次。"
           }
         }
       }
@@ -3179,7 +3179,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有浏览器请求在这台设备上进行以下更改。"
+            "value" : "有浏览器请求在此设备上进行以下更改。"
           }
         },
         "zh-Hant" : {
@@ -3415,7 +3415,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "软件源可包含应用、插件、主题和铃声。任何人都可以托管，我们无法验证其中的软件包是否安全。"
+            "value" : "软件源可包含 App、插件、主题和铃声。任何人都可以搭建软件源，我们无法验证其中的软件包是否安全。"
           }
         },
         "zh-Hant" : {
@@ -4123,7 +4123,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加高级源"
+            "value" : "添加高级软件源"
           }
         },
         "zh-Hant" : {
@@ -5067,7 +5067,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "确认后，队列会自动准备安装所需的数据。请稍后前往“队列”页面完成安装。"
+            "value" : "确认后，队列会准备安装所需的一切。请前往“队列”页面完成安装。"
           }
         },
         "zh-Hant" : {
@@ -5421,7 +5421,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全部分类"
+            "value" : "全部类别"
           }
         },
         "zh-Hant" : {
@@ -5657,7 +5657,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全部分区"
+            "value" : "全部分类"
           }
         },
         "zh-Hant" : {
@@ -5893,13 +5893,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许高级操作？"
+            "value" : "允许高风险操作？"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允許進階操作？"
+            "value" : "要允許高風險操作嗎？"
           }
         }
       }
@@ -6017,7 +6017,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已經加入"
+            "value" : "已加入"
           }
         }
       }
@@ -6366,13 +6366,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一项操作正在进行。请等待完成后再试。"
+            "value" : "另一项操作正在进行。请等待完成后重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "另一項操作正在進行。請等待其完成後再試一次。"
+            "value" : "另一項操作正在進行。請等待完成後再試一次。"
           }
         }
       }
@@ -7900,13 +7900,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引导安装"
+            "value" : "Bootstrap 安装"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引導安裝"
+            "value" : "Bootstrap 安裝"
           }
         }
       }
@@ -8136,13 +8136,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引导安装会在运行任何脚本之前放置所有软件包的文件。"
+            "value" : "Bootstrap 安装会在运行任何脚本之前放置所有软件包的文件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引導安裝會在執行任何指令碼之前放置所有套件的檔案。"
+            "value" : "Bootstrap 安裝會在執行任何指令碼之前放置所有套件的檔案。"
           }
         }
       }
@@ -10143,7 +10143,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "清除下载"
+            "value" : "清除下载项"
           }
         },
         "zh-Hant" : {
@@ -10500,7 +10500,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将这台设备连接到 Wi-Fi 或以太网，即可从浏览器管理它。"
+            "value" : "将此设备连接到 Wi-Fi 或以太网，即可通过浏览器进行管理。"
           }
         },
         "zh-Hant" : {
@@ -10620,7 +10620,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制为 Markdown"
+            "value" : "拷贝为 Markdown"
           }
         },
         "zh-Hant" : {
@@ -11569,7 +11569,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下载目录"
+            "value" : "下载文件夹"
           }
         },
         "zh-Hant" : {
@@ -11688,13 +11688,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "所有 App 都会关闭，包括这一个。再次打开即可获得新的验证码。"
+            "value" : "所有 App 都会关闭，包括此 App。再次打开即可获得新的验证码。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "所有 App 都會關閉，包括這一個。再次開啟即可取得新的驗證碼。"
+            "value" : "所有 App 都會關閉，包括此 App。再次開啟即可取得新的驗證碼。"
           }
         }
       }
@@ -11925,7 +11925,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "获取测试更新"
+            "value" : "获取测试版更新"
           }
         },
         "zh-Hant" : {
@@ -12994,7 +12994,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有软件源为这台设备提供 %@。"
+            "value" : "没有软件源为此设备提供 %@。"
           }
         },
         "zh-Hant" : {
@@ -13113,7 +13113,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有软件源提供这个软件包。"
+            "value" : "没有软件源提供此软件包。"
           }
         },
         "zh-Hant" : {
@@ -13350,7 +13350,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有测试更新"
+            "value" : "没有测试版更新"
           }
         },
         "zh-Hant" : {
@@ -13705,13 +13705,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在同一网络中的手机或电脑上，扫描二维码或打开这个地址："
+            "value" : "在同一网络中的手机或电脑上，扫描二维码或打开以下地址："
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用同一網路中的手機或電腦，掃描 QR 碼或開啟這個位址："
+            "value" : "使用同一網路中的手機或電腦，掃描 QR 碼或開啟以下位址："
           }
         }
       }
@@ -14536,7 +14536,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要%@"
+            "value" : "需要 %@"
           }
         },
         "zh-Hant" : {
@@ -14893,13 +14893,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设备不响应 %@。"
+            "value" : "设备无法处理 %@。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "裝置不回應 %@。"
+            "value" : "裝置無法處理 %@。"
           }
         }
       }
@@ -15607,13 +15607,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法写出软件源列表。"
+            "value" : "无法写入软件源列表。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法寫出軟體源列表。"
+            "value" : "無法寫入軟體源列表。"
           }
         }
       }
@@ -15964,7 +15964,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个文件由更新版本的 Irisin 生成。"
+            "value" : "此文件由较新版本的 Irisin 生成。"
           }
         },
         "zh-Hant" : {
@@ -16202,13 +16202,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个软件源已经添加过了。"
+            "value" : "此软件源已添加。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此軟體源已經加入。"
+            "value" : "此軟體源已加入。"
           }
         }
       }
@@ -16321,7 +16321,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个软件源尚未添加。"
+            "value" : "此软件源尚未添加。"
           }
         },
         "zh-Hant" : {
@@ -16676,7 +16676,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法获取测试更新"
+            "value" : "无法获取测试版更新"
           }
         },
         "zh-Hant" : {
@@ -17268,7 +17268,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你可以在设置中更改此项。"
+            "value" : "你可以在“设置”中更改此项。"
           }
         },
         "zh-Hant" : {
@@ -18332,13 +18332,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "导出应用日志"
+            "value" : "导出 App 日志"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "匯出應用程式日誌"
+            "value" : "匯出 App 記錄"
           }
         }
       }
@@ -18456,7 +18456,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "匯出安裝器日誌"
+            "value" : "匯出安裝程式記錄"
           }
         }
       }
@@ -18928,7 +18928,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "忽略腳本錯誤並重試"
+            "value" : "忽略指令碼錯誤並重試"
           }
         }
       }
@@ -19046,7 +19046,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "忽略腳本錯誤並重試？"
+            "value" : "要忽略指令碼錯誤並重試嗎？"
           }
         }
       }
@@ -19512,7 +19512,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "清空"
+            "value" : "清除"
           }
         },
         "zh-Hant" : {
@@ -20339,7 +20339,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "组件"
+            "value" : "Components"
           }
         },
         "zh-Hant" : {
@@ -20693,7 +20693,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已复制"
+            "value" : "已拷贝"
           }
         },
         "zh-Hant" : {
@@ -20811,7 +20811,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制"
+            "value" : "拷贝"
           }
         },
         "zh-Hant" : {
@@ -20929,7 +20929,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制链接"
+            "value" : "拷贝地址"
           }
         },
         "zh-Hant" : {
@@ -21047,7 +21047,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制 APT 源"
+            "value" : "拷贝 APT 源"
           }
         },
         "zh-Hant" : {
@@ -21165,7 +21165,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制消息"
+            "value" : "拷贝消息"
           }
         },
         "zh-Hant" : {
@@ -21283,7 +21283,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制名称"
+            "value" : "拷贝名称"
           }
         },
         "zh-Hant" : {
@@ -21401,7 +21401,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制路径"
+            "value" : "拷贝路径"
           }
         },
         "zh-Hant" : {
@@ -23290,7 +23290,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "获取安装包"
+            "value" : "下载安装包"
           }
         },
         "zh-Hant" : {
@@ -24595,7 +24595,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "匯出 dpkg 狀態"
+            "value" : "匯出 dpkg 狀態檔案"
           }
         }
       }
@@ -26241,7 +26241,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按分类筛选"
+            "value" : "按类别筛选"
           }
         },
         "zh-Hant" : {
@@ -26365,7 +26365,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "依層級篩選"
+            "value" : "依等級篩選"
           }
         }
       }
@@ -27068,7 +27068,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已找到，但架构不兼容"
+            "value" : "已找到，但架构不同"
           }
         },
         "zh-Hant" : {
@@ -27776,7 +27776,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "图标已重建"
+            "value" : "已重建图标"
           }
         },
         "zh-Hant" : {
@@ -28130,7 +28130,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新包"
+            "value" : "待安装"
           }
         },
         "zh-Hant" : {
@@ -28726,7 +28726,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用復原模式安裝？"
+            "value" : "要使用復原模式安裝嗎？"
           }
         }
       }
@@ -29428,7 +29428,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "安装器启动于 %@"
+            "value" : "安装器已于 %@ 启动"
           }
         },
         "zh-Hant" : {
@@ -29670,7 +29670,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Irisin 將重試此操作，並在套件腳本失敗時繼續執行。這可能損壞已安裝的套件或系統。"
+            "value" : "Irisin 將重試此操作，並在套件指令碼失敗時繼續執行。這可能損壞已安裝的套件或系統。"
           }
         }
       }
@@ -30490,7 +30490,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在加载已购项目…"
+            "value" : "正在载入已购项目…"
           }
         },
         "zh-Hant" : {
@@ -31789,7 +31789,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有更新的版本"
+            "value" : "有较新的版本"
           }
         },
         "zh-Hant" : {
@@ -32379,7 +32379,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无分类"
+            "value" : "没有类别"
           }
         },
         "zh-Hant" : {
@@ -32497,7 +32497,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有变化"
+            "value" : "没有更改"
           }
         },
         "zh-Hant" : {
@@ -32615,7 +32615,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "找不到可行的安装方案。"
+            "value" : "找不到兼容的安装方案。"
           }
         },
         "zh-Hant" : {
@@ -32733,7 +32733,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "暂无描述。"
+            "value" : "没有描述。"
           }
         },
         "zh-Hant" : {
@@ -33323,7 +33323,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不再需要的依赖"
+            "value" : "不再需要的软件包"
           }
         },
         "zh-Hant" : {
@@ -33441,7 +33441,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "不再排队"
+            "value" : "已不在队列中"
           }
         },
         "zh-Hant" : {
@@ -34031,7 +34031,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有正在运行的 %@ 进程。"
+            "value" : "没有名为 %@ 的进程正在运行。"
           }
         },
         "zh-Hant" : {
@@ -34621,13 +34621,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无脚本"
+            "value" : "没有脚本"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "沒有腳本"
+            "value" : "沒有指令碼"
           }
         }
       }
@@ -38518,7 +38518,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "软件包：%lld · 分区：%lld"
+            "value" : "软件包：%lld · 分类：%lld"
           }
         },
         "zh-Hant" : {
@@ -38754,7 +38754,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在准备应用更新。完成后应用将退出。"
+            "value" : "正在准备 App 更新。完成后 App 将退出。"
           }
         },
         "zh-Hant" : {
@@ -40288,13 +40288,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "恢复模式只会安装这个软件包，不会检查依赖关系或冲突。postinst、postrm 等维护脚本仍会运行，但即使返回错误也会被忽略，安装会尽力继续。请仅在系统已无法完成正常安装时使用。软件包可能无法正常工作，系统也可能变得更不稳定。"
+            "value" : "恢复模式只会安装此软件包，不会检查依赖关系或冲突。postinst、postrm 等维护脚本仍会运行，但即使返回错误也会被忽略，安装会尽力继续。请仅在系统已无法完成正常安装时使用。软件包可能无法正常工作，系统也可能变得更不稳定。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "復原模式只會安裝這個套件，不會檢查相依關係或衝突。postinst、postrm 等維護指令碼仍會執行，但即使回報錯誤也會被忽略，安裝會盡力繼續。請只在系統已無法完成正常安裝時使用。套件可能無法正常運作，系統也可能變得更不穩定。"
+            "value" : "復原模式只會安裝此套件，不會檢查相依關係或衝突。postinst、postrm 等維護指令碼仍會執行，但即使回報錯誤也會被忽略，安裝會盡力繼續。請只在系統已無法完成正常安裝時使用。套件可能無法正常運作，系統也可能變得更不穩定。"
           }
         }
       }
@@ -41350,13 +41350,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "恢复模式仅移除此软件包，不检查其他软件包是否依赖它。维护脚本仍会运行，但其失败将被忽略。其他软件包或系统可能因此无法正常工作。"
+            "value" : "恢复模式仅卸载此软件包，不检查其他软件包是否依赖它。维护脚本仍会运行，但失败会被忽略。其他软件包或系统可能因此无法正常工作。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "復原模式僅移除此套件，不會檢查其他套件是否需要它。維護腳本仍會執行，但其失敗將被忽略。其他套件或系統可能無法正常運作。"
+            "value" : "復原模式僅解除安裝此套件，不會檢查其他套件是否需要它。維護指令碼仍會執行，但失敗會被忽略。其他套件或系統可能無法正常運作。"
           }
         }
       }
@@ -41586,7 +41586,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请刷新软件源后再试。"
+            "value" : "请刷新软件源后重试。"
           }
         },
         "zh-Hant" : {
@@ -43120,13 +43120,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用恢复模式移除"
+            "value" : "使用恢复模式卸载"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用復原模式移除"
+            "value" : "使用復原模式解除安裝"
           }
         }
       }
@@ -43356,13 +43356,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用恢复模式移除？"
+            "value" : "使用恢复模式卸载？"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "使用復原模式移除？"
+            "value" : "要使用復原模式解除安裝嗎？"
           }
         }
       }
@@ -43828,7 +43828,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "卸载系统必需的软件包可能导致自定义固件或本应用无法工作。"
+            "value" : "卸载系统必需的软件包可能导致自定义固件或此 App 无法正常工作。"
           }
         },
         "zh-Hant" : {
@@ -44890,7 +44890,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将移除无法加载的软件源。此操作不可撤销。"
+            "value" : "将移除无法载入的软件源。此操作不可撤销。"
           }
         },
         "zh-Hant" : {
@@ -45959,7 +45959,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需求互相衝突"
+            "value" : "套件需求互相衝突"
           }
         }
       }
@@ -46189,7 +46189,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "显示安装文件"
+            "value" : "显示文件"
           }
         },
         "zh-Hant" : {
@@ -46661,7 +46661,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Irisin 未正确安装。请重新安装后再试。"
+            "value" : "Irisin 未正确安装。请重新安装后重试。"
           }
         },
         "zh-Hant" : {
@@ -46779,7 +46779,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存或分享已安装插件的列表。"
+            "value" : "存储或分享已安装插件的列表。"
           }
         },
         "zh-Hant" : {
@@ -46897,7 +46897,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存插件"
+            "value" : "存储插件"
           }
         },
         "zh-Hant" : {
@@ -47021,7 +47021,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "腳本輸出"
+            "value" : "指令碼輸出"
           }
         }
       }
@@ -47139,7 +47139,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "腳本"
+            "value" : "指令碼"
           }
         }
       }
@@ -47960,7 +47960,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分区"
+            "value" : "分类"
           }
         },
         "zh-Hant" : {
@@ -48078,7 +48078,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分区"
+            "value" : "分类"
           }
         },
         "zh-Hant" : {
@@ -49731,7 +49731,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "注销"
+            "value" : "退出登录"
           }
         },
         "zh-Hant" : {
@@ -50203,7 +50203,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已注销"
+            "value" : "已退出登录"
           }
         },
         "zh-Hant" : {
@@ -50439,7 +50439,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此软件包的部分内容无法展示。"
+            "value" : "此软件包的部分内容无法显示。"
           }
         },
         "zh-Hant" : {
@@ -51029,7 +51029,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "套件"
+            "value" : "Suite"
           }
         },
         "zh-Hant" : {
@@ -51147,13 +51147,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级操作"
+            "value" : "高风险操作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "進階操作"
+            "value" : "高風險操作"
           }
         }
       }
@@ -51977,7 +51977,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "再次点击以刷新全部。"
+            "value" : "再次轻点以全部刷新。"
           }
         },
         "zh-Hant" : {
@@ -52219,7 +52219,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 腳本失敗"
+            "value" : "%@ 指令碼失敗"
           }
         }
       }
@@ -52337,7 +52337,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%2$@ 的 %1$@ 腳本失敗，結束狀態為 %3$lld。"
+            "value" : "%2$@ 的 %1$@ 指令碼失敗，結束狀態為 %3$lld。"
           }
         }
       }
@@ -52567,7 +52567,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dists/ 下的套件名称，或以 / 结尾的路径表示扁平软件源。"
+            "value" : "dists/ 下的发行版名称；扁平软件源则填写以 / 结尾的路径。"
           }
         },
         "zh-Hant" : {
@@ -52803,7 +52803,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法复制 dpkg 状态文件。请重试。"
+            "value" : "无法拷贝 dpkg 状态文件。请重试。"
           }
         },
         "zh-Hant" : {
@@ -52921,7 +52921,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法写入文件，请重试。"
+            "value" : "无法写入文件。请重试。"
           }
         },
         "zh-Hant" : {
@@ -53039,7 +53039,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主屏幕将重新启动，所有已打开的应用都会关闭。"
+            "value" : "主屏幕将重新启动，所有已打开的 App 都会关闭。"
           }
         },
         "zh-Hant" : {
@@ -54697,7 +54697,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這些腳本會以 root 身分依此順序執行。"
+            "value" : "這些指令碼會以 root 身分依此順序執行。"
           }
         }
       }
@@ -56344,13 +56344,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此 Irisin 安装包适用于 %@，但当前自定义固件使用 %@。请安装与当前环境匹配的 Irisin 官方安装包。请勿使用转换工具安装 Irisin。"
+            "value" : "此 Irisin 适用于 %@，但当前 bootstrap 使用 %@。请安装与当前环境匹配的 Irisin 官方安装包。请勿使用转换工具安装 Irisin。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此 Irisin 安裝套件適用於 %@，但目前的自訂韌體使用 %@。請安裝與目前環境相符的 Irisin 官方安裝套件。請勿使用轉換工具安裝 Irisin。"
+            "value" : "此 Irisin 適用於 %@，但目前的 bootstrap 使用 %@。請安裝與目前環境相符的 Irisin 官方安裝檔。請勿使用轉換工具安裝 Irisin。"
           }
         }
       }
@@ -56816,7 +56816,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本设备支持 %@。"
+            "value" : "此设备支持 %@。"
           }
         },
         "zh-Hant" : {
@@ -57170,13 +57170,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个链接无效。"
+            "value" : "此链接无效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這個連結無效。"
+            "value" : "此連結無效。"
           }
         }
       }
@@ -57406,13 +57406,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法在此系统上使用恢复模式安装这个软件包。"
+            "value" : "无法在此系统上使用恢复模式安装此软件包。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法在此系統上使用復原模式安裝這個套件。"
+            "value" : "無法在此系統上使用復原模式安裝此套件。"
           }
         }
       }
@@ -57524,7 +57524,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法加载此软件包。请尝试其他软件源。"
+            "value" : "无法载入此软件包。请尝试其他软件源。"
           }
         },
         "zh-Hant" : {
@@ -57642,7 +57642,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此软件包未通过校验。请选择其他文件后重试。"
+            "value" : "无法校验此软件包。请选择其他文件后重试。"
           }
         },
         "zh-Hant" : {
@@ -58114,7 +58114,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此软件包已解压，但操作在另一个软件包处停止，它尚未配置。"
+            "value" : "此软件包已解压，但操作在配置此软件包之前已在另一个软件包处停止。"
           }
         },
         "zh-Hant" : {
@@ -60002,7 +60002,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法加载软件包"
+            "value" : "无法载入软件包"
           }
         },
         "zh-Hant" : {
@@ -60120,7 +60120,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法加载已购项目"
+            "value" : "无法载入已购项目"
           }
         },
         "zh-Hant" : {
@@ -61182,7 +61182,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法刷新应用：%@"
+            "value" : "无法刷新 App：%@"
           }
         },
         "zh-Hant" : {
@@ -61536,7 +61536,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法移除 %@ 处残留的应用文件：%@"
+            "value" : "无法移除 %@ 处残留的 App 文件：%@"
           }
         },
         "zh-Hant" : {
@@ -63070,7 +63070,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未知分区"
+            "value" : "未知分类"
           }
         },
         "zh-Hant" : {
@@ -64486,7 +64486,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "正在更新应用…"
+            "value" : "正在更新 App…"
           }
         },
         "zh-Hant" : {
@@ -64958,7 +64958,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "点按上方的添加按钮来添加软件源。"
+            "value" : "使用上方的添加按钮添加软件源。"
           }
         },
         "zh-Hant" : {
@@ -66374,13 +66374,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "尽管我们有多种安全机制来确保你的系统安全，错误的操作依然可能损坏系统。"
+            "value" : "我们设有安全保护措施，但错误的操作仍可能损坏系统。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儘管我們有多種安全機制來確保你的系統安全，錯誤的操作依然可能損壞系統。"
+            "value" : "我們設有安全保護措施，但錯誤的操作仍可能損壞系統。"
           }
         }
       }
@@ -67436,7 +67436,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你可以稍后在软件内继续添加。"
+            "value" : "你可以稍后在 App 中继续添加。"
           }
         },
         "zh-Hant" : {
@@ -68026,13 +68026,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请检查脚本输出。如果软件包无法正常工作，请将其移除或安装修复后的版本。"
+            "value" : "请检查脚本输出。如果软件包无法正常工作，请将其卸载或安装修复后的版本。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "請檢查指令碼輸出。如果套件無法運作，請將其移除或安裝已修正的版本。"
+            "value" : "請檢查指令碼輸出。如果套件無法運作，請將其解除安裝或安裝已修正的版本。"
           }
         }
       }
@@ -68262,7 +68262,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此软件包为 %1$@ 构建。本设备使用 %2$@。请选择兼容的软件包，或使用 Apelin 为本设备重新生成此软件包。"
+            "value" : "此软件包为 %1$@ 构建。此设备使用 %2$@。请选择兼容的软件包，或使用 Apelin 为此设备重新生成此软件包。"
           }
         },
         "zh-Hant" : {
