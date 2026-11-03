@@ -136,7 +136,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Irisin 会在你的局域网中提供一个网页，让其他设备上的浏览器管理这台设备。"
+            "value" : "Irisin 会在本地网络中提供网页，以便其他设备上的浏览器管理此设备。"
           }
         },
         "zh-Hant" : {
