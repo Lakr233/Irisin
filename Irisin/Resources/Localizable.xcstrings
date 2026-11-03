@@ -5893,13 +5893,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许高级操作？"
+            "value" : "允许高风险操作？"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要允許進階操作嗎？"
+            "value" : "要允許高風險操作嗎？"
           }
         }
       }
@@ -7900,13 +7900,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引导安装"
+            "value" : "Bootstrap 安装"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引導安裝"
+            "value" : "Bootstrap 安裝"
           }
         }
       }
@@ -8136,13 +8136,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引导安装会在运行任何脚本之前放置所有软件包的文件。"
+            "value" : "Bootstrap 安装会在运行任何脚本之前放置所有软件包的文件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引導安裝會在執行任何指令碼之前放置所有套件的檔案。"
+            "value" : "Bootstrap 安裝會在執行任何指令碼之前放置所有套件的檔案。"
           }
         }
       }
@@ -51147,13 +51147,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "高级操作"
+            "value" : "高风险操作"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "進階操作"
+            "value" : "高風險操作"
           }
         }
       }
@@ -56344,13 +56344,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此 Irisin 安装包适用于 %@，但当前自定义固件使用 %@。请安装与当前环境匹配的 Irisin 官方安装包。请勿使用转换工具安装 Irisin。"
+            "value" : "此 Irisin 适用于 %@，但当前 bootstrap 使用 %@。请安装与当前环境匹配的 Irisin 官方安装包。请勿使用转换工具安装 Irisin。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此 Irisin 安裝套件適用於 %@，但目前的自訂韌體使用 %@。請安裝與目前環境相符的 Irisin 官方安裝套件。請勿使用轉換工具安裝 Irisin。"
+            "value" : "此 Irisin 適用於 %@，但目前的 bootstrap 使用 %@。請安裝與目前環境相符的 Irisin 官方安裝檔。請勿使用轉換工具安裝 Irisin。"
           }
         }
       }
