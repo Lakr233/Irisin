@@ -14,14 +14,14 @@ import IrisinProtocol
 /// and bytes, a link's text as the archive spelled it (`archivedLinkText`).
 /// What was read is held against what dpkg recorded: a file that differs goes
 /// in as it is, and a listed path that is gone stays out, each said in a
-/// notice and counted in `Repacked`. `md5sums` is dpkg's copy while nothing
-/// differs, the original's own bytes, and is made from what went in once
-/// something does, so the package always agrees with itself.
+/// notice and counted in `Repacked`. `md5sums` is dpkg's copy, the original's
+/// own bytes, while it says what the archive holds, and is made from what went
+/// in once it does not, so the package always agrees with itself.
 ///
 /// What an installed package cannot say is what differs from the download by
-/// design: the control fields in dpkg's order, the compression (`dpkg-deb`'s
-/// default, xz) and an `md5sums` the original may not have shipped, which
-/// dpkg then wrote itself.
+/// design: the control fields in dpkg's order, the compression (always zstd,
+/// as Procursus's packages are, at a level of its own) and an `md5sums` the
+/// original may not have shipped, which dpkg then wrote itself.
 ///
 /// Root reads, since a package may ship what mobile cannot read, and the
 /// package leaves through the descriptor the client opened, never a path. The
@@ -107,18 +107,19 @@ final class PackageRepacker {
         }
 
         let declared = try Conffiles.declarations(infoText(database, identity, "conffiles"))
-        let data = work.appendingPathComponent("data.tar.xz")
+        let data = work.appendingPathComponent("data.tar.zst")
         let digests = try writeData(items, identity: identity, to: data)
 
         let recorded = try recordedDigests(database, identity, fields: fields)
+        // a file that became a link has a digest on record and none here
         let changed = items.map(\.entry.path).filter { path in
-            digests[path] != nil && recorded[path] != nil && digests[path] != recorded[path]
+            recorded[path] != nil && digests[path] != recorded[path]
         }
         for path in changed {
             emit(.notice("Changed since installation: /\(path)"))
         }
 
-        let control = work.appendingPathComponent("control.tar.xz")
+        let control = work.appendingPathComponent("control.tar.zst")
         try writeControl(
             identity,
             fields: fields,
@@ -126,8 +127,6 @@ final class PackageRepacker {
             items: items,
             digests: digests,
             conffiles: declared.keep,
-            leftOut: Set(leftOut),
-            differs: !changed.isEmpty,
             time: time,
             to: control
         )
@@ -135,7 +134,8 @@ final class PackageRepacker {
         try DebianPackageWriter.write(control: control, data: data, time: time, to: output)
         fsync(output)
 
-        let name = version.split(separator: ":").last.map(String.init) ?? version
+        // the epoch alone goes: a version with one may have colons of its own
+        let name = version.split(separator: ":", maxSplits: 1).last.map(String.init) ?? version
         return .init(
             fileName: [identity, name, architecture].joined(separator: "_") + ".deb",
             leftOut: leftOut.count,
@@ -202,12 +202,12 @@ final class PackageRepacker {
             // a link the bootstrap keeps where the archive has a directory,
             // /var/jb/var or ElleKit's DynamicLibraries: written as a link,
             // it would replace that link when the package is installed
-            if info.st_mode & S_IFMT == S_IFLNK, parents.contains(path) {
-                guard let target = filesystem.physical(location.path, followingLast: true),
-                      stat(target, &info) == 0
-                else {
-                    leftOut.append(path)
-                    continue
+            if info.st_mode & S_IFMT == S_IFLNK, parents.contains(path),
+               let target = filesystem.physical(location.path, followingLast: true)
+            {
+                var followed = stat()
+                if stat(target, &followed) == 0, followed.st_mode & S_IFMT == S_IFDIR {
+                    info = followed
                 }
             }
             let entry = { (kind: PreparedEntry.Kind, link: String?) in
@@ -389,8 +389,6 @@ final class PackageRepacker {
         items: [Item],
         digests: [String: String],
         conffiles: Set<String>,
-        leftOut: Set<String>,
-        differs: Bool,
         time: Int64,
         to url: URL
     ) throws {
@@ -402,16 +400,26 @@ final class PackageRepacker {
         members["control"] = Data(PackageDatabase.paragraph(record, names: database.fieldNames[identity] ?? []).utf8)
         // regular files and hard links in the archive's order, conffiles left
         // out, as dpkg writes them for a package that ships none
-        let unchanged = differs || !leftOut.isEmpty ? nil : try? Data(contentsOf: database.info(identity, "md5sums"))
-        members["md5sums"] = unchanged ?? Data(items.compactMap { item -> String? in
+        let sums = items.compactMap { item -> String? in
             guard let digest = digests[item.entry.path], !conffiles.contains("/" + item.entry.path) else { return nil }
-            return digest + "  " + item.entry.path + "\n"
-        }.joined().utf8)
-        // a conffile the user deleted is in no archive, and dpkg-deb refuses
-        // a package that declares one
+            return digest + "  " + item.entry.path
+        }
+        // dpkg's copy is the original's own, order and all, while it says what
+        // the archive holds
+        if let recorded = try infoText(database, identity, "md5sums"),
+           Set(recorded.split(separator: "\n").map(String.init)) == Set(sums)
+        {
+            members["md5sums"] = Data(recorded.utf8)
+        } else {
+            members["md5sums"] = Data(sums.map { $0 + "\n" }.joined().utf8)
+        }
+        // a conffile that is in no archive any more, deleted or taken over by
+        // another package, and dpkg-deb refuses a package that declares one
         if let declared = try infoText(database, identity, "conffiles") {
-            let kept = declared.split(separator: "\n").filter {
-                !leftOut.contains($0.trimmingCharacters(in: .whitespaces))
+            let archived = Set(items.map { "/" + $0.entry.path })
+            let kept = declared.split(separator: "\n").filter { line in
+                let text = line.trimmingCharacters(in: .whitespaces)
+                return text.hasPrefix("remove-on-upgrade ") || archived.contains(text)
             }
             if !kept.isEmpty {
                 members["conffiles"] = Data((kept.joined(separator: "\n") + "\n").utf8)

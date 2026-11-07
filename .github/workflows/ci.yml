@@ -47,6 +47,11 @@ jobs:
           sudo xcode-select -s "$latest/Contents/Developer"
           xcodebuild -version
 
+      # zstd is beyond the system's tar: what reads a repacked package here,
+      # beside our own libarchive, is dpkg-deb.
+      - name: Install dpkg
+        run: command -v dpkg-deb >/dev/null 2>&1 || brew install dpkg
+
       - name: Run host tests
         run: make harness
 

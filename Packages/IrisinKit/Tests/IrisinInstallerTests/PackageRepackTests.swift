@@ -292,14 +292,14 @@ struct PackageRepackTests {
         try Self.same(original, outcome.file, in: work)
     }
 
-    /// Nobody but this code wrote the archive: the system's ar and tar read
-    /// it, and dpkg-deb where it is installed.
+    /// Nobody but this code wrote the archive: the system's ar reads it, and
+    /// dpkg-deb where it is installed (the Mac's own tar has no zstd).
     @Test func otherToolsReadThePackage() throws {
         let work = try Work()
         try Self.install(try Self.deb(work, prepare: Self.standardPayload), in: work)
         let file = try Self.repack(work).file
         let members = try String(decoding: Self.output("/usr/bin/ar", ["-t", file.path], in: work.build), as: UTF8.self)
-        #expect(members == "debian-binary\ncontrol.tar.xz\ndata.tar.xz\n")
+        #expect(members == "debian-binary\ncontrol.tar.zst\ndata.tar.zst\n")
         let bytes = try Data(contentsOf: file)
         #expect(bytes.starts(with: Data("!<arch>\ndebian-binary   ".utf8)))
         #expect(bytes.count % 2 == 0)
@@ -307,28 +307,24 @@ struct PackageRepackTests {
         let extracted = work.build.appendingPathComponent("extracted")
         try FileManager.default.createDirectory(at: extracted, withIntermediateDirectories: true)
         try Self.run("/usr/bin/ar", ["-x", file.path], in: extracted)
-        let listing = try String(
-            decoding: Self.output("/usr/bin/tar", ["-tvf", "data.tar.xz"], in: extracted),
-            as: UTF8.self
-        )
-        #expect(listing.split(separator: "\n").first?.hasSuffix(" ./") == true)
-        #expect(listing.contains("./usr/bin/tool"))
-        #expect(listing.contains("rwsr-xr-x"))
-        #expect(try String(
-            decoding: Self.output("/usr/bin/tar", ["-xOf", "data.tar.xz", "./usr/share/repack/résumé 文件"], in: extracted),
-            as: UTF8.self
-        ) == "résumé\n")
+        for member in ["control.tar.zst", "data.tar.zst"] {
+            let contents = try Data(contentsOf: extracted.appendingPathComponent(member))
+            #expect(contents.starts(with: [0x28, 0xB5, 0x2F, 0xFD]), "\(member) is a zstd frame")
+        }
 
         let dpkgDeb = "/opt/homebrew/bin/dpkg-deb"
-        if FileManager.default.isExecutableFile(atPath: dpkgDeb) {
-            let fields = try String(
-                decoding: Self.output(dpkgDeb, ["--field", file.path, "Package", "Version"], in: extracted),
-                as: UTF8.self
-            )
-            #expect(fields == "Package: com.example.repack\nVersion: 2:1.2-3\n")
-            let contents = try String(decoding: Self.output(dpkgDeb, ["--contents", file.path], in: extracted), as: UTF8.self)
-            #expect(contents.contains("./usr/bin/relative -> tool"))
-        }
+        guard FileManager.default.isExecutableFile(atPath: dpkgDeb) else { return }
+        let fields = try String(
+            decoding: Self.output(dpkgDeb, ["--field", file.path, "Package", "Version"], in: extracted),
+            as: UTF8.self
+        )
+        #expect(fields == "Package: com.example.repack\nVersion: 2:1.2-3\n")
+        let contents = try String(decoding: Self.output(dpkgDeb, ["--contents", file.path], in: extracted), as: UTF8.self)
+        #expect(contents.split(separator: "\n").first?.hasSuffix(" ./") == true)
+        #expect(contents.contains("./usr/bin/relative -> tool"))
+        #expect(contents.contains("./usr/bin/tool"))
+        #expect(contents.contains("rwsr-xr-x"))
+        #expect(contents.contains("./usr/share/repack/résumé 文件"))
     }
 
     /// The whole way round: what was repacked installs into a fresh root and
@@ -476,6 +472,59 @@ struct PackageRepackTests {
             encoding: .utf8
         )
         #expect(sums.contains(edited.md5 + "  usr/share/repack/résumé 文件\n"))
+    }
+
+    /// A file that became a link has nothing to compare, and is a change: the
+    /// package must not keep a sum for what it no longer holds as a file.
+    @Test func aFileThatBecameALinkIsAChange() throws {
+        let work = try Work()
+        try Self.install(try Self.deb(work, prepare: Self.standardPayload), in: work)
+        let tool = work.root.appendingPathComponent("usr/share/repack/résumé 文件")
+        #expect(unlink(tool.path) == 0)
+        try FileManager.default.createSymbolicLink(atPath: tool.path, withDestinationPath: "blob")
+        let outcome = try Self.repack(work)
+        #expect(outcome.status == 0, "\(outcome.events)")
+        #expect(outcome.repacked?.changed == 1)
+        let (package, directory) = try Self.prepared(outcome.file, in: work)
+        let sums = try String(
+            contentsOf: directory.appendingPathComponent(#require(package.controlFiles["md5sums"]).name),
+            encoding: .utf8
+        )
+        #expect(!sums.contains("résumé"))
+    }
+
+    /// A link where the list has a directory leads to a file, and what the list
+    /// has below it is gone: one stale path, not a lost package.
+    @Test func aDirectoryThatBecameALinkToAFileIsNotFollowed() throws {
+        let work = try Work()
+        let original = try Self.deb(work) { data, _ in
+            try FileManager.default.createDirectory(at: data.appendingPathComponent("opt/tool"), withIntermediateDirectories: true)
+            try "leaf".write(to: data.appendingPathComponent("opt/tool/leaf"), atomically: true, encoding: .utf8)
+            try "file".write(to: data.appendingPathComponent("opt/file"), atomically: true, encoding: .utf8)
+        }
+        try Self.install(original, in: work)
+        let tool = work.root.appendingPathComponent("opt/tool")
+        try FileManager.default.removeItem(at: tool)
+        try FileManager.default.createSymbolicLink(atPath: tool.path, withDestinationPath: "file")
+        let outcome = try Self.repack(work)
+        #expect(outcome.status == 0, "\(outcome.events)")
+        #expect(outcome.repacked?.leftOut == 1)
+        let (package, _) = try Self.prepared(outcome.file, in: work)
+        #expect(package.entries.first { $0.path == "opt/tool" }?.kind == .symbolicLink)
+    }
+
+    /// Another package took the conffile over: it left this package's list and
+    /// not its `conffiles`.
+    @Test func aConffileTheListNoLongerHasIsNotDeclared() throws {
+        let work = try Work()
+        try Self.install(try Self.deb(work, prepare: Self.standardPayload), in: work)
+        let list = work.database.appendingPathComponent("info/com.example.repack.list")
+        let lines = try String(contentsOf: list, encoding: .utf8).split(separator: "\n").filter { $0 != "/etc/repack.conf" }
+        try (lines.joined(separator: "\n") + "\n").write(to: list, atomically: true, encoding: .utf8)
+        let outcome = try Self.repack(work)
+        #expect(outcome.status == 0, "\(outcome.events)")
+        let (package, _) = try Self.prepared(outcome.file, in: work)
+        #expect(package.controlFiles["conffiles"] == nil)
     }
 
     /// dpkg-deb refuses a package that declares a conffile it does not hold.

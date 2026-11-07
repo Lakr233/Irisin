@@ -28,8 +28,7 @@ final class RepackController: PackageProgressCard {
     private let anchor: PopoverAnchor?
 
     private static let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Archives")
-    /// One at a time, since the card is modal; what a run that was killed
-    /// left is replaced by the next.
+    /// One at a time, since the card is modal.
     private static let partial = directory.appendingPathComponent("repack.partial")
 
     private init(package: Package, host: UIViewController, anchor: PopoverAnchor?) {
@@ -44,8 +43,10 @@ final class RepackController: PackageProgressCard {
     }
 
     override func run() async {
+        // what a run or a share that was killed left: a repacked package can
+        // hold what only root could read, so none outlives its sheet for long
+        try? FileManager.default.removeItem(at: Self.directory)
         try? FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
-        try? FileManager.default.removeItem(at: Self.partial)
         let descriptor = open(Self.partial.path, O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0o600)
         guard descriptor >= 0 else {
             await close()
@@ -95,6 +96,12 @@ final class RepackController: PackageProgressCard {
             return
         }
         let anchor = anchor
+        let share = { [weak host] in
+            guard let host else { return }
+            ShareSheet.present([file], anchor: anchor, from: host) {
+                try? FileManager.default.removeItem(at: file)
+            }
+        }
         var differences: [String] = []
         if repacked.leftOut > 0 {
             differences.append(String(localized: "Missing files: \(repacked.leftOut)"))
@@ -102,18 +109,13 @@ final class RepackController: PackageProgressCard {
         if repacked.changed > 0 {
             differences.append(String(localized: "Files changed since installation: \(repacked.changed)"))
         }
-        guard !differences.isEmpty else {
-            ShareSheet.present([file], anchor: anchor, from: host)
-            return
-        }
+        guard !differences.isEmpty else { return share() }
         host.presentNotice(
             title: "Repacked with Differences",
             message: differences.joined(separator: "\n"),
-            dismissTitle: "Share"
-        ) { [weak host] in
-            guard let host else { return }
-            ShareSheet.present([file], anchor: anchor, from: host)
-        }
+            dismissTitle: "Share",
+            onDismiss: share
+        )
     }
 
     private func show(completed: Int, total: Int) {

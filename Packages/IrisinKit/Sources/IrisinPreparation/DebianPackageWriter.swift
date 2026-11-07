@@ -3,13 +3,17 @@ import Darwin
 import Foundation
 import IrisinProtocol
 
-/// One tar member of a `.deb`, `control.tar.xz` or `data.tar.xz`, written the
-/// way `dpkg-deb --build` writes them by default: GNU tar through xz, every
-/// name below `./`. `DebianPreparation` reads what this writes.
+/// One tar member of a `.deb`, `control.tar.zst` or `data.tar.zst`, written the
+/// way the bootstraps' own packages are: GNU tar through zstd, every name
+/// below `./`. `DebianPreparation` reads what this writes.
 ///
 /// A `PreparedEntry` says what goes in the header, relative path and all;
 /// its `file` is not read. The empty path is the archive's own `./`.
 public final class DebianTarWriter {
+    /// On Procursus's golang-1.22-src, 12% larger than level 19 in a thirtieth
+    /// of the time and 40% of the memory, which a phone feels more.
+    private static let compressionLevel = "9"
+
     private var archive: OpaquePointer?
     private let entry: OpaquePointer
 
@@ -20,9 +24,12 @@ public final class DebianTarWriter {
         self.archive = archive
         self.entry = entry
         guard archive_write_set_format_gnutar(archive) == ARCHIVE_OK,
-              archive_write_add_filter_xz(archive) == ARCHIVE_OK,
+              // ARCHIVE_WARN here is libarchive falling back on a `zstd`
+              // program, which a device does not have
+              archive_write_add_filter_zstd(archive) == ARCHIVE_OK,
+              archive_write_set_filter_option(archive, "zstd", "compression-level", Self.compressionLevel) == ARCHIVE_OK,
               // a file holds the stream as it ended: padding the last block
-              // is for tapes, and an xz stream does not end in zeros
+              // is for tapes
               archive_write_set_bytes_in_last_block(archive, 1) == ARCHIVE_OK,
               archive_write_open_filename(archive, url.path) == ARCHIVE_OK
         else {

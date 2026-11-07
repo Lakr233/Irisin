@@ -51,6 +51,9 @@ else {
 }
 
 let job = try? InstallerJob.decode(FileHandle.standardInput.readDataToEndOfFile())
+/// Asked before the log opens: with no file passed, that descriptor is the
+/// log's, and a repack would write its package there.
+let hasRepackFile = fcntl(InstallerJob.repackDescriptor, F_GETFD) != -1
 
 /// A transaction starts a fresh log and keeps the one before it, because the
 /// failure being investigated is usually the one before the retry. The
@@ -104,6 +107,12 @@ guard let job else {
     emit(.failure(.invalidJob))
     emit(.exit(EX_DATAERR))
     exit(EX_DATAERR)
+}
+
+if case .repack = job, !hasRepackFile {
+    emit(.failure(.invalidJob))
+    emit(.exit(EX_USAGE))
+    exit(EX_USAGE)
 }
 
 emit(.started(.init(job: job.name, uid: getuid(), installRoot: installRoot)))

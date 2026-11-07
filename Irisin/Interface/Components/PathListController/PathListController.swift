@@ -7,6 +7,7 @@
 //
 
 import AptRepository
+import IrisinProtocol
 import SnapKit
 import Then
 import UIKit
@@ -121,7 +122,8 @@ final class PathListController: UITableViewController {
                 self?.exportList(anchor: PopoverAnchor(sender: action.sender))
             },
         ]
-        if package != nil {
+        // a name dpkg still takes and no job carries, with an underscore
+        if let package, InstallerJob.isPackageIdentity(package.identity) {
             actions.append(UIAction(
                 title: String(localized: "Repack"),
                 image: UIImage(systemName: "archivebox")

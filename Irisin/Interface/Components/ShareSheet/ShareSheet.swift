@@ -130,14 +130,29 @@ enum ShareSheet {
     /// else by then; the sheet then goes over whatever is on top in the same
     /// window, pointing at that page and not at `anchor`. A cancelled task
     /// shares nothing, and with nowhere at all to go the user is told.
-    static func present(_ items: [Any], anchor: PopoverAnchor?, from presenter: UIViewController) {
-        guard !Task.isCancelled else { return }
+    /// `finished` runs once the items are no longer needed, whichever way
+    /// that came about.
+    static func present(
+        _ items: [Any],
+        anchor: PopoverAnchor?,
+        from presenter: UIViewController,
+        finished: (() -> Void)? = nil
+    ) {
+        guard !Task.isCancelled else {
+            finished?()
+            return
+        }
         guard let host = presentableController(for: presenter, anchor: anchor) else {
             SPIndicator.present(title: String(localized: "Unable to Export"), preset: .error)
+            finished?()
             return
         }
         let anchor = host === presenter ? anchor : nil
-        host.present(controller(items, anchor: anchor, over: host), animated: true)
+        let sheet = controller(items, anchor: anchor, over: host)
+        if let finished {
+            sheet.completionWithItemsHandler = { _, _, _, _ in finished() }
+        }
+        host.present(sheet, animated: true)
     }
 
     /// `presenter`, or the page on top of its window when it cannot present:

@@ -134,11 +134,12 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   root sits (33). A file that is not what dpkg recorded goes in as it is, and
   a listed path that is gone stays out, out of `conffiles` too: each is a
   notice in the log and a count in `.repacked`, which the app says before the
-  share sheet. `md5sums` is dpkg's copy while nothing differs and is made from
-  what went in once something does. It differs from the download by what an
+  share sheet, and the file goes when the sheet does, since it can hold what
+  only root could read. `md5sums` is dpkg's copy while it says what the archive
+  holds and is made from what went in once it does not. It differs from the download by what an
   installed package cannot say: the control fields in dpkg's order and
-  spelling, xz whatever the original used, and an `md5sums` the original may
-  not have shipped. On RootHide a package with a LaunchDaemon always counts one
+  spelling, zstd whatever the original used, and an `md5sums` the original
+  may not have shipped. On RootHide a package with a LaunchDaemon always counts one
   changed file, since its launchctl rewrites the plist in place. One
   installation repacks to one file, byte for byte. It changes nothing, so it
   does not ask `OperationConfirmation`, and its log is appended to, not started
@@ -755,6 +756,8 @@ match; the two spellings then fail to match.
 The Mac harness first; a jailbroken device or vphone for the privileged half.
 On the vphone the helper can be driven directly as root:
 `echo '{"transaction":{"_0":{"install":[],"remove":["x.y"],"dryRun":true}}}' | /var/jb/usr/libexec/irisin-install`.
+A repack needs its file on descriptor 3:
+`echo '{"repack":{"identity":"x.y"}}' | /var/jb/usr/libexec/irisin-install 3<>/tmp/x.deb`.
 It answers one JSON event per line; the plain-text account of the same run
 is `/var/jb/var/log/irisin-install.log`.
 
