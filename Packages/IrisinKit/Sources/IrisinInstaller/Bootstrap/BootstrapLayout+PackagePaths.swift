@@ -1,4 +1,5 @@
 import Foundation
+import IrisinProtocol
 
 extension BootstrapLayout {
     /// A shebang may already name a prefix-compiled rootless interpreter.
@@ -28,6 +29,23 @@ extension BootstrapLayout {
             return String(decoding: target.utf8.dropFirst("/rootfs".utf8.count), as: UTF8.self)
         }
         return jbroot + target
+    }
+
+    /// The text an archive spells a link with, from what `linkText` left on
+    /// disk: the reverse of it. A link another run wrote may name the jbroot
+    /// by another spelling (`/var` for `/private/var`), or the name it had
+    /// before RootHide renamed it, so a root's name counts as well as this
+    /// one's path.
+    func archivedLinkText(_ text: String) -> String {
+        guard case let .roothide(jbroot) = kind, text.utf8.first == 0x2F else { return text }
+        let root = text == jbroot || text.utf8.starts(with: "\(jbroot)/".utf8)
+            ? jbroot
+            : RoothideRoot.root(ofPath: text)
+        guard let root else {
+            return text == "/" ? "/rootfs" : "/rootfs" + text
+        }
+        let rest = String(decoding: text.utf8.dropFirst(root.utf8.count), as: UTF8.self)
+        return rest.isEmpty ? "/" : rest
     }
 
     /// The kernel path a link's text names. The text is one everywhere but

@@ -21,8 +21,8 @@ final class DaemonTransport: @unchecked Sendable {
             .daemon(installRoot: SimulatorDaemon.installRoot)
         }
 
-        func run(_ job: InstallerJob) async throws -> JobTranscript {
-            try SimulatorDaemon.run(job)
+        func run(_ job: InstallerJob, descriptor: Int32?) async throws -> JobTranscript {
+            try SimulatorDaemon.run(job, descriptor: descriptor)
         }
 
         func invalidate() {}
@@ -41,9 +41,12 @@ final class DaemonTransport: @unchecked Sendable {
             return .daemon(installRoot: String(cString: root))
         }
 
-        func run(_ job: InstallerJob) async throws -> JobTranscript {
+        func run(_ job: InstallerJob, descriptor file: Int32?) async throws -> JobTranscript {
             let reply = try await send(.run) { request in
                 try job.encode(into: request)
+                if let file {
+                    xpc_dictionary_set_fd(request, IrisinWire.Key.descriptor, file)
+                }
             }
             let descriptor = xpc_dictionary_dup_fd(reply, IrisinWire.Key.descriptor)
             let identifier = xpc_dictionary_get_uint64(reply, IrisinWire.Key.jobIdentifier)
@@ -128,7 +131,7 @@ final class DaemonTransport: @unchecked Sendable {
             throw IrisinFailure(code: .notPermitted)
         }
 
-        func run(_: InstallerJob) async throws -> JobTranscript {
+        func run(_: InstallerJob, descriptor _: Int32?) async throws -> JobTranscript {
             throw IrisinFailure(code: .notPermitted)
         }
 

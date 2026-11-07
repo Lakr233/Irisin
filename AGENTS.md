@@ -60,7 +60,7 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   an ordered package transaction (prepared files and identities), rebuild the
   icon cache, register Irisin's own app, respring, bootstrap or boot out
   Irisin's own daemon, reload AirDrop, enter safe mode, make the app's data
-  folder. The daemon jobs carry
+  folder, repack an installed package. The daemon jobs carry
   no path or label: the helper derives its own installed plist, and the home
   from the layout (`<jbroot>/var/mobile` on roothide, where icli registers
   apps' HOME and a bootstrap need not have it). The helper validates
@@ -116,6 +116,33 @@ transaction's journal on disk instead of a pipe: `Documentation/ExternalClients.
   log file beside the pipe
   (`<root>/var/log/irisin-install.log`, previous run in `.previous`) is
   the same events as timestamped plain text. Add a case, not a prefix.
+- **Repack is `dpkg-repack`, as a closed job.** The ellipsis on an installed
+  package's file list exports the list as text and repacks the package
+  (`RepackController`, `InstallerJob.repack`, `PackageRepacker`): root reads,
+  since a package may ship what mobile cannot read, and the `.deb` leaves
+  through a file the app opened and passed as a descriptor (descriptor 3, as
+  an external install's package arrives), so no path crosses the wire and
+  root opens nothing mobile could swap. The app's Cancel removes that file;
+  a helper that finds it has no name left stops, which is the only thing that
+  can reach it. The control file is the status record without what only
+  installation wrote, the control members are the info files, the data is
+  the list in its order, each path as it is on disk now: a link in the
+  archive's own spelling (`archivedLinkText`, the reverse of `linkText`), a
+  path the bootstrap keeps as a link where the archive has a directory still a
+  directory (`/var/jb`, ElleKit's `DynamicLibraries`), or the package would
+  replace it when installed, and no entry in the group of the place RootHide's
+  root sits (33). A file that is not what dpkg recorded goes in as it is, and
+  a listed path that is gone stays out, out of `conffiles` too: each is a
+  notice in the log and a count in `.repacked`, which the app says before the
+  share sheet. `md5sums` is dpkg's copy while nothing differs and is made from
+  what went in once something does. It differs from the download by what an
+  installed package cannot say: the control fields in dpkg's order and
+  spelling, xz whatever the original used, and an `md5sums` the original may
+  not have shipped. On RootHide a package with a LaunchDaemon always counts one
+  changed file, since its launchctl rewrites the plist in place. One
+  installation repacks to one file, byte for byte. It changes nothing, so it
+  does not ask `OperationConfirmation`, and its log is appended to, not started
+  afresh.
 - **No tool is spawned for the home screen, and no icli ships.** `uicache`,
   `sbreload` and `killall` are gone and `uikittools` is not a dependency.
   icli is our own repository and is linked into `irisin-install` as the

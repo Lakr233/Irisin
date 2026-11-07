@@ -167,7 +167,7 @@ extension DaemonServer {
         // helper is gone.
         guard flock(journal, LOCK_EX | LOCK_NB) == 0 else { throw IrisinFailure(errno: errno) }
         do {
-            try Self.spawnHelper(at: helperPath, job: job, standardOutput: journal, package: package)
+            try Self.spawnHelper(at: helperPath, job: job, standardOutput: journal, file: package)
         } catch {
             // The record must end, or it reads as interrupted forever.
             for event in [InstallerEvent.failure(.helperUnreachable), .exit(EX_UNAVAILABLE)] {

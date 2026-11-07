@@ -11,7 +11,7 @@ extension InstallerEvent {
             return String(localized: "Installer started at \(started.installRoot.isEmpty ? "/" : started.installRoot)")
         case let .phase(phase):
             return phase.localizedTitle
-        case .progress, .packageProgress:
+        case .progress, .packageProgress, .repacked:
             return nil
         case let .package(step, identity, version):
             let subject = version.isEmpty ? identity : "\(identity) (\(version))"
@@ -77,6 +77,8 @@ extension InstallerEvent.Problem {
             String(localized: "Unable to refresh apps: \(detail)")
         case let .daemonNotLoaded(detail):
             String(localized: "Irisin's background service could not be started: \(detail)")
+        case let .repackFailed(identity, detail):
+            String(localized: "Unable to repack \(identity): \(detail)")
         case let .noProcess(name):
             String(localized: "No process named \(name) is running.")
         case let .packageNeedsRepair(identity):

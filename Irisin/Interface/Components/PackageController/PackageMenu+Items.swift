@@ -179,7 +179,7 @@ extension PackageMenu {
             block: { package, host, _ in
                 let path = JailbreakRoot.installedPath("/Library/dpkg/info/\(package.identity).list")
                 guard FileManager.default.fileExists(atPath: path) else { return }
-                host.present(next: PathListController(path: path))
+                host.present(next: PathListController(path: path, package: package))
             },
             eligibleForPerform: { package in
                 FileManager

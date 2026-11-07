@@ -105,15 +105,17 @@ nonisolated enum PrivilegedBackend {
     /// matches what it is. `onEvent` draws the operation console, which
     /// lives only as long as the sheet on screen; the helper's own account of
     /// what it did is the one thing a support report cannot be written
-    /// without, so it has to outlive that sheet.
+    /// without, so it has to outlive that sheet. `descriptor` is the file a
+    /// repack writes into; the caller keeps its own.
     @discardableResult
     static func run(
         _ job: InstallerJob,
+        descriptor: Int32? = nil,
         onEvent: @escaping @Sendable (InstallerEvent) async -> Void = { _ in }
     ) async -> Int32? {
         do {
             Dog.shared.join("Installer", "running \(job.name)", level: .info)
-            let transcript = try await link.run(job)
+            let transcript = try await link.run(job, descriptor: descriptor)
             var status: Int32?
             for await event in transcript.events {
                 if case let .exit(announced) = event {
@@ -148,7 +150,7 @@ nonisolated enum PrivilegedBackend {
 
     private static func logLevel(of event: InstallerEvent) -> Dog.DogLevel {
         switch event {
-        case .started, .phase, .package: .info
+        case .started, .phase, .package, .repacked: .info
         case .warning: .warning
         case .failure: .error
         case .progress, .packageProgress, .script, .output, .notice, .exit: .verbose

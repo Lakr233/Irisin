@@ -143,7 +143,15 @@ final class DaemonServer: @unchecked Sendable {
                 throw IrisinFailure(code: .invalidRequest)
             }
             let resolved = try resolve(job)
-            let descriptor = try Self.startHelper(at: helperPath, job: resolved)
+            // a repack writes into a file the client opened: no path crosses
+            // the wire, and nothing here opens one a client could have swapped
+            let output = try repackOutput(of: resolved, in: message)
+            defer {
+                if let output {
+                    close(output)
+                }
+            }
+            let descriptor = try Self.startHelper(at: helperPath, job: resolved, file: output)
             let identifier = nextJobIdentifier
             nextJobIdentifier &+= 1
             defer { close(descriptor) }
@@ -155,6 +163,20 @@ final class DaemonServer: @unchecked Sendable {
         case .serviceInfo, .submitInstall, .transactionStatus, .transactionEvents, .removePackage, .respring:
             try performExternal(operation, message: message, into: reply, client: client)
         }
+    }
+
+    /// The file a repack writes into, a regular one, or nil for every other
+    /// job. The caller closes it.
+    private func repackOutput(of job: InstallerJob, in message: xpc_object_t) throws -> Int32? {
+        guard case .repack = job else { return nil }
+        let output = xpc_dictionary_dup_fd(message, IrisinWire.Key.descriptor)
+        guard output >= 0 else { throw IrisinFailure(code: .invalidRequest) }
+        var info = stat()
+        guard fstat(output, &info) == 0, info.st_mode & S_IFMT == S_IFREG else {
+            close(output)
+            throw IrisinFailure(code: .invalidRequest)
+        }
+        return output
     }
 
     /// Every package file the job names, canonicalised and required to be a

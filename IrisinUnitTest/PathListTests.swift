@@ -21,6 +21,13 @@ struct PathListTests {
         ])
     }
 
+    /// The export is the page's list, one path a line, and a path is bytes.
+    @Test func theExportIsOnePathALine() {
+        let text = PathListController.listText(["/usr", "/usr/share/résumé 文件"])
+        #expect(String(decoding: text, as: UTF8.self) == "/usr\n/usr/share/résumé 文件\n")
+        #expect(PathListController.listText([]).isEmpty)
+    }
+
     /// Each path is walked up a component a turn, to the root or to nothing.
     @Test func aPathThatIsNotOneStillEnds() {
         let odd = ["", "/", "//", "///a//", "a", "./", "../..", "/a/\u{034F}", "\u{034F}/", "/a\u{0301}/b\r\n/"]

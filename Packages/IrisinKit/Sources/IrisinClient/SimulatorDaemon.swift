@@ -56,8 +56,11 @@
             )
         }
 
-        static func run(_ job: InstallerJob) throws -> JobTranscript {
+        static func run(_ job: InstallerJob, descriptor: Int32?) throws -> JobTranscript {
             let job = try InstallerJob.decode(job.encoded())
+            // the file stays open for the job as the daemon's copy of it
+            // does, whatever the caller does with its own
+            let file = descriptor.map { dup($0) }
             var ends: [Int32] = [-1, -1]
             guard pipe(&ends) == 0 else {
                 throw IrisinFailure(code: .operationFailed, systemError: errno)
@@ -74,7 +77,11 @@
             Thread.detachNewThread {
                 emit(.started(.init(job: job.name, uid: getuid(), installRoot: installRoot)))
                 let layout = BootstrapLayout(kind: .rootless(prefix: BootstrapLayout.rootlessPrefix), mount: installRoot)
-                let status = InstallerRunner(installRoot: installRoot, layout: layout, emit: emit).run(job)
+                let runner = InstallerRunner(installRoot: installRoot, layout: layout, emit: emit)
+                if let file {
+                    runner.repackDescriptor = file
+                }
+                let status = runner.run(job)
                 emit(.exit(status))
                 try? output.close()
             }

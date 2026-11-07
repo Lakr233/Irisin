@@ -22,6 +22,9 @@ public final class InstallerRunner {
     /// Where an external install's package arrives: descriptor 3, which the
     /// daemon passed through. The harness hands a file of its own.
     var externalPackageDescriptor = InstallerJob.External.packageDescriptor
+    /// Where a repack's package goes: descriptor 3, which the daemon passed
+    /// through. The simulator and the harness hand a file of their own.
+    public var repackDescriptor = InstallerJob.repackDescriptor
     private let registrar: ApplicationRegistrar
     private let daemonManager: LaunchDaemon
     /// `ProcessTable.signal`, except in the harness: a Mac running a
@@ -107,6 +110,8 @@ public final class InstallerRunner {
             signal(SystemProcess.homeScreen, SIGSEGV)
         case .prepareUserHome:
             prepareUserHome()
+        case let .repack(identity):
+            repack(identity)
         case let .external(external):
             runExternal(external)
         }

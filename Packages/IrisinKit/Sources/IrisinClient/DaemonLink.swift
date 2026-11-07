@@ -149,12 +149,13 @@ public final class DaemonLink: @unchecked Sendable {
     /// Refused with `.notPermitted` when the bound backend is local; a
     /// handshake that has not happened yet is made here first, so a job asked
     /// for at cold launch waits for the daemon rather than being refused for
-    /// arriving early.
-    public func run(_ job: InstallerJob) async throws -> JobTranscript {
+    /// arriving early. `descriptor` is the file a job writes into, for the
+    /// job that has one (`InstallerJob.repack`); the caller keeps its own.
+    public func run(_ job: InstallerJob, descriptor: Int32? = nil) async throws -> JobTranscript {
         guard try await hello().isPrivileged else {
             throw IrisinFailure(code: .notPermitted)
         }
-        return try await transport.run(job)
+        return try await transport.run(job, descriptor: descriptor)
     }
 
     /// Drop the connection so the next request builds a new one. An XPC

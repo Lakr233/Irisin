@@ -45,6 +45,7 @@ public extension ExternalTransaction {
                 kind = "script"; self.identity = identity
             case .output: kind = "output"
             case .notice: kind = "notice"
+            case .repacked: kind = "repacked"
             case let .warning(problem):
                 kind = "warning"; self.problem = problem.name
             case let .failure(problem):
@@ -155,6 +156,7 @@ public extension InstallerEvent.Problem {
         case .leftoverBundle: "leftoverBundle"
         case .refreshFailed: "refreshFailed"
         case .daemonNotLoaded: "daemonNotLoaded"
+        case .repackFailed: "repackFailed"
         case .noProcess: "noProcess"
         case .packageNeedsRepair: "packageNeedsRepair"
         case .markingsNotSaved: "markingsNotSaved"

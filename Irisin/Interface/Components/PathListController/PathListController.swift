@@ -6,16 +6,22 @@
 //  live in Packages/PathListTableViewController as Objective-C.
 //
 
+import AptRepository
 import SnapKit
+import Then
 import UIKit
 
 /// The dpkg files list of an installed package, drawn as an indented tree.
 ///
 /// Every ancestor directory of a listed file is synthesized as a row of its own,
 /// so `/usr/lib/foo.dylib` also puts `/usr`, `/usr/lib` on screen and each row
-/// indents by how deep its path sits.
+/// indents by how deep its path sits. The bar's menu exports the list as text
+/// and, for an installed package, repacks it into a .deb.
 final class PathListController: UITableViewController {
     private let entryPath: String
+    /// The installed package the list is of; nil for what a queued package
+    /// brings, which is on no disk to repack.
+    private let package: Package?
     private var contents: [String] = []
     private var filteredContents: [String] = []
     /// Whatever is the parent of another row. A directory the package ships
@@ -43,8 +49,9 @@ final class PathListController: UITableViewController {
         return cell
     }
 
-    init(path: String) {
+    init(path: String, package: Package) {
         entryPath = path
+        self.package = package
         super.init(style: .plain)
         contents = Self.expandingAncestors(of: Self.readPaths(at: path))
         directories = Set(contents.map { ($0 as NSString).deletingLastPathComponent })
@@ -53,6 +60,7 @@ final class PathListController: UITableViewController {
     /// Paths that are in no list on disk yet: what a queued package brings.
     init(title: String, paths: [String]) {
         entryPath = ""
+        package = nil
         super.init(style: .plain)
         self.title = title
         contents = Self.expandingAncestors(of: paths)
@@ -77,6 +85,13 @@ final class PathListController: UITableViewController {
         searchController.hidesNavigationBarDuringPresentation = true
         navigationItem.hidesSearchBarWhenScrolling = true
         navigationItem.searchController = searchController
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "ellipsis"),
+            menu: moreMenu()
+        ).then {
+            $0.tintColor = .textTitle
+            $0.accessibilityLabel = String(localized: "More")
+        }
 
         tableView.separatorInset = .zero
         tableView.tableFooterView = UIView()
@@ -93,6 +108,55 @@ final class PathListController: UITableViewController {
         snapshot.appendItems(visibleContents)
         snapshot.reconfigureItems(survivingFrom: dataSource.snapshot())
         dataSource.apply(snapshot, animatingDifferences: tableView.shouldAnimateDiff)
+    }
+
+    // MARK: - Menu
+
+    private func moreMenu() -> UIMenu {
+        var actions = [
+            UIAction(
+                title: String(localized: "Export List"),
+                image: UIImage(systemName: "square.and.arrow.up")
+            ) { [weak self] action in
+                self?.exportList(anchor: PopoverAnchor(sender: action.sender))
+            },
+        ]
+        if package != nil {
+            actions.append(UIAction(
+                title: String(localized: "Repack"),
+                image: UIImage(systemName: "archivebox")
+            ) { [weak self] action in
+                self?.confirmRepack(anchor: PopoverAnchor(sender: action.sender))
+            })
+        }
+        return UIMenu(children: actions)
+    }
+
+    /// The whole list, whatever the search shows, one path a line.
+    private func exportList(anchor: PopoverAnchor?) {
+        let name = package?.identity ?? title ?? "files"
+        ExportFile.share(
+            Self.listText(contents),
+            named: "\(name.replacingOccurrences(of: "/", with: "-"))-\(ExportFile.stamp()).txt",
+            from: self,
+            anchor: anchor
+        )
+    }
+
+    static func listText(_ paths: [String]) -> Data {
+        Data(paths.map { $0 + "\n" }.joined().utf8)
+    }
+
+    private func confirmRepack(anchor: PopoverAnchor?) {
+        guard let package else { return }
+        presentConfirmation(
+            title: "Repack This Package?",
+            message: "This builds a new .deb from the files on this device, including any changes made since installation, so it may differ from the downloaded package.",
+            confirmTitle: "Repack"
+        ) { [weak self] in
+            guard let self else { return }
+            RepackController.start(package, from: self, anchor: anchor)
+        }
     }
 
     // MARK: - Contents

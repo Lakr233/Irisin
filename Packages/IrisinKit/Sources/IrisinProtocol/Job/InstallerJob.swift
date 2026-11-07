@@ -36,6 +36,11 @@ public enum InstallerJob: Codable, Equatable, Sendable {
     /// Make mobile's home where this bootstrap's apps are registered with it,
     /// when it is missing. The helper derives the path; none crosses the wire.
     case prepareUserHome
+    /// Build a `.deb` from what dpkg says this package installed, as
+    /// `dpkg-repack` does, into the file the client opened and passed along
+    /// with the job (`repackDescriptor`). No path crosses the wire, and root
+    /// never opens one a client could have swapped.
+    case repack(identity: String)
     /// A transaction another package's program submitted under its own id
     /// (`submitInstall`, `removePackage`). Started by the daemon alone,
     /// never through `run`.
@@ -43,6 +48,9 @@ public enum InstallerJob: Codable, Equatable, Sendable {
 
     /// Every package of ours starts with this, on both bootstraps.
     public static let selfIdentityPrefix = "wiki.qaq.irisin"
+
+    /// The descriptor a repack's package goes out on.
+    public static let repackDescriptor: Int32 = 3
 
     public var name: String {
         switch self {
@@ -55,6 +63,7 @@ public enum InstallerJob: Codable, Equatable, Sendable {
         case .reloadAirDrop: "reloadAirDrop"
         case .enterSafeMode: "enterSafeMode"
         case .prepareUserHome: "prepareUserHome"
+        case .repack: "repack"
         case .external: "external"
         }
     }
@@ -73,6 +82,12 @@ public extension InstallerJob {
     func validate() throws {
         if case let .external(external) = self {
             try external.validate()
+            return
+        }
+        if case let .repack(identity) = self {
+            guard Self.isPackageIdentity(identity) else {
+                throw IrisinFailure(code: .invalidRequest, path: identity)
+            }
             return
         }
         guard case let .transaction(transaction) = self else { return }

@@ -93,7 +93,14 @@ let package = Package(
 
         .testTarget(name: "IrisinProtocolTests", dependencies: ["IrisinProtocol"]),
         .testTarget(name: "IrisinVendorTests", dependencies: ["IrisinVendor"]),
-        .testTarget(name: "IrisinInstallerTests", dependencies: ["CIrisinDB", "IrisinInstaller"]),
+        .testTarget(
+            name: "IrisinInstallerTests",
+            dependencies: [
+                "CIrisinDB",
+                "IrisinInstaller",
+                "IrisinPreparation",
+            ]
+        ),
         .testTarget(name: "IrisinClientTests", dependencies: ["IrisinClient"]),
         .testTarget(
             name: "IrisinExternalContractTests",

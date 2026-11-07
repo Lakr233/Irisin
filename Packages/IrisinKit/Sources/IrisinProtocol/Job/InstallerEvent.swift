@@ -19,8 +19,9 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
     /// One package moves through the database.
     case package(PackageStep, identity: String, version: String)
     /// How far the package's current step is: files placed out of the files
-    /// its archive holds. Said at most once per percent, and only by a step
-    /// that can count; a script cannot.
+    /// its archive holds, or a repack's bytes read out of the bytes its files
+    /// hold. Said at most once per percent, and only by a step that can
+    /// count; a script cannot.
     case packageProgress(identity: String, completed: Int, total: Int)
     /// A maintainer script is about to run with these arguments.
     case script(identity: String, member: String, arguments: [String])
@@ -28,6 +29,8 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
     case output(String)
     /// Something worth knowing that changes nothing.
     case notice(String)
+    /// A repack's package is in the file the client passed.
+    case repacked(Repacked)
     /// A problem the job survived; the user may want to act on it.
     case warning(Problem)
     /// The reason the job stopped. Followed by a non-zero `exit`.
@@ -68,6 +71,9 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
         /// A transaction placed Irisin's own package, and the daemon it
         /// ships could not be loaded and started after it.
         case daemonNotLoaded(detail: String)
+        /// A repack stopped and the file the client passed holds no package.
+        /// `detail` is the helper's own account.
+        case repackFailed(identity: String, detail: String)
         /// A signal job found no process by that name.
         case noProcess(name: String)
         /// Unpacking failed after the database was told; the package stays
@@ -109,6 +115,8 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
                 "App refresh failed: \(detail)"
             case let .daemonNotLoaded(detail):
                 "Irisin's background service could not be loaded and started: \(detail)"
+            case let .repackFailed(identity, detail):
+                "Repacking \(identity) stopped: \(detail)"
             case let .noProcess(name):
                 "No process named \(name) is running."
             case let .packageNeedsRepair(identity):
@@ -135,6 +143,24 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
             self.uid = uid
             self.installRoot = installRoot
             self.timestamp = timestamp
+        }
+    }
+
+    /// What a repack made of an installed package.
+    public struct Repacked: Codable, Equatable, Sendable {
+        /// What `dpkg-name` would call the package.
+        public var fileName: String
+        /// Listed paths that are not on disk or cannot be archived, and so
+        /// were left out. Each is named in a notice.
+        public var leftOut: Int
+        /// Files that are not what dpkg recorded at installation, archived
+        /// as they are now. Each is named in a notice.
+        public var changed: Int
+
+        public init(fileName: String, leftOut: Int, changed: Int) {
+            self.fileName = fileName
+            self.leftOut = leftOut
+            self.changed = changed
         }
     }
 
@@ -179,6 +205,8 @@ public enum InstallerEvent: Codable, Equatable, Sendable {
             return line
         case let .notice(text):
             return "[*] \(text)"
+        case let .repacked(repacked):
+            return "Repacked \(repacked.fileName): \(repacked.leftOut) left out, \(repacked.changed) changed"
         case let .warning(problem):
             return "[!] \(problem.description)"
         case let .failure(problem):
