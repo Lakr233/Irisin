@@ -25,7 +25,7 @@ let package = Package(
         // Our own LaunchServices and SpringBoard code, linked into the helper
         // as a library: app registration and the graceful respring (PineBoard's
         // on tvOS, from 0.10.0). Not on the Mac.
-        .package(url: "https://github.com/owngoal-dev/icli.git", from: "0.10.0"),
+        .package(url: "https://github.com/owngoal-dev/icli.git", from: "1.0.0"),
         // icli's own libarchive, named here for `IrisinPreparation`: the same
         // package, so the helper gains no second copy, and the app already
         // links it through AptRepository.
